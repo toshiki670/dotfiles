@@ -4,6 +4,7 @@ set ambiwidth=double
 set tabstop=4
 set expandtab
 set shiftwidth=4
+"複数行のクリップボードからの貼付けがおかしい時、:set paste をすると治る
 set smartindent
 set list
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
