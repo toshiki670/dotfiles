@@ -28,6 +28,8 @@ set t_Co=256
 syntax on
 colorscheme jellybeans
 
+set laststatus=2
+
 set number
 set title
 set showmatch "括弧入力時の対応する括弧を表示
