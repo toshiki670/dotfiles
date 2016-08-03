@@ -1,5 +1,7 @@
 set number
 set title
+set showmatch "括弧入力時の対応する括弧を表示
+syntax on "コードの色分け
 set ambiwidth=double
 set tabstop=4
 set expandtab
