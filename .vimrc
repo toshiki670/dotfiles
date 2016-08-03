@@ -17,6 +17,7 @@ let g:neobundle_default_git_protocol='https'
 NeoBundleFetch 'Shougo/neobundle.vim'
 " ↓こんな感じが基本の書き方
 NeoBundle 'nanotech/jellybeans.vim'
+NeoBundle 'itchyny/lightline.vim'
 
 " vimrc に記述されたプラグインでインストールされていないものがないかチェックする
 NeoBundleCheck
