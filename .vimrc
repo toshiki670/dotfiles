@@ -28,6 +28,7 @@ set t_Co=256
 syntax on
 colorscheme jellybeans
 
+"個人設定
 set laststatus=2
 
 set number
