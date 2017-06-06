@@ -1,4 +1,4 @@
-PS1="Bash:\w$ " #Full directry
+PS1="Bash:\W$ " #Full directry
 
 #\a  ベル（ビープ音）をならします（ASCII のベル文字 07）
 #\d  "曜日 月 日"の形式の日付
