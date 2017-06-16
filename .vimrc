@@ -47,3 +47,9 @@ set history=50
 set virtualedit=block
 set whichwrap=b,s,[,],<,>
 set backspace=indent,eol,start
+
+inoremap {<Enter> {}<Left><CR><ESC><S-o>
+inoremap [<Enter> []<Left><CR><ESC><S-o>
+inoremap (<Enter> ()<Left><CR><ESC><S-o>
+
+
