@@ -1,3 +1,9 @@
+".vimrc
+"         []
+"   __    ____ __ _ _  _ __ ___
+"   \ \  / /| || ' ' \| '__/ __|
+"    \ \/ / | || | | || | | (__
+" o   \__/  |_||_|_|_||_|  \___|
 " neobundle settings {{{
 if has('vim_starting')
   set nocompatible
