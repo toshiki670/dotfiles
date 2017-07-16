@@ -4,6 +4,7 @@
 "   \ \  / /| || ' ' \| '__/ __|
 "    \ \/ / | || | | || | | (__
 " o   \__/  |_||_|_|_||_|  \___|
+"
 " neobundle settings {{{
 if has('vim_starting')
   set nocompatible
@@ -29,10 +30,10 @@ NeoBundle 'itchyny/lightline.vim'
 NeoBundleCheck
 call neobundle#end()
 filetype plugin indent on
-" どうせだから jellybeans カラースキーマを使ってみましょう
-set t_Co=256
-syntax on
-colorscheme jellybeans
+" Solarized
+syntax enable
+set background=dark
+colorscheme solarized
 
 "個人設定
 set laststatus=2
@@ -40,7 +41,6 @@ set laststatus=2
 set number
 set title
 set showmatch "括弧入力時の対応する括弧を表示
-syntax on "コードの色分け
 set ambiwidth=double
 set tabstop=4
 set expandtab
