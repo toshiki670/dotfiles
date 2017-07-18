@@ -14,6 +14,7 @@ colors
 #補完機能
 autoload -Uz compinit
 compinit
+bindkey "^[[Z" reverse-menu-complete
 
 #多部補完時に大文字小文字を区別しない
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
@@ -23,34 +24,16 @@ if [ -n "$LS_COLORS" ]; then
 fi
 #Printable 8bit
 setopt print_eight_bit
+setopt auto_cd
+setopt auto_pushd
+setopt correct
 
-##vcs_info setting
 
-autoload -Uz vcs_info
+#PROMPT='%F{cyan}[%#%n : %~]%f'$'\n''>> '
+PROMPT=%(?@'%F{cyan}[%#%n : %~]%f'$'\n''>> '@'%F{red}~[%#%n : %~]%f'$'\n''>> ')
+PROMPT2='>> '
+SPROMPT="%F{red}~Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
-zstyle ':vcs_info:*' enable git svn
-zstyle ':vcs_info:*' formats '(%s)-[%b]'
-zstyle ':vcs_info:*' actionformats '(%s)-[%b|%a]'
-zstyle ':vcs_info:svn:*' branchformat '%b:r%r'
-
-autoload -Uz is-at-least
-if is-at-least 4.3.10; then
-  zstyle ':vcs_info:git:*' check-for-changes true
-  zstyle ':vcs_info:git:*' stagedstr "+"
-  zstyle ':vcs_info:git:*' unstagedstr "-"
-  zstyle ':vcs_info:git:*' formats '(%s)-[%b] %c%u'
-  zstyle ':vcs_info:git:*' actionformats '(%s)-[%b|%a] %c%u'
-fi
-
-function _update_vcs_info_msg() {
-  psvar=()
-  LANG=en_US.UTF-8 vcs_info
-  [[ -n "$vcs_info_msg_0_" ]] && psvar[1]="$vcs_info_msg_0_"
-}
-add-zsh-hook precmd _update_vcs_info_msg
-
-PROMPT='%F{cyan}[%#%n : %~]%f'$'\n''>> '
-RPROMPT="%1(v|%F{green}%1v%f|)"
 
 #zsh-completions
 if [ -e /usr/local/share/zsh-completions ]; then
@@ -63,4 +46,23 @@ fi
 eval $(gdircolors ~/.dircolors-solarized)
 eval $(dircolors ~/dircolors-solarized/dircolors.ansi-universal)
 alias ls='gls --color=auto'
+#Currently Directory List
+alias cdl='a=(`ls -1`) ; ls -1 | cat -n ; read b ; cd ${a[$b]}'
+#For hermes
+alias hermes='echo "Hermes Command List\nher\nhtsk"'
+alias her='cd ~/Documents/Hermes/repos/hs2018-trainee/'
+alias htsk='cd ~/Documents/Hermes/repos/hs2018-trainee/01_研修課題/川添\ 寿樹/'
+alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
 
+# Google Search By Safari
+google() {
+  local str opt
+  if [ $# != 0 ]; then
+    for i in $*; do
+      str="$str${str:++}$i"
+    done
+    opt='search?num=100'
+    opt="${opt}&q=${str}"
+  fi
+  open -a Safari http://www.google.com/$opt
+}
