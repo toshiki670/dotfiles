@@ -42,9 +42,9 @@ set number
 set title
 set showmatch "括弧入力時の対応する括弧を表示
 set ambiwidth=double
-set tabstop=4
+set tabstop=2
 set expandtab
-set shiftwidth=4
+set shiftwidth=2
 "複数行のクリップボードからの貼付けがおかしい時、:set paste をすると治る
 set smartindent
 set list
@@ -58,4 +58,5 @@ inoremap {<Enter> {}<Left><CR><ESC><S-o>
 inoremap [<Enter> []<Left><CR><ESC><S-o>
 inoremap (<Enter> ()<Left><CR><ESC><S-o>
 
-
+noremap ; :
+noremap q1 q!
