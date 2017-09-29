@@ -3,6 +3,8 @@ export LANG=ja_JP.UTF-8
 export KCODE=u
 export PATH=/usr/local/bin:$PATH
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+#For rbenv
+eval "$(rbenv init -)"
 #for zsh-completions
 fpath=(/usr/local/share/zsh-completions $fpath)
 
@@ -52,7 +54,13 @@ alias cdl='a=(`ls -1`) ; ls -1 | cat -n ; read b ; cd ${a[$b]}'
 alias hermes='echo "Hermes Command List\nher\nhtsk"'
 alias her='cd ~/Documents/Hermes/repos/hs2018-trainee/'
 alias htsk='cd ~/Documents/Hermes/repos/hs2018-trainee/01_研修課題/川添\ 寿樹/'
+#For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
+#For vim
+alias vim-utf8='vim -c ":e ++enc=utf8"'
+alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
+alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
+alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 # Google Search By Safari
 google() {
@@ -64,5 +72,5 @@ google() {
     opt='search?num=100'
     opt="${opt}&q=${str}"
   fi
-  open -a Safari http://www.google.com/$opt
+  open http://www.google.com/$opt
 }
