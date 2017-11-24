@@ -54,6 +54,7 @@ set virtualedit=block
 set whichwrap=b,s,[,],<,>
 set backspace=indent,eol,start
 
+"自動挿入
 inoremap {<Enter> {}<Left><CR><ESC><S-o>
 inoremap [<Enter> []<Left><CR><ESC><S-o>
 inoremap (<Enter> ()<Left><CR><ESC><S-o>

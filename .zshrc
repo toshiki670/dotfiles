@@ -1,10 +1,24 @@
 # export PATH=/usr/local/bin:/usr/bin
 export LANG=ja_JP.UTF-8
 export KCODE=u
-export PATH=/usr/local/bin:$PATH
+export PATH="/usr/local/bin:$PATH"
+export PATH="/usr/sbin:$PATH"
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+#For pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
 #For rbenv
-eval "$(rbenv init -)"
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)";
+
+#For Bundle
+export PATH="$HOME/.rbenv/versions/2.4.2/bin:$PATH"
+
+#For comporser (Laravel)
+export PATH=$PATH:~/.composer/vendor/bin:/usr/local/sbin
+export PATH=$PATH:~/.composer/vendor/bin
 #for zsh-completions
 fpath=(/usr/local/share/zsh-completions $fpath)
 
@@ -32,9 +46,9 @@ setopt correct
 
 
 #PROMPT='%F{cyan}[%#%n : %~]%f'$'\n''>> '
-PROMPT=%(?@'%F{cyan}[%#%n : %~]%f'$'\n''>> '@'%F{red}~[%#%n : %~]%f'$'\n''>> ')
+PROMPT=%(?@'%F{cyan}[%#%n : %~]%f'$'\n''>> '@'%F{red}[%#%n : %~]%f'$'\n''>> ')
 PROMPT2='>> '
-SPROMPT="%F{red}~Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
+SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
 
 #zsh-completions
@@ -50,10 +64,6 @@ eval $(dircolors ~/dircolors-solarized/dircolors.ansi-universal)
 alias ls='gls --color=auto'
 #Currently Directory List
 alias cdl='a=(`ls -1`) ; ls -1 | cat -n ; read b ; cd ${a[$b]}'
-#For hermes
-alias hermes='echo "Hermes Command List\nher\nhtsk"'
-alias her='cd ~/Documents/Hermes/repos/hs2018-trainee/'
-alias htsk='cd ~/Documents/Hermes/repos/hs2018-trainee/01_研修課題/川添\ 寿樹/'
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
 #For vim
@@ -61,6 +71,13 @@ alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
 alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
+#拡張子に応じたコマンドを実行
+alias -s txt='vim'
+alias -s html='google-chrome'
+alias -s rb='ruby'
+alias -s py='python'
+alias -s php='php -f'
+
 
 # Google Search By Safari
 google() {
