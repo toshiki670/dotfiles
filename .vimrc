@@ -5,31 +5,91 @@
 "    \ \/ / | || | | || | | (__
 " o   \__/  |_||_|_|_||_|  \___|
 "
-" neobundle settings {{{
-if has('vim_starting')
-  set nocompatible
-  " neobundle をインストールしていない場合は自動インストール
-  if !isdirectory(expand("~/.vim/bundle/neobundle.vim/"))
-    echo "install neobundle..."
-    " vim からコマンド呼び出しているだけ neobundle.vim のクローン
-    :call system("git clone git://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim")
-  endif
-  " runtimepath の追加は必須
-  set runtimepath+=~/.vim/bundle/neobundle.vim/
-endif
-call neobundle#begin(expand('~/.vim/bundle'))
-let g:neobundle_default_git_protocol='https'
 
-" neobundle#begin - neobundle#end の間に導入するプラグインを記載します。
-NeoBundleFetch 'Shougo/neobundle.vim'
-" ↓こんな感じが基本の書き方
-NeoBundle 'nanotech/jellybeans.vim'
-NeoBundle 'itchyny/lightline.vim'
+"Vundleの記述はここから
+set nocompatible              " be iMproved, required
+filetype off                  " required
 
-" vimrc に記述されたプラグインでインストールされていないものがないかチェックする
-NeoBundleCheck
-call neobundle#end()
-filetype plugin indent on
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+" alternatively, pass a path where Vundle should install plugins
+"call vundle#begin('~/some/path/here')
+
+" let Vundle manage Vundle, required
+Plugin 'VundleVim/Vundle.vim'
+
+" The following are examples of different formats supported.
+" Keep Plugin commands between vundle#begin/end.
+" plugin on GitHub repo
+Plugin 'tpope/vim-fugitive'
+" plugin from http://vim-scripts.org/vim/scripts.html
+" Plugin 'L9'
+" Git plugin not hosted on GitHub
+Plugin 'git://git.wincent.com/command-t.git'
+" git repos on your local machine (i.e. when working on your own plugin)
+"Plugin 'file:///home/gmarik/path/to/plugin'
+" The sparkup vim script is in a subdirectory of this repo called vim.
+" Pass the path to set the runtimepath properly.
+Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
+" Install L9 and avoid a Naming conflict if you've already installed a
+" different version somewhere else.
+" Plugin 'ascenator/L9', {'name': 'newL9'}
+
+"---------Ruby on Rails--------------
+" 導入したいプラグインを以下に列挙
+" Plugin '[Github Author]/[Github repo]' の形式で記入
+"Plugin 'airblade/vim-gitgutter'
+Plugin 'tpope/vim-rails'
+" Ruby向けにendを自動挿入してくれる
+Plugin 'tpope/vim-endwise'
+
+"--------End---------------
+
+"--------html-------------
+Plugin 'mattn/emmet-vim'
+"--------------------------
+
+
+
+"lightline - https://github.com/itchyny/lightline.vim
+Plugin 'itchyny/lightline.vim'
+"Solarized
+Plugin 'altercation/vim-colors-solarized'
+
+"Folder Tree
+Plugin 'scrooloose/nerdtree'
+
+"For keybind
+Plugin 'kana/vim-submode'
+
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+"
+" Brief help
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+"
+" see :h vundle for more details or wiki for FAQ
+" Put your non-Plugin stuff after this line
+
+"ここまで
+
+
+"ERDTreeToggleoggle の設定
+"autocmd vimenter * NERDTree
+noremap tree :NERDTreeToggle<Enter>
+
+"Emmet"
+""let g:user_emmet_leader_key='<C-t>'
+inoremap <C-y> <C-y>,
+
+
 " Solarized
 syntax enable
 set background=dark
@@ -58,48 +118,73 @@ set backspace=indent,eol,start
 inoremap {<Enter> {}<Left><CR><ESC><S-o>
 inoremap [<Enter> []<Left><CR><ESC><S-o>
 inoremap (<Enter> ()<Left><CR><ESC><S-o>
-inoremap <C-e> <Esc> 
+inoremap ' ''<LEFT>
+inoremap " ""<LEFT>
 
+"inoremap <C-a> <Esc>
+
+noremap zz :w<Enter>
 noremap ; :
-noremap QQ :q!<Enter> 
+noremap QQ :q!<Enter>
 
 
+"インサートモードでも移動
+inoremap <C-j>  <down>
+inoremap <C-k>  <up>
+inoremap <C-h>  <left>
+inoremap <C-l>  <right>
 
+
+"https://qiita.com/tekkoc/items/98adcadfa4bdc8b5a6ca
 "画面分割設定
 nnoremap s <Nop>
+"スピリット画面移動
+nnoremap sw <C-w>w
 nnoremap sj <C-w>j
 nnoremap sk <C-w>k
 nnoremap sl <C-w>l
 nnoremap sh <C-w>h
+"スピリット画面そのものを移動
 nnoremap sJ <C-w>J
 nnoremap sK <C-w>K
 nnoremap sL <C-w>L
 nnoremap sH <C-w>H
+nnoremap sr <C-w>r
+"タブ移動
 nnoremap sn gt
 nnoremap sp gT
-nnoremap sr <C-w>r
+
+"スピリットの大きさを整える
 nnoremap s= <C-w>=
-nnoremap sw <C-w>w
+"縦横最大化
 nnoremap so <C-w>_<C-w>|
+"大きさを揃える
 nnoremap sO <C-w>=
 nnoremap sN :<C-u>bn<CR>
 nnoremap sP :<C-u>bp<CR>
+"新規タブ
 nnoremap st :<C-u>tabnew<CR>
+"タブ一覧
 nnoremap sT :<C-u>Unite tab<CR>
+
 nnoremap ss :<C-u>sp<CR>
 nnoremap sv :<C-u>vs<CR>
+"ウィンドウを閉じる
 nnoremap sq :<C-u>q<CR>
+"バッファを閉じる
 nnoremap sQ :<C-u>bd<CR>
+"現在のタブで開いたバッファ一覧
 nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
+"バッファ一覧
 nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 
 
-"call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
-"call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
-"call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
-"call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
-"call submode#map('bufmove', 'n', '', '>', '<C-w>>')
-"call submode#map('bufmove', 'n', '', '<', '<C-w><')
-"call submode#map('bufmove', 'n', '', '+', '<C-w>+')
-"call submode#map('bufmove', 'n', '', '-', '<C-w>-')"
-"
+call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
+call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
+call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
+call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
+call submode#map('bufmove', 'n', '', '>', '<C-w>>')
+call submode#map('bufmove', 'n', '', '<', '<C-w><')
+call submode#map('bufmove', 'n', '', '+', '<C-w>+')
+call submode#map('bufmove', 'n', '', '-', '<C-w>-')
+

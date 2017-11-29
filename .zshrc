@@ -46,7 +46,7 @@ setopt correct
 
 
 #PROMPT='%F{cyan}[%#%n : %~]%f'$'\n''>> '
-PROMPT=%(?@'%F{cyan}[%#%n : %~]%f'$'\n''>> '@'%F{red}[%#%n : %~]%f'$'\n''>> ')
+PROMPT=%(?@'%F{cyan}[%#%n %~]%f'$'\n''>> '@'%F{red}[%#%n %~]%f'$'\n''>> ')
 PROMPT2='>> '
 SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
@@ -73,7 +73,7 @@ alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
 alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 #拡張子に応じたコマンドを実行
 alias -s txt='vim'
-alias -s html='google-chrome'
+alias -s html='open'
 alias -s rb='ruby'
 alias -s py='python'
 alias -s php='php -f'
