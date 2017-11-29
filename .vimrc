@@ -87,7 +87,7 @@ noremap tree :NERDTreeToggle<Enter>
 
 "Emmet"
 ""let g:user_emmet_leader_key='<C-t>'
-inoremap <C-y> <C-y>,
+
 
 
 " Solarized
