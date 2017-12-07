@@ -66,6 +66,10 @@ alias ls='gls --color=auto'
 alias cdl='a=(`ls -1`) ; ls -1 | cat -n ; read b ; cd ${a[$b]}'
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
+#For Rails
+alias ror='cd ~/dev/RailsProject/'
+#For Note
+alias note='cd ~/Documents/Note'
 #For vim
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'

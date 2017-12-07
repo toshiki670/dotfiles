@@ -44,6 +44,7 @@ Plugin 'tpope/vim-rails'
 " Ruby向けにendを自動挿入してくれる
 Plugin 'tpope/vim-endwise'
 
+
 "--------End---------------
 
 "--------html-------------
@@ -94,16 +95,20 @@ noremap tree :NERDTreeToggle<Enter>
 syntax enable
 set background=dark
 colorscheme solarized
+highlight LineNr ctermfg=darkgreen
 
 "個人設定
 set laststatus=2
 
 set number
+" カーソルが何行目の何列目に置かれているかを表示する
+set ruler
 set title
 set showmatch "括弧入力時の対応する括弧を表示
 set ambiwidth=double
 set tabstop=2
 set expandtab
+set smarttab
 set shiftwidth=2
 "複数行のクリップボードからの貼付けがおかしい時、:set paste をすると治る
 set smartindent
@@ -113,6 +118,10 @@ set history=50
 set virtualedit=block
 set whichwrap=b,s,[,],<,>
 set backspace=indent,eol,start
+" 入力中のコマンドを表示する
+set showcmd
+"クリップボードにコピー
+set clipboard+=unnamed
 
 "自動挿入
 inoremap {<Enter> {}<Left><CR><ESC><S-o>
@@ -151,8 +160,8 @@ nnoremap sL <C-w>L
 nnoremap sH <C-w>H
 nnoremap sr <C-w>r
 "タブ移動
-nnoremap sn gt
-nnoremap sp gT
+nnoremap sm gt
+nnoremap sn gT
 
 "スピリットの大きさを整える
 nnoremap s= <C-w>=
