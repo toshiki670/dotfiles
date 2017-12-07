@@ -10,3 +10,7 @@ $ git push origin master<br>
 
 同期方法<br>
 $ git pull<br>
+
+*note
+./.git/config
+の中に接続方式の設定が書いてある
