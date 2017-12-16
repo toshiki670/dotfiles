@@ -18,7 +18,7 @@ export PATH="$HOME/.rbenv/versions/2.4.2/bin:$PATH"
 
 #For comporser (Laravel)
 export PATH=$PATH:~/.composer/vendor/bin:/usr/local/sbin
-export PATH=$PATH:~/.composer/vendor/bin
+#export PATH=$PATH:~/.composer/vendor/bin
 #for zsh-completions
 fpath=(/usr/local/share/zsh-completions $fpath)
 
@@ -81,6 +81,7 @@ alias -s html='open'
 alias -s rb='ruby'
 alias -s py='python'
 alias -s php='php -f'
+
 
 
 # Google Search By Safari

@@ -60,6 +60,10 @@ Plugin 'altercation/vim-colors-solarized'
 
 "Folder Tree
 Plugin 'scrooloose/nerdtree'
+"ERDTreeToggleoggle の設定
+"autocmd vimenter * NERDTree
+noremap tree :NERDTreeToggle<Enter>
+
 
 "For keybind
 Plugin 'kana/vim-submode'
@@ -82,12 +86,7 @@ filetype plugin indent on    " required
 "ここまで
 
 
-"ERDTreeToggleoggle の設定
-"autocmd vimenter * NERDTree
-noremap tree :NERDTreeToggle<Enter>
 
-"Emmet"
-""let g:user_emmet_leader_key='<C-t>'
 
 
 
@@ -95,14 +94,18 @@ noremap tree :NERDTreeToggle<Enter>
 syntax enable
 set background=dark
 colorscheme solarized
-highlight LineNr ctermfg=darkgreen
-
+highlight LineNr ctermfg=darkcyan
 "個人設定
 set laststatus=2
+"文字コードをUTF-8に設定
+set fenc=utf-8
 
 set number
 " カーソルが何行目の何列目に置かれているかを表示する
 set ruler
+"現在の行を強調
+"set cursorline
+
 set title
 set showmatch "括弧入力時の対応する括弧を表示
 set ambiwidth=double
@@ -112,6 +115,7 @@ set smarttab
 set shiftwidth=2
 "複数行のクリップボードからの貼付けがおかしい時、:set paste をすると治る
 set smartindent
+"不可視文字を可視化
 set list
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
 set history=50
@@ -122,6 +126,23 @@ set backspace=indent,eol,start
 set showcmd
 "クリップボードにコピー
 set clipboard+=unnamed
+"ビープ音を可視化
+set visualbell
+
+"検索系
+"検索文字列が小文字の場合は大文字小文字を区別なく検索
+set ignorecase
+" 検索文字列に大文字が含まれている場合は区別して検索する
+set smartcase
+" 検索文字列入力時に順次対象文字列にヒットさせる
+set incsearch
+" 検索時に最後まで行ったら最初に戻る
+set wrapscan
+" 検索語をハイライト表示
+set hlsearch
+" ESC連打でハイライト解除
+nmap <Esc><Esc> :nohlsearch<CR><Esc>
+
 
 "自動挿入
 inoremap {<Enter> {}<Left><CR><ESC><S-o>
@@ -135,7 +156,9 @@ inoremap " ""<LEFT>
 noremap zz :w<Enter>
 noremap ; :
 noremap QQ :q!<Enter>
-
+"折り返し時に表示行単位での移動出来るようにする
+nnoremap j gj
+nnoremap k gk
 
 "インサートモードでも移動
 inoremap <C-j>  <down>
@@ -197,3 +220,7 @@ call submode#map('bufmove', 'n', '', '<', '<C-w><')
 call submode#map('bufmove', 'n', '', '+', '<C-w>+')
 call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 
+"マウスクリック有効
+if has("mouse") " Enable the use of the mouse in all modes
+  set mouse=a
+endif
