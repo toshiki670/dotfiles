@@ -87,8 +87,8 @@ filetype plugin indent on    " required
 
 
 
-
-
+"Emmetの設定
+let g:user_emmet_leader_key='<C-f>'
 
 " Solarized
 syntax enable
@@ -142,6 +142,9 @@ set wrapscan
 set hlsearch
 " ESC連打でハイライト解除
 nmap <Esc><Esc> :nohlsearch<CR><Esc>
+" nNで移動する時画面中央に移動する
+noremap n nzz
+noremap N Nzz
 
 
 "自動挿入
@@ -151,9 +154,9 @@ inoremap (<Enter> ()<Left><CR><ESC><S-o>
 inoremap ' ''<LEFT>
 inoremap " ""<LEFT>
 
-"inoremap <C-a> <Esc>
+"inoremap <C-q> <Esc>
 
-noremap zz :w<Enter>
+"noremap zz :w<Enter>
 noremap ; :
 noremap QQ :q!<Enter>
 "折り返し時に表示行単位での移動出来るようにする
@@ -181,7 +184,7 @@ nnoremap sJ <C-w>J
 nnoremap sK <C-w>K
 nnoremap sL <C-w>L
 nnoremap sH <C-w>H
-nnoremap sr <C-w>r
+"nnoremap sr <C-w>r
 "タブ移動
 nnoremap sm gt
 nnoremap sn gT
@@ -198,8 +201,9 @@ nnoremap sP :<C-u>bp<CR>
 nnoremap st :<C-u>tabnew<CR>
 "タブ一覧
 nnoremap sT :<C-u>Unite tab<CR>
-
-nnoremap ss :<C-u>sp<CR>
+"水平分割
+nnoremap sr :<C-u>sp<CR>
+"垂直分割
 nnoremap sv :<C-u>vs<CR>
 "ウィンドウを閉じる
 nnoremap sq :<C-u>q<CR>
@@ -224,3 +228,5 @@ call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 if has("mouse") " Enable the use of the mouse in all modes
   set mouse=a
 endif
+
+
