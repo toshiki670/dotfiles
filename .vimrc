@@ -149,12 +149,15 @@ noremap N Nzz
 
 "自動挿入
 inoremap {<Enter> {}<Left><CR><ESC><S-o>
-inoremap [<Enter> []<Left><CR><ESC><S-o>
-inoremap (<Enter> ()<Left><CR><ESC><S-o>
+"inoremap [<Enter> []<Left><CR><ESC><S-o>
+inoremap [ []<LEFT>
+"inoremap (<Enter> ()<Left><CR><ESC><S-o>
+inoremap ( ()<LEFT>
 inoremap ' ''<LEFT>
 inoremap " ""<LEFT>
 
-"inoremap <C-q> <Esc>
+"簡単にノーマルモード移動
+"inoremap <C-a> <Esc>
 
 "noremap zz :w<Enter>
 noremap ; :
