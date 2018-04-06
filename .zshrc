@@ -75,6 +75,7 @@ alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
 alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
+alias ll='ls -la'
 #拡張子に応じたコマンドを実行
 alias -s txt='vim'
 alias -s html='open'
