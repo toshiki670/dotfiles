@@ -46,7 +46,7 @@ setopt correct
 
 
 #PROMPT='%F{cyan}[%#%n : %~]%f'$'\n''>> '
-PROMPT=%(?@'%F{cyan}[%#%n %~]%f'$'\n''>> '@'%F{red}[%#%n %~]%f'$'\n''>> ')
+PROMPT=%(?@'%F{cyan}[%m%#%n %~]%f'$'\n''>> '@'%F{red}[%m%#%n %~]%f'$'\n''>> ')
 PROMPT2='>> '
 SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
