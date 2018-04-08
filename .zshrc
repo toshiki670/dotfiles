@@ -87,7 +87,7 @@ alias -s php='php -f'
 
 
 # Google Search By Safari
-google() {
+goo() {
   local str opt
   if [ $# != 0 ]; then
     for i in $*; do
