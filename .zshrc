@@ -25,11 +25,9 @@ fpath=(/usr/local/share/zsh-completions $fpath)
 autoload -Uz add-zsh-hook
 #Color
 autoload -Uz colors
-colors
 
 #補完機能
 autoload -Uz compinit
-compinit
 bindkey "^[[Z" reverse-menu-complete
 
 #多部補完時に大文字小文字を区別しない
