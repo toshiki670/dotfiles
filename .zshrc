@@ -32,6 +32,8 @@ autoload -Uz colors && colors
 autoload -Uz compinit && compinit -u
 bindkey "^[[Z" reverse-menu-complete
 
+#complete 普通の補完関数; approximate ミススペルを訂正した上で補完を行う。; prefixカーソルの位置で補完を行う
+zstyle ':completion:*' completer _complete _approzimate _prefix
 #多部補完時に大文字小文字を区別しない
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 #タブを１回押すと、補完候補が表示され、さらにタブを押すことで、選択モードに入る
@@ -68,7 +70,7 @@ alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
 alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
-alias ll='ls -la'
+alias ll='ls -l'
 #拡張子に応じたコマンドを実行
 alias -s txt='vim'
 alias -s html='open'
