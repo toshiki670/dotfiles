@@ -34,6 +34,7 @@ bindkey "^[[Z" reverse-menu-complete
 
 #多部補完時に大文字小文字を区別しない
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+#タブを１回押すと、補完候補が表示され、さらにタブを押すことで、選択モードに入る
 zstyle ':completion:*:default' menu select=2
 if [ -n "$LS_COLORS" ]; then
   zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
@@ -56,8 +57,6 @@ SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 eval $(gdircolors ~/.dircolors-solarized)
 eval $(dircolors ~/dircolors-solarized/dircolors.ansi-universal)
 alias ls='gls --color=auto'
-#Currently Directory List
-alias cdl='a=(`ls -1`) ; ls -1 | cat -n ; read b ; cd ${a[$b]}'
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
 #For Rails
