@@ -20,14 +20,16 @@ export PATH="$HOME/.rbenv/versions/2.4.2/bin:$PATH"
 export PATH=$PATH:~/.composer/vendor/bin:/usr/local/sbin
 #export PATH=$PATH:~/.composer/vendor/bin
 #for zsh-completions
-fpath=(/usr/local/share/zsh-completions $fpath)
+if [ -e /usr/local/share/zsh-completions ]; then
+    fpath=(/usr/local/share/zsh-completions $fpath)
+fi
 
 autoload -Uz add-zsh-hook
 #Color
-autoload -Uz colors
+autoload -Uz colors && colors
 
 #補完機能
-autoload -Uz compinit
+autoload -Uz compinit && compinit -u
 bindkey "^[[Z" reverse-menu-complete
 
 #多部補完時に大文字小文字を区別しない
@@ -47,13 +49,6 @@ setopt correct
 PROMPT=%(?@'%F{cyan}[%m%#%n %~]%f'$'\n''>> '@'%F{red}[%m%#%n %~]%f'$'\n''>> ')
 PROMPT2='>> '
 SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
-
-
-
-#zsh-completions
-if [ -e /usr/local/share/zsh-completions ]; then
-    fpath=(/usr/local/share/zsh-completions $fpath)
-fi
 
 
 #Theme configure
