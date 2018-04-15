@@ -28,6 +28,11 @@ autoload -Uz add-zsh-hook
 #Color
 autoload -Uz colors && colors
 
+#Theme configure
+#eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
+eval $(gdircolors ~/.dircolors-solarized)
+eval $(dircolors ~/dircolors-solarized/dircolors.ansi-universal)
+
 #補完機能
 autoload -Uz compinit && compinit -u
 bindkey "^[[Z" reverse-menu-complete
@@ -54,10 +59,6 @@ PROMPT2='>> '
 SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
 
-#Theme configure
-#eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
-eval $(gdircolors ~/.dircolors-solarized)
-eval $(dircolors ~/dircolors-solarized/dircolors.ansi-universal)
 alias ls='gls --color=auto'
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
