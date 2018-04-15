@@ -65,6 +65,8 @@ alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
 alias ror='cd ~/dev/RailsProject/'
 #For Note
 alias note='cd ~/Documents/Note'
+#グローバルIPアドレス確認
+alias ipecho='curl ipecho.net/plain; echo'
 #For vim
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
