@@ -94,3 +94,6 @@ goo() {
   fi
   open http://www.google.com/$opt
 }
+
+#ターミナル起動時に実行
+cat ~/screenfetch
