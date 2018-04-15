@@ -62,8 +62,8 @@ SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 alias ls='gls --color=auto'
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
-#For Rails
-alias ror='cd ~/dev/RailsProject/'
+#For Rails 今は使っていないため(2018/04/16)
+#alias ror='cd ~/dev/RailsProject/'
 #For Note
 alias note='cd ~/Documents/Note'
 #グローバルIPアドレス確認
