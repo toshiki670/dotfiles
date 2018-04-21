@@ -7,14 +7,11 @@ export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 #For pyenv
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+eval "$(pyenv init --no-rehash -)"
 
 #For rbenv
-export PATH="$HOME/.rbenv/bin:$PATH"
 eval "$(rbenv init -)";
-
-#For Bundle
-export PATH="$HOME/.rbenv/versions/2.4.2/bin:$PATH"
+export PATH="$HOME/.rbenv/shims:$PATH"
 
 #For comporser (Laravel)
 export PATH=$PATH:~/.composer/vendor/bin:/usr/local/sbin
@@ -38,7 +35,7 @@ autoload -Uz compinit && compinit -u
 bindkey "^[[Z" reverse-menu-complete
 
 #complete 普通の補完関数; approximate ミススペルを訂正した上で補完を行う。; prefixカーソルの位置で補完を行う
-zstyle ':completion:*' completer _complete _approzimate _prefix
+tyle ':completion:*' completer _complete _prefix #_approzimate
 #多部補完時に大文字小文字を区別しない
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 #タブを１回押すと、補完候補が表示され、さらにタブを押すことで、選択モードに入る
@@ -59,6 +56,7 @@ PROMPT2='>> '
 SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
 
+alias relogin='exec $SHELL -l'
 alias ls='gls --color=auto'
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
