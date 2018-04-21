@@ -161,7 +161,7 @@ inoremap " ""<LEFT>
 
 "noremap zz :w<Enter>
 noremap ; :
-noremap QQ :q!<Enter>
+noremap QQ :q<Enter>
 "折り返し時に表示行単位での移動出来るようにする
 nnoremap j gj
 nnoremap k gk
