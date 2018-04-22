@@ -27,13 +27,15 @@ if [ -e /usr/local/opt/zplug ]; then
   #プラグイン追加後、下記を実行する
   #zplug install
   zplug load
-else
-  autoload -Uz add-zsh-hook
-  #Color
-  autoload -Uz colors && colors
-  #補完関連
-  autoload -U compinit && compinit
 fi
+
+
+#utoload -Uz add-zsh-hook
+#Color
+#utoload -Uz colors && colors
+#補完関連
+#utoload -U compinit && compinit
+
 
 #Theme configure
 #eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
