@@ -10,4 +10,4 @@ export PATH="/usr/sbin:$PATH"
 export PARH="/usr/local/sbin:$PATH"
 
 #ZSHの起動した関数の時間計測 .zshrc参照
-zmodload zsh/zprof && zprof
+#zmodload zsh/zprof && zprof

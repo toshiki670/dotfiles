@@ -25,7 +25,7 @@ if [ -e /usr/local/opt/zplug ]; then
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
   #プラグイン追加後、下記を実行する
-  zplug check --verbose || zplug install
+  #zplug install
   zplug load
 else
   autoload -Uz add-zsh-hook
@@ -121,7 +121,8 @@ goo() {
 cat ~/dotfiles/screenfetch
 
 
+
 #ZSHの起動した関数の時間計測 .zshenv参照
-if (which zprof > /dev/null 2>&1) ;then
-  zprof
-fi
+#if (which zprof > /dev/null 2>&1) ;then
+#  zprof
+#fi
