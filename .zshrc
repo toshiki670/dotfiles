@@ -1,29 +1,39 @@
-# export PATH=/usr/local/bin:/usr/bin
-export LANG=ja_JP.UTF-8
-export KCODE=u
-export PATH="/usr/local/bin:$PATH"
-export PATH="/usr/sbin:$PATH"
+# ログインシェルとインタラクティブシェルの場合だけ読み込まれる。
+#  シェルスクリプトでは不要な場合に記述する。
+#
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 #For pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --no-rehash -)"
+#export PYENV_ROOT="$HOME/.pyenv"
+#export PATH="$PYENV_ROOT/bin:$PATH"
+#eval "$(pyenv init --no-rehash -)"
 
-#For rbenv
-eval "$(rbenv init -)";
-export PATH="$HOME/.rbenv/shims:$PATH"
 
 #For comporser (Laravel)
-export PATH=$PATH:~/.composer/vendor/bin:/usr/local/sbin
 #export PATH=$PATH:~/.composer/vendor/bin
-#for zsh-completions
-if [ -e /usr/local/share/zsh-completions ]; then
-    fpath=(/usr/local/share/zsh-completions $fpath)
-fi
 
-autoload -Uz add-zsh-hook
-#Color
-autoload -Uz colors && colors
+
+#For rbenv
+eval "$(rbenv init --no-rehash -)";
+export PATH="$HOME/.rbenv/shims:$PATH"
+
+
+
+#aotoload設定一覧 (Zplugが入っている場合無効)
+if [ -e /usr/local/opt/zplug ]; then
+  #Zplug の有効化
+  export ZPLUG_HOME=/usr/local/opt/zplug
+  source $ZPLUG_HOME/init.zsh
+  zplug "zsh-users/zsh-completions"
+  #プラグイン追加後、下記を実行する
+  zplug check --verbose || zplug install
+  zplug load
+else
+  autoload -Uz add-zsh-hook
+  #Color
+  autoload -Uz colors && colors
+  #補完関連
+  autoload -U compinit && compinit
+fi
 
 #Theme configure
 #eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
@@ -31,11 +41,10 @@ eval $(gdircolors ~/.dircolors-solarized)
 eval $(dircolors ~/dircolors-solarized/dircolors.ansi-universal)
 
 #補完機能
-autoload -Uz compinit && compinit -u
 bindkey "^[[Z" reverse-menu-complete
 
 #complete 普通の補完関数; approximate ミススペルを訂正した上で補完を行う。; prefixカーソルの位置で補完を行う
-tyle ':completion:*' completer _complete _prefix #_approzimate
+zstyle ':completion:*' completer _complete _prefix #_approzimate
 #多部補完時に大文字小文字を区別しない
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 #タブを１回押すと、補完候補が表示され、さらにタブを押すことで、選択モードに入る
@@ -79,6 +88,20 @@ alias -s rb='ruby'
 alias -s py='python'
 alias -s php='php -f'
 
+# 履歴ファイルの保存先
+export HISTFILE=${HOME}/.zsh_history
+
+# メモリに保存される履歴の件数
+export HISTSIZE=1000
+
+# 履歴ファイルに保存される履歴の件数
+export SAVEHIST=100000
+
+# 重複を記録しない
+setopt hist_ignore_dups
+
+# 開始と終了を記録
+setopt EXTENDED_HISTORY
 
 
 # Google Search By Safari
@@ -95,4 +118,10 @@ goo() {
 }
 
 #ターミナル起動時に実行
-cat ~/screenfetch
+cat ~/dotfiles/screenfetch
+
+
+#ZSHの起動した関数の時間計測 .zshenv参照
+if (which zprof > /dev/null 2>&1) ;then
+  zprof
+fi
