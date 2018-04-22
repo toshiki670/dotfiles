@@ -38,7 +38,7 @@ fi
 #Theme configure
 #eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
 eval $(gdircolors ~/.dircolors-solarized)
-eval $(dircolors ~/dircolors-solarized/dircolors.ansi-universal)
+eval $(dircolors ~/.dircolors-solarized/dircolors.ansi-universal)
 
 #補完機能
 bindkey "^[[Z" reverse-menu-complete
