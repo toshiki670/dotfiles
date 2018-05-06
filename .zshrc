@@ -47,13 +47,16 @@ bindkey "^[[Z" reverse-menu-complete
 
 #complete 普通の補完関数; approximate ミススペルを訂正した上で補完を行う。; prefixカーソルの位置で補完を行う
 zstyle ':completion:*' completer _complete _prefix #_approzimate
+
 #多部補完時に大文字小文字を区別しない
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
 #タブを１回押すと、補完候補が表示され、さらにタブを押すことで、選択モードに入る
 zstyle ':completion:*:default' menu select=2
 if [ -n "$LS_COLORS" ]; then
   zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 fi
+
 #Printable 8bit
 setopt print_eight_bit
 setopt auto_cd
@@ -69,26 +72,36 @@ SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
 alias relogin='exec $SHELL -l'
 alias ls='gls --color=auto'
+
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
+
 #For Rails 今は使っていないため(2018/04/16)
 #alias ror='cd ~/dev/RailsProject/'
+
 #For Note
 alias note='cd ~/Documents/Note'
+
 #グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
+
 #For vim
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
 alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 alias ll='ls -l'
+
 #拡張子に応じたコマンドを実行
 alias -s txt='vim'
 alias -s html='open'
 alias -s rb='ruby'
 alias -s py='python'
 alias -s php='php -f'
+
+#Dotfiles Config
+alias vimrc='vim ~/.vimrc'
+alias zshrc='vim ~/.zshrc'
 
 # 履歴ファイルの保存先
 export HISTFILE=${HOME}/.zsh_history
@@ -103,7 +116,7 @@ export SAVEHIST=100000
 setopt hist_ignore_dups
 
 # 開始と終了を記録
-setopt EXTENDED_HISTORY
+#setopt EXTENDED_HISTORY
 
 
 # Google Search By Safari
