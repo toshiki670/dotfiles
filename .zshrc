@@ -87,6 +87,8 @@ alias ls='gls --color=auto'
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
 
+#For Rails
+alias be='bundle exec'
 
 #For Note
 alias note='cd ~/Documents/Note'
