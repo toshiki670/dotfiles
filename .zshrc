@@ -89,6 +89,7 @@ alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
 
 #For Rails 今は使っていないため(2018/04/16)
 #alias ror='cd ~/dev/RailsProject/'
+alias be='bundle exec'
 
 #For Note
 alias note='cd ~/Documents/Note'
