@@ -74,9 +74,9 @@ setopt auto_cd
 setopt auto_pushd
 setopt correct
 
-
-#PROMPT='%F{cyan}[%#%n : %~]%f'$'\n''>> '
-PROMPT=%(?@'%F{cyan}[%m%#%n %~]%f ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}[%m%#%n %~]%f ${vcs_info_msg_0_}'$'\n''>> ')
+# プロンプト設定
+my_prompt='[%m%#%n %~]%f'
+PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
 PROMPT2='>> '
 SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
@@ -87,8 +87,6 @@ alias ls='gls --color=auto'
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
 
-#For Rails 今は使っていないため(2018/04/16)
-#alias ror='cd ~/dev/RailsProject/'
 
 #For Note
 alias note='cd ~/Documents/Note'
