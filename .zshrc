@@ -147,7 +147,6 @@ goo() {
 cat ~/dotfiles/screenfetch
 
 
-
 #ZSHの起動した関数の時間計測 .zshenv参照
 #if (which zprof > /dev/null 2>&1) ;then
 #  zprof
