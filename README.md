@@ -1,12 +1,8 @@
 # Dotfiles
-====
-
 自分の開発環境
 
 
-
 ## Description
-
 主にvim, zshの開発環境の設定がまとめてあります。
 ご自由にCloneして頂いて構いません。
 
