@@ -60,9 +60,11 @@ Plugin 'altercation/vim-colors-solarized'
 
 "Folder Tree
 Plugin 'scrooloose/nerdtree'
+Plugin 'jistr/vim-nerdtree-tabs'
 "ERDTreeToggleoggle の設定
 "autocmd vimenter * NERDTree
-noremap tree :NERDTreeToggle<Enter>
+"noremap tree :NERDTreeToggle<Enter>
+noremap tree :NERDTreeTabsToggle<Enter>
 
 
 "For keybind
