@@ -1,16 +1,14 @@
-# dotfiles
+# Dotfiles
+====
 
-更新<br>
-$ git add .<br>
-$ git commit -m "anything"<br>
-$ git push origin master<br>
-新規のファイルが無い場合は以下で代用できます。<br>
-$ git commit -a -m "anything"<br>
-$ git push origin master<br>
+自分の開発環境
 
-同期方法<br>
-$ git pull<br>
 
-*note
-./.git/config
-の中に接続方式の設定が書いてある
+
+## Description
+
+主にvim, zshの開発環境の設定がまとめてあります。
+ご自由にCloneして頂いて構いません。
+
+もし、誤字脱字や便利な機能があったら教えていただけるとありがたいです。
+
