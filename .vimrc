@@ -43,7 +43,7 @@ Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
 Plugin 'tpope/vim-rails'
 " Ruby向けにendを自動挿入してくれる
 Plugin 'tpope/vim-endwise'
-
+Plugin 'vim-ruby/vim-ruby'
 
 "--------End---------------
 
