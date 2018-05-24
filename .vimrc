@@ -15,12 +15,9 @@ set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
 
 if dein#load_state('~/.cache/dein')
  call dein#begin('~/.cache/dein')
- " 以下のパスを編集する必要があるかも
  call dein#add('~/.cache/dein')
  " Add or remove your plugins here:
  call dein#add('Shougo/deoplete.nvim')
-
- " Add or remove your plugins here:
 
  " ここから
  " plugin on GitHub repo
