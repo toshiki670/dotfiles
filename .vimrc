@@ -88,6 +88,7 @@ set background=dark
 colorscheme solarized
 highlight LineNr ctermfg=darkcyan
 
+
 " 個人設定
 set laststatus=2
 
@@ -160,15 +161,12 @@ inoremap ( ()<LEFT>
 inoremap ' ''<LEFT>
 inoremap " ""<LEFT>
 
+
 " コマンド入力用の設定
 noremap ; :
 
 " 編集されていない時に終了する
 noremap QQ :q<Enter>
-
-" 折り返し時に表示行単位での移動出来るようにする
-" nnoremap j gj
-" nnoremap k gk
 
 " インサートモードでも移動
 inoremap <C-j>  <down>
@@ -221,7 +219,7 @@ nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
 " バッファ一覧
 nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 
-
+" Splitの調節
 call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
 call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
 call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
