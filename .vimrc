@@ -87,18 +87,22 @@ syntax enable
 set background=dark
 colorscheme solarized
 highlight LineNr ctermfg=darkcyan
+
 " 個人設定
 set laststatus=2
+
 " 文字コードをUTF-8に設定
 set fenc=utf-8
 
+" 行番号の表示
 set number
+
 " カーソルが何行目の何列目に置かれているかを表示する
 set ruler
-" 現在の行を強調
-" set cursorline
 
+" タイトルを表示
 set title
+
 " 括弧入力時の対応する括弧を表示
 set showmatch
 set ambiwidth=double
@@ -111,6 +115,7 @@ set shiftwidth=2
 
 " 複数行のクリップボードからの貼付けがおかしい時、:set paste をすると治る
 set smartindent
+
 " 不可視文字を可視化
 set list
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
@@ -118,10 +123,13 @@ set history=50
 set virtualedit=block
 set whichwrap=b,s,[,],<,>
 set backspace=indent,eol,start
+
 " 入力中のコマンドを表示する
 set showcmd
+
 " クリップボードにコピー
 set clipboard+=unnamed
+
 " ビープ音を可視化
 set visualbell
 
@@ -152,12 +160,12 @@ inoremap ( ()<LEFT>
 inoremap ' ''<LEFT>
 inoremap " ""<LEFT>
 
-"簡単にノーマルモード移動
-" inoremap <C-a> <Esc>
-
-" noremap zz :w<Enter>
+" コマンド入力用の設定
 noremap ; :
+
+" 編集されていない時に終了する
 noremap QQ :q<Enter>
+
 " 折り返し時に表示行単位での移動出来るようにする
 " nnoremap j gj
 " nnoremap k gk
