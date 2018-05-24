@@ -100,12 +100,15 @@ set ruler
 
 set title
 " 括弧入力時の対応する括弧を表示
-set showmatch 
+set showmatch
 set ambiwidth=double
-set tabstop=2
+
+" Tabの設定
 set expandtab
-set smarttab
+set tabstop=2
+set softtabstop=2
 set shiftwidth=2
+
 " 複数行のクリップボードからの貼付けがおかしい時、:set paste をすると治る
 set smartindent
 " 不可視文字を可視化
