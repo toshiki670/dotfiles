@@ -6,91 +6,78 @@
 " o   \__/  |_||_|_|_||_|  \___|
 "
 
-" Vundleの記述はここから
-set nocompatible              " be iMproved, required
-filetype off                  " required
+" dein.vim ここから -----------------------------------------------------
+if &compatible
+ set nocompatible
+endif
+" Add the dein installation directory into runtimepath
+set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
 
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-" alternatively, pass a path where Vundle should install plugins
-" call vundle#begin('~/some/path/here')
+if dein#load_state('~/.cache/dein')
+ call dein#begin('~/.cache/dein')
+ " 以下のパスを編集する必要があるかも
+ call dein#add('~/.cache/dein')
+ " Add or remove your plugins here:
+ call dein#add('Shougo/deoplete.nvim')
 
-" let Vundle manage Vundle, required
-Plugin 'VundleVim/Vundle.vim'
+ " Add or remove your plugins here:
 
-" The following are examples of different formats supported.
-" Keep Plugin commands between vundle#begin/end.
-" plugin on GitHub repo
-Plugin 'tpope/vim-fugitive'
-" plugin from http://vim-scripts.org/vim/scripts.html
-" Plugin 'L9'
-" Git plugin not hosted on GitHub
-Plugin 'git://git.wincent.com/command-t.git'
-" git repos on your local machine (i.e. when working on your own plugin)
-" Plugin 'file:///home/gmarik/path/to/plugin'
-" The sparkup vim script is in a subdirectory of this repo called vim.
-" Pass the path to set the runtimepath properly.
-Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
-" Install L9 and avoid a Naming conflict if you've already installed a
-" different version somewhere else.
-" Plugin 'ascenator/L9', {'name': 'newL9'}
+ " ここから
+ " plugin on GitHub repo
+ call dein#add('tpope/vim-fugitive')
 
-"---------Ruby on Rails--------------
-" 導入したいプラグインを以下に列挙
-" Plugin '[Github Author]/[Github repo]' の形式で記入
-" Plugin 'airblade/vim-gitgutter'
-Plugin 'tpope/vim-rails'
-" Ruby向けにendを自動挿入してくれる
-Plugin 'tpope/vim-endwise'
-Plugin 'vim-ruby/vim-ruby'
+ "---------Ruby on Rails--------------
+ " Plugin 'airblade/vim-gitgutter'
+ call dein#add('tpope/vim-rails')
+ " Ruby向けにendを自動挿入してくれる
+ call dein#add('tpope/vim-endwise')
+ " Rubyのシンタックス表示 
+ call dein#add('vim-ruby/vim-ruby')
+ "--------End---------------
 
-"--------End---------------
+ "--------html-------------
+ call dein#add('mattn/emmet-vim')
+ "--------------------------
 
-"--------html-------------
-Plugin 'mattn/emmet-vim'
-"--------------------------
+ " lightline - https://github.com/itchyny/lightline.vim
+ call dein#add('itchyny/lightline.vim')
+ " Solarized
+ call dein#add('altercation/vim-colors-solarized')
 
+ " NERDTree
+ call dein#add('scrooloose/nerdtree')
+ call dein#add('jistr/vim-nerdtree-tabs')
+ " NERDTreeToggleoggle の設定
+ " autocmd vimenter * NERDTree
+ " noremap tree :NERDTreeToggle<Enter>
 
+ " For keybind
+ call dein#add('kana/vim-submode')
+ " ここまで
 
-" lightline - https://github.com/itchyny/lightline.vim
-Plugin 'itchyny/lightline.vim'
-" Solarized
-Plugin 'altercation/vim-colors-solarized'
+ if !has('nvim')
+   call dein#add('roxma/nvim-yarp')
+   call dein#add('roxma/vim-hug-neovim-rpc')
+ endif
 
-" Folder Tree
-Plugin 'scrooloose/nerdtree'
-Plugin 'jistr/vim-nerdtree-tabs'
-" ERDTreeToggleoggle の設定
-" autocmd vimenter * NERDTree
-" noremap tree :NERDTreeToggle<Enter>
-noremap tree :NERDTreeTabsToggle<Enter>
+ call dein#end()
+ call dein#save_state()
+endif
 
-
-" For keybind
-Plugin 'kana/vim-submode'
-
-" All of your Plugins must be added before the following line
-call vundle#end()            " required
-filetype plugin indent on    " required
-" To ignore plugin indent changes, instead use:
-" filetype plugin on
-"
-" Brief help
-" :PluginList       - lists configured plugins
-" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-" :PluginSearch foo - searches for foo; append `!` to refresh local cache
-" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-"
-" see :h vundle for more details or wiki for FAQ
-" Put your non-Plugin stuff after this line
-
-"ここまで
+filetype plugin indent on
+syntax enable
+" dein.vim ここまで -----------------------------------------------------
 
 
-
+" Pluginの設定 ここから -------------------------------------------------
 " Emmetの設定
 let g:user_emmet_leader_key='<C-f>'
+
+" NERDTreeの設定
+noremap tree :NERDTreeTabsToggle<Enter>
+
+" Pluginの設定 ここまで -------------------------------------------------
+
 
 " Solarized
 syntax enable
@@ -166,8 +153,8 @@ inoremap " ""<LEFT>
 noremap ; :
 noremap QQ :q<Enter>
 " 折り返し時に表示行単位での移動出来るようにする
-nnoremap j gj
-nnoremap k gk
+" nnoremap j gj
+" nnoremap k gk
 
 " インサートモードでも移動
 inoremap <C-j>  <down>
@@ -234,6 +221,4 @@ call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 if has("mouse") " Enable the use of the mouse in all modes
   set mouse=a
 endif
-
-
 
