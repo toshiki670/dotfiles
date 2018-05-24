@@ -25,9 +25,9 @@ if dein#load_state('~/.cache/dein')
  " ここから
  " plugin on GitHub repo
  call dein#add('tpope/vim-fugitive')
+ call dein#add('airblade/vim-gitgutter')
 
  "---------Ruby on Rails--------------
- " Plugin 'airblade/vim-gitgutter'
  call dein#add('tpope/vim-rails')
  " Ruby向けにendを自動挿入してくれる
  call dein#add('tpope/vim-endwise')
@@ -70,6 +70,9 @@ syntax enable
 
 
 " Pluginの設定 ここから -------------------------------------------------
+" Gitgutterの設定
+set updatetime=250
+
 " Emmetの設定
 let g:user_emmet_leader_key='<C-f>'
 
