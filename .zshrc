@@ -40,10 +40,10 @@ fi
 autoload -Uz vcs_info
 setopt prompt_subst
 zstyle ':vcs_info:git:*' check-for-changes true
-zstyle ':vcs_info:git:*' stagedstr "%F{yellow}staged%F{cyan}|"
-zstyle ':vcs_info:git:*' unstagedstr "%F{red}unstaged%F{cyan}|"
-zstyle ':vcs_info:*' formats "%F{cyan}[%c%u%b]%f"
-zstyle ':vcs_info:*' actionformats "%F{red}[%a|%b]%f"
+zstyle ':vcs_info:git:*' stagedstr "|%F{yellow}staged%F{cyan}"
+zstyle ':vcs_info:git:*' unstagedstr "|%F{red}unstaged%F{cyan}"
+zstyle ':vcs_info:*' formats "%F{cyan}[%b%c%u]%f"
+zstyle ':vcs_info:*' actionformats "%F{red}[%b|%a]%f"
 precmd () { vcs_info }
 
 
