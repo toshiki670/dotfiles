@@ -49,7 +49,13 @@ if dein#load_state('~/.cache/dein')
  " noremap tree :NERDTreeToggle<Enter>
 
  " 補完
- call dein#add('Shougo/neocomplete.vim')
+if has('lua')
+  " コードの自動補完
+  call dein#add('Shougo/neocomplete.vim')
+endif
+
+ " インデント
+ call dein#add('Yggdroot/indentLine')
 
  " For keybind
  call dein#add('kana/vim-submode')
@@ -79,7 +85,7 @@ let g:user_emmet_leader_key='<C-f>'
 " NERDTreeの設定
 noremap tree :NERDTreeTabsToggle<Enter>
 
-" NeoCompleteの設定
+" Neocompleteの設定
 "Note: This option must be set in .vimrc(_vimrc).  NOT IN .gvimrc(_gvimrc)!
 " Disable AutoComplPop.
 let g:acp_enableAtStartup = 0
@@ -153,6 +159,7 @@ let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 " Pluginの設定 ここまで -------------------------------------------------
 
 
+
 " Solarized
 syntax enable
 set background=dark
@@ -198,6 +205,9 @@ set backspace=indent,eol,start
 
 " 入力中のコマンドを表示する
 set showcmd
+
+" コマンドモードの補完
+set wildmenu 
 
 " クリップボードにコピー
 set clipboard+=unnamed
