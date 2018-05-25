@@ -44,15 +44,16 @@ if dein#load_state('~/.cache/dein')
  " NERDTree
  call dein#add('scrooloose/nerdtree')
  call dein#add('jistr/vim-nerdtree-tabs')
+ call dein#add('Xuyuanp/nerdtree-git-plugin')
  " NERDTreeToggleoggle の設定
  " autocmd vimenter * NERDTree
  " noremap tree :NERDTreeToggle<Enter>
 
  " 補完
-if has('lua')
-  " コードの自動補完
-  call dein#add('Shougo/neocomplete.vim')
-endif
+ if has('lua')
+   " コードの自動補完
+   call dein#add('Shougo/neocomplete.vim')
+ endif
 
  " インデント
  call dein#add('Yggdroot/indentLine')
@@ -84,9 +85,20 @@ let g:user_emmet_leader_key='<C-f>'
 
 " NERDTreeの設定
 noremap tree :NERDTreeTabsToggle<Enter>
+let g:NERDTreeIndicatorMapCustom = {
+    \ "Modified"  : "M",
+    \ "Staged"    : "+",
+    \ "Untracked" : "~",
+    \ "Renamed"   : "R",
+    \ "Unmerged"  : "!",
+    \ "Deleted"   : "X",
+    \ "Dirty"     : "D",
+    \ "Clean"     : "C",
+    \ 'Ignored'   : 'I',
+    \ "Unknown"   : "?"
+    \ }
 
 " Neocompleteの設定
-"Note: This option must be set in .vimrc(_vimrc).  NOT IN .gvimrc(_gvimrc)!
 " Disable AutoComplPop.
 let g:acp_enableAtStartup = 0
 " Use neocomplete.
@@ -95,6 +107,7 @@ let g:neocomplete#enable_at_startup = 1
 let g:neocomplete#enable_smart_case = 1
 " Set minimum syntax keyword length.
 let g:neocomplete#sources#syntax#min_keyword_length = 3
+let g:neocomplete#lock_buffer_name_pattern = '\*ku\*'
 
 " Define dictionary.
 let g:neocomplete#sources#dictionary#dictionaries = {
