@@ -83,6 +83,17 @@ SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
 alias relogin='exec $SHELL -l'
 alias ls='gls --color=auto'
+alias ll='ls -l'
+alias la='ls -a'
+
+# For git
+alias ga='git add'
+alias gc='git commit'
+alias gb='git branch'
+alias gch='git checkout'
+alias gs='git status'
+alias gpo='git pull origin'
+
 
 #For PHP
 alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
@@ -100,8 +111,7 @@ alias ipecho='curl ipecho.net/plain; echo'
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
-alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
-alias ll='ls -l'
+# alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 #拡張子に応じたコマンドを実行
 alias -s txt='vim'
