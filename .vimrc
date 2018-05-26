@@ -32,7 +32,7 @@ if dein#load_state('~/.cache/dein')
  call dein#add('tpope/vim-rails')
  " Ruby向けにendを自動挿入してくれる
  call dein#add('tpope/vim-endwise')
- " Rubyのシンタックス表示 
+ " Rubyのシンタックス表示
  call dein#add('vim-ruby/vim-ruby')
  "---------End------------------------
 
@@ -41,8 +41,11 @@ if dein#load_state('~/.cache/dein')
  "--------------------------
 
  " lightline - https://github.com/itchyny/lightline.vim
- call dein#add('itchyny/lightline.vim')
- " Solarized
+" call dein#add('itchyny/lightline.vim')
+ call dein#add('vim-airline/vim-airline')
+ call dein#add('vim-airline/vim-airline-themes')
+
+" Solarized
  call dein#add('altercation/vim-colors-solarized')
 
  " NERDTree
@@ -69,29 +72,35 @@ syntax enable
 
 
 " Pluginの設定 ここから -------------------------------------------------
-" Gitgutterの設定
+" Gitgutter
 set updatetime=250
 
-" Emmetの設定
+" Emmet
 let g:user_emmet_leader_key='<C-f>'
 
-" NERDTreeの設定
+" NERDTree
 noremap tree :NERDTreeTabsToggle<Enter>
 let g:NERDTreeIndicatorMapCustom = {
-    \ "Modified"  : "M",
+    \ "Modified"  : "*",
     \ "Staged"    : "+",
     \ "Untracked" : "~",
-    \ "Renamed"   : "R",
+    \ "Renamed"   : "*",
     \ "Unmerged"  : "!",
-    \ "Deleted"   : "X",
-    \ "Dirty"     : "D",
-    \ "Clean"     : "C",
-    \ 'Ignored'   : 'I',
+    \ "Deleted"   : "-",
+    \ "Dirty"     : "*",
+    \ "Clean"     : "@",
+    \ 'Ignored'   : "_",
     \ "Unknown"   : "?"
     \ }
 
 " Use deoplete.
 let g:deoplete#enable_at_startup = 1
+
+" vim-airline
+let g:airline_powerline_fonts = 1
+let g:airline#extensions#tabline#enabled = 1
+let g:airline_theme = 'powerlineish'
+set ttimeoutlen=50
 
 " Pluginの設定 ここまで -------------------------------------------------
 
@@ -209,8 +218,8 @@ nnoremap sL <C-w>L
 nnoremap sH <C-w>H
 " nnoremap sr <C-w>r
 " タブ移動
-nnoremap sm gt
-nnoremap sn gT
+" nnoremap sm gt
+" nnoremap sn gT
 
 " スピリットの大きさを整える
 nnoremap s= <C-w>=
@@ -236,6 +245,9 @@ nnoremap sQ :<C-u>bd<CR>
 nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
 " バッファ一覧
 nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
+" バッファ移動
+nnoremap sm :bn<CR>
+nnoremap sn :bp<CR>
 
 " Splitの調節
 call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
