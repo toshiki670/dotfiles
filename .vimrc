@@ -51,7 +51,7 @@ if dein#load_state('~/.cache/dein')
  " NERDTree
  call dein#add('scrooloose/nerdtree')
  call dein#add('jistr/vim-nerdtree-tabs')
- call dein#add('Xuyuanp/nerdtree-git-plugin')
+ "call dein#add('Xuyuanp/nerdtree-git-plugin')
  " NERDTreeToggleoggle の設定
  " autocmd vimenter * NERDTree
  " noremap tree :NERDTreeToggle<Enter>
@@ -79,7 +79,8 @@ set updatetime=250
 let g:user_emmet_leader_key='<C-f>'
 
 " NERDTree
-noremap tree :NERDTreeTabsToggle<Enter>
+noremap tree :NERDTreeToggle<Enter>
+" noremap tree :NERDTreeTabsToggle<Enter>
 let g:NERDTreeIndicatorMapCustom = {
     \ "Modified"  : "*",
     \ "Staged"    : "+",
