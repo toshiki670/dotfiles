@@ -197,10 +197,10 @@ noremap ; :
 noremap QQ :q<Enter>
 
 " インサートモードでも移動
-"inoremap <C-j>  <down>
-"inoremap <C-k>  <up>
-"inoremap <C-h>  <left>
-"inoremap <C-l>  <right>
+inoremap <C-j>  <down>
+inoremap <C-k>  <up>
+inoremap <C-h>  <left>
+inoremap <C-l>  <right>
 
 
 " https://qiita.com/tekkoc/items/98adcadfa4bdc8b5a6ca
