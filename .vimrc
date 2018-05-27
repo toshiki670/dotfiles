@@ -24,13 +24,8 @@ if dein#load_state('~/.cache/dein')
  " Git
  call dein#load_toml(plugins_dir . 'git.toml', {'lazy': 1})
 
- "---------Ruby on Rails--------------
- call dein#add('tpope/vim-rails')
- " Ruby向けにendを自動挿入してくれる
- call dein#add('tpope/vim-endwise')
- " Rubyのシンタックス表示
- call dein#add('vim-ruby/vim-ruby')
- "---------End------------------------
+ " Ruby and Rails
+ call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
 
  "--------html-------------
  call dein#add('mattn/emmet-vim')
