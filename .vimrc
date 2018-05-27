@@ -46,8 +46,8 @@ if dein#load_state('~/.cache/dein')
 
  " NERDTree
  call dein#add('scrooloose/nerdtree')
- call dein#add('jistr/vim-nerdtree-tabs')
- "call dein#add('Xuyuanp/nerdtree-git-plugin')
+ " call dein#add('jistr/vim-nerdtree-tabs')
+ call dein#add('Xuyuanp/nerdtree-git-plugin')
  " NERDTreeToggleoggle の設定
  " autocmd vimenter * NERDTree
  " noremap tree :NERDTreeToggle<Enter>
