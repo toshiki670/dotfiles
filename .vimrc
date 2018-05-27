@@ -27,9 +27,8 @@ if dein#load_state('~/.cache/dein')
  " Ruby and Rails
  call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
 
- "--------html-------------
- call dein#add('mattn/emmet-vim')
- "--------------------------
+ " Web related
+ call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
 
  " lightline - https://github.com/itchyny/lightline.vim
 " call dein#add('itchyny/lightline.vim')
@@ -63,9 +62,6 @@ syntax enable
 
 
 " Pluginの設定 ここから -------------------------------------------------
-
-" Emmet
-let g:user_emmet_leader_key='<C-f>'
 
 " NERDTree
 noremap tree :NERDTreeToggle<Enter>
