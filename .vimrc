@@ -21,10 +21,8 @@ if dein#load_state('~/.cache/dein')
 
  call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
 
-
- " plugin on GitHub repo
- call dein#add('tpope/vim-fugitive')
- call dein#add('airblade/vim-gitgutter')
+ " Git
+ call dein#load_toml(plugins_dir . 'git.toml', {'lazy': 1})
 
  "---------Ruby on Rails--------------
  call dein#add('tpope/vim-rails')
@@ -70,8 +68,6 @@ syntax enable
 
 
 " Pluginの設定 ここから -------------------------------------------------
-" Gitgutter
-set updatetime=250
 
 " Emmet
 let g:user_emmet_leader_key='<C-f>'
