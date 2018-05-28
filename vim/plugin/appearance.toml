@@ -1,3 +1,13 @@
+# Git -------------------------
+[[plugins]]
+repo = 'tpope/vim-fugitive'
+
+[[plugins]]
+repo = 'airblade/vim-gitgutter'
+hook_add = '''
+set updatetime=250
+'''
+
 # statusline ------------------
 [[plugins]]
 repo = 'vim-airline/vim-airline'

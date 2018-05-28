@@ -25,19 +25,15 @@ if dein#load_state('~/.cache/dein')
   " Completion
   call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
 
+  " Control
+  call dein#load_toml(plugins_dir . 'control.toml', {'lazy': 1})
+
   " Ruby and Rails
   call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
 
   " Web related
   call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
 
-  " Control
-  call dein#load_toml(plugins_dir . 'control.toml', {'lazy': 1})
-
- " Git
-  " call dein#load_toml(plugins_dir . 'git.toml', {'lazy': 1})
-  call dein#add('tpope/vim-fugitive')
-  call dein#add('airblade/vim-gitgutter')
 
   " lightline - https://github.com/itchyny/lightline.vim
   " call dein#add('itchyny/lightline.vim')
@@ -111,7 +107,7 @@ set backspace=indent,eol,start
 set showcmd
 
 " コマンドモードの補完
-set wildmenu 
+set wildmenu
 
 " クリップボードにコピー
 set clipboard+=unnamed
