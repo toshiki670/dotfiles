@@ -202,15 +202,6 @@ nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 nnoremap sm :bn<CR>
 nnoremap sn :bp<CR>
 
-" Splitの調節
-call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
-call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
-call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
-call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
-call submode#map('bufmove', 'n', '', '>', '<C-w>>')
-call submode#map('bufmove', 'n', '', '<', '<C-w><')
-call submode#map('bufmove', 'n', '', '+', '<C-w>+')
-call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 
 " マウスクリック有効
 if has("mouse") " Enable the use of the mouse in all modes
