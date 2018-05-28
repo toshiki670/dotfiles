@@ -33,6 +33,10 @@ if dein#load_state('~/.cache/dein')
  " Appearance
  call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
 
+ " Control
+ call dein#load_toml(plugins_dir . 'control.toml', {'lazy': 1})
+
+
  " lightline - https://github.com/itchyny/lightline.vim
 " call dein#add('itchyny/lightline.vim')
 
@@ -44,9 +48,6 @@ if dein#load_state('~/.cache/dein')
  " autocmd vimenter * NERDTree
  " noremap tree :NERDTreeToggle<Enter>
 
-
- " For keybind
- call dein#add('kana/vim-submode')
 
  call dein#end()
  call dein#save_state()
