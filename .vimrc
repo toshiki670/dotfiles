@@ -19,10 +19,11 @@ if dein#load_state('~/.cache/dein')
   " Add or remove your plugins her e:
   let plugins_dir = '~/dotfiles/vim/plugin/'
 
-  call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
+  " Appearance
+  call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
 
- " Git
-  call dein#load_toml(plugins_dir . 'git.toml', {'lazy': 1})
+  " Completion
+  call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
 
   " Ruby and Rails
   call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
@@ -30,12 +31,13 @@ if dein#load_state('~/.cache/dein')
   " Web related
   call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
 
-  " Appearance
-  call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
-
   " Control
   call dein#load_toml(plugins_dir . 'control.toml', {'lazy': 1})
 
+ " Git
+  call dein#load_toml(plugins_dir . 'git.toml', {'lazy': 1})
+
+  
 
   " lightline - https://github.com/itchyny/lightline.vim
   " call dein#add('itchyny/lightline.vim')
