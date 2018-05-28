@@ -35,9 +35,9 @@ if dein#load_state('~/.cache/dein')
   call dein#load_toml(plugins_dir . 'control.toml', {'lazy': 1})
 
  " Git
-  call dein#load_toml(plugins_dir . 'git.toml', {'lazy': 1})
-
-  
+  " call dein#load_toml(plugins_dir . 'git.toml', {'lazy': 1})
+  call dein#add('tpope/vim-fugitive')
+  call dein#add('airblade/vim-gitgutter')
 
   " lightline - https://github.com/itchyny/lightline.vim
   " call dein#add('itchyny/lightline.vim')

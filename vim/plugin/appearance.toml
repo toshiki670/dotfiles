@@ -24,6 +24,11 @@ highlight LineNr ctermfg=darkcyan
 '''
 
 
+# Syntax ----------------------
+[[plugins]]
+repo = 'cespare/vim-toml'
+on_ft = ['toml']
+
 # Nerd Tree -------------------
 [[plugins]]
 repo = 'scrooloose/nerdtree'
