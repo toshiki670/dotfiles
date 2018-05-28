@@ -30,24 +30,20 @@ if dein#load_state('~/.cache/dein')
  " Web related
  call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
 
+ " Appearance
+ call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
+
  " lightline - https://github.com/itchyny/lightline.vim
 " call dein#add('itchyny/lightline.vim')
- call dein#add('vim-airline/vim-airline')
- call dein#add('vim-airline/vim-airline-themes')
 
-" Solarized
- call dein#add('altercation/vim-colors-solarized')
 
  " NERDTree
- call dein#add('scrooloose/nerdtree')
  " call dein#add('jistr/vim-nerdtree-tabs')
- call dein#add('Xuyuanp/nerdtree-git-plugin')
+
  " NERDTreeToggleoggle の設定
  " autocmd vimenter * NERDTree
  " noremap tree :NERDTreeToggle<Enter>
 
- " インデント
- call dein#add('Yggdroot/indentLine')
 
  " For keybind
  call dein#add('kana/vim-submode')
@@ -61,40 +57,12 @@ syntax enable
 " dein.vim ここまで -----------------------------------------------------
 
 
-" Pluginの設定 ここから -------------------------------------------------
-
-" NERDTree
-noremap tree :NERDTreeToggle<Enter>
-" noremap tree :NERDTreeTabsToggle<Enter>
-let g:NERDTreeIndicatorMapCustom = {
-    \ "Modified"  : "*",
-    \ "Staged"    : "+",
-    \ "Untracked" : "~",
-    \ "Renamed"   : "*",
-    \ "Unmerged"  : "!",
-    \ "Deleted"   : "-",
-    \ "Dirty"     : "*",
-    \ "Clean"     : "@",
-    \ 'Ignored'   : "_",
-    \ "Unknown"   : "?"
-    \ }
-
-
-" vim-airline
-let g:airline_powerline_fonts = 1
-let g:airline#extensions#tabline#enabled = 1
-let g:airline_theme = 'powerlineish'
-set ttimeoutlen=50
-
-" Pluginの設定 ここまで -------------------------------------------------
-
-
 
 " Solarized
-syntax enable
-set background=dark
-colorscheme solarized
-highlight LineNr ctermfg=darkcyan
+"syntax enable
+""set background=dark
+""colorscheme solarized
+""highlight LineNr ctermfg=darkcyan
 
 
 " 個人設定

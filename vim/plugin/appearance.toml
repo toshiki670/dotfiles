@@ -1,0 +1,55 @@
+# statusline ------------------
+[[plugins]]
+repo = 'vim-airline/vim-airline'
+hook_add = '''
+let g:airline_powerline_fonts = 1
+let g:airline#extensions#tabline#enabled = 1
+let g:airline_theme = 'powerlineish'
+set ttimeoutlen=50
+'''
+
+[[plugins]]
+repo = 'vim-airline/vim-airline-themes'
+
+
+# Color schema ----------------
+[[plugins]]
+repo = 'altercation/vim-colors-solarized'
+hook_add = '''
+" Solarized
+syntax enable
+set background=dark
+colorscheme solarized
+highlight LineNr ctermfg=darkcyan
+'''
+
+
+# Nerd Tree -------------------
+[[plugins]]
+repo = 'scrooloose/nerdtree'
+hook_add = '''
+noremap tree :NERDTreeToggle<Enter>
+'''
+
+[[plugins]]
+repo = 'Xuyuanp/nerdtree-git-plugin'
+hook_add = '''
+let g:NERDTreeIndicatorMapCustom = {
+    \ "Modified"  : "*",
+    \ "Staged"    : "+",
+    \ "Untracked" : "~",
+    \ "Renamed"   : "*",
+    \ "Unmerged"  : "!",
+    \ "Deleted"   : "-",
+    \ "Dirty"     : "*",
+    \ "Clean"     : "@",
+    \ 'Ignored'   : "_",
+    \ "Unknown"   : "?"
+    \ }
+'''
+
+
+# Indent ----------------------
+[[plugins]]
+repo = 'Yggdroot/indentLine'
+
