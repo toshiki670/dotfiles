@@ -8,110 +8,61 @@
 
 " dein.vim ここから -----------------------------------------------------
 if &compatible
- set nocompatible
+  set nocompatible
 endif
 " Add the dein installation directory into runtimepath
 set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
 
 if dein#load_state('~/.cache/dein')
- call dein#begin('~/.cache/dein')
- call dein#add('~/.cache/dein')
- " Add or remove your plugins here:
- " 補間
- call dein#add('Shougo/deoplete.nvim')
- if !has('nvim')
-   call dein#add('roxma/nvim-yarp')
-   call dein#add('roxma/vim-hug-neovim-rpc')
- endif
+  call dein#begin('~/.cache/dein')
+  call dein#add('~/.cache/dein')
+  " Add or remove your plugins her e:
+  let plugins_dir = '~/dotfiles/vim/config/plugin/'
 
- " plugin on GitHub repo
- call dein#add('tpope/vim-fugitive')
- call dein#add('airblade/vim-gitgutter')
+  " Appearance
+  call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
 
- "---------Ruby on Rails--------------
- call dein#add('tpope/vim-rails')
- " Ruby向けにendを自動挿入してくれる
- call dein#add('tpope/vim-endwise')
- " Rubyのシンタックス表示
- call dein#add('vim-ruby/vim-ruby')
- "---------End------------------------
+  " Completion
+  call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
 
- "--------html-------------
- call dein#add('mattn/emmet-vim')
- "--------------------------
+  " Control
+  call dein#load_toml(plugins_dir . 'control.toml', {'lazy': 1})
 
- " lightline - https://github.com/itchyny/lightline.vim
-" call dein#add('itchyny/lightline.vim')
- call dein#add('vim-airline/vim-airline')
- call dein#add('vim-airline/vim-airline-themes')
+  " Ruby and Rails
+  call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
 
-" Solarized
- call dein#add('altercation/vim-colors-solarized')
+  " Web related
+  call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
 
- " NERDTree
- call dein#add('scrooloose/nerdtree')
- call dein#add('jistr/vim-nerdtree-tabs')
- "call dein#add('Xuyuanp/nerdtree-git-plugin')
- " NERDTreeToggleoggle の設定
- " autocmd vimenter * NERDTree
- " noremap tree :NERDTreeToggle<Enter>
 
- " インデント
- call dein#add('Yggdroot/indentLine')
+  " lightline - https://github.com/itchyny/lightline.vim
+  " call dein#add('itchyny/lightline.vim')
 
- " For keybind
- call dein#add('kana/vim-submode')
 
- call dein#end()
- call dein#save_state()
+  " NERDTree
+  " call dein#add('jistr/vim-nerdtree-tabs')
+
+  " NERDTreeToggleoggle の設定
+  " autocmd vimenter * NERDTree
+  " noremap tree :NERDTreeToggle<Enter>
+
+  " Install if uninstalled
+  if dein#check_install()
+    call dein#install()
+  endif
+
+  " For Debug
+  if 0
+    call dein#recache_runtimepath()
+  endif
+
+  call dein#end()
+  call dein#save_state()
 endif
 
 filetype plugin indent on
 syntax enable
 " dein.vim ここまで -----------------------------------------------------
-
-
-" Pluginの設定 ここから -------------------------------------------------
-" Gitgutter
-set updatetime=250
-
-" Emmet
-let g:user_emmet_leader_key='<C-f>'
-
-" NERDTree
-noremap tree :NERDTreeToggle<Enter>
-" noremap tree :NERDTreeTabsToggle<Enter>
-let g:NERDTreeIndicatorMapCustom = {
-    \ "Modified"  : "*",
-    \ "Staged"    : "+",
-    \ "Untracked" : "~",
-    \ "Renamed"   : "*",
-    \ "Unmerged"  : "!",
-    \ "Deleted"   : "-",
-    \ "Dirty"     : "*",
-    \ "Clean"     : "@",
-    \ 'Ignored'   : "_",
-    \ "Unknown"   : "?"
-    \ }
-
-" Use deoplete.
-let g:deoplete#enable_at_startup = 1
-
-" vim-airline
-let g:airline_powerline_fonts = 1
-let g:airline#extensions#tabline#enabled = 1
-let g:airline_theme = 'powerlineish'
-set ttimeoutlen=50
-
-" Pluginの設定 ここまで -------------------------------------------------
-
-
-
-" Solarized
-syntax enable
-set background=dark
-colorscheme solarized
-highlight LineNr ctermfg=darkcyan
 
 
 " 個人設定
@@ -154,7 +105,7 @@ set backspace=indent,eol,start
 set showcmd
 
 " コマンドモードの補完
-set wildmenu 
+set wildmenu
 
 " クリップボードにコピー
 set clipboard+=unnamed
@@ -250,15 +201,6 @@ nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 nnoremap sm :bn<CR>
 nnoremap sn :bp<CR>
 
-" Splitの調節
-call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
-call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
-call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
-call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
-call submode#map('bufmove', 'n', '', '>', '<C-w>>')
-call submode#map('bufmove', 'n', '', '<', '<C-w><')
-call submode#map('bufmove', 'n', '', '+', '<C-w>+')
-call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 
 " マウスクリック有効
 if has("mouse") " Enable the use of the mouse in all modes
