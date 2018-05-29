@@ -52,7 +52,7 @@ if dein#load_state('~/.cache/dein')
   endif
 
   " For Debug
-  if 1
+  if 0
     call dein#recache_runtimepath()
   endif
 
