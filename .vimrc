@@ -59,14 +59,6 @@ syntax enable
 " dein.vim ここまで -----------------------------------------------------
 
 
-
-" Solarized
-"syntax enable
-""set background=dark
-""colorscheme solarized
-""highlight LineNr ctermfg=darkcyan
-
-
 " 個人設定
 set laststatus=2
 
