@@ -92,6 +92,7 @@ alias ga='git add'
 alias gc='git commit'
 alias gb='git branch'
 alias gch='git checkout'
+alias gd='git diff'
 alias gs='git status'
 alias gpo='git pull origin'
 
