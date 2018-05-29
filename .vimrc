@@ -46,8 +46,14 @@ if dein#load_state('~/.cache/dein')
   " autocmd vimenter * NERDTree
   " noremap tree :NERDTreeToggle<Enter>
 
+  " Install if uninstalled
   if dein#check_install()
     call dein#install()
+  endif
+
+  " For Debug
+  if 1
+    call dein#recache_runtimepath()
   endif
 
   call dein#end()
