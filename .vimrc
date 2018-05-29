@@ -17,7 +17,7 @@ if dein#load_state('~/.cache/dein')
   call dein#begin('~/.cache/dein')
   call dein#add('~/.cache/dein')
   " Add or remove your plugins her e:
-  let plugins_dir = '~/dotfiles/vim/plugin/'
+  let plugins_dir = '~/dotfiles/vim/config/plugin/'
 
   " Appearance
   call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
