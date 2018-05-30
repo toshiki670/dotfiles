@@ -89,12 +89,17 @@ alias lla='ls -la'
 
 # For git
 alias ga='git add'
+alias gau='git add -u'
+alias ga.='git add .'
 alias gc='git commit'
+alias gcm='git commit -m'
 alias gb='git branch'
 alias gch='git checkout'
 alias gd='git diff'
 alias gs='git status'
-alias gpo='git pull origin'
+alias gpull='git pull'
+alias gpullr='git pull --rebase'
+alias gpush='git push'
 
 
 # For PHP
