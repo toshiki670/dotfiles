@@ -19,6 +19,9 @@ if dein#load_state('~/.cache/dein')
   " Add or remove your plugins her e:
   let plugins_dir = '~/dotfiles/vim/config/plugin/'
 
+  " Async Proc
+  call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
+
   " Appearance
   call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
 
