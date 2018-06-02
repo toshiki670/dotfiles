@@ -168,10 +168,17 @@ on_ft = ['toml']
 [[plugins]]
 repo = 'scrooloose/nerdtree'
 hook_add = '''
-noremap tree :NERDTreeToggle<Enter>
+" noremap tree :NERDTreeToggle<Enter>
+set ttimeoutlen=50
 let g:NERDTreeShowBookmarks=1
 '''
 
+[[plugins]]
+repo = 'jistr/vim-nerdtree-tabs'
+hook_add = '''
+let g:nerdtree_tabs_open_on_console_startup=1
+noremap tree :NERDTreeTabsToggle<Enter>
+'''
 
 
 [[plugins]]
