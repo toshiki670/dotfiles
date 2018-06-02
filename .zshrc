@@ -117,6 +117,7 @@ alias note='cd ~/Documents/Note'
 alias ipecho='curl ipecho.net/plain; echo'
 
 # For vim
+alias v='vim'
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
