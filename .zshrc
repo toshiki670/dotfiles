@@ -88,6 +88,7 @@ alias la='ls -a'
 alias lla='ls -la'
 
 # For git
+alias g='git'
 alias ga='git add'
 alias gau='git add -u'
 alias ga.='git add .'
@@ -100,6 +101,7 @@ alias gs='git status'
 alias gpull='git pull'
 alias gpullr='git pull --rebase'
 alias gpush='git push'
+alias glog="git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
 
 
 # For PHP
