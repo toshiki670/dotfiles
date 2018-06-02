@@ -99,9 +99,10 @@ alias gch='git checkout'
 alias gd='git diff'
 alias gs='git status'
 alias gpull='git pull'
-alias gpullr='git pull --rebase'
+alias gpullre='git pull --rebase'
 alias gpush='git push'
 alias glog="git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
+alias g-reset-hard='git reset --hard HEAD'
 
 
 # For PHP
