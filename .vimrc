@@ -45,9 +45,7 @@ if dein#load_state('~/.cache/dein')
   endif
 
   " For Debug
-  if 0
-    call dein#recache_runtimepath()
-  endif
+  " call dein#recache_runtimepath()
 
   call dein#end()
   call dein#save_state()
