@@ -38,16 +38,6 @@ if dein#load_state('~/.cache/dein')
   call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
 
 
-  " lightline - https://github.com/itchyny/lightline.vim
-  " call dein#add('itchyny/lightline.vim')
-
-
-  " NERDTree
-  " call dein#add('jistr/vim-nerdtree-tabs')
-
-  " NERDTreeToggleoggle の設定
-  " autocmd vimenter * NERDTree
-  " noremap tree :NERDTreeToggle<Enter>
 
   " Install if uninstalled
   if dein#check_install()

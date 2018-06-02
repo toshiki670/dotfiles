@@ -1,17 +1,4 @@
 # statusline ------------------
-# [[plugins]]
-# repo = 'vim-airline/vim-airline'
-# hook_add = '''
-# let g:airline_powerline_fonts = 1
-# let g:airline#extensions#tabline#enabled = 1
-# let g:airline_theme = 'powerlineish'
-# set ttimeoutlen=50
-# '''
-# 
-# [[plugins]]
-# repo = 'vim-airline/vim-airline-themes'
-
-
 [[plugins]]
 repo = 'itchyny/lightline.vim'
 hook_add = '''
@@ -168,7 +155,6 @@ on_ft = ['toml']
 [[plugins]]
 repo = 'scrooloose/nerdtree'
 hook_add = '''
-" noremap tree :NERDTreeToggle<Enter>
 set ttimeoutlen=50
 let g:NERDTreeShowBookmarks=1
 '''
