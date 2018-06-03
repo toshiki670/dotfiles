@@ -1,10 +1,15 @@
 # Dotfiles
-自分の開発環境
-
+Zsh, Vim, Tmux and iTerm2.
 
 ## Description
-主にvim, zshの開発環境の設定がまとめてあります。
-ご自由にCloneして頂いて構いません。
+私の私による私のための開発環境
 
-もし、誤字脱字や便利な機能があったら教えていただけるとありがたいです。
+## Require
+* zsh
+  - zplug
+  - completetion?
 
+* vim 8~
+  - 沢山
+
+* tmux
