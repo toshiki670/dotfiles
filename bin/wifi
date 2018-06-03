@@ -93,7 +93,7 @@ do
 done
 
 percent=""
-if [ $set_percent = "TRUE" ]; then
+if [ "${set_percent}" = "TRUE" ]; then
   if [ -100 -gt $rssi ]; then
     percent=0
   else
@@ -110,7 +110,7 @@ fi
 
 begin_color=""
 end_color=""
-if [ $set_color = "TRUE" ]; then
+if [ "${set_color}" = "TRUE" ]; then
   begin_color="#[fg=${color_name}]"
   end_color="#[default]"
 fi
