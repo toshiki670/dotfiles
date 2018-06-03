@@ -1,6 +1,8 @@
 # ログインシェルとインタラクティブシェルの場合だけ読み込まれる。
 # シェルスクリプトでは不要な場合に記述する。
 # 
+export PATH="$HOME/dotfiles/bin:$PATH"
+
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 # For pyenv
 # export PYENV_ROOT="$HOME/.pyenv"
