@@ -1,7 +1,8 @@
 # どんな場合でも必ず最初に読み込まれる
 
 # 言語を日本語に設定KCODEにUTF-8を設定
-export LANG=ja_JP.UTF-8
+# export LANG=ja_JP.UTF-8
+export LANG=en_US.UTF-8
 export KCODE=u
 
 # 基本パス設定
