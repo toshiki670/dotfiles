@@ -1,63 +1,27 @@
 #!/bin/bash
-#
-# @(#) wifi v0.2.0 2015-09-24
-#
-# usage:
-#   wifi [-h|--help]
-#
-# description:
-#   show the wifi information (strength, bandwidth, SSID)
-#
-######################################################################
+# Respect
+# https://github.com/b4b4r07/dotfiles/blob/master/.tmux/bin/wifi
+# https://shellscript.sunone.me/parameter.html
 
-# Use: Put something this in your .tmux.conf file
-# set-option -g status-right: '#(wifi -c tmux)'
-#
-# ▁▂▃▅▇
+CMDNAME=`basename $0`
 
-# . "$DOTPATH"/etc/lib/vital.sh
+while getopts pc: OPT
+do
+  case $OPT in
+    "p" ) set_percent="TRUE" ;;
+    "c" ) set_color="TRUE" ; color_name="$OPTARG" ;;
+      * ) echo "Usage: $CMDNAME [-p] [-c VALUE]" 1>&2
+          exit 1 ;;
+  esac
+done
 
-# if ! is_osx; then
-#     echo "wifi: require OS X" 1>&2
-#     exit 1
-# fi
 
-# Check arguments
-# for arg in "$@"
-# do
-#     # Check if arguments have help option
-#     if [[ "$arg" =~ ^"-h"|"--help"$ ]]; then
-#         cat 1>&2 <<-'EOH'
-# usage: wifi [-h|--help]
-#     show the wifi information (strength, bandwidth, SSID)
-# EOH
-#         exit 1
-#     fi
-# done
-
-# airport command is executable file
-#
-# Usage:
-#   Search information about Wi-Fi by using airport command
-#   airport command has this options
-#    -c[<arg>] --channel=[<arg>]    Set arbitrary channel on the card
-#    -z        --disassociate       Disassociate from any network
-#    -I        --getinfo            Print current wireless status, e.g. signal info, BSSID, port type etc.
-#    -s[<arg>] --scan=[<arg>]       Perform a wireless broadcast scan.
-#                                      Will perform a directed scan if the optional <arg> is provided
-#    -x        --xml                Print info as XML
-#    -P        --psk                Create PSK from specified pass phrase and SSID.
-#                                      The following additional arguments must be specified with this command:
-#                                     --password=<arg>  Specify a WPA password
-#                                     --ssid=<arg>      Specify SSID when creating a PSK
-#    -h        --help               Show this help
-#
 airport_path="/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
 
 # Check if airport is available
 if [[ ! -x $airport_path ]]; then
-    echo "$airport_path: not found" 1>&2
-    exit 1
+  echo "$airport_path: not found" 1>&2
+  exit 1
 fi
 
 # The Unicode Block Elements
@@ -81,13 +45,13 @@ fi
 # |  258F   |  ▏    | LEFT ONE EIGHTH BLOCK      |            |
 # |  2590   |  ▐    | RIGHT HALF BLOCK           |            |
 #
-signals=(▂ ▅ ▇)
+signals=(▂ ▃ ▄ ▅ ▆ ▇)
 
 # Get the wifi information and then set it to an info array
 info=( $(eval "$airport_path" --getinfo | grep -E "^ *(agrCtlRSSI|state|lastTxRate|SSID):" | awk '{print $2}') )
 if [[ ${#info[@]} -eq 0 ]]; then
-    echo "offline"
-    exit 1
+  echo "Offline"
+  exit 1
 fi
 
 # cut out a needed information from the info
@@ -97,36 +61,59 @@ stat="${info[1]}"   # whether wifi is available
 rate="${info[2]}"   # bandwidth of wifi wave
 ssid="${info[3]}"   # wifi ssid name
 
+# If the wifi rate (wifi bandwidth) is unavailable,
+if [ "$rate" = 0 ]; then
+  echo "no_wifi"
+  exit 1
+fi
+
 # Determine the signal from rssi of wifi
 signal=""
 for ((j = 0; j < "${#signals[@]}"; j++))
 do
-    # reference of strength (rssi)
-    #  -20　Excellent
-    #  -30　Excellent
-    #  -40　Excellent
-    #  -50　Excellent
-    #  -60　better
-    #  -70　good
-    #  -80　not good
-    #  -90　bad
-    # -100　bad
-    if ((  $j == 0 && $rssi > -100 )) ||
-        (( $j == 1 && $rssi > -80  )) ||
-        (( $j == 2 && $rssi > -50  )); then
-        # make signal
-        signal="${signal}${signals[$j]} "
-    else
-        signal="${signal}  "
-    fi
+  # reference of strength (rssi)
+  #  -20　Excellent
+  #  -30　Excellent
+  #  -40　Excellent
+  #  -50　Excellent
+  #  -60　better
+  #  -70　good
+  #  -80　not good
+  #  -90　bad
+  # -100　bad
+  if ((  $j == 0 && $rssi >= -100 )) ||
+    (( $j == 1 && $rssi >= -90  )) ||
+    (( $j == 2 && $rssi >= -80  )) ||
+    (( $j == 3 && $rssi >= -70  )) ||
+    (( $j == 4 && $rssi >= -60  )) ||
+    (( $j == 5 && $rssi >= -50  )); then
+    # make signal
+    signal="${signal}${signals[$j]}"
+  fi
 done
 
-# If the wifi rate (wifi bandwidth) is unavailable,
-if [ "$rate" = 0 ]; then
-    echo "no_wifi"
-    exit 1
+percent=""
+if [ $set_percent = "TRUE" ]; then
+  if [ -100 -gt $rssi ]; then
+    percent=0
+  else
+    # -100~-50の範囲をパーセントで表現
+    p=$((($rssi + 100) * 2))
+    if [ $p -le 100 ]; then
+      percent=$p
+    else
+      percent=100
+    fi
+  fi
+  percent="${percent}% "
+fi
+
+begin_color=""
+end_color=""
+if [ $set_color = "TRUE" ]; then
+  begin_color="#[fg=${color_name}]"
+  end_color="#[default]"
 fi
 
 # Outputs wifi
-#   example: "fun-wifi 351Mbs ▂ ▅   "
-echo -e "${ssid} ${rate}Mbs ${signal}"
+echo -e "${begin_color}${ssid} ${rate}Mbs ${percent}${signal}${end_color} "
