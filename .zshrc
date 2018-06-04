@@ -26,11 +26,14 @@ if [ -e /usr/local/opt/zplug ]; then
   export ZPLUG_HOME=/usr/local/opt/zplug
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
+  zplug "zsh-users/zsh-syntax-highlighting"
+  zplug "zsh-users/zsh-autosuggestions"
   # プラグイン追加後、下記を実行する
   # zplug install
   zplug load
 fi
 
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=255'
 
 # utoload -Uz add-zsh-hook
 # Color
