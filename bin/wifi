@@ -116,4 +116,4 @@ if [ "${set_color}" = "TRUE" ]; then
 fi
 
 # Outputs wifi
-echo -e "${begin_color}${ssid} ${rate}Mbs ${percent}${signal}${end_color} "
+echo -e "${begin_color}${ssid} ${rate}Mbs ${percent}${signal}${end_color}"
