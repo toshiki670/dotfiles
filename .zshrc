@@ -33,7 +33,7 @@ if [ -e /usr/local/opt/zplug ]; then
   zplug load
 fi
 
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=255'
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=230'
 
 # utoload -Uz add-zsh-hook
 # Color
