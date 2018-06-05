@@ -169,8 +169,14 @@ goo() {
   open http://www.google.com/$opt
 }
 
+# Tmux起動
+if [ $SHLVL = 1 ]; then
+  tmux
+else
+  cat ~/dotfiles/screenfetch
+fi
+
 # ターミナル起動時に実行
-cat ~/dotfiles/screenfetch
 
 
 # ZSHの起動した関数の時間計測 .zshenv参照
