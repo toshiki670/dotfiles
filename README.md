@@ -8,6 +8,8 @@ Zsh, Vim, Tmux and iTerm2.
 * zsh
   - zplug
   - completetion?
+  - coreutils
+    + lsの強化バージョン
 
 * vim 8~
   - 沢山
