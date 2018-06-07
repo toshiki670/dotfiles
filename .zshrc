@@ -29,7 +29,6 @@ if [ -e /usr/local/opt/zplug ]; then
   zplug "zsh-users/zsh-syntax-highlighting"
   zplug "zsh-users/zsh-autosuggestions"
   zplug "mafredri/zsh-async"
-  zplug "sindresorhus/pure"
   # プラグイン追加後、下記を実行する
   # zplug install
   zplug load
@@ -82,10 +81,10 @@ setopt auto_pushd
 setopt correct
 
 # プロンプト設定
-# my_prompt='[%m%#%n %~]%f'
-# PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
-# PROMPT2='>> '
-# SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
+my_prompt='[%m%#%n %~]%f'
+PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
+PROMPT2='>> '
+SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
 
 alias relogin='exec $SHELL -l'
