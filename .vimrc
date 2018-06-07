@@ -19,6 +19,9 @@ if dein#load_state('~/.cache/dein')
   " Add or remove your plugins her e:
   let plugins_dir = '~/dotfiles/vim/config/plugin/'
 
+  " Async Proc
+  call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
+
   " Appearance
   call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
 
@@ -35,16 +38,6 @@ if dein#load_state('~/.cache/dein')
   call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
 
 
-  " lightline - https://github.com/itchyny/lightline.vim
-  " call dein#add('itchyny/lightline.vim')
-
-
-  " NERDTree
-  " call dein#add('jistr/vim-nerdtree-tabs')
-
-  " NERDTreeToggleoggle の設定
-  " autocmd vimenter * NERDTree
-  " noremap tree :NERDTreeToggle<Enter>
 
   " Install if uninstalled
   if dein#check_install()
@@ -52,9 +45,7 @@ if dein#load_state('~/.cache/dein')
   endif
 
   " For Debug
-  if 0
-    call dein#recache_runtimepath()
-  endif
+  " call dein#recache_runtimepath()
 
   call dein#end()
   call dein#save_state()

@@ -1,6 +1,8 @@
 # ログインシェルとインタラクティブシェルの場合だけ読み込まれる。
 # シェルスクリプトでは不要な場合に記述する。
 # 
+export PATH="$HOME/dotfiles/bin:$PATH"
+
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 # For pyenv
 # export PYENV_ROOT="$HOME/.pyenv"
@@ -24,11 +26,14 @@ if [ -e /usr/local/opt/zplug ]; then
   export ZPLUG_HOME=/usr/local/opt/zplug
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
+  zplug "zsh-users/zsh-syntax-highlighting"
+  zplug "zsh-users/zsh-autosuggestions"
   # プラグイン追加後、下記を実行する
   # zplug install
   zplug load
 fi
 
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=230'
 
 # utoload -Uz add-zsh-hook
 # Color
@@ -50,8 +55,8 @@ precmd () { vcs_info }
 
 # Theme configure
 # eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
-eval $(gdircolors ~/.dircolors-solarized)
-eval $(dircolors ~/.dircolors-solarized/dircolors.ansi-universal)
+eval $(gdircolors ~/dotfiles/color/dircolors-solarized)
+eval $(dircolors ~/dotfiles/color/dircolors-solarized/dircolors.ansi-universal)
 
 # 補完機能
 bindkey "^[[Z" reverse-menu-complete
@@ -88,12 +93,21 @@ alias la='ls -a'
 alias lla='ls -la'
 
 # For git
+alias g='git'
 alias ga='git add'
+alias gau='git add -u'
+alias ga.='git add .'
 alias gc='git commit'
+alias gcm='git commit -m'
 alias gb='git branch'
 alias gch='git checkout'
+alias gd='git diff'
 alias gs='git status'
-alias gpo='git pull origin'
+alias gpull='git pull'
+alias gpullre='git pull --rebase'
+alias gpush='git push'
+alias glog="git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
+alias g-reset-hard='git reset --hard HEAD'
 
 
 # For PHP
@@ -109,6 +123,7 @@ alias note='cd ~/Documents/Note'
 alias ipecho='curl ipecho.net/plain; echo'
 
 # For vim
+alias v='vim'
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
@@ -154,8 +169,14 @@ goo() {
   open http://www.google.com/$opt
 }
 
+# Tmux起動
+if [ $SHLVL = 1 ]; then
+  tmux
+else
+  cat ~/dotfiles/screenfetch
+fi
+
 # ターミナル起動時に実行
-cat ~/dotfiles/screenfetch
 
 
 # ZSHの起動した関数の時間計測 .zshenv参照
