@@ -22,7 +22,7 @@ export PATH="$HOME/.rbenv/shims:$PATH"
 
 # aotoload設定一覧 (Zplugが入っている場合無効)
 export ZPLUG_HOME=/usr/local/opt/zplug
-if [ -e ZPLUG_HOME ]; then
+if [ -e $ZPLUG_HOME ]; then
   # Zplug の有効化
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
@@ -40,7 +40,7 @@ source $ZPLUG_HOME/repos/olivierverdier/zsh-git-prompt/zshrc.sh
 
 # utoload -Uz add-zsh-hook
 # Color
-# utoload -Uz colors && colors
+utoload -Uz colors && colors
 # 補完関連
 # utoload -U compinit && compinit
 
@@ -82,16 +82,27 @@ setopt auto_cd
 setopt auto_pushd
 setopt correct
 
+ZSH_THEME_GIT_PROMPT_PREFIX="["
+ZSH_THEME_GIT_PROMPT_SUFFIX=" ]"
+ZSH_THEME_GIT_PROMPT_BRANCH="%{$fg[white]%}"
+ZSH_THEME_GIT_PROMPT_STAGED="%{$fg[green]%}%{ %G%}"
+ZSH_THEME_GIT_PROMPT_CONFLICTS="%{$fg[magenta]%}%{x%G%}"
+ZSH_THEME_GIT_PROMPT_CHANGED="%{$fg[red]%}%{+%G%}"
+ZSH_THEME_GIT_PROMPT_BEHIND="%{$fg[red]%}%{-%G%}"
+ZSH_THEME_GIT_PROMPT_AHEAD="%{$fg[green]%}%{+%G%}"
+ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}%{✔%G%}"
+
+
 # プロンプト設定
 my_prompt='[%m%#%n %~]%f'
 # PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
 if [ $? -eq 0 ]; then
-  ERROR_COLOR='cyan'
+  ERROR_COLOR='%F{cyan}'
 else
-  ERROR_COLOR='red'
+  ERROR_COLOR='%F{red}'
 fi
 
-PROMPT="%F{${ERROR_COLOR}}${my_prompt}"'$(git_super_status)'$'\n'
+PROMPT="${ERROR_COLOR}${my_prompt}"'$(git_super_status)'$'\n'
 
 
 # PROMPT='%B%m%~%b$(git_super_status) %# '
