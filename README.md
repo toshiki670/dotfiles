@@ -10,6 +10,7 @@ Zsh, Vim, Tmux and iTerm2.
   - completetion?
   - coreutils
     + lsの強化バージョン
+  - git clone https://github.com/seebi/dircolors-solarized.git
 
 * vim 8~
   - 沢山
