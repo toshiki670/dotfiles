@@ -14,3 +14,7 @@ tags
 # Color
 color/*
 !.keep
+
+# zsh
+zsh/bundle/*
+!.keep
