@@ -21,20 +21,22 @@ export PATH="$HOME/.rbenv/shims:$PATH"
 
 
 # aotoload設定一覧 (Zplugが入っている場合無効)
-if [ -e /usr/local/opt/zplug ]; then
+export ZPLUG_HOME=/usr/local/opt/zplug
+if [ -e ZPLUG_HOME ]; then
   # Zplug の有効化
-  export ZPLUG_HOME=/usr/local/opt/zplug
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
   zplug "zsh-users/zsh-syntax-highlighting"
   zplug "zsh-users/zsh-autosuggestions"
   zplug "mafredri/zsh-async"
+  zplug "olivierverdier/zsh-git-prompt"
   # プラグイン追加後、下記を実行する
   # zplug install
   zplug load
 fi
 
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=230'
+source $ZPLUG_HOME/repos/olivierverdier/zsh-git-prompt/zshrc.sh
 
 # utoload -Uz add-zsh-hook
 # Color
@@ -43,14 +45,14 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=230'
 # utoload -U compinit && compinit
 
 # Git のステータスを表示
-autoload -Uz vcs_info
-setopt prompt_subst
-zstyle ':vcs_info:git:*' check-for-changes true
-zstyle ':vcs_info:git:*' stagedstr "|%F{yellow}staged%F{cyan}"
-zstyle ':vcs_info:git:*' unstagedstr "|%F{red}unstaged%F{cyan}"
-zstyle ':vcs_info:*' formats "%F{cyan}[%b%c%u]%f"
-zstyle ':vcs_info:*' actionformats "%F{red}[%b|%a]%f"
-precmd () { vcs_info }
+# autoload -Uz vcs_info
+# setopt prompt_subst
+# zstyle ':vcs_info:git:*' check-for-changes true
+# zstyle ':vcs_info:git:*' stagedstr "|%F{yellow}staged%F{cyan}"
+# zstyle ':vcs_info:git:*' unstagedstr "|%F{red}unstaged%F{cyan}"
+# zstyle ':vcs_info:*' formats "%F{cyan}[%b%c%u]%f"
+# zstyle ':vcs_info:*' actionformats "%F{red}[%b|%a]%f"
+# precmd () { vcs_info }
 
 
 
@@ -82,7 +84,17 @@ setopt correct
 
 # プロンプト設定
 my_prompt='[%m%#%n %~]%f'
-PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
+# PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
+if [ $? -eq 0 ]; then
+  ERROR_COLOR='cyan'
+else
+  ERROR_COLOR='red'
+fi
+
+PROMPT="%F{${ERROR_COLOR}}${my_prompt}"'$(git_super_status)'$'\n'
+
+
+# PROMPT='%B%m%~%b$(git_super_status) %# '
 PROMPT2='>> '
 SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
