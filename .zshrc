@@ -56,8 +56,8 @@ precmd () { vcs_info }
 
 # Theme configure
 # eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
-eval $(gdircolors ~/dotfiles/color/dircolors-solarized)
-eval $(dircolors ~/dotfiles/color/dircolors-solarized/dircolors.ansi-universal)
+eval $(gdircolors ~/dotfiles/zsh/bundle/color/dircolors-solarized)
+eval $(dircolors ~/dotfiles/zsh/bundle/color/dircolors-solarized/dircolors.ansi-universal)
 
 # 補完機能
 bindkey "^[[Z" reverse-menu-complete
