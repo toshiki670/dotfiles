@@ -82,8 +82,13 @@ setopt auto_cd
 setopt auto_pushd
 setopt correct
 
+# プロンプト設定
+sep_l='⮀'
+sep_r='⮂'
+
+
 ZSH_THEME_GIT_PROMPT_PREFIX="["
-ZSH_THEME_GIT_PROMPT_SUFFIX=" ]"
+ZSH_THEME_GIT_PROMPT_SUFFIX="]"
 ZSH_THEME_GIT_PROMPT_BRANCH="%{$fg[green]%}"
 ZSH_THEME_GIT_PROMPT_STAGED="%{$fg[green]%}%{ %G%}"
 ZSH_THEME_GIT_PROMPT_CONFLICTS="%{$fg[magenta]%}%{x%G%}"
@@ -93,19 +98,19 @@ ZSH_THEME_GIT_PROMPT_AHEAD="%{$fg[green]%}%{+%G%}"
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}%{✔%G%}"
 
 
-# プロンプト設定
-my_prompt='[%m%#%n %~]%f'
-# PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
+my_prompt='[%#%~]'
 
+pass_status="%K{green}%F{022}${my_prompt}%k%f%K{240}%F{green}${sep_l}%k%f"
+fail_status="%K{207}%F{088}${my_prompt}%k%f%F{207}${sep_l}%f"
 
-
-PROMPT="%(?.%{${fg[cyan]}%}.%{${fg[red]}%})${my_prompt}"'$(git_super_status)'$'\n'
+PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'
 
 
 # PROMPT='%B%m%~%b$(git_super_status) %# '
 PROMPT2='>> '
 SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
 
+# PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
 
 alias relogin='exec $SHELL -l'
 alias ls='gls --color=auto'
