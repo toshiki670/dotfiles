@@ -28,7 +28,6 @@ if [ -e $ZPLUG_HOME ]; then
   zplug "zsh-users/zsh-completions"
   zplug "zsh-users/zsh-syntax-highlighting"
   zplug "zsh-users/zsh-autosuggestions"
-  zplug "mafredri/zsh-async"
   zplug "olivierverdier/zsh-git-prompt"
   # プラグイン追加後、下記を実行する
   # zplug install
@@ -82,7 +81,7 @@ setopt auto_cd
 setopt auto_pushd
 setopt correct
 
-# プロンプト設定
+# Prompt comfig -------------------------------------------
 sep='⮀'
 sub_sep='⮁'
 
@@ -91,35 +90,39 @@ pri_fore='022'
 pri_set="%K{${pri_clr}}%F{${pri_fore}}"
 
 sec_clr='240'
-sec_fore='254'
+sec_fore='255'
 sec_set="%K{${sec_clr}}%F{${sec_fore}}"
 
+fail_clr='207'
+fail_fore='088'
+fail_set="%K{${fail_clr}}%F{${fail_fore}}"
+
 ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ⭠ "
-ZSH_THEME_GIT_PROMPT_SUFFIX="%F{${sec_clr}}${sep}"
-ZSH_THEME_GIT_PROMPT_SEPARATOR="|"
-ZSH_THEME_GIT_PROMPT_BRANCH="%{$fg[green]%}"
-ZSH_THEME_GIT_PROMPT_STAGED="%{$fg[green]%}%{ %G%}"
-ZSH_THEME_GIT_PROMPT_CONFLICTS="%{$fg[magenta]%}%{x%G%}"
-ZSH_THEME_GIT_PROMPT_CHANGED="%{$fg[red]%}%{+%G%}"
-ZSH_THEME_GIT_PROMPT_BEHIND="%{$fg[red]%}%{-%G%}"
-ZSH_THEME_GIT_PROMPT_AHEAD="%{$fg[green]%}%{+%G%}"
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}%{✔%G%}"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%K{${sec_clr}}%F{${sec_clr}} %k${sep}"
+ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sub_sep} "
+ZSH_THEME_GIT_PROMPT_BRANCH="${sec_set}"
+ZSH_THEME_GIT_PROMPT_STAGED="%K{${sec_clr}}%F{green}%{!%G%}"
+ZSH_THEME_GIT_PROMPT_CONFLICTS="%K{${sec_clr}}%F{magenta}%{x%G%}"
+ZSH_THEME_GIT_PROMPT_CHANGED="%K{${sec_clr}}%F{219}%{+%G%}"
+ZSH_THEME_GIT_PROMPT_BEHIND="%K{${sec_clr}}%F{219}%{-%G%}"
+ZSH_THEME_GIT_PROMPT_AHEAD="%K{${sec_clr}}%F{green}%{+%G%}"
+ZSH_THEME_GIT_PROMPT_CLEAN="%K{${sec_clr}}%F{green}%{✔ %G%}"
 
 
-my_prompt='%#%~'
-my_prompt2="${pri_set}⌘ %k%F{${pri_clr}}${sep}%f"
+my_prompt='%#%~ '
+my_prompt2="${pri_set}⌘ %k%F{${pri_clr}}${sep}%f "
 
 pass_status="${pri_set}${my_prompt}%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
-fail_status="%K{207}%F{088}${my_prompt}%K{${sec_clr}}%F{207}${sep}%k%f"
+fail_status="${fail_set}${my_prompt}%K{${sec_clr}}%F{${fail_clr}}${sep}%k%f"
 
 PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'$my_prompt2
+PROMPT2=$my_prompt2
 
+my_correct="${fail_set}Correct%K{${sec_clr}}%F{${fail_clr}}${sep}%f"
+my_correct2="${pri_set}[nyae] %k%F{${pri_clr}}${sep}%f "
+SPROMPT="${my_correct}%F{${sec_fore}}'%R' to '%r'? %k%F{${sec_clr}}${sep}%f"$'\n'$my_correct2
 
-# PROMPT='%B%m%~%b$(git_super_status) %# '
-PROMPT2='>> '
-SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
-
-# PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
+# ---------------------------------------------------------
 
 alias relogin='exec $SHELL -l'
 alias ls='gls --color=auto'
