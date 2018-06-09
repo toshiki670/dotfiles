@@ -95,7 +95,7 @@ sec_fore='254'
 sec_set="%K{${sec_clr}}%F{${sec_fore}}"
 
 ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ⭠ "
-ZSH_THEME_GIT_PROMPT_SUFFIX="]"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%F{${sec_clr}}${sep}"
 ZSH_THEME_GIT_PROMPT_SEPARATOR="|"
 ZSH_THEME_GIT_PROMPT_BRANCH="%{$fg[green]%}"
 ZSH_THEME_GIT_PROMPT_STAGED="%{$fg[green]%}%{ %G%}"
@@ -107,11 +107,12 @@ ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}%{✔%G%}"
 
 
 my_prompt='%#%~'
+my_prompt2="${pri_set}⌘ %k%F{${pri_clr}}${sep}%f"
 
-pass_status="${pri_set}${my_prompt}%k%f%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
-fail_status="%K{207}%F{088}${my_prompt}%k%f%K{${sec_clr}}%F{207}${sep}%k%f"
+pass_status="${pri_set}${my_prompt}%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
+fail_status="%K{207}%F{088}${my_prompt}%K{${sec_clr}}%F{207}${sep}%k%f"
 
-PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'
+PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'$my_prompt2
 
 
 # PROMPT='%B%m%~%b$(git_super_status) %# '
