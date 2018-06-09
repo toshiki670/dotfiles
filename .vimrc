@@ -24,12 +24,10 @@ if dein#load_state('~/.cache/dein')
 
   " Appearance
   call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
-
   " Completion
   call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
-
   " Control
-  call dein#load_toml(plugins_dir . 'control.toml', {'lazy': 1})
+  call dein#add('kana/vim-submode')
 
   " Ruby and Rails
   call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
@@ -192,6 +190,15 @@ nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 nnoremap sm :bn<CR>
 nnoremap sn :bp<CR>
 
+" Splitの調節
+call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
+call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
+call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
+call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
+call submode#map('bufmove', 'n', '', '>', '<C-w>>')
+call submode#map('bufmove', 'n', '', '<', '<C-w><')
+call submode#map('bufmove', 'n', '', '+', '<C-w>+')
+call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 
 " マウスクリック有効
 if has("mouse") " Enable the use of the mouse in all modes
