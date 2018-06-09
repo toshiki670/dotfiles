@@ -17,6 +17,7 @@ export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 # For rbenv
 eval "$(rbenv init --no-rehash -)";
 export PATH="$HOME/.rbenv/shims:$PATH"
+o
 
 
 
@@ -166,6 +167,8 @@ alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
 # alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
+
+alias emacs='echo "Emacs is died!!!!"'
 
 # 拡張子に応じたコマンドを実行
 alias -s txt='vim'
