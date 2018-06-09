@@ -36,24 +36,6 @@ if [ -e $ZPLUG_HOME ]; then
 fi
 
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=230'
-source $ZPLUG_HOME/repos/olivierverdier/zsh-git-prompt/zshrc.sh
-
-# utoload -Uz add-zsh-hook
-# Color
-# utoload -Uz colors && colors
-# 補完関連
-# utoload -U compinit && compinit
-
-# Git のステータスを表示
-# autoload -Uz vcs_info
-# setopt prompt_subst
-# zstyle ':vcs_info:git:*' check-for-changes true
-# zstyle ':vcs_info:git:*' stagedstr "|%F{yellow}staged%F{cyan}"
-# zstyle ':vcs_info:git:*' unstagedstr "|%F{red}unstaged%F{cyan}"
-# zstyle ':vcs_info:*' formats "%F{cyan}[%b%c%u]%f"
-# zstyle ':vcs_info:*' actionformats "%F{red}[%b|%a]%f"
-# precmd () { vcs_info }
-
 
 
 # Theme configure
@@ -98,6 +80,7 @@ fail_clr='207'
 fail_fore='088'
 fail_set="%K{${fail_clr}}%F{${fail_fore}}"
 
+source $ZPLUG_HOME/repos/olivierverdier/zsh-git-prompt/zshrc.sh
 ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ⭠ "
 ZSH_THEME_GIT_PROMPT_SUFFIX="%K{${sec_clr}}%F{${sec_clr}} %k${sep}"
 ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sub_sep} "
