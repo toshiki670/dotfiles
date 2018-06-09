@@ -83,12 +83,20 @@ setopt auto_pushd
 setopt correct
 
 # プロンプト設定
-sep_l='⮀'
-sep_r='⮂'
+sep='⮀'
+sub_sep='⮁'
 
+pri_clr='green'
+pri_fore='022'
+pri_set="%K{${pri_clr}}%F{${pri_fore}}"
 
-ZSH_THEME_GIT_PROMPT_PREFIX="["
+sec_clr='240'
+sec_fore='254'
+sec_set="%K{${sec_clr}}%F{${sec_fore}}"
+
+ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ⭠ "
 ZSH_THEME_GIT_PROMPT_SUFFIX="]"
+ZSH_THEME_GIT_PROMPT_SEPARATOR="|"
 ZSH_THEME_GIT_PROMPT_BRANCH="%{$fg[green]%}"
 ZSH_THEME_GIT_PROMPT_STAGED="%{$fg[green]%}%{ %G%}"
 ZSH_THEME_GIT_PROMPT_CONFLICTS="%{$fg[magenta]%}%{x%G%}"
@@ -98,10 +106,10 @@ ZSH_THEME_GIT_PROMPT_AHEAD="%{$fg[green]%}%{+%G%}"
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}%{✔%G%}"
 
 
-my_prompt='[%#%~]'
+my_prompt='%#%~'
 
-pass_status="%K{green}%F{022}${my_prompt}%k%f%K{240}%F{green}${sep_l}%k%f"
-fail_status="%K{207}%F{088}${my_prompt}%k%f%F{207}${sep_l}%f"
+pass_status="${pri_set}${my_prompt}%k%f%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
+fail_status="%K{207}%F{088}${my_prompt}%k%f%K{${sec_clr}}%F{207}${sep}%k%f"
 
 PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'
 
