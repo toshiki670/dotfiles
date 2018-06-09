@@ -17,8 +17,6 @@ export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 # For rbenv
 eval "$(rbenv init --no-rehash -)";
 export PATH="$HOME/.rbenv/shims:$PATH"
-o
-
 
 
 # aotoload設定一覧 (Zplugが入っている場合無効)
@@ -196,6 +194,7 @@ goo() {
 # Tmux起動
 if [ $SHLVL = 1 ]; then
   tmux
+  exit
 else
   cat ~/dotfiles/screenfetch
 fi
