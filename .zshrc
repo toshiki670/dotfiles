@@ -119,9 +119,9 @@ fail_status="${fail_set}${my_prompt}%K{${sec_clr}}%F{${fail_clr}}${sep}%k%f"
 PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'$my_prompt2
 PROMPT2=$my_prompt2
 
-my_correct="${fail_set}Correct%K{${sec_clr}}%F{${fail_clr}}${sep}%f"
-my_correct2="${pri_set}[nyae] %k%F{${pri_clr}}${sep}%f "
-SPROMPT="${my_correct}%F{${sec_fore}}'%R' to '%r'? %k%F{${sec_clr}}${sep}%f"$'\n'$my_correct2
+my_sprompt="${fail_set}Correct%K{${sec_clr}}%F{${fail_clr}}${sep}%f"
+my_sprompt2="${pri_set}[nyae] %k%F{${pri_clr}}${sep}%f "
+SPROMPT="${my_sprompt}%F{${sec_fore}}'%R' to '%r'? %k%F{${sec_clr}}${sep}%f"$'\n'$my_sprompt2
 
 # ---------------------------------------------------------
 
