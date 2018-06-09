@@ -40,7 +40,7 @@ source $ZPLUG_HOME/repos/olivierverdier/zsh-git-prompt/zshrc.sh
 
 # utoload -Uz add-zsh-hook
 # Color
-utoload -Uz colors && colors
+# utoload -Uz colors && colors
 # 補完関連
 # utoload -U compinit && compinit
 
@@ -84,7 +84,7 @@ setopt correct
 
 ZSH_THEME_GIT_PROMPT_PREFIX="["
 ZSH_THEME_GIT_PROMPT_SUFFIX=" ]"
-ZSH_THEME_GIT_PROMPT_BRANCH="%{$fg[white]%}"
+ZSH_THEME_GIT_PROMPT_BRANCH="%{$fg[green]%}"
 ZSH_THEME_GIT_PROMPT_STAGED="%{$fg[green]%}%{ %G%}"
 ZSH_THEME_GIT_PROMPT_CONFLICTS="%{$fg[magenta]%}%{x%G%}"
 ZSH_THEME_GIT_PROMPT_CHANGED="%{$fg[red]%}%{+%G%}"
@@ -96,13 +96,10 @@ ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}%{✔%G%}"
 # プロンプト設定
 my_prompt='[%m%#%n %~]%f'
 # PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
-if [ $? -eq 0 ]; then
-  ERROR_COLOR='%F{cyan}'
-else
-  ERROR_COLOR='%F{red}'
-fi
 
-PROMPT="${ERROR_COLOR}${my_prompt}"'$(git_super_status)'$'\n'
+
+
+PROMPT="%(?.%{${fg[cyan]}%}.%{${fg[red]}%})${my_prompt}"'$(git_super_status)'$'\n'
 
 
 # PROMPT='%B%m%~%b$(git_super_status) %# '
