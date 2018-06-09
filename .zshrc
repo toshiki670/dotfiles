@@ -109,7 +109,7 @@ ZSH_THEME_GIT_PROMPT_AHEAD="%K{${sec_clr}}%F{green}%{+%G%}"
 ZSH_THEME_GIT_PROMPT_CLEAN="%K{${sec_clr}}%F{green}%{✔ %G%}"
 
 
-my_prompt='%#%~ '
+my_prompt=' %#%~ '
 my_prompt2="${pri_set}⌘ %k%F{${pri_clr}}${sep}%f "
 
 pass_status="${pri_set}${my_prompt}%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
