@@ -188,6 +188,9 @@ let g:NERDTreeIndicatorMapCustom = {
 # Git -------------------------
 [[plugins]]
 repo = 'tpope/vim-fugitive'
+hook_add = '''
+noremap gadd :Gwrite<Enter>
+'''
 
 [[plugins]]
 repo = 'airblade/vim-gitgutter'
