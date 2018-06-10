@@ -88,6 +88,7 @@ ZSH_THEME_GIT_PROMPT_CONFLICTS="%K{${sec_clr}}%F{magenta}%{x%G%}"
 ZSH_THEME_GIT_PROMPT_CHANGED="%K{${sec_clr}}%F{219}%{+%G%}"
 ZSH_THEME_GIT_PROMPT_BEHIND="%K{${sec_clr}}%F{219}%{-%G%}"
 ZSH_THEME_GIT_PROMPT_AHEAD="%K{${sec_clr}}%F{green}%{+%G%}"
+ZSH_THEME_GIT_PROMPT_UNTRACKED="%K{${sec_clr}}%{… %G%}"
 ZSH_THEME_GIT_PROMPT_CLEAN="%K{${sec_clr}}%F{green}%{✔ %G%}"
 
 
