@@ -24,8 +24,10 @@ if dein#load_state('~/.cache/dein')
 
   " Appearance
   call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
+
   " Completion
   call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
+
   " Control
   call dein#add('kana/vim-submode')
 
