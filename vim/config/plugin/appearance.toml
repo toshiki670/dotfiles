@@ -189,7 +189,8 @@ let g:NERDTreeIndicatorMapCustom = {
 [[plugins]]
 repo = 'tpope/vim-fugitive'
 hook_add = '''
-noremap gadd :Gwrite<Enter>
+noremap gad :Gwrite<Enter>
+noremap gcm :Gcommit<Enter>
 '''
 
 [[plugins]]
