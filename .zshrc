@@ -80,7 +80,7 @@ fail_set="%K{${fail_clr}}%F{${fail_fore}}"
 
 source $ZPLUG_HOME/repos/olivierverdier/zsh-git-prompt/zshrc.sh
 ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ⭠ "
-ZSH_THEME_GIT_PROMPT_SUFFIX="%K{${sec_clr}}%F{${sec_clr}} %k${sep}"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%K{${sec_clr}} %k"
 ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sub_sep} "
 ZSH_THEME_GIT_PROMPT_BRANCH="${sec_set}"
 ZSH_THEME_GIT_PROMPT_STAGED="%K{${sec_clr}}%F{green}%{!%G%}"
@@ -98,7 +98,7 @@ my_prompt2="${pri_set}⌘ %k%F{${pri_clr}}${sep}%f "
 pass_status="${pri_set}${my_prompt}%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
 fail_status="${fail_set}${my_prompt}%K{${sec_clr}}%F{${fail_clr}}${sep}%k%f"
 
-PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'$my_prompt2
+PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'"%F{${sec_clr}}${sep}"$'\n'$my_prompt2
 PROMPT2=$my_prompt2
 
 my_sprompt="${fail_set}Correct%K{${sec_clr}}%F{${fail_clr}}${sep}%f"
