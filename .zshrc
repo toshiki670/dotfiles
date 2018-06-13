@@ -27,7 +27,7 @@ if [ -e $ZPLUG_HOME ]; then
   zplug "zsh-users/zsh-completions"
   zplug "zsh-users/zsh-syntax-highlighting"
   zplug "zsh-users/zsh-autosuggestions"
-  zplug "olivierverdier/zsh-git-prompt"
+  zplug "starcraftman/zsh-git-prompt"
   # プラグイン追加後、下記を実行する
   # zplug install
   zplug load
@@ -78,18 +78,26 @@ fail_clr='207'
 fail_fore='088'
 fail_set="%K{${fail_clr}}%F{${fail_fore}}"
 
-source $ZPLUG_HOME/repos/olivierverdier/zsh-git-prompt/zshrc.sh
+source $ZPLUG_HOME/repos/starcraftman/zsh-git-prompt/zshrc.sh
 ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ⭠ "
 ZSH_THEME_GIT_PROMPT_SUFFIX="%K{${sec_clr}} %k"
+ZSH_THEME_GIT_PROMPT_HASH_PREFIX=":"
 ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sub_sep} "
 ZSH_THEME_GIT_PROMPT_BRANCH="${sec_set}"
 ZSH_THEME_GIT_PROMPT_STAGED="%K{${sec_clr}}%F{green}%{!%G%}"
 ZSH_THEME_GIT_PROMPT_CONFLICTS="%K{${sec_clr}}%F{magenta}%{x%G%}"
 ZSH_THEME_GIT_PROMPT_CHANGED="%K{${sec_clr}}%F{219}%{+%G%}"
-ZSH_THEME_GIT_PROMPT_BEHIND="%K{${sec_clr}}%F{219}%{-%G%}"
-ZSH_THEME_GIT_PROMPT_AHEAD="%K{${sec_clr}}%F{green}%{+%G%}"
+ZSH_THEME_GIT_PROMPT_BEHIND="%K{${sec_clr}}%F{219}%{-%2G%}"
+ZSH_THEME_GIT_PROMPT_AHEAD="%K{${sec_clr}}%F{green}%{+%2G%}"
+ZSH_THEME_GIT_PROMPT_STASHED="${sec_set}%{⚑%G%}"
 ZSH_THEME_GIT_PROMPT_UNTRACKED="%K{${sec_clr}}%{… %G%}"
 ZSH_THEME_GIT_PROMPT_CLEAN="%K{${sec_clr}}%F{green}%{✔ %G%}"
+ZSH_THEME_GIT_PROMPT_LOCAL=" L"
+# The remote branch will be shown between these two
+ZSH_THEME_GIT_PROMPT_UPSTREAM_FRONT=" {%{$fg[blue]%}"
+ZSH_THEME_GIT_PROMPT_UPSTREAM_END="%{${reset_color}%}}"
+ZSH_THEME_GIT_PROMPT_MERGING="%{$fg_bold[magenta]%}|MERGING%{${reset_color}%}"
+ZSH_THEME_GIT_PROMPT_REBASE="%{$fg_bold[magenta]%}|REBASE%{${reset_color}%} "
 
 
 my_prompt=' %#%~ '
