@@ -55,8 +55,10 @@ filetype plugin indent on
 syntax enable
 " dein.vim ここまで -----------------------------------------------------
 
+" テキストのモードを非表示
+set noshowmode
 
-" 個人設定
+" Last status
 set laststatus=2
 
 " 文字コードをUTF-8に設定
