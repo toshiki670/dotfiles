@@ -33,7 +33,7 @@ if [ -e $ZPLUG_HOME ]; then
   zplug load
 fi
 
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=230'
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
 
 # Theme configure
@@ -102,7 +102,7 @@ ZSH_THEME_GIT_PROMPT_REBASE="%{$fg_bold[magenta]%}|REBASE%{${reset_color}%}"
 
 
 my_prompt=' %#%~ '
-my_prompt2="${pri_set}⌘ %k%F{${pri_clr}}${sep}%f "
+my_prompt2="${sec_set}⌘ %k%F{${sec_clr}}${sep}%f "
 
 pass_status="${pri_set}${my_prompt}%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
 fail_status="${fail_set}${my_prompt}%K{${sec_clr}}%F{${fail_clr}}${sep}%k%f"
@@ -111,7 +111,7 @@ PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'"%F{${sec_clr}}${sep}"
 PROMPT2=$my_prompt2
 
 my_sprompt="${fail_set}Correct%K{${sec_clr}}%F{${fail_clr}}${sep}%f"
-my_sprompt2="${pri_set}[nyae] %k%F{${pri_clr}}${sep}%f "
+my_sprompt2="${sec_set}[nyae] %k%F{${sec_clr}}${sep}%f "
 SPROMPT="${my_sprompt}%F{${sec_fore}}'%R' to '%r'? %k%F{${sec_clr}}${sep}%f"$'\n'$my_sprompt2
 
 # ---------------------------------------------------------
