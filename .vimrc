@@ -146,13 +146,11 @@ noremap N Nzz
 
 
 " 自動挿入
-inoremap {<Enter> {}<Left><CR><ESC><S-o>
-" inoremap [<Enter> []<Left><CR><ESC><S-o>
-inoremap [ []<LEFT>
-" inoremap (<Enter> ()<Left><CR><ESC><S-o>
-inoremap ( ()<LEFT>
-inoremap ' ''<LEFT>
-inoremap " ""<LEFT>
+" inoremap {<Enter> {}<Left><CR><ESC><S-o>
+" inoremap [ []<LEFT>
+" inoremap ( ()<LEFT>
+" inoremap ' ''<LEFT>
+" inoremap " ""<LEFT>
 
 
 " コマンド入力用の設定
