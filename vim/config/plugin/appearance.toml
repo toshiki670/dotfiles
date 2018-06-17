@@ -203,3 +203,7 @@ set updatetime=250
 [[plugins]]
 repo = 'Yggdroot/indentLine'
 
+# Comment ---------------------
+[[plugins]]
+repo = 'tomtom/tcomment_vim'
+
