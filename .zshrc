@@ -155,6 +155,7 @@ alias v='vim'
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
+alias vim-cheat='vim ~/dotfiles/vim/cheatsheet/common.md'
 # alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 alias emacs='echo "Emacs is died!!!!"'
