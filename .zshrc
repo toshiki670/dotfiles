@@ -121,6 +121,7 @@ alias ls='gls --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'
+alias rm='rm -i'
 
 # For git
 alias g='git'
