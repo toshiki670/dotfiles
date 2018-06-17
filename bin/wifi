@@ -5,12 +5,13 @@
 
 CMDNAME=`basename $0`
 
-while getopts pc: OPT
+while getopts npc: OPT
 do
   case $OPT in
+    "n" ) set_name="TRUE" ;;
     "p" ) set_percent="TRUE" ;;
     "c" ) set_color="TRUE" ; color_name="$OPTARG" ;;
-      * ) echo "Usage: $CMDNAME [-p] [-c VALUE]" 1>&2
+      * ) echo "Usage: $CMDNAME [-n] [-p] [-c VALUE]" 1>&2
           exit 1 ;;
   esac
 done
@@ -59,7 +60,10 @@ fi
 rssi="${info[0]}"   # strength of wifi wave
 stat="${info[1]}"   # whether wifi is available
 rate="${info[2]}"   # bandwidth of wifi wave
-ssid="${info[3]}"   # wifi ssid name
+ssid=""
+if [ "${set_name}" = "TRUE" ]; then
+  ssid="${info[3]}"   # wifi ssid name
+fi
 
 # If the wifi rate (wifi bandwidth) is unavailable,
 if [ "$rate" = 0 ]; then
