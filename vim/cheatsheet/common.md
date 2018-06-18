@@ -24,7 +24,7 @@ st    : Create new tab
 ### Adjust spirit
 s>>.. : Move a split to right
 s<<.. : Move a split to left
-s++.. : Move a split to up_
+s++.. : Move a split to up
 s--.. : Move a split to down
 
 
@@ -34,4 +34,4 @@ C-p
 C-k
 
 ### Emmet
-C-f   : Have to change this keybind. 
+C-f   : Have to change this keybind
