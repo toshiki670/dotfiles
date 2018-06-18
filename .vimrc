@@ -75,6 +75,7 @@ if has('conceal')
   set conceallevel=2 concealcursor=niv
 endif
 
+highlight EndOfBuffer ctermfg=8
 
 " テキストのモードを非表示
 set noshowmode
