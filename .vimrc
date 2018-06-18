@@ -182,8 +182,8 @@ nnoremap sL <C-w>L
 nnoremap sH <C-w>H
 " nnoremap sr <C-w>r
 " タブ移動
-" nnoremap sm gt
-" nnoremap sn gT
+nnoremap sm gt
+nnoremap sn gT
 
 " スピリットの大きさを整える
 nnoremap s= <C-w>=
@@ -210,8 +210,8 @@ nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
 " バッファ一覧
 nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 " バッファ移動
-nnoremap sm :bn<CR>
-nnoremap sn :bp<CR>
+" nnoremap sm :bn<CR>
+" nnoremap sn :bp<CR>
 
 " Splitの調節
 call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
