@@ -1,8 +1,11 @@
-# My remote memories
-
+# Your brain gave up thinking, So I give happiness...
 ## Normal mode
 *     : Choice word after all marked the same word.
 =     : Fix indent(and on visual mode).
+C-d   : Move corsor to down half window
+C-u   : Move corsor to up half window
+C-f   : Move corsor to next window
+C-u   : Move corsor to previous window
 
 ## Window
 sw    : Rotate spirit
