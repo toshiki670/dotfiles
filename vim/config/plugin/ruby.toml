@@ -16,3 +16,4 @@ repo = 'tpope/vim-rails'
 [[plugins]]
 repo = 'uplus/deoplete-solargraph'
 
+
