@@ -93,7 +93,7 @@ ZSH_THEME_GIT_PROMPT_AHEAD="%K{${sec_clr}}%F{green}%{+%2G%}"
 ZSH_THEME_GIT_PROMPT_STASHED="${sec_set}%{⚑%G%}"
 ZSH_THEME_GIT_PROMPT_UNTRACKED="%K{${sec_clr}}%{… %G%}"
 ZSH_THEME_GIT_PROMPT_CLEAN="%K{${sec_clr}}%F{green}%{✔ %G%}"
-ZSH_THEME_GIT_PROMPT_LOCAL=" L"
+ZSH_THEME_GIT_PROMPT_LOCAL="${sec_set} L"
 # The remote branch will be shown between these two
 ZSH_THEME_GIT_PROMPT_UPSTREAM_FRONT="{%{$fg[blue]%}"
 ZSH_THEME_GIT_PROMPT_UPSTREAM_END="%{${reset_color}%}}"
