@@ -214,3 +214,4 @@ hook_add = '''
 let g:cheatsheet#cheat_file = '~/dotfiles/vim/cheatsheet/common.md'
 noremap cheat :Cheat<Enter>
 '''
+

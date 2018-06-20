@@ -18,3 +18,4 @@ else
     echo "error: Invalid argument ($target)"
     echo "Usage: $0 [bash|zsh]"
 fi
+
