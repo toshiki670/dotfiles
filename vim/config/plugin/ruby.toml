@@ -16,4 +16,6 @@ repo = 'tpope/vim-rails'
 [[plugins]]
 repo = 'uplus/deoplete-solargraph'
 
+[[plugins]]
+repo = 'violetyk/neosnippet-rails'
 

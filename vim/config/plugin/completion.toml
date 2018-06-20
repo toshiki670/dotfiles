@@ -17,8 +17,9 @@ if = '''!has('nvim')'''
 
 [[plugins]]
 repo = 'Shougo/neosnippet.vim'
+depends = 'Shougo/neosnippet-snippet'
+depends = 'violetyk/neosnippet-rails'
 
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
-depends = 'Shougo/neosnippet.vim'
 
