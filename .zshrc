@@ -135,7 +135,7 @@ alias gpull='git pull'
 alias gpullre='git pull --rebase'
 alias gpush='git push'
 alias glog="git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
-alias g-reset-hard='git reset --hard HEAD'
+alias g_reset_hard='git reset --hard HEAD'
 
 
 # For PHP
@@ -152,10 +152,10 @@ alias ipecho='curl ipecho.net/plain; echo'
 
 # For vim
 alias v='vim'
-alias vim-utf8='vim -c ":e ++enc=utf8"'
-alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
-alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
-alias vim-cheat='vim ~/dotfiles/vim/cheatsheet/common.md'
+alias vim_utf8='vim -c ":e ++enc=utf8"'
+alias vim_euc_jp='vim -c ":e ++enc=euc-jp"'
+alias vim_shift_jis='vim -c ":e ++enc=shift_jis"'
+alias vim_cheat='vim ~/dotfiles/vim/cheatsheet/common.md'
 # alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 alias emacs='echo "Emacs is died!!!!"'
@@ -201,7 +201,7 @@ goo() {
 }
 
 
-ps-grep() {
+ps_grep() {
   ps aux | grep $1 | grep -v grep
 }
 
