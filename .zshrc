@@ -200,6 +200,12 @@ goo() {
   open http://www.google.com/$opt
 }
 
+
+ps-grep() {
+  ps aux | grep $1 | grep -v grep
+}
+
+
 # Tmux起動
 if [ $SHLVL = 1 ]; then
   tmux
