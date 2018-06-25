@@ -158,8 +158,6 @@ alias vim_shift_jis='vim -c ":e ++enc=shift_jis"'
 alias vim_cheat='vim ~/dotfiles/vim/cheatsheet/common.md'
 # alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
-alias emacs='echo "Emacs is died!!!!"'
-
 # 拡張子に応じたコマンドを実行
 alias -s txt='vim'
 alias -s html='open'
