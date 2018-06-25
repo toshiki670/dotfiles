@@ -156,6 +156,7 @@ noremap name *:%s///g<LEFT><LEFT>
 
 " コマンド入力用の設定
 noremap ; :
+noremap : ;
 
 " 編集されていない時に終了する
 noremap QQ :q<Enter>
