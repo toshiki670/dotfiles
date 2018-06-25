@@ -182,7 +182,10 @@ export SAVEHIST=100000
 setopt hist_ignore_dups
 
 # 開始と終了を記録
-# setopt EXTENDED_HISTORY
+setopt EXTENDED_HISTORY
+
+# 全履歴を一覧表示する
+function history-all { history -E 1 }
 
 
 # Google Search By Safari
