@@ -33,6 +33,7 @@ if dein#load_state('~/.cache/dein')
 
   " Ruby and Rails
   call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
+  call dein#add('tpope/vim-rails')
 
   " Web related
   call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})

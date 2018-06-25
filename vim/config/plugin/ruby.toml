@@ -1,3 +1,4 @@
+# Ruby
 [[plugins]]
 repo = 'vim-ruby/vim-ruby'
 on_i = 1
@@ -16,6 +17,7 @@ repo = 'tpope/vim-rails'
 [[plugins]]
 repo = 'uplus/deoplete-solargraph'
 
+# Rails
 [[plugins]]
-repo = 'violetyk/neosnippet-rails'
+repo = 'tpope/vim-rails'
 
