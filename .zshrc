@@ -207,12 +207,12 @@ ps_grep() {
 
 
 # Tmux起動
-if [ $SHLVL = 1 ]; then
-  tmux
-  exit
-else
-  cat ~/dotfiles/screenfetch
-fi
+# if [ $SHLVL = 1 ]; then
+#   tmux
+#   exit
+# else
+#   cat ~/dotfiles/screenfetch
+# fi
 
 # ターミナル起動時に実行
 
