@@ -157,14 +157,15 @@ repo = 'scrooloose/nerdtree'
 hook_add = '''
 set ttimeoutlen=50
 let g:NERDTreeShowBookmarks=1
+noremap tree :NERDTreeToggle<Enter>
 '''
 
-[[plugins]]
-repo = 'jistr/vim-nerdtree-tabs'
-hook_add = '''
-let g:nerdtree_tabs_open_on_console_startup=1
-noremap tree :NERDTreeTabsToggle<Enter>
-'''
+# [[plugins]]
+# repo = 'jistr/vim-nerdtree-tabs'
+# hook_add = '''
+# let g:nerdtree_tabs_open_on_console_startup=1
+# noremap tree :NERDTreeTabsToggle<Enter>
+# '''
 
 
 [[plugins]]
@@ -188,6 +189,10 @@ let g:NERDTreeIndicatorMapCustom = {
 # Git -------------------------
 [[plugins]]
 repo = 'tpope/vim-fugitive'
+hook_add = '''
+noremap gad :Gwrite<Enter>
+noremap gcm :Gcommit<Enter>
+'''
 
 [[plugins]]
 repo = 'airblade/vim-gitgutter'
@@ -198,4 +203,16 @@ set updatetime=250
 # Indent ----------------------
 [[plugins]]
 repo = 'Yggdroot/indentLine'
+
+# Comment ---------------------
+[[plugins]]
+repo = 'tomtom/tcomment_vim'
+
+# Cheatsheet ------------------
+[[plugins]]
+repo = 'reireias/vim-cheatsheet'
+hook_add = '''
+let g:cheatsheet#cheat_file = '~/dotfiles/vim/cheatsheet/common.md'
+noremap cheat :Cheat<Enter>
+'''
 

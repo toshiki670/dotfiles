@@ -29,10 +29,11 @@ if dein#load_state('~/.cache/dein')
   call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
 
   " Control
-  call dein#load_toml(plugins_dir . 'control.toml', {'lazy': 1})
+  call dein#add('kana/vim-submode')
 
   " Ruby and Rails
   call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
+  call dein#add('tpope/vim-rails')
 
   " Web related
   call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
@@ -55,8 +56,32 @@ filetype plugin indent on
 syntax enable
 " dein.vim ここまで -----------------------------------------------------
 
+" Plugin key-mappings.
+" Note: It must be "imap" and "smap".  It uses <Plug> mappings.
+imap <C-k>     <Plug>(neosnippet_expand_or_jump)
+smap <C-k>     <Plug>(neosnippet_expand_or_jump)
+xmap <C-k>     <Plug>(neosnippet_expand_target)
 
-" 個人設定
+" SuperTab like snippets behavior.
+" Note: It must be "imap" and "smap".  It uses <Plug> mappings.
+imap <expr><TAB>
+ \ pumvisible() ? "\<C-n>" :
+ \ neosnippet#expandable_or_jumpable() ?
+ \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
+\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+
+" For conceal markers.
+if has('conceal')
+  set conceallevel=2 concealcursor=niv
+endif
+
+highlight EndOfBuffer ctermfg=8
+
+" テキストのモードを非表示
+set noshowmode
+
+" Last status
 set laststatus=2
 
 " 文字コードをUTF-8に設定
@@ -120,29 +145,28 @@ nmap <Esc><Esc> :nohlsearch<CR><Esc>
 " nNで移動する時画面中央に移動する
 noremap n nzz
 noremap N Nzz
-
+noremap name *:%s///g<LEFT><LEFT>
 
 " 自動挿入
-inoremap {<Enter> {}<Left><CR><ESC><S-o>
-" inoremap [<Enter> []<Left><CR><ESC><S-o>
-inoremap [ []<LEFT>
-" inoremap (<Enter> ()<Left><CR><ESC><S-o>
-inoremap ( ()<LEFT>
-inoremap ' ''<LEFT>
-inoremap " ""<LEFT>
+" inoremap {<Enter> {}<Left><CR><ESC><S-o>
+" inoremap [ []<LEFT>
+" inoremap ( ()<LEFT>
+" inoremap ' ''<LEFT>
+" inoremap " ""<LEFT>
 
 
 " コマンド入力用の設定
 noremap ; :
+noremap : ;
 
 " 編集されていない時に終了する
 noremap QQ :q<Enter>
 
 " インサートモードでも移動
-inoremap <C-j>  <down>
-inoremap <C-k>  <up>
-inoremap <C-h>  <left>
-inoremap <C-l>  <right>
+" inoremap <C-j>  <down>
+" inoremap <C-k>  <up>
+" inoremap <C-h>  <left>
+" inoremap <C-l>  <right>
 
 
 " https://qiita.com/tekkoc/items/98adcadfa4bdc8b5a6ca
@@ -161,8 +185,8 @@ nnoremap sL <C-w>L
 nnoremap sH <C-w>H
 " nnoremap sr <C-w>r
 " タブ移動
-" nnoremap sm gt
-" nnoremap sn gT
+nnoremap sm gt
+nnoremap sn gT
 
 " スピリットの大きさを整える
 nnoremap s= <C-w>=
@@ -189,9 +213,18 @@ nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
 " バッファ一覧
 nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 " バッファ移動
-nnoremap sm :bn<CR>
-nnoremap sn :bp<CR>
+" nnoremap sm :bn<CR>
+" nnoremap sn :bp<CR>
 
+" Splitの調節
+call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
+call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
+call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
+call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
+call submode#map('bufmove', 'n', '', '>', '<C-w>>')
+call submode#map('bufmove', 'n', '', '<', '<C-w><')
+call submode#map('bufmove', 'n', '', '+', '<C-w>+')
+call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 
 " マウスクリック有効
 if has("mouse") " Enable the use of the mouse in all modes

@@ -19,44 +19,27 @@ eval "$(rbenv init --no-rehash -)";
 export PATH="$HOME/.rbenv/shims:$PATH"
 
 
-
 # aotoload設定一覧 (Zplugが入っている場合無効)
-if [ -e /usr/local/opt/zplug ]; then
+export ZPLUG_HOME=/usr/local/opt/zplug
+if [ -e $ZPLUG_HOME ]; then
   # Zplug の有効化
-  export ZPLUG_HOME=/usr/local/opt/zplug
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
   zplug "zsh-users/zsh-syntax-highlighting"
   zplug "zsh-users/zsh-autosuggestions"
+  zplug "toshiki670/zsh-git-prompt"
   # プラグイン追加後、下記を実行する
   # zplug install
   zplug load
 fi
 
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=230'
-
-# utoload -Uz add-zsh-hook
-# Color
-# utoload -Uz colors && colors
-# 補完関連
-# utoload -U compinit && compinit
-
-# Git のステータスを表示
-autoload -Uz vcs_info
-setopt prompt_subst
-zstyle ':vcs_info:git:*' check-for-changes true
-zstyle ':vcs_info:git:*' stagedstr "|%F{yellow}staged%F{cyan}"
-zstyle ':vcs_info:git:*' unstagedstr "|%F{red}unstaged%F{cyan}"
-zstyle ':vcs_info:*' formats "%F{cyan}[%b%c%u]%f"
-zstyle ':vcs_info:*' actionformats "%F{red}[%b|%a]%f"
-precmd () { vcs_info }
-
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
 
 # Theme configure
 # eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
-eval $(gdircolors ~/dotfiles/color/dircolors-solarized)
-eval $(dircolors ~/dotfiles/color/dircolors-solarized/dircolors.ansi-universal)
+eval $(gdircolors ~/dotfiles/zsh/bundle/color/dircolors-solarized)
+eval $(dircolors ~/dotfiles/zsh/bundle/color/dircolors-solarized/dircolors.ansi-universal)
 
 # 補完機能
 bindkey "^[[Z" reverse-menu-complete
@@ -79,26 +62,71 @@ setopt auto_cd
 setopt auto_pushd
 setopt correct
 
-# プロンプト設定
-my_prompt='[%m%#%n %~]%f'
-PROMPT=%(?@'%F{cyan}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> '@'%F{red}${my_prompt} ${vcs_info_msg_0_}'$'\n''>> ')
-PROMPT2='>> '
-SPROMPT="%F{red}Correct '%R' to '%r'?%f"$'\n''[nyae]>> '
+# Prompt comfig -------------------------------------------
+sep='⮀'
+sub_sep='⮁'
 
+pri_clr='green'
+pri_fore='022'
+pri_set="%K{${pri_clr}}%F{${pri_fore}}"
+
+sec_clr='240'
+sec_fore='255'
+sec_set="%K{${sec_clr}}%F{${sec_fore}}"
+
+fail_clr='207'
+fail_fore='088'
+fail_set="%K{${fail_clr}}%F{${fail_fore}}"
+
+source $ZPLUG_HOME/repos/toshiki670/zsh-git-prompt/zshrc.sh
+ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ⭠ "
+ZSH_THEME_GIT_PROMPT_SUFFIX="%K{${sec_clr}} %k"
+ZSH_THEME_GIT_PROMPT_HASH_PREFIX=":"
+ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sub_sep} "
+ZSH_THEME_GIT_PROMPT_BRANCH_AFTER="${sec_set} "
+ZSH_THEME_GIT_PROMPT_BRANCH="${sec_set}"
+ZSH_THEME_GIT_PROMPT_STAGED="%K{${sec_clr}}%F{green}%{!%G%}"
+ZSH_THEME_GIT_PROMPT_CONFLICTS="%K{${sec_clr}}%F{magenta}%{x%G%}"
+ZSH_THEME_GIT_PROMPT_CHANGED="%K{${sec_clr}}%F{219}%{+%G%}"
+ZSH_THEME_GIT_PROMPT_BEHIND="%K{${sec_clr}}%F{219}%{-%2G%}"
+ZSH_THEME_GIT_PROMPT_AHEAD="%K{${sec_clr}}%F{green}%{+%2G%}"
+ZSH_THEME_GIT_PROMPT_STASHED="${sec_set}%{⚑%G%}"
+ZSH_THEME_GIT_PROMPT_UNTRACKED="%K{${sec_clr}}%{… %G%}"
+ZSH_THEME_GIT_PROMPT_CLEAN="%K{${sec_clr}}%F{green}%{✔ %G%}"
+ZSH_THEME_GIT_PROMPT_LOCAL="${sec_set} L"
+# The remote branch will be shown between these two
+ZSH_THEME_GIT_PROMPT_UPSTREAM_FRONT="{%{$fg[blue]%}"
+ZSH_THEME_GIT_PROMPT_UPSTREAM_END="%{${reset_color}%}}"
+ZSH_THEME_GIT_PROMPT_MERGING="%{$fg_bold[magenta]%}|MERGING%{${reset_color}%}"
+ZSH_THEME_GIT_PROMPT_REBASE="%{$fg_bold[magenta]%}|REBASE%{${reset_color}%}"
+
+
+my_prompt=' %#%~ '
+my_prompt2="${sec_set}⌘ %k%F{${sec_clr}}${sep}%f "
+
+pass_status="${pri_set}${my_prompt}%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
+fail_status="${fail_set}${my_prompt}%K{${sec_clr}}%F{${fail_clr}}${sep}%k%f"
+
+PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'"%F{${sec_clr}}${sep}"$'\n'$my_prompt2
+PROMPT2=$my_prompt2
+
+my_sprompt="${fail_set}Correct%K{${sec_clr}}%F{${fail_clr}}${sep}%f"
+my_sprompt2="${sec_set}[nyae] %k%F{${sec_clr}}${sep}%f "
+SPROMPT="${my_sprompt}%F{${sec_fore}}'%R' to '%r'? %k%F{${sec_clr}}${sep}%f"$'\n'$my_sprompt2
+
+# ---------------------------------------------------------
 
 alias relogin='exec $SHELL -l'
 alias ls='gls --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'
+alias rm='rm -i'
 
 # For git
 alias g='git'
-alias ga='git add'
-alias gau='git add -u'
-alias ga.='git add .'
-alias gc='git commit'
-alias gcm='git commit -m'
+alias gad='git add'
+alias gcm='git commit'
 alias gb='git branch'
 alias gch='git checkout'
 alias gd='git diff'
@@ -125,8 +153,9 @@ alias ipecho='curl ipecho.net/plain; echo'
 # For vim
 alias v='vim'
 alias vim-utf8='vim -c ":e ++enc=utf8"'
-alias vim-euc-jp='vim -c ":e ++enc=euc-jp"'
-alias vim-shift-jis='vim -c ":e ++enc=shift_jis"'
+alias vim-euc_jp='vim -c ":e ++enc=euc-jp"'
+alias vim-shift_jis='vim -c ":e ++enc=shift_jis"'
+alias vim-cheat='vim ~/dotfiles/vim/cheatsheet/common.md'
 # alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 # 拡張子に応じたコマンドを実行
@@ -137,8 +166,8 @@ alias -s py='python'
 alias -s php='php -f'
 
 # Dotfiles Config
-alias vimrc='vim ~/.vimrc'
-alias zshrc='vim ~/.zshrc'
+alias vimrc='vim ~/dotfiles/vim/.vimrc'
+alias zshrc='vim ~/dotfiles/zsh/.zshrc'
 
 # 履歴ファイルの保存先
 export HISTFILE=${HOME}/.zsh_history
@@ -153,7 +182,10 @@ export SAVEHIST=100000
 setopt hist_ignore_dups
 
 # 開始と終了を記録
-# setopt EXTENDED_HISTORY
+setopt EXTENDED_HISTORY
+
+# 全履歴を一覧表示する
+function history-all { history -E 1 }
 
 
 # Google Search By Safari
@@ -169,12 +201,19 @@ goo() {
   open http://www.google.com/$opt
 }
 
+
+function ps-grep {
+  ps aux | grep $1 | grep -v grep
+}
+
+
 # Tmux起動
-if [ $SHLVL = 1 ]; then
-  tmux
-else
-  cat ~/dotfiles/screenfetch
-fi
+# if [ $SHLVL = 1 ]; then
+#   tmux
+#   exit
+# else
+#   cat ~/dotfiles/screenfetch
+# fi
 
 # ターミナル起動時に実行
 
@@ -183,3 +222,4 @@ fi
 # if (which zprof > /dev/null 2>&1) ;then
 #   zprof
 # fi
+

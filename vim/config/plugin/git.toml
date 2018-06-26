@@ -1,9 +1,0 @@
-[[plugins]]
-repo = 'tpope/vim-fugitive'
-
-[[plugins]]
-repo = 'airblade/vim-gitgutter'
-hook_add = '''
-set updatetime=250
-'''
-

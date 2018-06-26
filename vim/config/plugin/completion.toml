@@ -15,3 +15,11 @@ if = '''!has('nvim')'''
 repo = 'roxma/vim-hug-neovim-rpc'
 if = '''!has('nvim')'''
 
+[[plugins]]
+repo = 'Shougo/neosnippet.vim'
+depends = 'Shougo/neosnippet-snippet'
+depends = 'violetyk/neosnippet-rails'
+
+[[plugins]]
+repo = 'Shougo/neosnippet-snippets'
+
