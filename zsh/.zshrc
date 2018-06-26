@@ -166,8 +166,8 @@ alias -s py='python'
 alias -s php='php -f'
 
 # Dotfiles Config
-alias vimrc='vim ~/.vimrc'
-alias zshrc='vim ~/.zshrc'
+alias vimrc='vim ~/dotfiles/vim/.vimrc'
+alias zshrc='vim ~/dotfiles/zsh/.zshrc'
 
 # 履歴ファイルの保存先
 export HISTFILE=${HOME}/.zsh_history
