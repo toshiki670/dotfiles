@@ -10,12 +10,25 @@
 if &compatible
   set nocompatible
 endif
-" Add the dein installation directory into runtimepath
-set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
 
-if dein#load_state('~/.cache/dein')
-  call dein#begin('~/.cache/dein')
-  call dein#add('~/.cache/dein')
+" プラグインが実際にインストールされるディレクトリ
+let s:dein_dir = expand('~/.cache/dein')
+" dein.vim 本体
+let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
+
+" dein.vim がなければ github から落としてくる
+if &runtimepath !~# '/dein.vim'
+  if !isdirectory(s:dein_repo_dir)
+    execute '!git clone https://github.com/Shougo/dein.vim' s:dein_repo_dir
+  endif
+  execute 'set runtimepath^=' . fnamemodify(s:dein_repo_dir, ':p')
+endif
+
+" Add the dein installation directory into runtimepath
+set runtimepath+=s:dein_repo_dir
+if dein#load_state(s:dein_dir)
+  call dein#begin(s:dein_dir)
+  call dein#add(s:dein_dir)
   " Add or remove your plugins her e:
   let plugins_dir = '~/dotfiles/vim/config/plugin/'
 
@@ -141,7 +154,7 @@ set wrapscan
 " 検索語をハイライト表示
 set hlsearch
 " ESC連打でハイライト解除
-nmap <Esc><Esc> :nohlsearch<CR><Esc>
+noremap <Esc><Esc> :nohlsearch<CR><Esc>
 " nNで移動する時画面中央に移動する
 noremap n nzz
 noremap N Nzz
