@@ -5,14 +5,14 @@
 "    \ \/ / | || | | || | | (__
 " o   \__/  |_||_|_|_||_|  \___|
 "
-
-" dein.vim ここから -----------------------------------------------------
 if &compatible
   set nocompatible
 endif
 
+" dein.vim ここから -----------------------------------------------------
 " プラグインが実際にインストールされるディレクトリ
-let s:dein_dir = expand('~/.cache/dein')
+let s:dein_dir = expand('~/dotfiles/vim/plugin')
+
 " dein.vim 本体
 let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
 
