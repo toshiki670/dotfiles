@@ -32,6 +32,7 @@ if dein#load_state(s:dein_dir)
   " Add or remove your plugins her e:
   let plugins_dir = '~/dotfiles/vim/config/plugin/'
 
+
   " Async Proc
   call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
 
@@ -69,6 +70,7 @@ filetype plugin indent on
 syntax enable
 " dein.vim ここまで -----------------------------------------------------
 
+
 " Plugin key-mappings.
 " Note: It must be "imap" and "smap".  It uses <Plug> mappings.
 imap <C-k>     <Plug>(neosnippet_expand_or_jump)
@@ -88,6 +90,9 @@ smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 if has('conceal')
   set conceallevel=2 concealcursor=niv
 endif
+
+" End of Plugin config ---------------------------------------------------
+
 
 highlight EndOfBuffer ctermfg=8
 
