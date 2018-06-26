@@ -16,4 +16,6 @@ Zsh, Vim, Tmux and iTerm2.
   - 沢山
 
 * tmux
+  - Tmux Plugin Manager
+    + $ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
