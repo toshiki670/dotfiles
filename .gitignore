@@ -15,6 +15,11 @@ tags
 color/*
 !.keep
 
-# zsh
+# Zsh
 zsh/bundle/*
 !.keep
+
+# Vim
+vim/plugin/*
+!.keep
+
