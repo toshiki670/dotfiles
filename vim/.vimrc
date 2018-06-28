@@ -183,12 +183,6 @@ noremap name *:%s///g<LEFT><LEFT>
 noremap ; :
 noremap : ;
 
-" インサートモードでも移動
-" inoremap <C-j>  <down>
-" inoremap <C-k>  <up>
-" inoremap <C-h>  <left>
-" inoremap <C-l>  <right>
-
 
 " https://qiita.com/tekkoc/items/98adcadfa4bdc8b5a6ca
 " 画面分割設定
