@@ -183,9 +183,6 @@ noremap name *:%s///g<LEFT><LEFT>
 noremap ; :
 noremap : ;
 
-" 編集されていない時に終了する
-noremap QQ :q<Enter>
-
 " インサートモードでも移動
 " inoremap <C-j>  <down>
 " inoremap <C-k>  <up>
