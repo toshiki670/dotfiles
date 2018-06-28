@@ -131,8 +131,14 @@ set smartindent
 set list
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
 set history=50
+
+" フリーカーソルモード
 set virtualedit=block
-set whichwrap=b,s,[,],<,>
+
+" カーソルを左右に動かした時に前後の行末、行頭に移動
+set whichwrap=b,s,h,l,[,],<,>
+
+" バックスペースの動作
 set backspace=indent,eol,start
 
 " 入力中のコマンドを表示する
