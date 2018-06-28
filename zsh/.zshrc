@@ -66,7 +66,7 @@ setopt correct
 sep='⮀'
 sub_sep='⮁'
 
-pri_clr='green'
+pri_clr='226'
 pri_fore='022'
 pri_set="%K{${pri_clr}}%F{${pri_fore}}"
 
@@ -74,7 +74,7 @@ sec_clr='240'
 sec_fore='255'
 sec_set="%K{${sec_clr}}%F{${sec_fore}}"
 
-fail_clr='207'
+fail_clr='214'
 fail_fore='088'
 fail_set="%K{${fail_clr}}%F{${fail_fore}}"
 
