@@ -12,7 +12,7 @@ let g:lightline = {
         \   'right': [
         \     ['lineinfo', 'syntastic'],
         \     ['percent'],
-        \     ['charcode', 'fileformat', 'fileencoding', 'filetype'],
+        \     ['charcode', 'fileencoding', 'filetype', 'fileformat'],
         \   ]
         \ },
         \ 'component_function': {
