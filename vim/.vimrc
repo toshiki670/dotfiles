@@ -35,8 +35,8 @@ if dein#load_state(s:dein_dir)
   " Async Proc
   call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
 
-  " Appearance
-  call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
+  " Common
+  call dein#load_toml(plugins_dir . 'common.toml', {'lazy': 0})
 
   " Completion
   call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
