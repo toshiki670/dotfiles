@@ -66,7 +66,7 @@ setopt correct
 sep='⮀'
 sub_sep='⮁'
 
-pri_clr='226'
+pri_clr='155'
 pri_fore='022'
 pri_set="%K{${pri_clr}}%F{${pri_fore}}"
 
