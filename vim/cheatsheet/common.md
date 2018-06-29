@@ -40,17 +40,17 @@ C-k
 C-f   : Have to change this keybind
 
 ## Unite rails
-nnoremap <C-H><C-H><C-H>  rails/view
-nnoremap <C-H><C-H>       rails/model
-nnoremap <C-H>            rails/controller
+nnoremap <C-H>v          rails/view
+nnoremap <C-H>m          rails/model
+nnoremap <C-H>c          rails/controller
 
-nnoremap <C-H>c           rails/config
-nnoremap <C-H>s           rails/spec
-nnoremap <C-H>m           rails/db -input=migrate
-nnoremap <C-H>l           rails/lib
-nnoremap <expr><C-H>g     Gemfile
-nnoremap <expr><C-H>r     config/routes.rb
-nnoremap <expr><C-H>se    db/seeds.rb
-nnoremap <C-H>ra          rails/rake
-nnoremap <C-H>h           rails/heroku
+nnoremap <C-H>co         rails/config
+nnoremap <C-H>s          rails/spec
+nnoremap <C-H>mi         rails/db -input=migrate
+nnoremap <C-H>l          rails/lib
+nnoremap <expr><C-H>g    Gemfile
+nnoremap <expr><C-H>r    config/routes.rb
+nnoremap <expr><C-H>se   db/seeds.rb
+nnoremap <C-H>ra         rails/rake
+nnoremap <C-H>h          rails/heroku
 
