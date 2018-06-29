@@ -25,7 +25,6 @@ if &runtimepath !~# '/dein.vim'
 endif
 
 " Add the dein installation directory into runtimepath
-set runtimepath+=s:dein_repo_dir
 if dein#load_state(s:dein_dir)
   call dein#begin(s:dein_dir)
   call dein#add(s:dein_dir)
