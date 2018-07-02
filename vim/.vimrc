@@ -192,8 +192,8 @@ noremap name *:%s///g<LEFT><LEFT>
 
 
 " コマンド入力用の設定
-noremap ; :
-noremap : ;
+" noremap ; :
+" noremap : ;
 
 
 " https://qiita.com/tekkoc/items/98adcadfa4bdc8b5a6ca
