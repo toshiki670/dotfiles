@@ -38,8 +38,8 @@ if dein#load_state(s:dein_dir)
   " Common
   call dein#load_toml(plugins_dir . 'common.toml', {'lazy': 0})
 
-  " Unite
-  call dein#load_toml(plugins_dir . 'unite.toml', {'lazy': 0})
+  " Denite
+  call dein#load_toml(plugins_dir . 'denite.toml', {'lazy': 0})
 
   " Completion
   call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
