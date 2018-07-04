@@ -4,8 +4,8 @@ hook_add = '''
 let g:deoplete#enable_at_startup = 1
 let g:deoplete#enable_smart_case = 1
 '''
-depends = 'nvim-yarp'
-depends = 'vim-hug-neovim-rpc'
+# depends = 'nvim-yarp'
+# depends = 'vim-hug-neovim-rpc'
 
 [[plugins]]
 repo = 'roxma/nvim-yarp'
