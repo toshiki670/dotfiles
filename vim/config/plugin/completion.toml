@@ -3,17 +3,28 @@ repo = 'Shougo/deoplete.nvim'
 hook_add = '''
 let g:deoplete#enable_at_startup = 1
 let g:deoplete#enable_smart_case = 1
+
+let g:deoplete#sources#omni#input_patterns = {
+  \ "ruby" : '[^. *\t]\.\w*\|\h\w*::',
+  \}
 '''
 # depends = 'nvim-yarp'
 # depends = 'vim-hug-neovim-rpc'
 
 [[plugins]]
-repo = 'roxma/nvim-yarp'
-if = '''!has('nvim')'''
+repo = 'Shougo/neco-vim'
 
 [[plugins]]
-repo = 'roxma/vim-hug-neovim-rpc'
-if = '''!has('nvim')'''
+repo = 'Shougo/neco-syntax'
+
+
+# [[plugins]]
+# repo = 'roxma/nvim-yarp'
+# if = '''!has('nvim')'''
+#
+# [[plugins]]
+# repo = 'roxma/vim-hug-neovim-rpc'
+# if = '''!has('nvim')'''
 
 [[plugins]]
 repo = 'Shougo/neosnippet.vim'
