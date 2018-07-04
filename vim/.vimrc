@@ -52,8 +52,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('tpope/vim-rails')
 
   " Web related
-  call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
-
+  call dein#add('mattn/emmet-vim')
 
 
   " Install if uninstalled
@@ -93,6 +92,8 @@ if has('conceal')
   set conceallevel=2 concealcursor=niv
 endif
 
+" For Emmet
+let g:user_emmet_leader_key='<C-f>'
 " End of Plugin config ---------------------------------------------------
 " color ------------------------------------------------------------------
 " 分差時の表示を変更
