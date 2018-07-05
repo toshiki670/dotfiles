@@ -4,15 +4,19 @@ repo = 'Shougo/denite.nvim'
 [[plugins]]
 repo = '5t111111/denite-rails'
 hook_add = '''
-nnoremap <C-h> <Nop>
-nmap     <Leader>r <C-h>
-nnoremap <C-h>r :Denite<Space>rails:
-nnoremap <silent> <C-h>r :<C-u>Denite<Space>rails:dwim<Return>
-nnoremap <silent> <C-h>m :<C-u>Denite<Space>rails:model<Return>
-nnoremap <silent> <C-h>c :<C-u>Denite<Space>rails:controller<Return>
-nnoremap <silent> <C-h>v :<C-u>Denite<Space>rails:view<Return>
-nnoremap <silent> <C-h>h :<C-u>Denite<Space>rails:helper<Return>
-nnoremap <silent> <C-h>r :<C-u>Denite<Space>rails:test<Return>
-nnoremap <silent> <C-h>s :<C-u>Denite<Space>rails:spec<Return>
+let mapleader = "\<Space>"
+nnoremap [rails] <Nop>
+nmap     <Leader>r [rails]
+nnoremap [rails]r :Denite<Space>rails:
+nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:dwim<Return>
+nnoremap <silent> [rails]m   :<C-u>Denite<Space>rails:model<Return>
+nnoremap <silent> [rails]c   :<C-u>Denite<Space>rails:controller<Return>
+nnoremap <silent> [rails]v   :<C-u>Denite<Space>rails:view<Return>
+nnoremap <silent> [rails]h   :<C-u>Denite<Space>rails:helper<Return>
+nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:test<Return>
+nnoremap <silent> [rails]s   :<C-u>Denite<Space>rails:spec<Return>
+nnoremap <silent> [rails]g  ':e '.b:rails_root.'/Gemfile<CR>'
+nnoremap <silent> [rails]ro ':e '.b:rails_root.'/config/routes.rb<CR>'
+nnoremap <silent> [rails]se ':e '.b:rails_root.'/db/seeds.rb<CR>'
 '''
 

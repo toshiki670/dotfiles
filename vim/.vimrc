@@ -106,6 +106,8 @@ highlight DiffText   ctermfg=10 ctermbg=21
 highlight EndOfBuffer ctermfg=8
 
 " set series -------------------------------------------------------------
+
+let mapleader = "\<Space>"
 " テキストのモードを非表示
 set noshowmode
 
