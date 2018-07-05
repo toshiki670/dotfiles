@@ -184,7 +184,7 @@ noremap <Esc><Esc> :nohlsearch<CR><Esc>
 " nNで移動する時画面中央に移動する
 noremap n nzz
 noremap N Nzz
-noremap name *:%s///g<LEFT><LEFT>
+noremap <Leader>na *:%s///g<LEFT><LEFT>
 
 " 自動挿入
 " inoremap {<Enter> {}<Left><CR><ESC><S-o>
