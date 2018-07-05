@@ -13,9 +13,6 @@ on_ft = ['ruby']
 [[plugins]]
 repo = 'tpope/vim-rails'
 
-[[plugins]]
-repo = 'violetyk/neosnippet-rails'
-
 # Completion
 # [[plugins]]
 # repo = 'fishbullet/deoplete-ruby'
