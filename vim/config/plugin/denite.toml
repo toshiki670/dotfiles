@@ -2,7 +2,7 @@
 repo = 'Shougo/denite.nvim'
 
 [[plugins]]
-repo = '5t111111/denite-rails'
+repo = 'iyuuya/denite-rails'
 hook_add = '''
 let mapleader = "\<Space>"
 nnoremap [rails] <Nop>
@@ -13,10 +13,9 @@ nnoremap <silent> [rails]m   :<C-u>Denite<Space>rails:model<Return>
 nnoremap <silent> [rails]c   :<C-u>Denite<Space>rails:controller<Return>
 nnoremap <silent> [rails]v   :<C-u>Denite<Space>rails:view<Return>
 nnoremap <silent> [rails]h   :<C-u>Denite<Space>rails:helper<Return>
-nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:test<Return>
+nnoremap <silent> [rails]t   :<C-u>Denite<Space>rails:test<Return>
 nnoremap <silent> [rails]s   :<C-u>Denite<Space>rails:spec<Return>
-nnoremap <silent> [rails]g  ':e '.b:rails_root.'/Gemfile<CR>'
-nnoremap <silent> [rails]ro ':e '.b:rails_root.'/config/routes.rb<CR>'
-nnoremap <silent> [rails]se ':e '.b:rails_root.'/db/seeds.rb<CR>'
+nnoremap <silent> [rails]d   :<C-u>Denite<Space>rails:db<Return>
+nnoremap <silent> [rails]co  :<C-u>Denite<Space>rails:config<Return>
 '''
 
