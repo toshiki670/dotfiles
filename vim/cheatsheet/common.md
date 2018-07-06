@@ -39,18 +39,41 @@ C-k
 ### Emmet
 C-f   : Have to change this keybind
 
-## Unite rails
-nnoremap <C-H>v          rails/view
-nnoremap <C-H>m          rails/model
-nnoremap <C-H>c          rails/controller
-
-nnoremap <C-H>co         rails/config
-nnoremap <C-H>s          rails/spec
-nnoremap <C-H>mi         rails/db -input=migrate
-nnoremap <C-H>l          rails/lib
-nnoremap <expr><C-H>g    Gemfile
-nnoremap <expr><C-H>r    config/routes.rb
-nnoremap <expr><C-H>se   db/seeds.rb
-nnoremap <C-H>ra         rails/rake
-nnoremap <C-H>h          rails/heroku
+## Denite rails
+nmap     <Leader>r [rails]
+nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:dwim<Return>
+nnoremap <silent> [rails]m   :<C-u>Denite<Space>rails:model<Return>
+nnoremap <silent> [rails]c   :<C-u>Denite<Space>rails:controller<Return>
+nnoremap <silent> [rails]v   :<C-u>Denite<Space>rails:view<Return>
+nnoremap <silent> [rails]a   :<C-u>Denite<Space>rails:asset<Return>
+nnoremap <silent> [rails]h   :<C-u>Denite<Space>rails:helper<Return>
+nnoremap <silent> [rails]t   :<C-u>Denite<Space>rails:test<Return>
+nnoremap <silent> [rails]s   :<C-u>Denite<Space>rails:spec<Return>
+nnoremap <silent> [rails]d   :<C-u>Denite<Space>rails:db<Return>
+nnoremap <silent> [rails]co  :<C-u>Denite<Space>rails:config<Return>
+Denite rails:ability
+Denite rails:asset
+Denite rails:attribute
+Denite rails:config
+Denite rails:controller
+Denite rails:db
+Denite rails:decorator
+Denite rails:domain
+Denite rails:factory
+Denite rails:form
+Denite rails:helper
+Denite rails:job
+Denite rails:loyalty
+Denite rails:mailer
+Denite rails:model
+Denite rails:policy
+Denite rails:presenter
+Denite rails:query
+Denite rails:serializer
+Denite rails:service
+Denite rails:spec
+Denite rails:test
+Denite rails:uploader
+Denite rails:validator
+Denite rails:view
 
