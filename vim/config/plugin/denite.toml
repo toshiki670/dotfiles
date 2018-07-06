@@ -4,7 +4,6 @@ repo = 'Shougo/denite.nvim'
 [[plugins]]
 repo = 'iyuuya/denite-rails'
 hook_add = '''
-let mapleader = "\<Space>"
 nnoremap [rails] <Nop>
 nmap     <Leader>r [rails]
 nnoremap [rails]r :Denite<Space>rails:

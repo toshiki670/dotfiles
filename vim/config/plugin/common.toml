@@ -158,7 +158,7 @@ repo = 'scrooloose/nerdtree'
 hook_add = '''
 set ttimeoutlen=50
 let g:NERDTreeShowBookmarks=1
-noremap tree :NERDTreeToggle<Enter>
+noremap <Leader>t :NERDTreeToggle<Enter>
 '''
 
 # [[plugins]]
@@ -191,8 +191,10 @@ let g:NERDTreeIndicatorMapCustom = {
 [[plugins]]
 repo = 'tpope/vim-fugitive'
 hook_add = '''
-noremap gad :Gwrite<Enter>
-noremap gcm :Gcommit<Enter>
+nnoremap [git] <Nop>
+nmap     <Leader>g [git]
+noremap <silent> [git]a :Gwrite<Enter>
+noremap <silent> [git]c :Gcommit<Enter>
 '''
 
 [[plugins]]
@@ -214,6 +216,6 @@ repo = 'tomtom/tcomment_vim'
 repo = 'reireias/vim-cheatsheet'
 hook_add = '''
 let g:cheatsheet#cheat_file = '~/dotfiles/vim/cheatsheet/common.md'
-noremap cheat :Cheat<Enter>
+noremap <Leader>ch :Cheat<Enter>
 '''
 

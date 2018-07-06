@@ -8,6 +8,7 @@
 if &compatible
   set nocompatible
 endif
+let mapleader = "\<Space>"
 
 " dein.vim ここから -----------------------------------------------------
 " プラグインが実際にインストールされるディレクトリ
@@ -107,7 +108,6 @@ highlight EndOfBuffer ctermfg=8
 
 " set series -------------------------------------------------------------
 
-let mapleader = "\<Space>"
 " テキストのモードを非表示
 set noshowmode
 
