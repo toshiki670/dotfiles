@@ -238,10 +238,6 @@ nnoremap sv :<C-u>vs<CR>
 nnoremap sq :<C-u>q<CR>
 " バッファを閉じる
 nnoremap sQ :<C-u>bd<CR>
-" 現在のタブで開いたバッファ一覧
-nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
-" バッファ一覧
-nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 " バッファ移動
 " nnoremap sm :bn<CR>
 " nnoremap sn :bp<CR>
