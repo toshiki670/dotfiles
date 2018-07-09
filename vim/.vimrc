@@ -252,7 +252,7 @@ call submode#map('bufmove', 'n', '', '+', '<C-w>+')
 call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 
 " マウスクリック有効
-if has("mouse") " Enable the use of the mouse in all modes
-  set mouse=a
-endif
+" if has("mouse") " Enable the use of the mouse in all modes
+"   set mouse=a
+" endif
 
