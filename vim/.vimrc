@@ -65,16 +65,14 @@ if dein#load_state(s:dein_dir)
 
   call dein#end()
   call dein#save_state()
+
+  " For Emmet
+  let g:user_emmet_leader_key='<C-f>'
 endif
 
 filetype plugin indent on
 syntax enable
-" dein.vim ここまで -----------------------------------------------------
 
-
-" For Emmet
-let g:user_emmet_leader_key='<C-f>'
-" End of Plugin config ---------------------------------------------------
 " color ------------------------------------------------------------------
 " 分差時の表示を変更
 highlight DiffAdd    ctermfg=10 ctermbg=22
