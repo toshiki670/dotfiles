@@ -11,11 +11,17 @@ let g:deoplete#sources#omni#input_patterns = {
 # depends = 'nvim-yarp'
 # depends = 'vim-hug-neovim-rpc'
 
+# Vimスクリプトの補完
 [[plugins]]
 repo = 'Shougo/neco-vim'
 
+# 各filetypeのsyntaxファイルの中にある記述を見て 補完候補を追加
 [[plugins]]
 repo = 'Shougo/neco-syntax'
+
+# lookコマンドを使って英単語を補完
+[[plugins]]
+repo = 'ujihisa/neco-look'
 
 
 # [[plugins]]
