@@ -6,6 +6,7 @@ C-d   : Move corsor to down half window
 C-u   : Move corsor to up half window
 C-f   : Move corsor to next window
 C-u   : Move corsor to previous window
+ga    : Get Ascii value
 
 ## Window
 sw    : Rotate spirit
