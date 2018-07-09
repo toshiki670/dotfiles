@@ -2,7 +2,7 @@
 repo = 'Shougo/denite.nvim'
 hook_add = '''
 nmap [denite] <Nop>
-map <Leader>u [denite]
+map <Space>u [denite]
 
 " プロジェクト内のファイル検索
 nmap <silent> [denite]p :<C-u>Denite file_rec -highlight-mode-insert=Search<CR>
@@ -31,7 +31,7 @@ call denite#custom#map('insert', '<C-O>', '<denite:do_action:tabopen>')
 repo = 'iyuuya/denite-rails'
 hook_add = '''
 nnoremap [rails] <Nop>
-nmap     <Leader>r [rails]
+nmap     <Space>r [rails]
 nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:dwim<Return>
 nnoremap <silent> [rails]m   :<C-u>Denite<Space>rails:model<Return>
 nnoremap <silent> [rails]c   :<C-u>Denite<Space>rails:controller<Return>
