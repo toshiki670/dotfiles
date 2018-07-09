@@ -170,6 +170,10 @@ set updatetime=250
 # Indent ----------------------
 [[plugins]]
 repo = 'Yggdroot/indentLine'
+hook_add = '''
+let g:indentLine_char = '|'
+let g:indentLine_color_term = 239
+'''
 
 # Comment ---------------------
 [[plugins]]
