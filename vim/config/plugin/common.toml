@@ -11,7 +11,6 @@ let g:lightline = {
         \   ],
         \   'right': [
         \     ['lineinfo', 'syntastic'],
-        \     ['percent'],
         \     ['fileencoding', 'filetype', 'fileformat'],
         \   ]
         \ },
