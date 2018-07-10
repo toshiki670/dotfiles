@@ -1,8 +1,9 @@
 # ログインシェルとインタラクティブシェルの場合だけ読み込まれる。
 # シェルスクリプトでは不要な場合に記述する。
 # 
-export PATH="$HOME/dotfiles/bin:$PATH"
 
+export PATH="/usr/local/sbin:$PATH"
+export PATH="$HOME/dotfiles/bin:$PATH"
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 # For pyenv
 # export PYENV_ROOT="$HOME/.pyenv"
@@ -66,7 +67,7 @@ setopt correct
 sep='⮀'
 sub_sep='⮁'
 
-pri_clr='green'
+pri_clr='155'
 pri_fore='022'
 pri_set="%K{${pri_clr}}%F{${pri_fore}}"
 
@@ -74,7 +75,7 @@ sec_clr='240'
 sec_fore='255'
 sec_set="%K{${sec_clr}}%F{${sec_fore}}"
 
-fail_clr='207'
+fail_clr='214'
 fail_fore='088'
 fail_set="%K{${fail_clr}}%F{${fail_fore}}"
 
@@ -121,7 +122,6 @@ alias ls='gls --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'
-alias rm='rm -i'
 
 # For git
 alias g='git'
@@ -151,7 +151,9 @@ alias note='cd ~/Documents/Note'
 alias ipecho='curl ipecho.net/plain; echo'
 
 # For vim
-alias v='vim'
+alias vim=nvim
+alias v=vim
+alias vi =vim
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc_jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift_jis='vim -c ":e ++enc=shift_jis"'

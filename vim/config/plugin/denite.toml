@@ -1,0 +1,46 @@
+[[plugins]]
+repo = 'Shougo/denite.nvim'
+hook_add = '''
+nmap [denite] <Nop>
+map <Space>u [denite]
+
+" プロジェクト内のファイル検索
+nmap <silent> [denite]p :<C-u>Denite file_rec -highlight-mode-insert=Search<CR>
+" バッファに展開中のファイル検索
+nmap <silent> [denite]b :<C-u>Denite buffer -highlight-mode-insert=Search<CR>
+" ファイル内の関数/クラス等の検索
+nmap <silent> [denite]o :<C-u>Denite outline -highlight-mode-insert=Search<CR>
+
+" 上下移動を<C-N>, <C-P>
+call denite#custom#map('normal', '<C-N>', '<denite:move_to_next_line>')
+call denite#custom#map('normal', '<C-P>', '<denite:move_to_previous_line>')
+call denite#custom#map('insert', '<C-N>', '<denite:move_to_next_line>')
+call denite#custom#map('insert', '<C-P>', '<denite:move_to_previous_line>')
+" 入力履歴移動を<C-J>, <C-K>
+call denite#custom#map('insert', '<C-J>', '<denite:assign_next_text>')
+call denite#custom#map('insert', '<C-K>', '<denite:assign_previous_text>')
+" 横割りオープンを`<C-S>`
+call denite#custom#map('insert', '<C-S>', '<denite:do_action:split>')
+" 縦割りオープンを`<C-I>`
+call denite#custom#map('insert', '<C-I>', '<denite:do_action:vsplit>')
+" タブオープンを`<C-O>`
+call denite#custom#map('insert', '<C-O>', '<denite:do_action:tabopen>')
+'''
+
+[[plugins]]
+repo = 'iyuuya/denite-rails'
+hook_add = '''
+nnoremap [rails] <Nop>
+nmap     <Space>r [rails]
+nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:dwim<Return>
+nnoremap <silent> [rails]m   :<C-u>Denite<Space>rails:model<Return>
+nnoremap <silent> [rails]c   :<C-u>Denite<Space>rails:controller<Return>
+nnoremap <silent> [rails]v   :<C-u>Denite<Space>rails:view<Return>
+nnoremap <silent> [rails]a   :<C-u>Denite<Space>rails:asset<Return>
+nnoremap <silent> [rails]h   :<C-u>Denite<Space>rails:helper<Return>
+nnoremap <silent> [rails]t   :<C-u>Denite<Space>rails:test<Return>
+nnoremap <silent> [rails]s   :<C-u>Denite<Space>rails:spec<Return>
+nnoremap <silent> [rails]d   :<C-u>Denite<Space>rails:db<Return>
+nnoremap <silent> [rails]co  :<C-u>Denite<Space>rails:config<Return>
+'''
+

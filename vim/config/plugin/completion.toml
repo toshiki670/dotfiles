@@ -1,25 +1,15 @@
 [[plugins]]
-repo = 'Shougo/deoplete.nvim'
-hook_add = '''
-let g:deoplete#enable_at_startup = 1
-let g:deoplete#enable_smart_case = 1
-'''
-depends = 'nvim-yarp'
-depends = 'vim-hug-neovim-rpc'
-
-[[plugins]]
-repo = 'roxma/nvim-yarp'
-if = '''!has('nvim')'''
-
-[[plugins]]
-repo = 'roxma/vim-hug-neovim-rpc'
-if = '''!has('nvim')'''
-
-[[plugins]]
-repo = 'Shougo/neosnippet.vim'
-depends = 'Shougo/neosnippet-snippet'
-depends = 'violetyk/neosnippet-rails'
-
-[[plugins]]
 repo = 'Shougo/neosnippet-snippets'
+
+# Vimスクリプトの補完
+[[plugins]]
+repo = 'Shougo/neco-vim'
+
+# 各filetypeのsyntaxファイルの中にある記述を見て 補完候補を追加
+[[plugins]]
+repo = 'Shougo/neco-syntax'
+
+# lookコマンドを使って英単語を補完
+[[plugins]]
+repo = 'ujihisa/neco-look'
 

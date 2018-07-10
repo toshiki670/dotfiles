@@ -25,7 +25,6 @@ if &runtimepath !~# '/dein.vim'
 endif
 
 " Add the dein installation directory into runtimepath
-set runtimepath+=s:dein_repo_dir
 if dein#load_state(s:dein_dir)
   call dein#begin(s:dein_dir)
   call dein#add(s:dein_dir)
@@ -36,11 +35,15 @@ if dein#load_state(s:dein_dir)
   " Async Proc
   call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
 
-  " Appearance
-  call dein#load_toml(plugins_dir . 'appearance.toml', {'lazy': 0})
+  " Common
+  call dein#load_toml(plugins_dir . 'common.toml', {'lazy': 0})
 
   " Completion
   call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
+  call dein#load_toml(plugins_dir . 'completion_lazy.toml', {'lazy': 1})
+
+  " Denite
+  call dein#load_toml(plugins_dir . 'denite.toml', {'lazy': 0})
 
   " Control
   call dein#add('kana/vim-submode')
@@ -48,10 +51,6 @@ if dein#load_state(s:dein_dir)
   " Ruby and Rails
   call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
   call dein#add('tpope/vim-rails')
-
-  " Web related
-  call dein#load_toml(plugins_dir . 'web.toml', {'lazy': 1})
-
 
 
   " Install if uninstalled
@@ -61,40 +60,24 @@ if dein#load_state(s:dein_dir)
 
   " For Debug
   " call dein#recache_runtimepath()
-
   call dein#end()
   call dein#save_state()
 endif
 
 filetype plugin indent on
 syntax enable
-" dein.vim ここまで -----------------------------------------------------
 
+" color ------------------------------------------------------------------
+" 分差時の表示を変更
+highlight DiffAdd    ctermfg=10 ctermbg=22
+highlight DiffDelete ctermfg=10 ctermbg=52
+highlight DiffChange ctermfg=10 ctermbg=17
+highlight DiffText   ctermfg=10 ctermbg=21
 
-" Plugin key-mappings.
-" Note: It must be "imap" and "smap".  It uses <Plug> mappings.
-imap <C-k>     <Plug>(neosnippet_expand_or_jump)
-smap <C-k>     <Plug>(neosnippet_expand_or_jump)
-xmap <C-k>     <Plug>(neosnippet_expand_target)
-
-" SuperTab like snippets behavior.
-" Note: It must be "imap" and "smap".  It uses <Plug> mappings.
-imap <expr><TAB>
- \ pumvisible() ? "\<C-n>" :
- \ neosnippet#expandable_or_jumpable() ?
- \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
-\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-
-" For conceal markers.
-if has('conceal')
-  set conceallevel=2 concealcursor=niv
-endif
-
-" End of Plugin config ---------------------------------------------------
-
-
+" バッファ外のチルダ
 highlight EndOfBuffer ctermfg=8
+
+" set series -------------------------------------------------------------
 
 " テキストのモードを非表示
 set noshowmode
@@ -131,8 +114,14 @@ set smartindent
 set list
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
 set history=50
+
+" フリーカーソルモード
 set virtualedit=block
-set whichwrap=b,s,[,],<,>
+
+" カーソルを左右に動かした時に前後の行末、行頭に移動
+set whichwrap=b,s,h,l,[,],<,>
+
+" バックスペースの動作
 set backspace=indent,eol,start
 
 " 入力中のコマンドを表示する
@@ -146,6 +135,9 @@ set clipboard+=unnamed
 
 " ビープ音を可視化
 set visualbell
+
+" 保存せずにバッファ移動
+set hidden
 
 " 検索系
 " 検索文字列が小文字の場合は大文字小文字を区別なく検索
@@ -163,7 +155,7 @@ noremap <Esc><Esc> :nohlsearch<CR><Esc>
 " nNで移動する時画面中央に移動する
 noremap n nzz
 noremap N Nzz
-noremap name *:%s///g<LEFT><LEFT>
+noremap <Space>na *:%s///g<LEFT><LEFT>
 
 " 自動挿入
 " inoremap {<Enter> {}<Left><CR><ESC><S-o>
@@ -174,17 +166,8 @@ noremap name *:%s///g<LEFT><LEFT>
 
 
 " コマンド入力用の設定
-noremap ; :
-noremap : ;
-
-" 編集されていない時に終了する
-noremap QQ :q<Enter>
-
-" インサートモードでも移動
-" inoremap <C-j>  <down>
-" inoremap <C-k>  <up>
-" inoremap <C-h>  <left>
-" inoremap <C-l>  <right>
+" noremap ; :
+" noremap : ;
 
 
 " https://qiita.com/tekkoc/items/98adcadfa4bdc8b5a6ca
@@ -226,10 +209,6 @@ nnoremap sv :<C-u>vs<CR>
 nnoremap sq :<C-u>q<CR>
 " バッファを閉じる
 nnoremap sQ :<C-u>bd<CR>
-" 現在のタブで開いたバッファ一覧
-nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
-" バッファ一覧
-nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
 " バッファ移動
 " nnoremap sm :bn<CR>
 " nnoremap sn :bp<CR>
@@ -245,7 +224,7 @@ call submode#map('bufmove', 'n', '', '+', '<C-w>+')
 call submode#map('bufmove', 'n', '', '-', '<C-w>-')
 
 " マウスクリック有効
-if has("mouse") " Enable the use of the mouse in all modes
-  set mouse=a
-endif
+" if has("mouse") " Enable the use of the mouse in all modes
+"   set mouse=a
+" endif
 
