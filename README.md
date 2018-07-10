@@ -1,5 +1,5 @@
 # Dotfiles
-Zsh, Vim, Tmux and iTerm2.
+Zsh, Nvim, Tmux and iTerm2.
 
 ## Description
 私の私による私のための開発環境
@@ -12,8 +12,9 @@ Zsh, Vim, Tmux and iTerm2.
     + lsの強化バージョン
   - git clone https://github.com/seebi/dircolors-solarized.git
 
-* vim 8~
-  - 沢山
+* Nvim 0.30
+  - gem install neovim
+  - npm install -g neovim
 
 * tmux
   - Tmux Plugin Manager
