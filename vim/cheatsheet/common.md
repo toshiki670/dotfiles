@@ -1,4 +1,10 @@
 # Your brain gave up thinking, So I give happiness...
+
+## Ex command
+:sp   : 横方向に分割
+:vs   : 縦方向に分割
+
+
 ## Normal mode
 *     : Choice word after all marked the same word.
 =     : Fix indent(and on visual mode).
