@@ -27,7 +27,7 @@ endif
 [[plugins]]
 repo = 'Shougo/deoplete.nvim'
 on_i = 1
-depends = ['Shougo/neco-vim', 'Shougo/neco-syntax', 'ujihisa/neco-look']
+depends = ['neco-vim', 'neco-syntax', 'neco-look']
 hook_add = '''
 let g:deoplete#enable_at_startup = 1
 let g:deoplete#enable_smart_case = 1
