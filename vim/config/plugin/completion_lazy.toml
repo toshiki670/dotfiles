@@ -1,0 +1,57 @@
+[[plugins]]
+repo = 'Shougo/neosnippet.vim'
+on_i = 1
+depends = ['neosnippet-snippets']
+hook_source = '''
+" Plugin key-mappings.
+" Note: It must be "imap" and "smap".  It uses <Plug> mappings.
+imap <C-k>     <Plug>(neosnippet_expand_or_jump)
+smap <C-k>     <Plug>(neosnippet_expand_or_jump)
+xmap <C-k>     <Plug>(neosnippet_expand_target)
+
+" SuperTab like snippets behavior.
+" Note: It must be "imap" and "smap".  It uses <Plug> mappings.
+imap <expr><TAB>
+ \ pumvisible() ? "\<C-n>" :
+ \ neosnippet#expandable_or_jumpable() ?
+ \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
+\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+
+" For conceal markers.
+if has('conceal')
+  set conceallevel=2 concealcursor=niv
+endif
+'''
+
+[[plugins]]
+repo = 'Shougo/deoplete.nvim'
+on_i = 1
+depends = ['Shougo/neco-vim', 'Shougo/neco-syntax', 'ujihisa/neco-look']
+hook_add = '''
+let g:deoplete#enable_at_startup = 1
+let g:deoplete#enable_smart_case = 1
+let g:deoplete#enable_camel_case = 0
+let g:deoplete#enable_ignore_case = 0
+let g:deoplete#auto_complete_delay = 1
+let g:deoplete#auto_complete_start_length = 2
+let g:deoplete#max_list = 100
+let g:deoplete#file#enable_buffer_path = 1
+
+" le:deoplete#sources#omni#input_patterns = {
+"   \ "ruby" : '[^. *\t]\.\w*\|\h\w*::',
+"   \}
+'''
+
+
+# depends = 'nvim-yarp'
+# depends = 'vim-hug-neovim-rpc'
+
+# [[plugins]]
+# repo = 'roxma/nvim-yarp'
+# if = '''!has('nvim')'''
+#
+# [[plugins]]
+# repo = 'roxma/vim-hug-neovim-rpc'
+# if = '''!has('nvim')'''
+
