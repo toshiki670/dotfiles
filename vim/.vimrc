@@ -52,9 +52,6 @@ if dein#load_state(s:dein_dir)
   call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
   call dein#add('tpope/vim-rails')
 
-  " Web related
-  call dein#add('mattn/emmet-vim')
-
 
   " Install if uninstalled
   if dein#check_install()
@@ -63,12 +60,8 @@ if dein#load_state(s:dein_dir)
 
   " For Debug
   " call dein#recache_runtimepath()
-
   call dein#end()
   call dein#save_state()
-
-  " For Emmet
-  let g:user_emmet_leader_key='<C-f>'
 endif
 
 filetype plugin indent on
