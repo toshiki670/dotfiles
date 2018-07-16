@@ -10,8 +10,10 @@ if &compatible
 endif
 
 " dein.vim ここから -----------------------------------------------------
+let s:vimrc_root = '~/dotfiles/vim'
+
 " プラグインが実際にインストールされるディレクトリ
-let s:dein_dir = expand('~/dotfiles/vim/plugin')
+let s:dein_dir = expand(s:vimrc_root . '/plugin')
 
 " dein.vim 本体
 let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
@@ -29,7 +31,7 @@ if dein#load_state(s:dein_dir)
   call dein#begin(s:dein_dir)
   call dein#add(s:dein_dir)
   " Add or remove your plugins her e:
-  let s:config_dir = '~/dotfiles/vim/config/plugin/'
+  let s:config_dir = s:vimrc_root . '/config/plugin/'
 
 
   " Async Proc
