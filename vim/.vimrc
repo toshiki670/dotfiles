@@ -29,27 +29,27 @@ if dein#load_state(s:dein_dir)
   call dein#begin(s:dein_dir)
   call dein#add(s:dein_dir)
   " Add or remove your plugins her e:
-  let plugins_dir = '~/dotfiles/vim/config/plugin/'
+  let s:config_dir = '~/dotfiles/vim/config/plugin/'
 
 
   " Async Proc
   call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
 
   " Common
-  call dein#load_toml(plugins_dir . 'common.toml', {'lazy': 0})
+  call dein#load_toml(s:config_dir . 'common.toml', {'lazy': 0})
 
   " Completion
-  call dein#load_toml(plugins_dir . 'completion.toml', {'lazy': 0})
-  call dein#load_toml(plugins_dir . 'completion_lazy.toml', {'lazy': 1})
+  call dein#load_toml(s:config_dir . 'completion.toml', {'lazy': 0})
+  call dein#load_toml(s:config_dir . 'completion_lazy.toml', {'lazy': 1})
 
   " Denite
-  call dein#load_toml(plugins_dir . 'denite.toml', {'lazy': 0})
+  call dein#load_toml(s:config_dir . 'denite.toml', {'lazy': 0})
 
   " Control
   call dein#add('kana/vim-submode')
 
   " Ruby and Rails
-  call dein#load_toml(plugins_dir . 'ruby.toml', {'lazy': 1})
+  call dein#load_toml(s:config_dir . 'ruby.toml', {'lazy': 1})
   call dein#add('tpope/vim-rails')
 
 
