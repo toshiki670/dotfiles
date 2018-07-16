@@ -1,15 +1,16 @@
 [[plugins]]
 repo = 'Shougo/denite.nvim'
 hook_add = '''
+let g:unite_source_file_mru_limit = 192
 nmap [denite] <Nop>
-map <Space>u [denite]
+map <Space>d [denite]
 
 " プロジェクト内のファイル検索
-nmap <silent> [denite]p :<C-u>Denite file_rec -highlight-mode-insert=Search<CR>
+nmap <silent> [denite]p :<C-u>Denite file_rec<CR>
 " バッファに展開中のファイル検索
-nmap <silent> [denite]b :<C-u>Denite buffer -highlight-mode-insert=Search<CR>
+nmap <silent> [denite]b :<C-u>Denite buffer<CR>
 " ファイル内の関数/クラス等の検索
-nmap <silent> [denite]o :<C-u>Denite outline -highlight-mode-insert=Search<CR>
+nmap <silent> [denite]o :<C-u>Denite outline<CR>
 
 " 上下移動を<C-N>, <C-P>
 call denite#custom#map('normal', '<C-N>', '<denite:move_to_next_line>')

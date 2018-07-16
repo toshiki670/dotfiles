@@ -7,7 +7,7 @@ let g:lightline = {
         \ 'active': {
         \   'left': [
         \     ['mode', 'paste'],
-        \     ['fugitive', 'gitgutter', 'filename'],
+        \     ['fugitive', 'filename'],
         \   ],
         \   'right': [
         \     ['lineinfo', 'syntastic'],
@@ -24,7 +24,6 @@ let g:lightline = {
         \   'fileencoding': 'MyFileencoding',
         \   'mode': 'MyMode',
         \   'syntastic': 'SyntasticStatuslineFlag',
-        \   'gitgutter': 'MyGitGutter',
         \ },
         \ 'separator': {'left': '⮀', 'right': '⮂'},
         \ 'subseparator': {'left': '⮁', 'right': '⮃'}
@@ -72,27 +71,6 @@ endfunction
 
 function! MyMode()
   return winwidth('.') > 60 ? lightline#mode() : ''
-endfunction
-
-function! MyGitGutter()
-  if ! exists('*GitGutterGetHunkSummary')
-        \ || ! get(g:, 'gitgutter_enabled', 0)
-        \ || winwidth('.') <= 90
-    return ''
-  endif
-  let symbols = [
-        \ g:gitgutter_sign_added . ' ',
-        \ g:gitgutter_sign_modified . ' ',
-        \ g:gitgutter_sign_removed . ' '
-        \ ]
-  let hunks = GitGutterGetHunkSummary()
-  let ret = []
-  for i in [0, 1, 2]
-    if hunks[i] > 0
-      call add(ret, symbols[i] . hunks[i])
-    endif
-  endfor
-  return join(ret, ' ')
 endfunction
 
 " https://github.com/Lokaltog/vim-powerline/blob/develop/autoload/Powerline/Functions.vim
