@@ -6,7 +6,11 @@ nmap [denite] <Nop>
 map <Space>d [denite]
 
 " プロジェクト内のファイル検索
-nmap <silent> [denite]p :<C-u>Denite file_rec<CR>
+nmap <silent> [denite]f :<C-u>Denite file_rec<CR>
+" プロジェクト内の検索
+nmap <silent> [denite]g :<C-u>Denite grep<CR>
+" カーソル下の検索
+nmap <silent> [denite]* :<C-u>DeniteCursorWord grep<CR>
 " バッファに展開中のファイル検索
 nmap <silent> [denite]b :<C-u>Denite buffer<CR>
 " ファイル内の関数/クラス等の検索
