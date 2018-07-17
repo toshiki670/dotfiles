@@ -15,6 +15,7 @@ Zsh, Nvim, Tmux and iTerm2.
 * Nvim 0.30
   - gem install neovim
   - npm install -g neovim
+  - brew install the_silver_searcher
 
 * tmux
   - Tmux Plugin Manager
