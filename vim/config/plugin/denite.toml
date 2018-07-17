@@ -16,6 +16,11 @@ nmap <silent> [denite]b :<C-u>Denite buffer<CR>
 " ファイル内の関数/クラス等の検索
 nmap <silent> [denite]o :<C-u>Denite outline<CR>
 
+
+"denite時に使用するキーマップ
+"ESCキーでdeniteを終了
+call denite#custom#map('insert', '<esc>', '<denite:enter_mode:normal>', 'noremap')
+call denite#custom#map('normal', '<esc>', '<denite:quit>', 'noremap')
 " 上下移動を<C-N>, <C-P>
 call denite#custom#map('normal', '<C-N>', '<denite:move_to_next_line>')
 call denite#custom#map('normal', '<C-P>', '<denite:move_to_previous_line>')
