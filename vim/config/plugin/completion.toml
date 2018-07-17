@@ -1,5 +1,5 @@
 [[plugins]]
-repo = 'Shougo/neosnippet-snippets'
+repo = 'toshiki670/neosnippet-snippets'
 
 # Vimスクリプトの補完
 [[plugins]]
