@@ -81,6 +81,10 @@ highlight EndOfBuffer ctermfg=8
 
 " set series -------------------------------------------------------------
 
+if has('nvim')
+  set sh=bash
+endif
+
 " テキストのモードを非表示
 set noshowmode
 
@@ -152,6 +156,13 @@ set incsearch
 set wrapscan
 " 検索語をハイライト表示
 set hlsearch
+
+
+
+if has('nvim')
+  tnoremap <silent> <ESC> <C-\><C-n>
+endif
+
 " ESC連打でハイライト解除
 noremap <Esc><Esc> :nohlsearch<CR><Esc>
 " nNで移動する時画面中央に移動する
