@@ -20,6 +20,10 @@ eval "$(rbenv init --no-rehash -)";
 export PATH="$HOME/.rbenv/shims:$PATH"
 
 
+if [ -e ~/dotfiles/zsh/completions ]; then
+  fpath=(~/dotfiles/zsh/completions $fpath)
+fi
+
 # aotoload設定一覧 (Zplugが入っている場合無効)
 export ZPLUG_HOME=/usr/local/opt/zplug
 if [ -e $ZPLUG_HOME ]; then
