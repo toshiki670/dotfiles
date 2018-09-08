@@ -21,3 +21,5 @@ Zsh, Nvim, Tmux and iTerm2.
   - Tmux Plugin Manager
     + $ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
+## Brew
+* bat
