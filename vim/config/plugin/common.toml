@@ -137,6 +137,7 @@ nnoremap [git] <Nop>
 nmap     <Space>g [git]
 noremap <silent> [git]a :Gwrite<Enter>
 noremap <silent> [git]c :Gcommit<Enter>
+noremap <silent> [git]r :Gread<Enter>
 '''
 
 [[plugins]]
