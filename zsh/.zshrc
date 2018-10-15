@@ -148,6 +148,9 @@ alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
 # For Rails
 alias be='bundle exec'
 
+# For docker
+alias dce='docker-compose exec'
+
 # For Note
 alias note='cd ~/Documents/Note'
 
