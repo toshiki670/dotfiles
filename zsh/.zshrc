@@ -173,6 +173,16 @@ alias -s rb='ruby'
 alias -s py='python'
 alias -s php='php -f'
 
+function rungcc(){
+    gcc $1
+    base=$1
+    file=${base%.*}
+    ./a.out
+    rm -f a.out
+}
+
+alias -s {c,cpp}=rungcc
+
 # Dotfiles Config
 alias vimrc='vim ~/dotfiles/vim/.vimrc'
 alias zshrc='vim ~/dotfiles/zsh/.zshrc'
