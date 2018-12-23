@@ -25,7 +25,8 @@ if [ -e ~/dotfiles/zsh/completions ]; then
 fi
 
 # aotoload設定一覧 (Zplugが入っている場合無効)
-export ZPLUG_HOME=/usr/local/opt/zplug
+# export ZPLUG_HOME=/usr/local/opt/zplug
+export ZPLUG_HOME=~/dotfiles/zsh/plugin/zplug
 if [ -e $ZPLUG_HOME ]; then
   # Zplug の有効化
   source $ZPLUG_HOME/init.zsh
@@ -122,7 +123,7 @@ SPROMPT="${my_sprompt}%F{${sec_fore}}'%R' to '%r'? %k%F{${sec_clr}}${sep}%f"$'\n
 # ---------------------------------------------------------
 
 alias relogin='exec $SHELL -l'
-alias ls='gls --color=auto'
+alias ls='ls --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'
