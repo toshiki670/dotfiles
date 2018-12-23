@@ -19,6 +19,9 @@ color/*
 zsh/bundle/*
 !.keep
 
+zsh/plugin/*
+!.keep
+
 # Vim
 vim/plugin/*
 !.keep
