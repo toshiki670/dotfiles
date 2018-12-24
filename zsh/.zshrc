@@ -105,7 +105,7 @@ ZSH_THEME_GIT_PROMPT_MERGING="%{$fg_bold[magenta]%}|MERGING%{${reset_color}%}"
 ZSH_THEME_GIT_PROMPT_REBASE="%{$fg_bold[magenta]%}|REBASE%{${reset_color}%}"
 
 
-my_prompt='[%#%~]'
+my_prompt='[%? %n%#%m %~]'
 my_prompt2="${sec_set}INSERT> %f"
 
 pass_status="${pri_set}${my_prompt}%f"
