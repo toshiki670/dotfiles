@@ -69,36 +69,34 @@ setopt auto_pushd
 setopt correct
 
 # Prompt comfig -------------------------------------------
-sep='⮀'
-sub_sep='⮁'
+sep='|'
 
-pri_clr='155'
+pri_clr='002'
 pri_fore='022'
-pri_set="%K{${pri_clr}}%F{${pri_fore}}"
+pri_set="%F{${pri_clr}}"
 
 sec_clr='240'
 sec_fore='255'
-sec_set="%K{${sec_clr}}%F{${sec_fore}}"
+sec_set="%F{${sec_fore}}"
 
-fail_clr='214'
+fail_clr='009'
 fail_fore='088'
-fail_set="%K{${fail_clr}}%F{${fail_fore}}"
+fail_set="%F{${fail_clr}}"
 
 source $ZPLUG_HOME/repos/toshiki670/zsh-git-prompt/zshrc.sh
-ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ⭠ "
-ZSH_THEME_GIT_PROMPT_SUFFIX="%K{${sec_clr}} %k"
+ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ["
+ZSH_THEME_GIT_PROMPT_SUFFIX="]%k"
 ZSH_THEME_GIT_PROMPT_HASH_PREFIX=":"
-ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sub_sep} "
-ZSH_THEME_GIT_PROMPT_BRANCH_AFTER="${sec_set} "
+ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sep} "
 ZSH_THEME_GIT_PROMPT_BRANCH="${sec_set}"
-ZSH_THEME_GIT_PROMPT_STAGED="%K{${sec_clr}}%F{green}%{!%G%}"
-ZSH_THEME_GIT_PROMPT_CONFLICTS="%K{${sec_clr}}%F{magenta}%{x%G%}"
-ZSH_THEME_GIT_PROMPT_CHANGED="%K{${sec_clr}}%F{219}%{+%G%}"
-ZSH_THEME_GIT_PROMPT_BEHIND="%K{${sec_clr}}%F{219}%{-%2G%}"
-ZSH_THEME_GIT_PROMPT_AHEAD="%K{${sec_clr}}%F{green}%{+%2G%}"
+ZSH_THEME_GIT_PROMPT_STAGED="%F{green}%{!%G%}"
+ZSH_THEME_GIT_PROMPT_CONFLICTS="%F{magenta}%{x%G%}"
+ZSH_THEME_GIT_PROMPT_CHANGED="%F{219}%{+%G%}"
+ZSH_THEME_GIT_PROMPT_BEHIND="%F{219}%{-%2G%}"
+ZSH_THEME_GIT_PROMPT_AHEAD="%F{green}%{+%2G%}"
 ZSH_THEME_GIT_PROMPT_STASHED="${sec_set}%{⚑%G%}"
-ZSH_THEME_GIT_PROMPT_UNTRACKED="%K{${sec_clr}}%{… %G%}"
-ZSH_THEME_GIT_PROMPT_CLEAN="%K{${sec_clr}}%F{green}%{✔ %G%}"
+ZSH_THEME_GIT_PROMPT_UNTRACKED="%{… %G%}"
+ZSH_THEME_GIT_PROMPT_CLEAN="%F{green}%{OK %G%}"
 ZSH_THEME_GIT_PROMPT_LOCAL="${sec_set} L"
 # The remote branch will be shown between these two
 ZSH_THEME_GIT_PROMPT_UPSTREAM_FRONT="{%{$fg[blue]%}"
@@ -107,18 +105,16 @@ ZSH_THEME_GIT_PROMPT_MERGING="%{$fg_bold[magenta]%}|MERGING%{${reset_color}%}"
 ZSH_THEME_GIT_PROMPT_REBASE="%{$fg_bold[magenta]%}|REBASE%{${reset_color}%}"
 
 
-my_prompt=' %#%~ '
-my_prompt2="${sec_set}⌘ %k%F{${sec_clr}}${sep}%f "
+my_prompt='[%#%~]'
+my_prompt2="${sec_set}INSERT> %f"
 
-pass_status="${pri_set}${my_prompt}%K{${sec_clr}}%F{${pri_clr}}${sep}%k%f"
-fail_status="${fail_set}${my_prompt}%K{${sec_clr}}%F{${fail_clr}}${sep}%k%f"
+pass_status="${pri_set}${my_prompt}%f"
+fail_status="${fail_set}${my_prompt}%f"
 
-PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'"%F{${sec_clr}}${sep}"$'\n'$my_prompt2
+PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'$my_prompt2
 PROMPT2=$my_prompt2
 
-my_sprompt="${fail_set}Correct%K{${sec_clr}}%F{${fail_clr}}${sep}%f"
-my_sprompt2="${sec_set}[nyae] %k%F{${sec_clr}}${sep}%f "
-SPROMPT="${my_sprompt}%F{${sec_fore}}'%R' to '%r'? %k%F{${sec_clr}}${sep}%f"$'\n'$my_sprompt2
+SPROMPT="${fail_set}Correct ${sec_set}'%R' to '%r'?%f"$'\n'"${sec_set}[nyae]>%f "
 
 # ---------------------------------------------------------
 
