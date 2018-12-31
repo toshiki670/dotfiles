@@ -1,6 +1,7 @@
 # ログインシェルとインタラクティブシェルの場合だけ読み込まれる。
 # シェルスクリプトでは不要な場合に記述する。
 # 
+export DOTFILES=~/dotfiles
 
 export PATH="/usr/local/sbin:$PATH"
 export PATH="$HOME/dotfiles/bin:$PATH"
@@ -20,20 +21,23 @@ eval "$(rbenv init --no-rehash -)";
 export PATH="$HOME/.rbenv/shims:$PATH"
 
 
-if [ -e ~/dotfiles/zsh/completions ]; then
-  fpath=(~/dotfiles/zsh/completions $fpath)
+if [ -e $DOTFILES/zsh/completions ]; then
+  fpath=($DOTFILES/zsh/completions $fpath)
 fi
 
 # aotoload設定一覧 (Zplugが入っている場合無効)
 # export ZPLUG_HOME=/usr/local/opt/zplug
-export ZPLUG_HOME=~/dotfiles/zsh/plugin/zplug
+export ZPLUG_HOME=$DOTFILES/zsh/plugin/zplug
+export ZPLUG_BIN=$ZPLUG_HOME/bin
+export ZPLUG_CACHE_DIR=$ZPLUG_HOME/cache
+export ZPLUG_REPOS=$ZPLUG_HOME/repos
 if [ -e $ZPLUG_HOME ]; then
   # Zplug の有効化
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
   zplug "zsh-users/zsh-syntax-highlighting"
   zplug "zsh-users/zsh-autosuggestions"
-  zplug "toshiki670/zsh-git-prompt"
+  zplug "starcraftman/zsh-git-prompt"
   # プラグイン追加後、下記を実行する
   # zplug install
   zplug load
@@ -44,8 +48,8 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
 # Theme configure
 # eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
-eval $(dircolors ~/dotfiles/zsh/bundle/color/dircolors-solarized)
-eval $(dircolors ~/dotfiles/zsh/bundle/color/dircolors-solarized/dircolors.ansi-universal)
+eval $(dircolors $DOTFILES/zsh/bundle/color/dircolors-solarized)
+eval $(dircolors $DOTFILES/zsh/bundle/color/dircolors-solarized/dircolors.ansi-universal)
 
 # 補完機能
 bindkey "^[[Z" reverse-menu-complete
@@ -58,7 +62,7 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 
 # タブを１回押すと、補完候補が表示され、さらにタブを押すことで、選択モードに入る
 zstyle ':completion:*:default' menu select=2
-if [ -n "$LS_COLORS" ]; then
+if [ -n $LS_COLORS ]; then
   zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 fi
 
@@ -83,7 +87,7 @@ fail_clr='009'
 fail_fore='088'
 fail_set="%F{${fail_clr}}"
 
-source $ZPLUG_HOME/repos/toshiki670/zsh-git-prompt/zshrc.sh
+source $ZPLUG_HOME/repos/starcraftman/zsh-git-prompt/zshrc.sh
 ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ["
 ZSH_THEME_GIT_PROMPT_SUFFIX="]%k"
 ZSH_THEME_GIT_PROMPT_HASH_PREFIX=":"
@@ -160,7 +164,7 @@ alias v=vim
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc_jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift_jis='vim -c ":e ++enc=shift_jis"'
-alias vim-cheat='vim ~/dotfiles/vim/cheatsheet/common.md'
+alias vim-cheat='vim $DOTFILES/vim/cheatsheet/common.md'
 # alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 # 拡張子に応じたコマンドを実行
@@ -181,8 +185,8 @@ function rungcc(){
 alias -s {c,cpp}=rungcc
 
 # Dotfiles Config
-alias vimrc='vim ~/dotfiles/vim/.vimrc'
-alias zshrc='vim ~/dotfiles/zsh/.zshrc'
+alias vimrc='vim $DOTFILES/vim/.vimrc'
+alias zshrc='vim $DOTFILES/zsh/.zshrc'
 
 # 履歴ファイルの保存先
 export HISTFILE=${HOME}/.zsh_history
@@ -227,7 +231,7 @@ function ps-grep {
 #   tmux
 #   exit
 # else
-#   cat ~/dotfiles/screenfetch
+#   cat $DOTFILES/screenfetch
 # fi
 
 # ターミナル起動時に実行
