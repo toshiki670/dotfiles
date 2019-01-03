@@ -37,9 +37,12 @@ if [ -e $ZPLUG_HOME ]; then
   zplug "zsh-users/zsh-completions"
   zplug "zsh-users/zsh-syntax-highlighting"
   zplug "zsh-users/zsh-autosuggestions"
-  zplug "starcraftman/zsh-git-prompt"
+  zplug "mafredri/zsh-async", from:github
+  zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+  # zplug "starcraftman/zsh-git-prompt"
+
   # プラグイン追加後、下記を実行する
-  # zplug install
+  zplug check || zplug install
   zplug load
 fi
 
@@ -73,52 +76,52 @@ setopt auto_pushd
 setopt correct
 
 # Prompt comfig -------------------------------------------
-sep='|'
-
-pri_clr='002'
-pri_fore='022'
-pri_set="%F{${pri_clr}}"
-
-sec_clr='240'
-sec_fore='255'
-sec_set="%F{${sec_fore}}"
-
-fail_clr='009'
-fail_fore='088'
-fail_set="%F{${fail_clr}}"
-
-source $ZPLUG_HOME/repos/starcraftman/zsh-git-prompt/zshrc.sh
-ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ["
-ZSH_THEME_GIT_PROMPT_SUFFIX="]%k"
-ZSH_THEME_GIT_PROMPT_HASH_PREFIX=":"
-ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sep} "
-ZSH_THEME_GIT_PROMPT_BRANCH="${sec_set}"
-ZSH_THEME_GIT_PROMPT_STAGED="%F{green}%{!%G%}"
-ZSH_THEME_GIT_PROMPT_CONFLICTS="%F{magenta}%{x%G%}"
-ZSH_THEME_GIT_PROMPT_CHANGED="%F{219}%{+%G%}"
-ZSH_THEME_GIT_PROMPT_BEHIND="%F{219}%{-%2G%}"
-ZSH_THEME_GIT_PROMPT_AHEAD="%F{green}%{+%2G%}"
-ZSH_THEME_GIT_PROMPT_STASHED="${sec_set}%{⚑%G%}"
-ZSH_THEME_GIT_PROMPT_UNTRACKED="%{… %G%}"
-ZSH_THEME_GIT_PROMPT_CLEAN="%F{green}%{OK %G%}"
-ZSH_THEME_GIT_PROMPT_LOCAL="${sec_set} L"
-# The remote branch will be shown between these two
-ZSH_THEME_GIT_PROMPT_UPSTREAM_FRONT="{%{$fg[blue]%}"
-ZSH_THEME_GIT_PROMPT_UPSTREAM_END="%{${reset_color}%}}"
-ZSH_THEME_GIT_PROMPT_MERGING="%{$fg_bold[magenta]%}|MERGING%{${reset_color}%}"
-ZSH_THEME_GIT_PROMPT_REBASE="%{$fg_bold[magenta]%}|REBASE%{${reset_color}%}"
-
-
-my_prompt='[%? %n%#%m %~]'
-my_prompt2="${sec_set}INSERT> %f"
-
-pass_status="${pri_set}${my_prompt}%f"
-fail_status="${fail_set}${my_prompt}%f"
-
-PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'$my_prompt2
-PROMPT2=$my_prompt2
-
-SPROMPT="${fail_set}Correct ${sec_set}'%R' to '%r'?%f"$'\n'"${sec_set}[nyae]>%f "
+# sep='|'
+#
+# pri_clr='002'
+# pri_fore='022'
+# pri_set="%F{${pri_clr}}"
+#
+# sec_clr='240'
+# sec_fore='255'
+# sec_set="%F{${sec_fore}}"
+#
+# fail_clr='009'
+# fail_fore='088'
+# fail_set="%F{${fail_clr}}"
+#
+# source $ZPLUG_HOME/repos/starcraftman/zsh-git-prompt/zshrc.sh
+# ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ["
+# ZSH_THEME_GIT_PROMPT_SUFFIX="]%k"
+# ZSH_THEME_GIT_PROMPT_HASH_PREFIX=":"
+# ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sep} "
+# ZSH_THEME_GIT_PROMPT_BRANCH="${sec_set}"
+# ZSH_THEME_GIT_PROMPT_STAGED="%F{green}%{!%G%}"
+# ZSH_THEME_GIT_PROMPT_CONFLICTS="%F{magenta}%{x%G%}"
+# ZSH_THEME_GIT_PROMPT_CHANGED="%F{219}%{+%G%}"
+# ZSH_THEME_GIT_PROMPT_BEHIND="%F{219}%{-%2G%}"
+# ZSH_THEME_GIT_PROMPT_AHEAD="%F{green}%{+%2G%}"
+# ZSH_THEME_GIT_PROMPT_STASHED="${sec_set}%{⚑%G%}"
+# ZSH_THEME_GIT_PROMPT_UNTRACKED="%{… %G%}"
+# ZSH_THEME_GIT_PROMPT_CLEAN="%F{green}%{OK %G%}"
+# ZSH_THEME_GIT_PROMPT_LOCAL="${sec_set} L"
+# # The remote branch will be shown between these two
+# ZSH_THEME_GIT_PROMPT_UPSTREAM_FRONT="{%{$fg[blue]%}"
+# ZSH_THEME_GIT_PROMPT_UPSTREAM_END="%{${reset_color}%}}"
+# ZSH_THEME_GIT_PROMPT_MERGING="%{$fg_bold[magenta]%}|MERGING%{${reset_color}%}"
+# ZSH_THEME_GIT_PROMPT_REBASE="%{$fg_bold[magenta]%}|REBASE%{${reset_color}%}"
+#
+#
+# my_prompt='[%? %n%#%m %~]'
+# my_prompt2="${sec_set}INSERT> %f"
+#
+# pass_status="${pri_set}${my_prompt}%f"
+# fail_status="${fail_set}${my_prompt}%f"
+#
+# PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'$my_prompt2
+# PROMPT2=$my_prompt2
+#
+# SPROMPT="${fail_set}Correct ${sec_set}'%R' to '%r'?%f"$'\n'"${sec_set}[nyae]>%f "
 
 # ---------------------------------------------------------
 
