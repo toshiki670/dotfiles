@@ -39,6 +39,9 @@ if [ -e $ZPLUG_HOME ]; then
   zplug "zsh-users/zsh-autosuggestions"
   zplug "mafredri/zsh-async", from:github
   zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+  zplug "mollifier/cd-gitroot"
+  zplug "Tarrasch/zsh-bd"
+  zplug "supercrabtree/k"
   # zplug "starcraftman/zsh-git-prompt"
 
   # プラグイン追加後、下記を実行する
