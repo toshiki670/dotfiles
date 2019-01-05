@@ -18,11 +18,14 @@ color/*
 # Zsh
 zsh/bundle/*
 !.keep
-
 zsh/plugin/*
 !.keep
 
 # Vim
 vim/plugin/*
+!.keep
+
+# Tmux
+tmux/plugin/*
 !.keep
 
