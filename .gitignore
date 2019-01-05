@@ -25,7 +25,3 @@ zsh/plugin/*
 vim/plugin/*
 !.keep
 
-# Tmux
-tmux/plugin/*
-!.keep
-
