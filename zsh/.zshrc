@@ -128,6 +128,10 @@ setopt correct
 
 # ---------------------------------------------------------
 
+if [ -x "$(command -v xset)" ]; then
+  xset r rate 210 25
+fi
+
 alias relogin='exec $SHELL -l'
 alias ls='ls --color=auto'
 alias ll='ls -l'
