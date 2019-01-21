@@ -132,9 +132,9 @@ if [ -x "$(command -v xset)" ]; then
   xset r rate 210 25
 fi
 
-if [ -x "$(command -v imwheel)" ]; then
-  imwheel
-fi
+# if [ -x "$(command -v imwheel)" ]; then
+#   imwheel
+# fi
 
 alias relogin='exec $SHELL -l'
 alias ls='ls --color=auto'
