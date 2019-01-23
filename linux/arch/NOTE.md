@@ -10,3 +10,12 @@
 * Nordvpn-bin
   + `$ yay -S nordvpn-bin`
 
+
+
+
+
+# Gnome setting
+## Animations disable
+`$ gsettings set org.gnome.desktop.interface enable-animations false`
+
+
