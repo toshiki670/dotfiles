@@ -129,7 +129,7 @@ setopt correct
 # ---------------------------------------------------------
 
 if [ -x "$(command -v xset)" ]; then
-  xset r rate 210 25
+  xset r rate 248 48
 fi
 
 # if [ -x "$(command -v imwheel)" ]; then
