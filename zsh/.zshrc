@@ -5,7 +5,11 @@ export DOTFILES=~/dotfiles
 
 export PATH="/usr/local/sbin:$PATH"
 export PATH="$HOME/dotfiles/bin:$PATH"
-export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+
+if [ -x "$(command -v brew)" ]; then
+  export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+fi
+
 # For pyenv
 # export PYENV_ROOT="$HOME/.pyenv"
 # export PATH="$PYENV_ROOT/bin:$PATH"
@@ -17,8 +21,10 @@ export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 
 
 # For rbenv
-eval "$(rbenv init --no-rehash -)";
-export PATH="$HOME/.rbenv/shims:$PATH"
+if [ -x "$(command -v rbenv)" ]; then
+  eval "$(rbenv init --no-rehash -)";
+  export PATH="$HOME/.rbenv/shims:$PATH"
+fi
 
 
 if [ -e $DOTFILES/zsh/completions ]; then
