@@ -26,10 +26,9 @@ if [ -x "$(command -v rbenv)" ]; then
   export PATH="$HOME/.rbenv/shims:$PATH"
 fi
 
-
-if [ -e $DOTFILES/zsh/completions ]; then
-  fpath=($DOTFILES/zsh/completions $fpath)
-fi
+# if [ -e $DOTFILES/zsh/completions ]; then
+#   fpath=($DOTFILES/zsh/completions $fpath)
+# fi
 
 # aotoload設定一覧 (Zplugが入っている場合無効)
 # export ZPLUG_HOME=/usr/local/opt/zplug
@@ -48,6 +47,7 @@ if [ -e $ZPLUG_HOME ]; then
   zplug "mollifier/cd-gitroot"
   zplug "Tarrasch/zsh-bd"
   zplug "supercrabtree/k"
+  zplug "docker/cli", use:"contrib/completion/zsh/_docker"
   # zplug "starcraftman/zsh-git-prompt"
 
   # プラグイン追加後、下記を実行する
