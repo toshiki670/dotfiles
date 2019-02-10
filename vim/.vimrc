@@ -137,7 +137,11 @@ set showcmd
 set wildmenu
 
 " クリップボードにコピー
-set clipboard+=unnamed
+if has('mac')
+  set clipboard+=unnamed
+elseif has('unix')
+  set clipboard+=unnamedplus
+endif
 
 " ビープ音を可視化
 set visualbell
