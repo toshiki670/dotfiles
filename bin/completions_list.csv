@@ -1,0 +1,2 @@
+"docker","https://raw.githubusercontent.com/docker/cli/master/contrib/completion/zsh/_docker"
+"docker-compose","https://raw.githubusercontent.com/docker/compose/$(docker-compose version --short)/contrib/completion/zsh/_docker-compose"
