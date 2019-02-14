@@ -7,6 +7,11 @@ Zsh, Nvim, Tmux and iTerm2.
 ## Require
 * zsh
   - zplug
+```
+export ZPLUG_HOME=~/dotfiles/zsh/plugin
+git clone https://github.com/zplug/zplug $ZPLUG_HOME
+```
+
   - completetion?
   - coreutils
     + lsの強化バージョン
@@ -21,3 +26,5 @@ Zsh, Nvim, Tmux and iTerm2.
   - Tmux Plugin Manager
     + $ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
+## Brew
+* bat

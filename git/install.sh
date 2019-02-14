@@ -1,2 +1,2 @@
-echo "[include]\n  path = ~/dotfiles/git/git.config\n" >> ~/.gitconfig
+echo -e "[include]\n  path = ~/dotfiles/git/git.config\n" >> ~/.gitconfig
 

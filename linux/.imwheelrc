@@ -1,0 +1,5 @@
+".*"
+None, up, Button4, 3
+None, down, Button5, 3
+None, Thumb1, Alt_L|Left
+None, Thumb2, Alt_R|Right

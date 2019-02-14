@@ -24,9 +24,7 @@ let g:lightline = {
         \   'fileencoding': 'MyFileencoding',
         \   'mode': 'MyMode',
         \   'syntastic': 'SyntasticStatuslineFlag',
-        \ },
-        \ 'separator': {'left': '⮀', 'right': '⮂'},
-        \ 'subseparator': {'left': '⮁', 'right': '⮃'}
+        \ }
         \ }
 
 function! MyModified()
@@ -34,7 +32,7 @@ function! MyModified()
 endfunction
 
 function! MyReadonly()
-  return &ft !~? 'help\|vimfiler\|gundo' && &ro ? '⭤' : ''
+  return &ft !~? 'help\|vimfiler\|gundo' && &ro ? '[RO]' : ''
 endfunction
 
 function! MyFilename()
@@ -50,7 +48,7 @@ function! MyFugitive()
   try
     if &ft !~? 'vimfiler\|gundo' && exists('*fugitive#head')
       let branch = fugitive#head()
-      return strlen(branch) ? '⭠ '.branch : ''
+      return strlen(branch) ? branch : ''
     endif
   catch
   endtry
@@ -142,6 +140,7 @@ nnoremap [git] <Nop>
 nmap     <Space>g [git]
 noremap <silent> [git]a :Gwrite<Enter>
 noremap <silent> [git]c :Gcommit<Enter>
+noremap <silent> [git]r :Gread<Enter>
 '''
 
 [[plugins]]
