@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Imwheel
+NoDisplay=true
+Exec=/usr/sbin/imwheel
