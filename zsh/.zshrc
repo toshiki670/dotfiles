@@ -134,14 +134,6 @@ setopt correct
 
 # ---------------------------------------------------------
 
-if [ -x "$(command -v xset)" ]; then
-  xset r rate 248 48
-fi
-
-# if [ -x "$(command -v imwheel)" ]; then
-#   imwheel
-# fi
-
 alias relogin='exec $SHELL -l'
 alias ls='ls --color=auto'
 alias ll='ls -l'
