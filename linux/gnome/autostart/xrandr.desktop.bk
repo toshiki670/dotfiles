@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Exec=xrandr --output DP-0 --auto --output DP-2 --auto --left-of DP-0
+X-GNOME-Autostart-enabled=true
+Name=xrandr Setting
