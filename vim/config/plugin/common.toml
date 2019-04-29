@@ -93,37 +93,44 @@ repo = 'cespare/vim-toml'
 on_ft = ['toml']
 
 # Nerd Tree -------------------
-[[plugins]]
-repo = 'scrooloose/nerdtree'
-hook_add = '''
-set ttimeoutlen=50
-let g:NERDTreeShowBookmarks=1
-noremap <Space>t :NERDTreeToggle<Enter>
-'''
-
 # [[plugins]]
-# repo = 'jistr/vim-nerdtree-tabs'
+# repo = 'scrooloose/nerdtree'
 # hook_add = '''
-# let g:nerdtree_tabs_open_on_console_startup=1
-# noremap tree :NERDTreeTabsToggle<Enter>
+# set ttimeoutlen=50
+# let g:NERDTreeShowBookmarks=1
+# noremap <Space>t :NERDTreeToggle<Enter>
+# '''
+#
+# # [[plugins]]
+# # repo = 'jistr/vim-nerdtree-tabs'
+# # hook_add = '''
+# # let g:nerdtree_tabs_open_on_console_startup=1
+# # noremap tree :NERDTreeTabsToggle<Enter>
+# # '''
+#
+#
+# [[plugins]]
+# repo = 'Xuyuanp/nerdtree-git-plugin'
+# hook_add = '''
+# let g:NERDTreeIndicatorMapCustom = {
+#     \ "Modified"  : "*",
+#     \ "Staged"    : "+",
+#     \ "Untracked" : "~",
+#     \ "Renamed"   : "*",
+#     \ "Unmerged"  : "!",
+#     \ "Deleted"   : "-",
+#     \ "Dirty"     : "*",
+#     \ "Clean"     : "@",
+#     \ 'Ignored'   : "_",
+#     \ "Unknown"   : "?"
+#     \ }
 # '''
 
-
+# Defx.nvim --------------------
 [[plugins]]
-repo = 'Xuyuanp/nerdtree-git-plugin'
+repo = 'Shougo/defx.nvim'
 hook_add = '''
-let g:NERDTreeIndicatorMapCustom = {
-    \ "Modified"  : "*",
-    \ "Staged"    : "+",
-    \ "Untracked" : "~",
-    \ "Renamed"   : "*",
-    \ "Unmerged"  : "!",
-    \ "Deleted"   : "-",
-    \ "Dirty"     : "*",
-    \ "Clean"     : "@",
-    \ 'Ignored'   : "_",
-    \ "Unknown"   : "?"
-    \ }
+noremap <Space>t :<C-u>Defx<Enter>
 '''
 
 
