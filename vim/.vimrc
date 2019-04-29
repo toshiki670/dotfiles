@@ -161,7 +161,8 @@ set wrapscan
 " 検索語をハイライト表示
 set hlsearch
 
-
+" スペルチェック機能の有効化
+set spell
 
 if has('nvim')
   tnoremap <silent> <ESC> <C-\><C-n>
