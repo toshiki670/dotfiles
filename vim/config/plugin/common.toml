@@ -130,7 +130,7 @@ on_ft = ['toml']
 [[plugins]]
 repo = 'Shougo/defx.nvim'
 hook_add = '''
-noremap <Space>t :NERDTreeToggle<Enter>
+noremap <Space>t :<C-u>Defx<Enter>
 '''
 
 
