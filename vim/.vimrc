@@ -210,8 +210,7 @@ nnoremap sn gT
 nnoremap s= <C-w>=
 " 縦横最大化
 nnoremap so <C-w>_<C-w>|
-" 大きさを揃える
-nnoremap sO <C-w>=
+
 nnoremap sN :<C-u>bn<CR>
 nnoremap sP :<C-u>bp<CR>
 " 新規タブ
