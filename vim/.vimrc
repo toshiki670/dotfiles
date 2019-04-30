@@ -5,15 +5,24 @@
 "    \ \/ / | || | | || | | (__
 " o   \__/  |_||_|_|_||_|  \___|
 "
-
+" Root directory
 let g:vimrc_root = expand('~/dotfiles/vim/')
 
 " config's directory
 let g:config_dir = g:vimrc_root . 'config/'
 
 
-source ~/dotfiles/vim/config/setting.vim
-source ~/dotfiles/vim/config/mapping.vim
-source ~/dotfiles/vim/config/color.vim
-source ~/dotfiles/vim/config/plugin.vim
+let s:config_names = [
+      \'setting.vim',
+      \'mapping.vim',
+      \'color.vim',
+      \'plugin.vim',
+      \]
+
+for filename in s:config_names
+  let path = g:config_dir . filename
+  if filereadable(path)
+    exe 'so' path
+  endif
+endfor
 
