@@ -243,8 +243,8 @@ let g:indentLine_color_term = 239
 '''
 
 # Comment ---------------------
-[[plugins]]
-repo = 'tomtom/tcomment_vim'
+# [[plugins]]
+# repo = 'tomtom/tcomment_vim'
 
 # Cheatsheet ------------------
 [[plugins]]
