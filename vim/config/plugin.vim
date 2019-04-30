@@ -39,7 +39,7 @@ if dein#load_state(s:dein_dir)
   call dein#load_toml(s:plugin_dir . 'denite.toml', {'lazy': 0})
 
   " Control
-  call dein#add('kana/vim-submode')
+  call dein#load_toml(s:plugin_dir . 'vim-submode.toml', {'lazy': 1})
 
   " Ruby and Rails
   call dein#load_toml(s:plugin_dir . 'ruby.toml', {'lazy': 1})
@@ -58,12 +58,3 @@ if dein#load_state(s:dein_dir)
 endif
 
 
-" Splitの調節
-call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
-call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
-call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
-call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
-call submode#map('bufmove', 'n', '', '>', '<C-w>>')
-call submode#map('bufmove', 'n', '', '<', '<C-w><')
-call submode#map('bufmove', 'n', '', '+', '<C-w>+')
-call submode#map('bufmove', 'n', '', '-', '<C-w>-')
