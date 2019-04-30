@@ -26,6 +26,7 @@ if dein#load_state(s:dein_dir)
 
   " Common
   call dein#load_toml(s:plugin_dir . 'common.toml', {'lazy': 0})
+  call dein#load_toml(s:plugin_dir . 'defx.toml', {'lazy': 1})
   call dein#add('cespare/vim-toml', {'on_ft': 'toml'})
   call dein#add('tomtom/tcomment_vim')
 
