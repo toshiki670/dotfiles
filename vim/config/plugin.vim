@@ -1,5 +1,5 @@
 " プラグインが実際にインストールされるディレクトリ
-let s:dein_dir = expand(g:vimrc_root . 'plugin/')
+let s:dein_dir = g:vimrc_root . 'plugin/'
 
 " dein.vim 本体
 let s:dein_repo_dir = s:dein_dir . 'repos/github.com/Shougo/dein.vim'
