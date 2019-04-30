@@ -1,96 +1,95 @@
 " Common setting file
 if &compatible
-  set nocompatible
+  se nocompatible
 endif
 
 " 文字コードをUTF-8に設定
-set fenc=utf-8
+se fenc=utf-8
 
 if has('nvim')
-  set sh=bash
+  se sh=bash
 endif
 
 " テキストのモードを非表示
-set noshowmode
+se noshowmode
 
 " Last status
-set laststatus=2
+se laststatus=2
 
 " 行番号の表示
-set number
+se number
 
 " カーソルが何行目の何列目に置かれているかを表示する
-set ruler
+se ruler
 
 " タイトルを表示
-set title
+se title
 
 " 括弧入力時の対応する括弧を表示
-set showmatch
-set ambiwidth=double
+se showmatch
+se ambiwidth=double
 
 " Tabの設定
-set expandtab
-set tabstop=2
-set softtabstop=2
-set shiftwidth=2
+se expandtab
+se tabstop=2
+se softtabstop=2
+se shiftwidth=2
 
-" 複数行のクリップボードからの貼付けがおかしい時、:set paste をすると治る
-set smartindent
+" 複数行のクリップボードからの貼付けがおかしい時、:se paste をすると治る
+se smartindent
 
 " 不可視文字を可視化
-set list
-set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
-set history=50
+se list
+se listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
+se history=50
 
 " フリーカーソルモード
-set virtualedit=block
+se virtualedit=block
 
 " カーソルを左右に動かした時に前後の行末、行頭に移動
-set whichwrap=b,s,h,l,[,],<,>
+se whichwrap=b,s,h,l,[,],<,>
 
 " バックスペースの動作
-set backspace=indent,eol,start
+se backspace=indent,eol,start
 
 " 入力中のコマンドを表示する
-set showcmd
+se showcmd
 
 " コマンドモードの補完
-set wildmenu
+se wildmenu
 
 " クリップボードにコピー
 if has('mac')
-  set clipboard+=unnamed
+  se clipboard+=unnamed
 elseif has('unix')
-  set clipboard+=unnamedplus
+  se clipboard+=unnamedplus
 endif
 
 " ビープ音を可視化
-set visualbell
+se visualbell
 
 " 保存せずにバッファ移動
-set hidden
+se hidden
 
 " 検索系
 " 検索文字列が小文字の場合は大文字小文字を区別なく検索
-set ignorecase
+se ignorecase
 " 検索文字列に大文字が含まれている場合は区別して検索する
-set smartcase
+se smartcase
 " 検索文字列入力時に順次対象文字列にヒットさせる
-set incsearch
+se incsearch
 " 検索時に最後まで行ったら最初に戻る
-set wrapscan
+se wrapscan
 " 検索語をハイライト表示
-set hlsearch
+se hlsearch
 
 " スペルチェック機能の有効化
-set spell
+se spell
 
 " マウスクリック有効
 if has("mouse") " Enable the use of the mouse in all modes
-  set mouse=a
+  se mouse=a
 endif
 
 filetype plugin indent on
-syntax enable
 
