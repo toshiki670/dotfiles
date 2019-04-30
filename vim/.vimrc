@@ -10,7 +10,7 @@ if &compatible
 endif
 
 " dein.vim ここから -----------------------------------------------------
-let s:vimrc_root = '~/dotfiles/vim/'
+let s:vimrc_root = expand('~/dotfiles/vim/')
 
 " config's directory
 let s:config_dir = s:vimrc_root . 'config/'
