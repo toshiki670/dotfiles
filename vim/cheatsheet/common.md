@@ -1,4 +1,4 @@
-# Your brain gave up thinking, So I give happiness...
+# Cheet file
 
 ## Ex command
 :sp   : 横方向に分割
