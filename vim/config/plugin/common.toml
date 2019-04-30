@@ -88,9 +88,9 @@ let g:molokai_original = 1
 
 
 # Syntax ----------------------
-[[plugins]]
-repo = 'cespare/vim-toml'
-on_ft = ['toml']
+# [[plugins]]
+# repo = 'cespare/vim-toml'
+# on_ft = ['toml']
 
 # Nerd Tree -------------------
 # [[plugins]]
