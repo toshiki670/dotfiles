@@ -9,15 +9,10 @@ Prioritize feature extensions over its overrides.
 
 
 
-# Supported OS
-* MacOS
-* Linux series
-  - Archlinux
-
-
-
 # Each environment
 ## Bash
+Create an alias file in the root directory.
+
 
 ## Bin
 Place the original command
@@ -45,11 +40,13 @@ Create an alias file in the root directory.
 * Tmux Plugin Manager
   - $ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
+
 ## Vim
 I love vim.
 
 
 ## Zsh
+Create an alias file in the root directory.
 
 
 --------------------------------------
