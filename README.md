@@ -1,8 +1,59 @@
-# Dotfiles
-Zsh, Nvim, Tmux and iTerm2.
+# Overview
+* Simplification of environment construction
+* unification of environment
 
-## Description
-私の私による私のための開発環境
+
+
+# Policy
+Prioritize feature extensions over its overrides.
+
+
+
+# Supported OS
+* MacOS
+* Linux series
+  - Archlinux
+
+
+
+# Each environment
+## Bash
+
+## Bin
+Place the original command
+
+
+## Font
+Favorite fonts
+
+
+## Git
+Just execute `install.sh`
+
+
+## Iterm
+For macOS's terminal config
+
+
+## Linux
+On the way...
+
+
+## Tmux
+Create an alias file in the root directory.
+
+* Tmux Plugin Manager
+  - $ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
+## Vim
+I love vim.
+
+
+## Zsh
+
+
+--------------------------------------
+Old readme
 
 ## Require
 * zsh
@@ -22,9 +73,6 @@ git clone https://github.com/zplug/zplug $ZPLUG_HOME
   - npm install -g neovim
   - brew install the_silver_searcher
 
-* tmux
-  - Tmux Plugin Manager
-    + $ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
 ## Brew
 * bat
