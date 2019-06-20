@@ -26,6 +26,11 @@ if [ -x "$(command -v rbenv)" ]; then
   export PATH="$HOME/.rbenv/shims:$PATH"
 fi
 
+# For gem
+if [ -x "$(command -v gem)" ]; then
+  PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
+fi
+
 if [ -e $DOTFILES/zsh/completions ]; then
   fpath=($DOTFILES/zsh/completions $fpath)
 fi
