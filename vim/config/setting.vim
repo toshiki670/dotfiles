@@ -84,7 +84,7 @@ se wrapscan
 se hlsearch
 
 " スペルチェック機能の有効化
-se spell
+" se spell
 
 " マウスクリック有効
 if has("mouse") " Enable the use of the mouse in all modes
