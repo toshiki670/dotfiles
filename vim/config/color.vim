@@ -5,7 +5,7 @@ hi DiffChange ctermfg=10 ctermbg=17
 hi DiffText   ctermfg=10 ctermbg=21
 
 " バッファ外のチルダ
-hi EndOfBuffer ctermfg=8
+hi link EndOfBuffer Ignore
 
 " Enable syntax
 syntax enable
