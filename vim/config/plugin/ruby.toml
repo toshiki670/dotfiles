@@ -4,6 +4,14 @@ repo = 'vim-ruby/vim-ruby'
 on_i = 1
 on_ft = ['ruby']
 
+# Rufo
+repo = 'ruby-formatter/rufo-vim'
+on_i = 1
+on_ft = ['ruby']
+hook_add '''
+let g:rufo_ato_formattin = 1
+'''
+
 [[plugins]]
 repo = 'tpope/vim-endwise'
 on_i = 1
