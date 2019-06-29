@@ -32,6 +32,7 @@ if dein#load_state(s:dein_dir)
   cal dein#add('tomtom/tcomment_vim')
 
   " Completion
+  cal dein#load_toml(s:plugin_dir . 'language_client.toml', {'lazy': 0})
   cal dein#load_toml(s:plugin_dir . 'completion.toml', {'lazy': 0})
   cal dein#load_toml(s:plugin_dir . 'completion_lazy.toml', {'lazy': 1})
 
