@@ -1,0 +1,35 @@
+#!/bin/bash
+
+repository="upstream"
+branch="master"
+upstream_path="${repository}/${branch}"
+
+# It's not necessary to running as root.
+if [[ ! $EUID -ne 0 ]]; then
+  echo "Running this script as root is no supported."
+  exit 1
+fi
+
+
+# Check installed the required shell.
+if ! type "git" > /dev/null 2>&1; then
+  echo "${0##*/}: Git command not found." >&1
+  exit 127
+fi
+
+# Check exist upstream repository in git's remote list.
+if ! git branch -a | grep "${upstream_path}" > /dev/null 2>&1; then
+  echo "${0##*/}: \`${upstream_path}' not found in git branch." >&1
+  exit 63
+fi
+
+# Fetch & Merge
+if ! git fetch ${repository}; then
+  exit $?
+fi
+
+if ! git merge ${upstream_path}; then
+  exit $?
+fi
+
+exit 0
