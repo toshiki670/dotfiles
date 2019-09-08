@@ -18,8 +18,15 @@
 # Setup
 ## Preparation
 1. Create install media.
-2. Confirm drive to install.
+2. Check drive to install.<br>
     `$ fdisk -l`
+3. Cut partition
+  * Restore
+  * Boot
+  * Crypt
+    + Root
+    + Home
+
 
 ## Install
 
