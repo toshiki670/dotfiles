@@ -1,6 +1,6 @@
 # Overview
 
-# Reverence
+# Reference
 
 # Composition
 - Motherboard : ASRock Intel Z370 Extreme4 ATX
