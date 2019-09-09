@@ -18,15 +18,37 @@
 # Setup
 ## Preparation
 1. Create install media.
-2. Check drive to install.<br>
+1. Check drive to install.  
     `$ fdisk -l`
-3. Cut partition
-  * Restore
-  * Boot
-  * Crypt
-    + Root
-    + Home
+1. Make restore, boot and LVM.  
+    ```
+    $ gdisk /dev/nvme*n*
+    Restore: 1GB: ???
+    Boot   : 256MB: EF00
+    LVM    : FREE:  8E00
+    ```
+1. Make LVM.  
+    ```
+    $ cryptsetup luksFormat /dev/nvme*n*p*
+    $ cryptsetup open /dev/nvme*n*p* cryptolvm
+    $ pvcreate /dev/mapper/cryptolvm
+    $ vgcreate cryptolvm /dev/mapper/cryptolvm
+    $ lvcreate -L 50G cryptolvm -n root
+    $ lvcreate -l 100%FREE cryptolvm -n home
+    ```
+1. Format
 
+
+1. Mount
+
+
+```
+Restore: 1GB
+Boot   : 256MB
+LVM    : Crypt
+  Root : 50GB : XFS
+  Home : FREE : XFS
+```
 
 ## Install
 
