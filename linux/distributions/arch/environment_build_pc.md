@@ -26,6 +26,8 @@
     Restore: 1GB: ???
     Boot   : 256MB: EF00
     LVM    : FREE:  8E00
+
+    $ mkfs.fat -F 32 /dev/nvme*n*p*
     ```
 1. Make LVM.  
     ```
@@ -35,9 +37,18 @@
     $ vgcreate cryptolvm /dev/mapper/cryptolvm
     $ lvcreate -L 50G cryptolvm -n root
     $ lvcreate -l 100%FREE cryptolvm -n home
-    ```
-1. Format
 
+    $ mkfs.xfs /dev/mapper/cryptolvm-root
+    $ mkfs.xfs /dev/mapper/cryptolvm-home
+    ```
+    Result
+    ```
+    Restore: 1GB
+    Boot   : 256MB
+    LVM    : Crypt
+      Root : 50GB : XFS
+      Home : FREE : XFS
+    ```
 
 1. Mount
 
