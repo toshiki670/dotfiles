@@ -53,21 +53,58 @@
     ```
 
 1. Mount
+    ```
+    $ mount /dev/mapper/cryptolvm-root /mnt
+    $ mkdir /mnt/boot
+    $ mkdir /mnt/home
+    $ mount /dev/nvme*n*p* /mnt/boot
+    $ mount /dev/mapper/cryptolvm-home /mnt/home
+    ```
 
+1. Check to connect network.
+    `$ ping archlinux.jp`
 
-```
-Restore: 1GB
-Boot   : 256MB
-LVM    : Crypt
-  Root : 50GB : XFS
-  Home : FREE : XFS
-```
+1. Update system clock
+    `$ timedatectl set-ntp true`
 
 ## Install
+1. Choose mirror
+    `$ vim /etc/pacman.d/mirrorlist`
+
+1. Install base system
+    `$ pacstrap /mnt base base-devel`
 
 ## Setting
+1. Generate fstab
+    `$ genfstab -U /mnt >> /mnt/etc/fstab`
+
+1. Chroot
+    `$ arch-chroot /mnt`
+
+1. Timezone
+    ```
+    $ ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+    $ hwclock --systohc --utc
+    ```
+
+1. Locale  
+    Uncomment `en_US.UTF-8 UTF-8` and other needed locales in `/etc/locale.gen`, and generate them with:
+    `$ locale-gen`
+
+1. Host name
+
+1. Network setting
+
+1. Initramfs
+
+1. Root password
+
+1. Boot loader
+
 
 ## After setting
+
+
 
 # Note
 
