@@ -20,6 +20,7 @@
 1. Create install media.
 1. Check drive to install.  
     `$ fdisk -l`
+
 1. Make restore, boot and LVM.  
     ```
     $ gdisk /dev/nvme*n*
@@ -29,6 +30,7 @@
 
     $ mkfs.fat -F 32 /dev/nvme*n*p*
     ```
+
 1. Make LVM.  
     ```
     $ cryptsetup luksFormat /dev/nvme*n*p*
