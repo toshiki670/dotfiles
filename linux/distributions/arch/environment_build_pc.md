@@ -43,8 +43,7 @@
     $ mkfs.xfs /dev/mapper/cryptolvm-root
     $ mkfs.xfs /dev/mapper/cryptolvm-home
     ```
-    Result
-    ```
+    ``` Result
     Restore: 1GB
     Boot   : 256MB
     LVM    : Crypt
@@ -61,24 +60,24 @@
     $ mount /dev/mapper/cryptolvm-home /mnt/home
     ```
 
-1. Check to connect network.
+1. Check to connect network.  
     `$ ping archlinux.jp`
 
-1. Update system clock
+1. Update system clock.  
     `$ timedatectl set-ntp true`
 
 ## Install
-1. Choose mirror
+1. Choose mirror.  
     `$ vim /etc/pacman.d/mirrorlist`
 
-1. Install base system
+1. Install base system.  
     `$ pacstrap /mnt base base-devel`
 
 ## Setting
-1. Generate fstab
+1. Generate fstab.  
     `$ genfstab -U /mnt >> /mnt/etc/fstab`
 
-1. Chroot
+1. Chroot.  
     `$ arch-chroot /mnt`
 
 1. Timezone
@@ -88,7 +87,7 @@
     ```
 
 1. Locale  
-    Uncomment `en_US.UTF-8 UTF-8` and other needed locales in `/etc/locale.gen`, and generate them with:
+    Uncomment `en_US.UTF-8 UTF-8` and other needed locales in `/etc/locale.gen`, and generate them with:  
     `$ locale-gen`
 
 1. Host name
