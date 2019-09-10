@@ -56,7 +56,7 @@
       Home  : FREE : XFS
     ```
 
-1. Mount
+1. Mount.
     ```
     $ mount /dev/mapper/cryptolvm-root /mnt
     $ mkdir /mnt/boot
@@ -97,32 +97,49 @@
     $ arch-chroot /mnt
     ```
 
-1. Timezone
+1. Timezone.
     ```
     $ ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
     $ hwclock --systohc --utc
     ```
 
-1. Locale<br>
+1. Locale.<br>
     Uncomment `en_US.UTF-8 UTF-8` and other needed locales in `/etc/locale.gen`, and generate them with:
     ```
     $ locale-gen
     ```
 
-1. Host name
+1. Host name.
 
-1. Network setting
+1. Network setting.
 
-1. Initramfs
+1. Initramfs.
 
-1. Root password
+1. Root password.
 
-1. Boot loader
+1. Boot loader.
 
 
 ## After setting
+1. Desktop's enviroment.
+    ```
+    $ pacman -S plasma
+    $ systemctl enable sddm
+    ```
 
+1. Necessary packages
+    ```
+    $ pacman -S zsh git vim neovim
+    ```
 
+1. Yay
+    ```
+    $ git clone https://aur.archlinux.org/yay.git
+    $ cd yay
+    $ makepkg -si
+    $ cd ..
+    $ rm -rf yay
+    ```
 
 # Note
 
