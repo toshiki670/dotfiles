@@ -20,10 +20,12 @@
 # Setup
 ## Preparation
 1. Create install media.
-1. Check drive to install.  
-    `$ fdisk -l`
+1. Check drive to install.
+    ```
+    $ fdisk -l
+    ```
 
-1. Make restore, boot and LVM.  
+1. Make restore, boot and LVM.
     ```
     $ gdisk /dev/nvme*n*
     Restore: 1GB: ???
@@ -33,7 +35,7 @@
     $ mkfs.fat -F 32 /dev/nvme*n*p*
     ```
 
-1. Make LVM.  
+1. Make LVM.
     ```
     $ cryptsetup luksFormat /dev/nvme*n*p*
     $ cryptsetup open /dev/nvme*n*p* cryptolvm
@@ -45,12 +47,13 @@
     $ mkfs.xfs /dev/mapper/cryptolvm-root
     $ mkfs.xfs /dev/mapper/cryptolvm-home
     ```
-    ``` Result
-    Restore: 1GB
-    Boot   : 256MB
-    LVM    : Crypt
-      Root : 50GB : XFS
-      Home : FREE : XFS
+    ``` 
+    Result partition
+    Restore : 1GB
+    Boot    : 256MB
+    LVM     : Crypt
+      Root  : 50GB : XFS
+      Home  : FREE : XFS
     ```
 
 1. Mount
@@ -62,25 +65,37 @@
     $ mount /dev/mapper/cryptolvm-home /mnt/home
     ```
 
-1. Check to connect network.  
-    `$ ping archlinux.jp`
+1. Check to connect network.
+    ```
+    $ ping archlinux.jp
+    ```
 
-1. Update system clock.  
-    `$ timedatectl set-ntp true`
+1. Update system clock.
+    ```
+    $ timedatectl set-ntp true
+    ```
 
 ## Install
-1. Choose mirror.  
-    `$ vim /etc/pacman.d/mirrorlist`
+1. Choose mirror.
+    ```
+    $ vim /etc/pacman.d/mirrorlist
+    ```
 
-1. Install base system.  
-    `$ pacstrap /mnt base base-devel`
+1. Install base system.
+    ```
+    $ pacstrap /mnt base base-devel
+    ```
 
 ## Setting
-1. Generate fstab.  
-    `$ genfstab -U /mnt >> /mnt/etc/fstab`
+1. Generate fstab.
+    ```
+    $ genfstab -U /mnt >> /mnt/etc/fstab
+    ```
 
-1. Chroot.  
-    `$ arch-chroot /mnt`
+1. Chroot.
+    ```
+    $ arch-chroot /mnt
+    ```
 
 1. Timezone
     ```
@@ -88,9 +103,11 @@
     $ hwclock --systohc --utc
     ```
 
-1. Locale  
-    Uncomment `en_US.UTF-8 UTF-8` and other needed locales in `/etc/locale.gen`, and generate them with:  
-    `$ locale-gen`
+1. Locale<br>
+    Uncomment `en_US.UTF-8 UTF-8` and other needed locales in `/etc/locale.gen`, and generate them with:
+    ```
+    $ locale-gen
+    ```
 
 1. Host name
 
