@@ -1,6 +1,8 @@
 # Overview
 
 # Reference
+- [Installation guide - Arch Wiki](https://wiki.archlinux.org/index.php/Installation_guide)
+- [dm-crypt/Encrypting an entire system - Arch Wiki](https://wiki.archlinux.org/index.php/Dm-crypt/Encrypting_an_entire_system)
 
 # Composition
 - Motherboard : ASRock Intel Z370 Extreme4 ATX
