@@ -113,12 +113,30 @@
 
 1. Network setting.
 
-1. Initramfs.
-
-1. Root password.
+1. Initramfs.<br>
+  1. Add the keyboard, encrypt and lvm2 hooks to mkinitcpio.conf:
+    ```
+    HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems fsck)
+    ```
+  2. Create.
+    ```
+    $ mkinitcpio -p linux
+    ```
 
 1. Boot loader.
+  1. Note the PARTUUID
+    ```
+    blkid -s PARTUUID -o value /dev/nvme*n*
+    ```
+  2. The following kernel parameter needs to be set by the boot loader:
+    ```
+    cryptdevice=PARTUUID=device-PARTUUID:cryptolvm root=/dev/mapper/cryptolvm-root
+    ```
 
+1. Set the root password.
+    ```
+    $ passwd
+    ```
 
 ## After setting
 1. Desktop's enviroment.
