@@ -3,6 +3,7 @@
 # Reference
 - [Installation guide - Arch Wiki](https://wiki.archlinux.org/index.php/Installation_guide)
 - [dm-crypt/Encrypting an entire system - Arch Wiki](https://wiki.archlinux.org/index.php/Dm-crypt/Encrypting_an_entire_system)
+- [Arch dm-cryptでデバイスを透過的に暗号化する - u+のブログ](http://u10e10.hatenablog.com/entry/dm-crypt-usage)
 
 # Composition
 - Motherboard : ASRock Intel Z370 Extreme4 ATX
@@ -157,6 +158,11 @@
     $ makepkg -si
     $ cd ..
     $ rm -rf yay
+    ```
+
+1. Make boot key
+    ```
+    $ dd bs=512 count=4 if=/dev/urandom of=/path/to/file
     ```
 
 # Note
