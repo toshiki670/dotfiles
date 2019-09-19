@@ -41,12 +41,12 @@
     $ cryptsetup luksFormat /dev/nvme*n*p*
     $ cryptsetup open /dev/nvme*n*p* cryptolvm
     $ pvcreate /dev/mapper/cryptolvm
-    $ vgcreate cryptolvm /dev/mapper/cryptolvm
-    $ lvcreate -L 50G cryptolvm -n root
-    $ lvcreate -l 100%FREE cryptolvm -n home
+    $ vgcreate system /dev/mapper/cryptolvm
+    $ lvcreate -L 50G system -n root
+    $ lvcreate -l 100%FREE system -n home
 
-    $ mkfs.xfs /dev/mapper/cryptolvm-root
-    $ mkfs.xfs /dev/mapper/cryptolvm-home
+    $ mkfs.xfs /dev/mapper/system-root
+    $ mkfs.xfs /dev/mapper/system-home
     ```
     ``` 
     Result partition
@@ -59,11 +59,11 @@
 
 1. Mount.
     ```
-    $ mount /dev/mapper/cryptolvm-root /mnt
+    $ mount /dev/mapper/system-root /mnt
     $ mkdir /mnt/boot
     $ mkdir /mnt/home
     $ mount /dev/nvme*n*p* /mnt/boot
-    $ mount /dev/mapper/cryptolvm-home /mnt/home
+    $ mount /dev/mapper/system-home /mnt/home
     ```
 
 1. Check to connect network.
@@ -131,7 +131,7 @@
     ```
     2. The following kernel parameter needs to be set by the boot loader:
     ```
-    cryptdevice=PARTUUID=device-PARTUUID:cryptolvm root=/dev/mapper/cryptolvm-root
+    cryptdevice=PARTUUID=device-PARTUUID:cryptolvm root=/dev/mapper/system-root
     ```
 
 1. Set the root password.
