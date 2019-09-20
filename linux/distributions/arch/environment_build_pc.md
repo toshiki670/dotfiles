@@ -162,7 +162,17 @@
 
 1. Make boot key
     ```
-    $ dd bs=512 count=4 if=/dev/urandom of=/path/to/file
+    $ dd bs=512 count=4 if=/dev/urandom of=/path/to/key_file
+    ```
+
+1. Add keyfile
+    ```
+    $ cryptsetup luksAddKey /dev/nvme*n*p* /path/to/key_file
+    ```
+
+1. Add karnel parameter
+    ```
+
     ```
 
 # Note
