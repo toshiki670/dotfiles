@@ -124,13 +124,30 @@
     ```
 
 1. Boot loader.
-    1. Note the PARTUUID
+    1. Install systemd-boot
     ```
-    blkid -s PARTUUID -o value /dev/nvme*n*
+    $ bootctl --path=/boot install
     ```
-    2. The following kernel parameter needs to be set by the boot loader:
+
+    1. Add Archlinux loader file.
     ```
-    cryptdevice=PARTUUID=device-PARTUUID:cryptolvm root=/dev/mapper/system-root
+    $ vi /boot/loader/entries/arch.conf
+    title  Arch Linux
+    linux /vmlinuz-linux
+    initrd /initramfs-linux.img
+    option cryptdevice=UUID=
+    option root=/dev/mapper/system-root
+    ```
+
+    1. Append the UUID of boot storage.
+    ```
+    blkid -s UUID -o value /dev/nvme*n* >> /boot/loader/entries/arch.conf
+    ```
+
+    1. Make option.
+    ```
+    $ vi /boot/loader/entries/arch.conf
+    option cryptdevice=UUID=device-UUID:vault root=dev/mapper/system-root
     ```
 
 1. Set the root password.
