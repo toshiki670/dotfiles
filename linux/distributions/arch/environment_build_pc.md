@@ -136,7 +136,6 @@
     linux /vmlinuz-linux
     initrd /initramfs-linux.img
     option cryptdevice=UUID=
-    option root=/dev/mapper/system-root
     ```
 
     1. Append the UUID of boot storage.
@@ -147,7 +146,7 @@
     1. Make option.
     ```
     $ vi /boot/loader/entries/arch.conf
-    option cryptdevice=UUID=device-UUID:vault root=dev/mapper/system-root
+    option cryptdevice=UUID=device-UUID:vault root=/dev/mapper/system-root
     ```
 
 1. Set the root password.
