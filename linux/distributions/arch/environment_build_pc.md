@@ -38,10 +38,10 @@
 
 1. Make LVM.
     ```
-    $ cryptsetup luksFormat /dev/nvme*n*p*
-    $ cryptsetup open /dev/nvme*n*p* cryptolvm
-    $ pvcreate /dev/mapper/cryptolvm
-    $ vgcreate system /dev/mapper/cryptolvm
+    $ cryptsetup -v -c serpent-xts-plain64 -s 512 -h sha512 luksFormat /dev/nvme*n*p*
+    $ cryptsetup open /dev/nvme*n*p* vault
+    $ pvcreate /dev/mapper/vault
+    $ vgcreate system /dev/mapper/vault
     $ lvcreate -L 50G system -n root
     $ lvcreate -l 100%FREE system -n home
 
@@ -60,8 +60,7 @@
 1. Mount.
     ```
     $ mount /dev/mapper/system-root /mnt
-    $ mkdir /mnt/boot
-    $ mkdir /mnt/home
+    $ mkdir /mnt/boot /mnt/home
     $ mount /dev/nvme*n*p* /mnt/boot
     $ mount /dev/mapper/system-home /mnt/home
     ```
@@ -115,7 +114,7 @@
 1. Network setting.
 
 1. Initramfs.<br>
-    1. Add the keyboard, encrypt and lvm2 hooks to mkinitcpio.conf:
+    1. Add the keyboard, encrypt and lvm2 hooks to /etc/mkinitcpio.conf:
     ```
     HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems fsck)
     ```
