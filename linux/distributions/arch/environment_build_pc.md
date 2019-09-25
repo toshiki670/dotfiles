@@ -145,7 +145,7 @@
     options cryptdevice=UUID=
     ```
 
-    1. Append the UUID of boot storage.
+    1. Append the UUID of vault storage.
     ```
     blkid -s UUID -o value /dev/nvme*n* >> /boot/loader/entries/arch.conf
     ```
