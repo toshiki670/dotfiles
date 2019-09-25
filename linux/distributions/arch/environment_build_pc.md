@@ -115,7 +115,7 @@
     $ vi /etc/hosts
     127.0.0.1 localhost
     ::1       localhost
-    127.0.1.1 myhostname.localdomain	myhostname
+    127.0.1.1 myhostname.localdomain  myhostname
     ```
 
 1. Network setting.
@@ -142,7 +142,7 @@
     title  Arch Linux
     linux /vmlinuz-linux
     initrd /initramfs-linux.img
-    option cryptdevice=UUID=
+    options cryptdevice=UUID=
     ```
 
     1. Append the UUID of boot storage.
@@ -153,7 +153,7 @@
     1. Make option.
     ```
     $ vi /boot/loader/entries/arch.conf
-    option cryptdevice=UUID=device-UUID:vault root=/dev/mapper/system-root
+    options cryptdevice=UUID=device-UUID:vault root=/dev/mapper/system-root
     ```
 
 1. Set the root password.
