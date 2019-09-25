@@ -111,7 +111,7 @@
 
 1. Host name.
     ```
-    $ echo myhostname > /etc/hostname
+    $ cat /dev/urandom | tr -dc "[:alnum:]" | fold -w 8 | head -n 1 | sed "s/^/Arch-/" > /etc/hostname
     $ vi /etc/hosts
     127.0.0.1 localhost
     ::1       localhost
@@ -119,6 +119,9 @@
     ```
 
 1. Network setting.
+    ```
+    $ systemctl enable dhcpcd
+    ```
 
 1. Initramfs.<br>
     1. Add the keyboard, encrypt and lvm2 hooks to /etc/mkinitcpio.conf:
@@ -159,6 +162,13 @@
 1. Set the root password.
     ```
     $ passwd
+    ```
+
+1. Finally
+    ```
+    $ exit
+    $ umount -R /mnt
+    $ reboot
     ```
 
 ## After setting
