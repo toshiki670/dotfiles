@@ -111,7 +111,7 @@
 
 1. Host name.
     ```
-    $ cat /dev/urandom | tr -dc "[:alnum:]" | fold -w 8 | head -n 1 | sed "s/^/Arch-/" > /etc/hostname
+    $ cat /dev/urandom | tr -dc "[:alnum:]" | fold -w 8 | head -n 1 | sed "s/^/Linux-/" > /etc/hostname
     $ vi /etc/hosts
     127.0.0.1 localhost
     ::1       localhost
@@ -175,6 +175,8 @@
 1. Desktop's enviroment.
     ```
     $ pacman -S plasma
+    Choose the phonon-qt5-vlc.
+
     $ systemctl enable sddm
     ```
 
