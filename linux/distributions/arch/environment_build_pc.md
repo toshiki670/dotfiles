@@ -122,6 +122,12 @@
     ```
     $ systemctl enable dhcpcd
     ```
+    ```
+    Add Google DNS
+    $ vi /etc/resolv.conf
+    nameserver 8.8.8.8
+    nameserver 8.8.4.4
+    ```
 
 1. Initramfs.<br>
     1. Add the keyboard, encrypt and lvm2 hooks to /etc/mkinitcpio.conf:
@@ -162,6 +168,13 @@
 1. Set the root password.
     ```
     $ passwd
+    ```
+
+1. Add User
+    ```
+    $ useradd username
+    $ passwd username
+    $ usermod -aG wheel username
     ```
 
 1. Finally
