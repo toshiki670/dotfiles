@@ -172,7 +172,7 @@
 
 1. Add User
     ```
-    $ useradd username
+    $ useradd -m username
     $ passwd username
     $ usermod -aG wheel username
     ```
