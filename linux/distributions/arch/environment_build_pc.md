@@ -177,6 +177,13 @@
     $ passwd username
     ```
 
+1. Enable wheel group as sudoer.
+    ```
+    $ visudo
+    Uncomment the below:
+    # %wheel ALL=(ALL) ALL
+    ```
+
 1. Finally
     ```
     $ exit
