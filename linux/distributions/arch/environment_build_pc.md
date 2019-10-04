@@ -29,11 +29,12 @@
 1. Make restore, boot and LVM.
     ```
     $ gdisk /dev/nvme*n*
-    Restore: 1GB: ???
-    Boot   : 256MB: EF00
+    Boot   : 255MB: EF00
+    Restore: 1GB: 8300
     LVM    : FREE:  8E00
 
-    $ mkfs.fat -F 32 /dev/nvme*n*p*
+    Boot
+    $ mkfs.fat -vcF 32 -n boot /dev/nvme*n*p*
     ```
 
 1. Make LVM.
