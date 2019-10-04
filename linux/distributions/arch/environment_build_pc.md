@@ -163,7 +163,7 @@
     1. Make option.
     ```
     $ vi /boot/loader/entries/arch.conf
-    options cryptdevice=UUID=device-UUID:vault root=/dev/mapper/system-root
+    options cryptdevice=UUID=device-UUID:vault root=/dev/mapper/system-root nvidia-drm.modeset=1 rw
     ```
 
 1. Set the root password.
