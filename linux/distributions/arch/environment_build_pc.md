@@ -7,7 +7,7 @@
 
 # Composition
 - Motherboard : ASRock Intel Z370 Extreme4 ATX
-- CPU         : Intel i5-8500 (6) @ 4.100GHz
+- CPU         : Intel i9-9900KF (8 core / 16 thread) @ 3.6GHz
 - GPU         : NVIDIA GeForce RTX 2080
 - Memory      : Corsair DDR4-2666MHz 8GB * 4
 - Drive       : SSD 250GB
