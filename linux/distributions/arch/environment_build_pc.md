@@ -37,10 +37,15 @@
     $ mkfs.fat -vcF 32 -n boot /dev/nvme*n*p*
     ```
 
+1. Make boot key
+    ```
+    $ dd bs=512 count=4 if=/dev/urandom of=/path/to/key_file
+    ```
+
 1. Make LVM.
     ```
-    $ cryptsetup -v -c serpent-xts-plain64 -s 512 -h sha512 luksFormat /dev/nvme*n*p*
-    $ cryptsetup open /dev/nvme*n*p* Decrypted
+    $ cryptsetup -v -c serpent-xts-plain64 -s 512 -h sha512 luksFormat /dev/nvme*n*p* /path/to/key_file
+    $ cryptsetup --key-file=/path/to/key_file luksOpen /dev/nvme*n*p* Decrypted
     $ pvcreate /dev/mapper/Decrypted
     $ vgcreate system /dev/mapper/Decrypted
     $ lvcreate -L 50G system -n root
@@ -153,7 +158,7 @@
     title  Arch Linux
     linux /vmlinuz-linux
     initrd /initramfs-linux.img
-    options cryptdevice=UUID=device-UUID:Decrypted cryptkey=/dev/disk/by-uuid/USB-UUID:xfs:/path/to/file root=/dev/mapper/system-root nvidia-drm.modeset=1 rw
+    options cryptdevice=UUID=device-UUID:Decrypted cryptkey=/dev/disk/by-uuid/USB-UUID:xfs:/path/to/key_file root=/dev/mapper/system-root nvidia-drm.modeset=1 rw
     ```
     Append the UUID of Decrypted storage.
     ```
@@ -214,21 +219,6 @@
     $ makepkg -si
     $ cd ..
     $ rm -rf yay
-    ```
-
-1. Make boot key
-    ```
-    $ dd bs=512 count=4 if=/dev/urandom of=/path/to/key_file
-    ```
-
-1. Add keyfile
-    ```
-    $ cryptsetup luksAddKey /dev/nvme*n*p* /path/to/key_file
-    ```
-
-1. Add karnel parameter
-    ```
-
     ```
 
 # Note
