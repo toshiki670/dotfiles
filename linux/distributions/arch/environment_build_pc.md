@@ -196,7 +196,15 @@
 
 1. Necessary packages
     ```
-    $ pacman -S zsh git vim neovim
+    $ pacman -S zsh git vim neovim words
+    ```
+
+1. Packages for Neovim
+    ```
+    $ pacman -S ruby python python-pip python2 python2-pip
+    $ gem install neovim
+    $ pip install neovim
+    $ pip2 install neovim
     ```
 
 1. Yay
