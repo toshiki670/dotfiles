@@ -193,11 +193,10 @@
 ## After setting
 1. Desktop's enviroment.
     ```
-    $ pacman -S plasma
-    Choose the phonon-qt5-vlc.
-
+    $ pacman -S plasma kde-applications
     $ systemctl enable sddm
     ```
+    [x] Choose the phonon-qt5-vlc.
 
 1. Necessary packages
     ```
