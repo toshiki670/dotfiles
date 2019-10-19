@@ -131,11 +131,13 @@
     ```
 
 1. Initramfs.<br>
-    1. Add the keyboard, encrypt and lvm2 hooks to /etc/mkinitcpio.conf:
+    1. Write to /etc/mkinitcpio.conf:
+    ``` mkinitcpio.conf
+    MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+    HOOKS=(base udev autodetect modconf keyboard keymap block encrypt lvm2 filesystems fsck)
     ```
-    HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems fsck)
-    ```
-    2. Create.
+
+    1. Create.
     ```
     $ mkinitcpio -p linux
     ```
@@ -146,24 +148,16 @@
     $ bootctl --path=/boot install
     ```
 
-    1. Add Archlinux loader file.
+    1. Add an Archlinux loader file to /boot/loader/entries/arch.conf.
     ```
-    $ vi /boot/loader/entries/arch.conf
     title  Arch Linux
     linux /vmlinuz-linux
     initrd /initramfs-linux.img
-    options cryptdevice=UUID=
+    options cryptdevice=UUID=device-UUID:Decrypted cryptkey=/dev/disk/by-uuid/USB-UUID:xfs:/path/to/file root=/dev/mapper/system-root nvidia-drm.modeset=1 rw
     ```
-
-    1. Append the UUID of vault storage.
+    Append the UUID of Decrypted storage.
     ```
     blkid -s UUID -o value /dev/nvme*n* >> /boot/loader/entries/arch.conf
-    ```
-
-    1. Make option.
-    ```
-    $ vi /boot/loader/entries/arch.conf
-    options cryptdevice=UUID=device-UUID:vault root=/dev/mapper/system-root nvidia-drm.modeset=1 rw
     ```
 
 1. Set the root password.
