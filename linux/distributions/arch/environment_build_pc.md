@@ -40,9 +40,9 @@
 1. Make LVM.
     ```
     $ cryptsetup -v -c serpent-xts-plain64 -s 512 -h sha512 luksFormat /dev/nvme*n*p*
-    $ cryptsetup open /dev/nvme*n*p* vault
-    $ pvcreate /dev/mapper/vault
-    $ vgcreate system /dev/mapper/vault
+    $ cryptsetup open /dev/nvme*n*p* Decrypted
+    $ pvcreate /dev/mapper/Decrypted
+    $ vgcreate system /dev/mapper/Decrypted
     $ lvcreate -L 50G system -n root
     $ lvcreate -l 100%FREE system -n home
 
