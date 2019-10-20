@@ -98,7 +98,10 @@ setopt auto_cd
 setopt auto_pushd
 setopt correct
 
-alias relogin='exec $SHELL -l'
+# Reload
+alias reload='exec $SHELL -l'
+
+# ls command series
 alias ls='ls --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
@@ -182,6 +185,7 @@ setopt EXTENDED_HISTORY
 # 全履歴を一覧表示する
 function history-all { history -E 1 }
 
+# Process grep
 function ps-grep {
   ps aux | grep $1 | grep -v grep
 }
