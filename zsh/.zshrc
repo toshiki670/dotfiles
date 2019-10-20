@@ -66,6 +66,8 @@ elif type "git" > /dev/null 2>&1; then
 
   # Install the Zplug
   git clone https://github.com/zplug/zplug $ZPLUG_HOME
+  zplug install
+  zplug load
 fi
 
 
