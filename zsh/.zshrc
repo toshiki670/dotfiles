@@ -41,7 +41,10 @@ export ZPLUG_HOME=$DOTFILES/zsh/plugin/zplug
 export ZPLUG_BIN=$ZPLUG_HOME/bin
 export ZPLUG_CACHE_DIR=$ZPLUG_HOME/cache
 export ZPLUG_REPOS=$ZPLUG_HOME/repos
+
+# Initialize and Install the Zplug
 if [ -e $ZPLUG_HOME ]; then
+
   # Zplug の有効化
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
@@ -58,7 +61,13 @@ if [ -e $ZPLUG_HOME ]; then
   # プラグイン追加後、下記を実行する
   zplug check || zplug install
   zplug load
+
+elif type "git" > /dev/null 2>&1; then
+
+  # Install the Zplug
+  git clone https://github.com/zplug/zplug $ZPLUG_HOME
 fi
+
 
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
