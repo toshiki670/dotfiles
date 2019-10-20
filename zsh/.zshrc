@@ -6,7 +6,7 @@ export DOTFILES=~/dotfiles
 export PATH="/usr/local/sbin:$PATH"
 export PATH="$HOME/dotfiles/bin:$PATH"
 
-if [ -x "$(command -v brew)" ]; then
+if type "brew" > /dev/null 2>&1; then
   export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 fi
 
@@ -21,13 +21,13 @@ fi
 
 
 # For rbenv
-if [ -x "$(command -v rbenv)" ]; then
+if type "rbenv" > /dev/null 2>&1; then
   eval "$(rbenv init --no-rehash -)";
   export PATH="$HOME/.rbenv/shims:$PATH"
 fi
 
 # For gem
-if [ -x "$(command -v gem)" ]; then
+if type "gem" > /dev/null 2>&1; then
   PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
 fi
 
