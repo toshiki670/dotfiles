@@ -6,7 +6,7 @@ export DOTFILES=~/dotfiles
 export PATH="/usr/local/sbin:$PATH"
 export PATH="$HOME/dotfiles/bin:$PATH"
 
-if [ -x "$(command -v brew)" ]; then
+if type "brew" > /dev/null 2>&1; then
   export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 fi
 
@@ -21,13 +21,13 @@ fi
 
 
 # For rbenv
-if [ -x "$(command -v rbenv)" ]; then
+if type "rbenv" > /dev/null 2>&1; then
   eval "$(rbenv init --no-rehash -)";
   export PATH="$HOME/.rbenv/shims:$PATH"
 fi
 
 # For gem
-if [ -x "$(command -v gem)" ]; then
+if type "gem" > /dev/null 2>&1; then
   PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
 fi
 
@@ -41,7 +41,10 @@ export ZPLUG_HOME=$DOTFILES/zsh/plugin/zplug
 export ZPLUG_BIN=$ZPLUG_HOME/bin
 export ZPLUG_CACHE_DIR=$ZPLUG_HOME/cache
 export ZPLUG_REPOS=$ZPLUG_HOME/repos
+
+# Initialize and Install the Zplug
 if [ -e $ZPLUG_HOME ]; then
+
   # Zplug の有効化
   source $ZPLUG_HOME/init.zsh
   zplug "zsh-users/zsh-completions"
@@ -58,7 +61,15 @@ if [ -e $ZPLUG_HOME ]; then
   # プラグイン追加後、下記を実行する
   zplug check || zplug install
   zplug load
+
+elif type "git" > /dev/null 2>&1; then
+
+  # Install the Zplug
+  git clone https://github.com/zplug/zplug $ZPLUG_HOME
+  zplug install
+  zplug load
 fi
+
 
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
@@ -89,57 +100,10 @@ setopt auto_cd
 setopt auto_pushd
 setopt correct
 
-# Prompt comfig -------------------------------------------
-# sep='|'
-#
-# pri_clr='002'
-# pri_fore='022'
-# pri_set="%F{${pri_clr}}"
-#
-# sec_clr='240'
-# sec_fore='255'
-# sec_set="%F{${sec_fore}}"
-#
-# fail_clr='009'
-# fail_fore='088'
-# fail_set="%F{${fail_clr}}"
-#
-# source $ZPLUG_HOME/repos/starcraftman/zsh-git-prompt/zshrc.sh
-# ZSH_THEME_GIT_PROMPT_PREFIX="${sec_set} ["
-# ZSH_THEME_GIT_PROMPT_SUFFIX="]%k"
-# ZSH_THEME_GIT_PROMPT_HASH_PREFIX=":"
-# ZSH_THEME_GIT_PROMPT_SEPARATOR="${sec_set} ${sep} "
-# ZSH_THEME_GIT_PROMPT_BRANCH="${sec_set}"
-# ZSH_THEME_GIT_PROMPT_STAGED="%F{green}%{!%G%}"
-# ZSH_THEME_GIT_PROMPT_CONFLICTS="%F{magenta}%{x%G%}"
-# ZSH_THEME_GIT_PROMPT_CHANGED="%F{219}%{+%G%}"
-# ZSH_THEME_GIT_PROMPT_BEHIND="%F{219}%{-%2G%}"
-# ZSH_THEME_GIT_PROMPT_AHEAD="%F{green}%{+%2G%}"
-# ZSH_THEME_GIT_PROMPT_STASHED="${sec_set}%{⚑%G%}"
-# ZSH_THEME_GIT_PROMPT_UNTRACKED="%{… %G%}"
-# ZSH_THEME_GIT_PROMPT_CLEAN="%F{green}%{OK %G%}"
-# ZSH_THEME_GIT_PROMPT_LOCAL="${sec_set} L"
-# # The remote branch will be shown between these two
-# ZSH_THEME_GIT_PROMPT_UPSTREAM_FRONT="{%{$fg[blue]%}"
-# ZSH_THEME_GIT_PROMPT_UPSTREAM_END="%{${reset_color}%}}"
-# ZSH_THEME_GIT_PROMPT_MERGING="%{$fg_bold[magenta]%}|MERGING%{${reset_color}%}"
-# ZSH_THEME_GIT_PROMPT_REBASE="%{$fg_bold[magenta]%}|REBASE%{${reset_color}%}"
-#
-#
-# my_prompt='[%? %n%#%m %~]'
-# my_prompt2="${sec_set}INSERT> %f"
-#
-# pass_status="${pri_set}${my_prompt}%f"
-# fail_status="${fail_set}${my_prompt}%f"
-#
-# PROMPT=%(?.$pass_status.$fail_status)'$(git_super_status)'$'\n'$my_prompt2
-# PROMPT2=$my_prompt2
-#
-# SPROMPT="${fail_set}Correct ${sec_set}'%R' to '%r'?%f"$'\n'"${sec_set}[nyae]>%f "
+# Reload
+alias reload='exec $SHELL -l'
 
-# ---------------------------------------------------------
-
-alias relogin='exec $SHELL -l'
+# ls command series
 alias ls='ls --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
@@ -223,36 +187,13 @@ setopt EXTENDED_HISTORY
 # 全履歴を一覧表示する
 function history-all { history -E 1 }
 
-
-# Google Search By Safari
-goo() {
-  local str opt
-  if [ $# != 0 ]; then
-    for i in $*; do
-      str="$str${str:++}$i"
-    done
-    opt='search?num=100'
-    opt="${opt}&q=${str}"
-  fi
-  open http://www.google.com/$opt
-}
-
-
+# Process grep
 function ps-grep {
   ps aux | grep $1 | grep -v grep
 }
 
 
-# Tmux起動
-# if [ $SHLVL = 1 ]; then
-#   tmux
-#   exit
-# else
-#   cat $DOTFILES/screenfetch
-# fi
-
 # ターミナル起動時に実行
-
 
 # ZSHの起動した関数の時間計測 .zshenv参照
 # if (which zprof > /dev/null 2>&1) ;then
