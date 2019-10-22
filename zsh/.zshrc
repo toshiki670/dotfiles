@@ -76,9 +76,20 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
 
 # Theme configure
-# eval `/usr/local/opt/coreutils/libexec/gnubin/dircolors ~/.dircolors-solarized/dircolors.ansi-dark`
-eval $(dircolors $DOTFILES/zsh/bundle/color/dircolors-solarized)
-eval $(dircolors $DOTFILES/zsh/bundle/color/dircolors-solarized/dircolors.ansi-universal)
+# Install location
+DIRCOLORS=$DOTFILES/zsh/bundle/dircolors-solarized
+
+# Dircolors installation
+if $(type "git" > /dev/null 2>&1) && [[ ! -d $DIRCOLORS ]]; then
+  git clone https://github.com/seebi/dircolors-solarized.git $DIRCOLORS
+fi
+
+# Dircolors activation
+if [[ -d $DIRCOLORS ]]; then
+  eval $(dircolors $DIRCOLORS)
+  eval $(dircolors $DIRCOLORS/dircolors.ansi-universal)
+fi
+
 
 # 補完機能
 bindkey "^[[Z" reverse-menu-complete
