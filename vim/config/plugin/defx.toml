@@ -1,5 +1,20 @@
 [[plugins]]
+repo = 'kristijanhusak/defx-git'
+hook_add = '''
+  let g:defx_git#indicators = {
+    \ 'Modified'  : '+',
+    \ 'Staged'    : '*',
+    \ 'Untracked' : '?',
+    \ 'Renamed'   : '>',
+    \ 'Unmerged'  : '!',
+    \ 'Deleted'   : 'x',
+    \ 'Unknown'   : '?'
+    \ }
+'''
+
+[[plugins]]
 repo = 'Shougo/defx.nvim'
+depends = ['defx-git']
 hook_add = '''
 noremap <Space>t :<C-u>Defx<Enter>
 
