@@ -4,9 +4,9 @@ repo = 'autozimu/LanguageClient-neovim'
 rev = 'next'
 build = 'bash install.sh'
 hook_add = '''
-let g:LanguageClient_serverCommands = {
-  \ 'javascript': ['javascript-typescript-stdio'],
-  \ 'ruby': ['solargraph', 'stdio'],
-\}
+  let g:LanguageClient_serverCommands = {
+    \ 'javascript': ['javascript-typescript-stdio'],
+    \ 'ruby': ['solargraph', 'stdio'],
+  \}
 '''
 

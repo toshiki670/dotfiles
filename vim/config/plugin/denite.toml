@@ -1,69 +1,69 @@
 [[plugins]]
 repo = 'Shougo/denite.nvim'
 hook_add = '''
-let g:unite_source_file_mru_limit = 192
+  let g:unite_source_file_mru_limit = 192
 
 
-nmap [denite] <Nop>
-map <Space>d [denite]
-" プロジェクト内のファイル検索
-nmap <silent> [denite]f :<C-u>Denite file_rec<CR>
-" プロジェクト内の検索
-nmap <silent> [denite]g :<C-u>Denite grep<CR>
-" カーソル下の検索
-nmap <silent> [denite]* :<C-u>DeniteCursorWord grep<CR>
-" バッファに展開中のファイル検索
-nmap <silent> [denite]b :<C-u>Denite buffer<CR>
-" ファイル内の関数/クラス等の検索
-nmap <silent> [denite]o :<C-u>Denite outline<CR>
+  nmap [denite] <Nop>
+  map <Space>d [denite]
+  " プロジェクト内のファイル検索
+  nmap <silent> [denite]f :<C-u>Denite file_rec<CR>
+  " プロジェクト内の検索
+  nmap <silent> [denite]g :<C-u>Denite grep<CR>
+  " カーソル下の検索
+  nmap <silent> [denite]* :<C-u>DeniteCursorWord grep<CR>
+  " バッファに展開中のファイル検索
+  nmap <silent> [denite]b :<C-u>Denite buffer<CR>
+  " ファイル内の関数/クラス等の検索
+  nmap <silent> [denite]o :<C-u>Denite outline<CR>
 
 
-"denite時に使用するキーマップ
-"ESCキーでdeniteを終了
-call denite#custom#map('insert', '<esc>', '<denite:enter_mode:normal>', 'noremap')
-call denite#custom#map('normal', '<esc>', '<denite:quit>', 'noremap')
-" 上下移動を<C-N>, <C-P>
-call denite#custom#map('normal', '<C-N>', '<denite:move_to_next_line>')
-call denite#custom#map('normal', '<C-P>', '<denite:move_to_previous_line>')
-call denite#custom#map('insert', '<C-N>', '<denite:move_to_next_line>')
-call denite#custom#map('insert', '<C-P>', '<denite:move_to_previous_line>')
-" 入力履歴移動を<C-J>, <C-K>
-call denite#custom#map('insert', '<C-J>', '<denite:assign_next_text>')
-call denite#custom#map('insert', '<C-K>', '<denite:assign_previous_text>')
-" 横割りオープンを`<C-S>`
-call denite#custom#map('insert', '<C-S>', '<denite:do_action:split>')
-" 縦割りオープンを`<C-I>`
-call denite#custom#map('insert', '<C-V>', '<denite:do_action:vsplit>')
-" タブオープンを`<C-O>`
-call denite#custom#map('insert', '<C-O>', '<denite:do_action:tabopen>')
+  "denite時に使用するキーマップ
+  "ESCキーでdeniteを終了
+  call denite#custom#map('insert', '<esc>', '<denite:enter_mode:normal>', 'noremap')
+  call denite#custom#map('normal', '<esc>', '<denite:quit>', 'noremap')
+  " 上下移動を<C-N>, <C-P>
+  call denite#custom#map('normal', '<C-N>', '<denite:move_to_next_line>')
+  call denite#custom#map('normal', '<C-P>', '<denite:move_to_previous_line>')
+  call denite#custom#map('insert', '<C-N>', '<denite:move_to_next_line>')
+  call denite#custom#map('insert', '<C-P>', '<denite:move_to_previous_line>')
+  " 入力履歴移動を<C-J>, <C-K>
+  call denite#custom#map('insert', '<C-J>', '<denite:assign_next_text>')
+  call denite#custom#map('insert', '<C-K>', '<denite:assign_previous_text>')
+  " 横割りオープンを`<C-S>`
+  call denite#custom#map('insert', '<C-S>', '<denite:do_action:split>')
+  " 縦割りオープンを`<C-I>`
+  call denite#custom#map('insert', '<C-V>', '<denite:do_action:vsplit>')
+  " タブオープンを`<C-O>`
+  call denite#custom#map('insert', '<C-O>', '<denite:do_action:tabopen>')
 
 
-"grepでagを使用するように設定
-call denite#custom#var('grep', 'command', ['ag'])
-"カレントディレクトリ内の検索もagを使用する
-call denite#custom#var('file_rec', 'command', ['ag', '--follow', '--nocolor', '--nogroup', '-g', ''])
-"その他のgrepの設定
-call denite#custom#var('grep', 'default_opts',['-i', '--vimgrep'])
-call denite#custom#var('grep', 'recursive_opts', [])
-call denite#custom#var('grep', 'pattern_opt', [])
-call denite#custom#var('grep', 'separator', ['--'])
-call denite#custom#var('grep', 'final_opts', [])
+  "grepでagを使用するように設定
+  call denite#custom#var('grep', 'command', ['ag'])
+  "カレントディレクトリ内の検索もagを使用する
+  call denite#custom#var('file_rec', 'command', ['ag', '--follow', '--nocolor', '--nogroup', '-g', ''])
+  "その他のgrepの設定
+  call denite#custom#var('grep', 'default_opts',['-i', '--vimgrep'])
+  call denite#custom#var('grep', 'recursive_opts', [])
+  call denite#custom#var('grep', 'pattern_opt', [])
+  call denite#custom#var('grep', 'separator', ['--'])
+  call denite#custom#var('grep', 'final_opts', [])
 '''
 
 [[plugins]]
 repo = 'iyuuya/denite-rails'
 hook_add = '''
-nnoremap [rails] <Nop>
-nmap     <Space>r [rails]
-nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:dwim<Return>
-nnoremap <silent> [rails]m   :<C-u>Denite<Space>rails:model<Return>
-nnoremap <silent> [rails]c   :<C-u>Denite<Space>rails:controller<Return>
-nnoremap <silent> [rails]v   :<C-u>Denite<Space>rails:view<Return>
-nnoremap <silent> [rails]a   :<C-u>Denite<Space>rails:asset<Return>
-nnoremap <silent> [rails]h   :<C-u>Denite<Space>rails:helper<Return>
-nnoremap <silent> [rails]t   :<C-u>Denite<Space>rails:test<Return>
-nnoremap <silent> [rails]s   :<C-u>Denite<Space>rails:spec<Return>
-nnoremap <silent> [rails]d   :<C-u>Denite<Space>rails:db<Return>
-nnoremap <silent> [rails]co  :<C-u>Denite<Space>rails:config<Return>
+  nnoremap [rails] <Nop>
+  nmap     <Space>r [rails]
+  nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:dwim<Return>
+  nnoremap <silent> [rails]m   :<C-u>Denite<Space>rails:model<Return>
+  nnoremap <silent> [rails]c   :<C-u>Denite<Space>rails:controller<Return>
+  nnoremap <silent> [rails]v   :<C-u>Denite<Space>rails:view<Return>
+  nnoremap <silent> [rails]a   :<C-u>Denite<Space>rails:asset<Return>
+  nnoremap <silent> [rails]h   :<C-u>Denite<Space>rails:helper<Return>
+  nnoremap <silent> [rails]t   :<C-u>Denite<Space>rails:test<Return>
+  nnoremap <silent> [rails]s   :<C-u>Denite<Space>rails:spec<Return>
+  nnoremap <silent> [rails]d   :<C-u>Denite<Space>rails:db<Return>
+  nnoremap <silent> [rails]co  :<C-u>Denite<Space>rails:config<Return>
 '''
 
