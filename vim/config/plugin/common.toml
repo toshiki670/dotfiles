@@ -13,9 +13,9 @@
 [[plugins]]
 repo = 'phanviet/vim-monokai-pro'
 hook_add = '''
-syntax enable
-set termguicolors
-colorscheme monokai_pro
+  syntax enable
+  set termguicolors
+  colorscheme monokai_pro
 '''
 
 # Syntax ----------------------
@@ -23,55 +23,21 @@ colorscheme monokai_pro
 # repo = 'cespare/vim-toml'
 # on_ft = ['toml']
 
-# Nerd Tree -------------------
-# [[plugins]]
-# repo = 'scrooloose/nerdtree'
-# hook_add = '''
-# set ttimeoutlen=50
-# let g:NERDTreeShowBookmarks=1
-# noremap <Space>t :NERDTreeToggle<Enter>
-# '''
-#
-# # [[plugins]]
-# # repo = 'jistr/vim-nerdtree-tabs'
-# # hook_add = '''
-# # let g:nerdtree_tabs_open_on_console_startup=1
-# # noremap tree :NERDTreeTabsToggle<Enter>
-# # '''
-#
-#
-# [[plugins]]
-# repo = 'Xuyuanp/nerdtree-git-plugin'
-# hook_add = '''
-# let g:NERDTreeIndicatorMapCustom = {
-#     \ "Modified"  : "*",
-#     \ "Staged"    : "+",
-#     \ "Untracked" : "~",
-#     \ "Renamed"   : "*",
-#     \ "Unmerged"  : "!",
-#     \ "Deleted"   : "-",
-#     \ "Dirty"     : "*",
-#     \ "Clean"     : "@",
-#     \ 'Ignored'   : "_",
-#     \ "Unknown"   : "?"
-#     \ }
-# '''
-
 # Git -------------------------
 [[plugins]]
 repo = 'tpope/vim-fugitive'
 hook_add = '''
-nnoremap [git] <Nop>
-nmap     <Space>g [git]
-noremap <silent> [git]a :Gwrite<Enter>
-noremap <silent> [git]c :Gcommit<Enter>
-noremap <silent> [git]r :Gread<Enter>
+  nnoremap [git] <Nop>
+  nmap     <Space>g [git]
+  noremap <silent> [git]a :Gwrite<Enter>
+  noremap <silent> [git]c :Gcommit<Enter>
+  noremap <silent> [git]r :Gread<Enter>
 '''
 
 [[plugins]]
 repo = 'airblade/vim-gitgutter'
 hook_add = '''
-set updatetime=250
+  set updatetime=250
 '''
 
 # Indent ----------------------
@@ -90,7 +56,7 @@ set updatetime=250
 [[plugins]]
 repo = 'reireias/vim-cheatsheet'
 hook_add = '''
-let g:cheatsheet#cheat_file = '~/dotfiles/vim/cheatsheet/common.md'
-noremap <Space>ch :Cheat<Enter>
+  let g:cheatsheet#cheat_file = '~/dotfiles/vim/cheatsheet/common.md'
+  noremap <Space>ch :Cheat<Enter>
 '''
 
