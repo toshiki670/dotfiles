@@ -1,0 +1,13 @@
+[Unit]
+Description=OpenCorsairLink's service
+After=local-fs.target
+ConditionPathExists=/usr/sbin
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/opencorsairlink --device 0 --led channel=0,mode=0,colors=00ffff
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
+
