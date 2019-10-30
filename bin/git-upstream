@@ -5,7 +5,7 @@ branch="master"
 upstream_path="${repository}/${branch}"
 
 # It's not necessary to running as root.
-if [[ ! $EUID -ne 0 ]]; then
+if [[ ${EUID:-${UID}} -eq 0 ]]; then
   echo "${0##*/}: Running this script as root is no supported." >&1
   exit 1
 fi
