@@ -6,7 +6,7 @@
 " o   \__/  |_||_|_|_||_|  \___|
 "
 " Root directory
-let g:vimrc_root = expand('~/dotfiles/vim/')
+let g:vimrc_root = expand('$DOTFILES/vim/')
 
 " config's directory
 let g:config_dir = g:vimrc_root . 'config/'
