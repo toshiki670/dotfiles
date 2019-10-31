@@ -1,10 +1,10 @@
 # ログインシェルとインタラクティブシェルの場合だけ読み込まれる。
 # シェルスクリプトでは不要な場合に記述する。
 # 
-export DOTFILES=~/dotfiles
+export DOTFILES="${HOME%/}/dotfiles"
 
 export PATH="/usr/local/sbin:$PATH"
-export PATH="$HOME/dotfiles/bin:$PATH"
+export PATH="${DOTFILES}/bin:$PATH"
 
 if type "brew" > /dev/null 2>&1; then
   export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
@@ -33,16 +33,16 @@ fi
 
 
 # Setting completions
-completions=$DOTFILES/zsh/completions/
+completions=${DOTFILES}/zsh/completions
 
 # For docker
-comp_docker=${completions}_docker
+comp_docker=${completions}/_docker
 if [[ ! -e ${comp_docker} ]] && type "docker" > /dev/null 2>&1; then
   curl -L https://raw.githubusercontent.com/docker/cli/master/contrib/completion/zsh/_docker > ${comp_docker}
 fi
 
 # For docker-compose
-comp_docker_compose=${completions}_docker-compose
+comp_docker_compose=${completions}/_docker-compose
 if [[ ! -e ${comp_docker_compose} ]] && type "docker-compose" > /dev/null 2>&1; then
   curl -L https://raw.githubusercontent.com/docker/compose/$(docker-compose version --short)/contrib/completion/zsh/_docker-compose > ${comp_docker_compose}
 fi
@@ -57,7 +57,7 @@ fi
 if type "git" > /dev/null 2>&1; then
 
   # Install location
-  ZPLUG_HOME=$DOTFILES/zsh/bundle/zplug
+  ZPLUG_HOME=${DOTFILES}/zsh/bundle/zplug
 
   # Zplug's installation
   if [[ ! -d $ZPLUG_HOME ]]; then
@@ -94,7 +94,7 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
 # Theme configure
 # Install location
-DIRCOLORS=$DOTFILES/zsh/bundle/dircolors-solarized
+DIRCOLORS=${DOTFILES}/zsh/bundle/dircolors-solarized
 
 # Dircolors installation
 if $(type "git" > /dev/null 2>&1) && [[ ! -d $DIRCOLORS ]]; then
@@ -152,18 +152,11 @@ alias gpush='git push'
 alias glog="git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
 alias g-reset-hard='git reset --hard HEAD'
 
-
-# For PHP
-alias xam='cd /Applications/XAMPP/xamppfiles/htdocs/php/'
-
 # For Rails
 alias be='bundle exec'
 
 # For docker
 alias dce='docker-compose exec'
-
-# For Note
-alias note='cd ~/Documents/Note'
 
 # グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
@@ -174,7 +167,7 @@ alias v=vim
 alias vim-utf8='vim -c ":e ++enc=utf8"'
 alias vim-euc_jp='vim -c ":e ++enc=euc-jp"'
 alias vim-shift_jis='vim -c ":e ++enc=shift_jis"'
-alias vim-cheat='vim $DOTFILES/vim/cheatsheet/common.md'
+alias vim-cheat="vim ${DOTFILES}/vim/cheatsheet/common.md"
 # alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 # 拡張子に応じたコマンドを実行
@@ -195,8 +188,8 @@ function rungcc(){
 alias -s {c,cpp}=rungcc
 
 # Dotfiles Config
-alias vimrc='vim $DOTFILES/vim/.vimrc'
-alias zshrc='vim $DOTFILES/zsh/.zshrc'
+alias vimrc="vim ${DOTFILES}/vim/.vimrc"
+alias zshrc="vim ${DOTFILES}/zsh/.zshrc"
 
 # 履歴ファイルの保存先
 export HISTFILE=${HOME}/.zsh_history
