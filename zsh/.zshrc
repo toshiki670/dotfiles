@@ -195,10 +195,10 @@ alias zshrc="vim ${DOTFILES}/zsh/.zshrc"
 export HISTFILE=${HOME}/.zsh_history
 
 # メモリに保存される履歴の件数
-export HISTSIZE=1000
+export HISTSIZE=3072
 
 # 履歴ファイルに保存される履歴の件数
-export SAVEHIST=100000
+export SAVEHIST=1000000
 
 # 重複を記録しない
 setopt hist_ignore_dups
