@@ -21,9 +21,9 @@ else
 fi
 
 # Tmux Setup
-if ! type "tmux" > /dev/null 2>&1; then
+if type "tmux" > /dev/null 2>&1; then
   ln -sf ${dotfiles}tmux/.tmux.conf ~/.tmux.conf
-  if ! type "git" > /dev/null 2>&1; then
+  if type "git" > /dev/null 2>&1; then
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
   fi
 fi
