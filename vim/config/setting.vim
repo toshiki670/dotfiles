@@ -83,6 +83,9 @@ se wrapscan
 " 検索語をハイライト表示
 se hlsearch
 
+" Don't hide the double quote on Json.
+autocmd Filetype json setl conceallevel=0
+
 " スペルチェック機能の有効化
 " se spell
 
