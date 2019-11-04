@@ -18,10 +18,6 @@ Create an alias file in the root directory.
 Place the original command
 
 
-## Font
-Favorite fonts
-
-
 ## Git
 Just execute `install.sh`
 
