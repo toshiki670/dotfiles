@@ -1,10 +1,8 @@
-"^google-chrome"
+"^google-chrome$"
   None, up, Button4, 2
   None, down, Button5, 2
-  Shift_L, Up, Shift_L|Button4, 2
-  Shift_L, Down, Shift_L|Button5, 2
-
-  # No scroll by zoom key
+  Shift_L, Up, Button4, 1
+  Shift_L, Down, Button5, 1
   Control_L, Up, Control_L|Button4
   Control_L, Down, Control_L|Button5
 
