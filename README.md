@@ -1,4 +1,4 @@
-<img alt="GitHub" src="https://img.shields.io/github/license/toshiki670/dotfiles?style=flat-square">
+<a href="LICENSE" alt="MIT License"><img alt="GitHub" src="https://img.shields.io/github/license/toshiki670/dotfiles?style=flat-square"></a>
 
 # Overview
 * Simplification of environment construction
