@@ -15,4 +15,4 @@ $ pip2 install neovim
 ```
 
 # Install
-'sh install.sh'
+`$ sh install.sh`
