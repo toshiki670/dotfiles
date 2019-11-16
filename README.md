@@ -1,3 +1,5 @@
+![GitHub](https://img.shields.io/github/license/toshiki670/dotfiles?style=flat-square)
+
 # Overview
 * Simplification of environment construction
 * unification of environment
