@@ -89,7 +89,7 @@
 
 1. Install base system.
     ```
-    $ pacstrap /mnt base base-devel
+    $ pacstrap /mnt base base-devel linux
     ```
 
 ## Setting
@@ -193,14 +193,14 @@
 ## After setting
 1. Desktop's enviroment.
     ```
-    $ pacman -S plasma kde-applications
+    $ pacman -S plasma konsole dolphin filelight ark gwenview
     $ systemctl enable sddm
     ```
     [x] Choose the phonon-qt5-vlc.
 
 1. Necessary packages
     ```
-    $ pacman -S zsh git vim neovim words
+    $ pacman -S zsh git vim neovim words cryfs
     ```
 
 1. Packages for Neovim
