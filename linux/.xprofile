@@ -3,7 +3,3 @@ export QT_IM_MODULE=fcitx
 export XMODIFIERS=”@im=fcitx”
 
 
-
-if [ -x "$(command -v imwheel)" ]; then
-  /usr/bin/imwheel
-fi
