@@ -46,6 +46,9 @@ if dein#load_state(s:dein_dir)
   cal dein#load_toml(s:plugin_dir . 'ruby.toml', {'lazy': 1})
   cal dein#add('tpope/vim-rails')
 
+  " Rust
+  cal dein#add('rust-lang/rust.vim')
+
 
   " Install if uninstalled
   if dein#check_install()
