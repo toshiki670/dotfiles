@@ -42,6 +42,9 @@ if dein#load_state(s:dein_dir)
   " Control
   cal dein#load_toml(s:plugin_dir . 'vim-submode.toml', {'lazy': 0})
 
+  " Strengthen %
+  cal dein#add('andymass/vim-matchup')
+
   " Ruby and Rails
   cal dein#load_toml(s:plugin_dir . 'ruby.toml', {'lazy': 1})
   cal dein#add('tpope/vim-rails')

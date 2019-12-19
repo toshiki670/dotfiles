@@ -49,6 +49,9 @@ se virtualedit=block
 " カーソルを左右に動かした時に前後の行末、行頭に移動
 se whichwrap=b,s,h,l,[,],<,>
 
+" 行番号を相対的に表示する
+se relativenumber
+
 " バックスペースの動作
 se backspace=indent,eol,start
 
