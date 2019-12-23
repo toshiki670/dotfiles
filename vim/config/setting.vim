@@ -50,7 +50,7 @@ se virtualedit=block
 se whichwrap=b,s,h,l,[,],<,>
 
 " 行番号を相対的に表示する
-se relativenumber
+" se relativenumber
 
 " バックスペースの動作
 se backspace=indent,eol,start
