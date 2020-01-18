@@ -7,7 +7,7 @@ hook_add = '''
   nmap [denite] <Nop>
   map <Space>d [denite]
   " プロジェクト内のファイル検索
-  nmap <silent> [denite]f :<C-u>Denite file_rec<CR>
+  nmap <silent> [denite]f :<C-u>Denite file/rec<CR>
   " プロジェクト内の検索
   nmap <silent> [denite]g :<C-u>Denite grep<CR>
   " カーソル下の検索
