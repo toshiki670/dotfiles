@@ -18,24 +18,42 @@ hook_add = '''
   nmap <silent> [denite]o :<C-u>Denite outline<CR>
 
 
+" Define mappings
+autocmd FileType denite call s:denite_my_settings()
+function! s:denite_my_settings() abort
+  nnoremap <silent><buffer><expr> <CR>
+  \ denite#do_map('do_action')
+  nnoremap <silent><buffer><expr> d
+  \ denite#do_map('do_action', 'delete')
+  nnoremap <silent><buffer><expr> p
+  \ denite#do_map('do_action', 'preview')
+  nnoremap <silent><buffer><expr> q
+  \ denite#do_map('quit')
+  nnoremap <silent><buffer><expr> i
+  \ denite#do_map('open_filter_buffer')
+  nnoremap <silent><buffer><expr> <Space>
+  \ denite#do_map('toggle_select').'j'
+endfunction
+
+
   "denite時に使用するキーマップ
   "ESCキーでdeniteを終了
-  call denite#custom#map('insert', '<esc>', '<denite:enter_mode:normal>', 'noremap')
-  call denite#custom#map('normal', '<esc>', '<denite:quit>', 'noremap')
+  "call denite#custom#map('insert', '<esc>', '<denite:enter_mode:normal>', 'noremap')
+  "call denite#custom#map('normal', '<esc>', '<denite:quit>', 'noremap')
   " 上下移動を<C-N>, <C-P>
-  call denite#custom#map('normal', '<C-N>', '<denite:move_to_next_line>')
-  call denite#custom#map('normal', '<C-P>', '<denite:move_to_previous_line>')
-  call denite#custom#map('insert', '<C-N>', '<denite:move_to_next_line>')
-  call denite#custom#map('insert', '<C-P>', '<denite:move_to_previous_line>')
+  "call denite#custom#map('normal', '<C-N>', '<denite:move_to_next_line>')
+  "call denite#custom#map('normal', '<C-P>', '<denite:move_to_previous_line>')
+  "call denite#custom#map('insert', '<C-N>', '<denite:move_to_next_line>')
+  "call denite#custom#map('insert', '<C-P>', '<denite:move_to_previous_line>')
   " 入力履歴移動を<C-J>, <C-K>
-  call denite#custom#map('insert', '<C-J>', '<denite:assign_next_text>')
-  call denite#custom#map('insert', '<C-K>', '<denite:assign_previous_text>')
+  "call denite#custom#map('insert', '<C-J>', '<denite:assign_next_text>')
+  "call denite#custom#map('insert', '<C-K>', '<denite:assign_previous_text>')
   " 横割りオープンを`<C-S>`
-  call denite#custom#map('insert', '<C-S>', '<denite:do_action:split>')
+  "call denite#custom#map('insert', '<C-S>', '<denite:do_action:split>')
   " 縦割りオープンを`<C-I>`
-  call denite#custom#map('insert', '<C-V>', '<denite:do_action:vsplit>')
+  "call denite#custom#map('insert', '<C-V>', '<denite:do_action:vsplit>')
   " タブオープンを`<C-O>`
-  call denite#custom#map('insert', '<C-O>', '<denite:do_action:tabopen>')
+  "call denite#custom#map('insert', '<C-O>', '<denite:do_action:tabopen>')
 
 
   "grepでagを使用するように設定
