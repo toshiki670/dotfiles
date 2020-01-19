@@ -66,5 +66,6 @@ send \"w\n\"
 expect \"Proceed? (Y/N):\"
 send \"Y\n\"
 
+expect \"\\\$\"
 exit 0
 "
