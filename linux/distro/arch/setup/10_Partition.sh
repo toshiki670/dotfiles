@@ -63,6 +63,8 @@ send \"encrypted\n\"
 
 expect \"Command (? for help):\"
 send \"w\n\"
+expect \"Proceed? (Y/N):\"
+send \"Y\n\"
 
 exit 0
 "
