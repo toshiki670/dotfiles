@@ -63,4 +63,6 @@ send \"encrypted\n\"
 
 expect \"Command (? for help):\"
 send \"w\n\"
+
+exit 0
 "
