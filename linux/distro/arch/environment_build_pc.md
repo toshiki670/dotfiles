@@ -33,6 +33,8 @@
     Restore   : 1GB: 8300
     Encrypted : FREE:  8E00
 
+    1. o  :  Create a new empty GPT.
+
     Boot
     $ mkfs.fat -vcF 32 -n boot /dev/nvme*n*p*
     ```
