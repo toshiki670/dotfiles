@@ -19,7 +19,12 @@ fi
 
 # Check exist upstream repository in git's remote list.
 if ! git branch -a | grep "${upstream_path}" > /dev/null 2>&1; then
-  echo "${0##*/}: \`${upstream_path}' not found in git branch." >&1
+  {
+    echo "${0##*/}: \`${upstream_path}' not found in git branch."
+    echo "${0##*/}: Please command below:"
+    echo "${0##*/}: $ git remote add upstream ${ssh_path}"
+    echo "${0##*/}: $ git fetch upstream"
+  } >&1
   exit 63
 fi
 
