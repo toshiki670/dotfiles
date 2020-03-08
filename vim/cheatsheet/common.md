@@ -1,65 +1,65 @@
 # Cheet file
 ## Ex command
-`:sp    `: Split horizontally
-`:vs    `: Split vertically
+`:sp    `: Split horizontally<br>
+`:vs    `: Split vertically<br>
 
 
 ## Normal mode
-`*      `: Choice word after all marked the same word.
-`=      `: Fix indent(and on visual mode).
-`C-d    `: Move corsor to down half window
-`C-u    `: Move corsor to up half window
-`C-f    `: Move corsor to next window
-`C-u    `: Move corsor to previous window
-`ga     `: Get Ascii value
+`*      `: Choice word after all marked the same word.<br>
+`=      `: Fix indent(and on visual mode).<br>
+`C-d    `: Move corsor to down half window<br>
+`C-u    `: Move corsor to up half window<br>
+`C-f    `: Move corsor to next window<br>
+`C-u    `: Move corsor to previous window<br>
+`ga     `: Get Ascii value<br>
 
 
 ## Visual mode
-`<      `: Indent to left
-`>      `: Indent to right
+`<      `: Indent to left<br>
+`>      `: Indent to right<br>
 
 
 ## Window
-`sw     `: Rotate spirit
-`sj     `: Move to down split
-`sk     `: Move to up split
-`sl     `: Move to right split
-`sh     `: Move to left split
+`sw     `: Rotate spirit<br>
+`sj     `: Move to down split<br>
+`sk     `: Move to up split<br>
+`sl     `: Move to right split<br>
+`sh     `: Move to left split<br>
 
-`sJ     `: Move a split window to down
-`sK     `: Move a split window to up
-`sL     `: Move a split window to right
-`sH     `: Move a split window to left
+`sJ     `: Move a split window to down<br>
+`sK     `: Move a split window to up<br>
+`sL     `: Move a split window to right<br>
+`sH     `: Move a split window to left<br>
 
-`sm     `: Move to right tab
-`sn     `: Move to left tab
+`sm     `: Move to right tab<br>
+`sn     `: Move to left tab<br>
 
-`st     `: Create new tab
+`st     `: Create new tab<br>
 
 ### Adjust spirit
-`s>>..  `: Move a split to right
-`s<<..  `: Move a split to left
-`s++..  `: Move a split to up
-`s--..  `: Move a split to down
+`s>>..  `: Move a split to right<br>
+`s<<..  `: Move a split to left<br>
+`s++..  `: Move a split to up<br>
+`s--..  `: Move a split to down<br>
 
 
 ## Completion
-`C-n    `:
-`C-p    `:
-`C-k    `:
+`C-n    `:<br>
+`C-p    `:<br>
+`C-k    `:<br>
 
 ### Emmet
-`C-f    `: Have to change this keybind
+`C-f    `: Have to change this keybind<br>
 
 
 ## Denite
 `Space+d`: Prefix key
 
-`f      `: Search for files within Project
-`g      `: Search within Project
-`*      `: Search for word under cursor
-`b      `: Search for files that opened in buffer
-`o      `: Search for functions / classes in files
+`f      `: Search for files within Project<br>
+`g      `: Search within Project<br>
+`*      `: Search for word under cursor<br>
+`b      `: Search for files that opened in buffer<br>
+`o      `: Search for functions / classes in files<br>
 
 ### Denite rails
 nmap     <Leader>r [rails]
