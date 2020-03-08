@@ -1,52 +1,67 @@
 # Cheet file
-
 ## Ex command
-:sp   : 横方向に分割
-:vs   : 縦方向に分割
+`:sp    `: Split horizontally
+`:vs    `: Split vertically
 
 
 ## Normal mode
-*     : Choice word after all marked the same word.
-=     : Fix indent(and on visual mode).
-C-d   : Move corsor to down half window
-C-u   : Move corsor to up half window
-C-f   : Move corsor to next window
-C-u   : Move corsor to previous window
-ga    : Get Ascii value
+`*      `: Choice word after all marked the same word.
+`=      `: Fix indent(and on visual mode).
+`C-d    `: Move corsor to down half window
+`C-u    `: Move corsor to up half window
+`C-f    `: Move corsor to next window
+`C-u    `: Move corsor to previous window
+`ga     `: Get Ascii value
+
+
+## Visual mode
+`<      `: Indent to left
+`>      `: Indent to right
+
 
 ## Window
-sw    : Rotate spirit
-sj    : Move to down split
-sk    : Move to up split
-sl    : Move to right split
-sh    : Move to left split
+`sw     `: Rotate spirit
+`sj     `: Move to down split
+`sk     `: Move to up split
+`sl     `: Move to right split
+`sh     `: Move to left split
 
-sJ    : Move a split window to down
-sK    : Move a split window to up
-sL    : Move a split window to right
-sH    : Move a split window to left
+`sJ     `: Move a split window to down
+`sK     `: Move a split window to up
+`sL     `: Move a split window to right
+`sH     `: Move a split window to left
 
-sm    : Move to right tab
-sn    : Move to left tab
+`sm     `: Move to right tab
+`sn     `: Move to left tab
 
-st    : Create new tab
+`st     `: Create new tab
 
 ### Adjust spirit
-s>>.. : Move a split to right
-s<<.. : Move a split to left
-s++.. : Move a split to up
-s--.. : Move a split to down
+`s>>..  `: Move a split to right
+`s<<..  `: Move a split to left
+`s++..  `: Move a split to up
+`s--..  `: Move a split to down
 
 
 ## Completion
-C-n
-C-p
-C-k
+`C-n    `:
+`C-p    `:
+`C-k    `:
 
 ### Emmet
-C-f   : Have to change this keybind
+`C-f    `: Have to change this keybind
 
-## Denite rails
+
+## Denite
+`Space+d`: Prefix key
+
+`f      `: Search for files within Project
+`g      `: Search within Project
+`*      `: Search for word under cursor
+`b      `: Search for files that opened in buffer
+`o      `: Search for functions / classes in files
+
+### Denite rails
 nmap     <Leader>r [rails]
 nnoremap <silent> [rails]r   :<C-u>Denite<Space>rails:dwim<Return>
 nnoremap <silent> [rails]m   :<C-u>Denite<Space>rails:model<Return>
