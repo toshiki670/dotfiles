@@ -6,7 +6,13 @@ build = 'bash install.sh'
 hook_add = '''
   let g:LanguageClient_serverCommands = {
     \ 'javascript': ['javascript-typescript-stdio'],
+    \ 'typescript': ['javascript-typescript-stdio'],
     \ 'ruby': ['solargraph', 'stdio'],
   \}
+  let g:LanguageClient_rootMarkers = {
+    " other root markers....
+    \ 'javascript': ['jsconfig.json'],
+    \ 'typescript': ['tsconfig.json'],
+    \ }
 '''
 

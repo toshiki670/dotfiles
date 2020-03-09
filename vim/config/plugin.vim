@@ -52,6 +52,9 @@ if dein#load_state(s:dein_dir)
   " Rust
   cal dein#add('rust-lang/rust.vim')
 
+  " Typescript
+  cal dein#load_toml(s:plugin_dir . 'typescript.toml', {'lazy': 0})
+
 
   " Install if uninstalled
   if dein#check_install()

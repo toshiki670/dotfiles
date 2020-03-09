@@ -1,0 +1,10 @@
+# LanguageClient-neovim
+[[plugins]]
+repo = 'leafgarland/typescript-vim'
+hook_add = '''
+let g:typescript_indent_disable = 1
+let g:typescript_opfirst='\%([<>=,?^%|*/&]\|\([-:+]\)\1\@!\|!=\|in\%(stanceof\)\=\>\)'
+'''
+
+[[plugins]]
+repo = 'ianks/vim-tsx'
