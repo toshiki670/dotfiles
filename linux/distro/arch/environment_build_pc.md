@@ -223,5 +223,8 @@
     ```
 
 # Note
-
-
+## Bluetooth
+```
+$ systemctl enable bluetooth
+$ systemctl start bluetooth
+```
