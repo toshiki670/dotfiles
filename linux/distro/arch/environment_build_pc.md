@@ -206,10 +206,10 @@
     ```
     
 1. Add pacman.conf
-```
-[quarry]
-Server = https://pkgbuild.com/~anatolik/quarry/x86_64/
-```
+    ```
+    [quarry]
+    Server = https://pkgbuild.com/~anatolik/quarry/x86_64/
+    ```
 
 1. Packages for Neovim
     ```
