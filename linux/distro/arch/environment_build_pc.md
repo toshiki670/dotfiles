@@ -204,13 +204,21 @@
     ```
     $ pacman -S zsh git vim neovim words cryfs
     ```
+    
+1. Add pacman.conf
+```
+[quarry]
+Server = https://pkgbuild.com/~anatolik/quarry/x86_64/
+```
 
 1. Packages for Neovim
     ```
-    $ pacman -S ruby python python-pip python2 python2-pip
-    $ gem install neovim
-    $ pip install neovim
-    $ pip2 install neovim
+    $ pacman -S ruby ruby-neovim python python-pip python-neovim
+    ```
+
+1. For ruby
+    ```
+    $ pacman -S ruby-rdoc ruby-docs
     ```
 
 1. Yay
