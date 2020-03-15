@@ -195,7 +195,7 @@
 ## After setting
 1. Desktop's enviroment.
     ```
-    $ pacman -S --noconfirm plasma konsole dolphin filelight ark gwenview vlc
+    $ pacman -S --noconfirm plasma konsole dolphin filelight ark gwenview vlc openssh
     $ systemctl enable sddm
     ```
     [x] Choose the phonon-qt5-vlc.
@@ -238,4 +238,8 @@
 $ pacman -S pulseaudio-alsa pulseaudio-bluetooth bluez-utils
 $ systemctl enable bluetooth
 $ systemctl start bluetooth
+```
+## Japanese input
+```
+$ pacman -S fcitx fcitx-mozc fcitx-gtk3 fcitx-qt5 kcm-fcitx
 ```
