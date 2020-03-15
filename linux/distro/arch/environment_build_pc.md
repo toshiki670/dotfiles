@@ -91,7 +91,7 @@
 
 1. Install base system.
     ```
-    $ pacstrap /mnt base base-devel linux
+    $ pacstrap /mnt base base-devel linux linux-firmware pacman-contrib
     ```
 
 ## Setting
@@ -213,7 +213,9 @@
 
 1. Packages for Neovim
     ```
-    $ pacman -S ruby ruby-neovim python python-pip python-neovim
+    $ pacman -S ruby ruby-neovim ruby-solargraph python python-pip python-neovim yarn npm
+    $ yarn global add neovim
+    $ npm i javascript-typescript-langserver -g
     ```
 
 1. For ruby
