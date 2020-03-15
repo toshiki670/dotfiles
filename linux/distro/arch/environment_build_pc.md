@@ -235,6 +235,7 @@
 # Note
 ## Bluetooth
 ```
+$ pacman -S pulseaudio-alsa pulseaudio-bluetooth bluez-utils
 $ systemctl enable bluetooth
 $ systemctl start bluetooth
 ```
