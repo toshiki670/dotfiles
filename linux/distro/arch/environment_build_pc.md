@@ -195,14 +195,14 @@
 ## After setting
 1. Desktop's enviroment.
     ```
-    $ pacman -S plasma konsole dolphin filelight ark gwenview
+    $ pacman -S --noconfirm plasma konsole dolphin filelight ark gwenview vlc
     $ systemctl enable sddm
     ```
     [x] Choose the phonon-qt5-vlc.
 
 1. Necessary packages
     ```
-    $ pacman -S zsh git vim neovim words cryfs
+    $ pacman -S --noconfirm zsh git vim neovim words cryfs
     ```
     
 1. Add pacman.conf
@@ -213,7 +213,7 @@
 
 1. Packages for Neovim
     ```
-    $ pacman -S ruby ruby-neovim ruby-solargraph python python-pip python-neovim yarn npm
+    $ pacman -S --noconfirm ruby ruby-neovim ruby-solargraph python python-pip python-neovim yarn npm
     $ yarn global add neovim
     $ npm i javascript-typescript-langserver -g
     ```
