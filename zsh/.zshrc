@@ -149,7 +149,7 @@ function gap(){
   git status
 }
 function gcm(){
-  git commit -m "$1 '$(git rev-parse --abbrev-ref HEAD)'"
+  git commit -m "$* '$(git rev-parse --abbrev-ref HEAD)'"
   git status
 }
 alias gb='git branch'
