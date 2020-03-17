@@ -140,17 +140,10 @@ alias lla='ls -la'
 
 # For git
 alias g='git'
-function gad(){
-  git add
-  git status
-}
-function gap(){
-  git add -p
-  git status
-}
+alias gad='git add'
+alias gap='git add -p'
 function gcm(){
   git commit -m "$* '$(git rev-parse --abbrev-ref HEAD)'"
-  git status
 }
 alias gb='git branch'
 alias gch='git checkout'
