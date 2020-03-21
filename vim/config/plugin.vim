@@ -30,6 +30,7 @@ if dein#load_state(s:dein_dir)
   cal dein#load_toml(s:plugin_dir . 'lightline.toml', {'lazy': 0})
   cal dein#add('cespare/vim-toml', {'on_ft': 'toml'})
   cal dein#add('tomtom/tcomment_vim')
+  cal dein#load_toml(s:plugin_dir . 'lexima.toml', {'lazy': 0})
 
   " Completion
   cal dein#load_toml(s:plugin_dir . 'language_client.toml', {'lazy': 0})
