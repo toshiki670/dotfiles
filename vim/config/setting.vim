@@ -86,6 +86,9 @@ se wrapscan
 " 検索語をハイライト表示
 se hlsearch
 
+" 文字置換をインタラクティブに表示
+se inccommand=split
+
 " Don't hide the double quote on Json.
 autocmd Filetype json setl conceallevel=0
 
