@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 実行時の管理者権限がRootの場合、現在のユーザ名が取得できないため、エラーとする
+if [[ $EUID -eq 0 ]]; then
+  echo "${0##*/}: Parmission error." >&1
+  exit 1
+fi
+
+dir=$1
+
+# パスが正しく入力されていない場合
+if [[ ! -e $dir ]]; then
+  echo "${0##*/}: Invalid Argument." >&1
+  exit 2
+fi
+
+# 引数を指定しなかった場合
+if [[ -z $dir ]]; then
+  dir='.'
+fi
+
+sudo chown -R ${USER}:${USER} $dir
