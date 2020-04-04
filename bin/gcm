@@ -40,6 +40,7 @@ quote="'"
 message=$*
 
 
+# Affix(prefix and suffix) setting
 if [[ $has_separate_string == $TRUE ]]; then
   separate=$separate_string
 fi
