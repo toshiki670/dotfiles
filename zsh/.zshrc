@@ -142,9 +142,6 @@ alias lla='ls -la'
 alias g='git'
 alias gad='git add'
 alias gap='git add -p'
-function gcm(){
-  git commit -m "$* '$(git rev-parse --abbrev-ref HEAD)'"
-}
 alias gb='git branch'
 alias gch='git checkout'
 alias gd='git diff'
