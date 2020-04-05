@@ -14,16 +14,54 @@ readonly CMDNAME=`basename $0`
 readonly TRUE=1
 
 
+function usage() {
+cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+
+  cat << __USAGE_TEXT__
+Usage:
+  $CMDNAME [-p] [-s] [-h]
+  $cmdname_space [-S <separate_string>]
+  $cmdname_space [-q <quote_string>]
+__USAGE_TEXT__
+}
+
+function description() {
+  cat << '__DESCRIPTION_TEXT__'
+Description:
+  This tools for prefix or suffix Git's commit messages.
+
+Example:
+  $ git commit -m "Commit message 'feature/#1'"
+
+Options:
+  -p Append prefix
+  -s Append sufix
+  -S Change separate string
+  -q Change quote string
+  -h Show help
+__DESCRIPTION_TEXT__
+}
+
+function show_help() {
+  usage
+  echo
+  description
+}
+
+
 # Option analysis
-while getopts psS:q: OPT
+while getopts psS:q:h OPT
 do
   case $OPT in
     "p" ) is_with_prefix=$TRUE ;;
     "s" ) is_with_suffix=$TRUE ;;
     "S" ) has_separate_string=$TRUE ; separate_string=$OPTARG ;;
     "q" ) has_quote_string=$TRUE ; quote_string=$OPTARG ;;
+    "h" ) show_help >&1
+          exit 0
+          ;;
     # Invalid options
-      * ) echo "Usage: $CMDNAME [-p] [-s] [-e SEPARATE_STRING]" 1>&2
+      * ) usage 1>&2
           exit 1 ;;
   esac
 done
