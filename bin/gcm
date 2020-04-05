@@ -15,12 +15,12 @@ readonly TRUE=1
 
 
 # Option analysis
-while getopts pse:q: OPT
+while getopts psS:q: OPT
 do
   case $OPT in
     "p" ) is_with_prefix=$TRUE ;;
     "s" ) is_with_suffix=$TRUE ;;
-    "e" ) has_separate_string=$TRUE ; separate_string=$OPTARG ;;
+    "S" ) has_separate_string=$TRUE ; separate_string=$OPTARG ;;
     "q" ) has_quote_string=$TRUE ; quote_string=$OPTARG ;;
     # Invalid options
       * ) echo "Usage: $CMDNAME [-p] [-s] [-e SEPARATE_STRING]" 1>&2
