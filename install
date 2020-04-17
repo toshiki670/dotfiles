@@ -26,7 +26,7 @@ if type "zsh" > /dev/null 2>&1; then
   maker '.zlogin'
   maker '.zshrc'
 else
-  echo "${0##*/}: Zsh isn't found." >&1
+  echo "${0##*/}: Zsh isn't found." 1>&2
 fi
 
 # Nvim Setup
@@ -35,7 +35,7 @@ if type "nvim" > /dev/null 2>&1; then
   mkdir -p ${nvim_comf_path}
   ln -sf ${dotfiles}vim/.vimrc ${nvim_comf_path}init.vim
 else
-  echo "${0##*/}: Neovim isn't found." >&1
+  echo "${0##*/}: Neovim isn't found." 1>&2
 fi
 
 # Tmux Setup
