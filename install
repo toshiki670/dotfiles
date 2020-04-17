@@ -4,9 +4,27 @@ dotfiles=~/dotfiles/
 
 # Zsh Setup
 if type "zsh" > /dev/null 2>&1; then
-  ln -sf ${dotfiles}zsh/.zshenv ~/.zshenv
-  ln -sf ${dotfiles}zsh/.zlogin ~/.zlogin
-  ln -sf ${dotfiles}zsh/.zshrc ~/.zshrc
+
+  loader() {
+    echo "### Dotfiles script ###"
+    echo "if [[ -f $1 ]]; then"
+    echo "  . $1"
+    echo "fi"
+    echo "### End ###"
+  }
+
+  maker() {
+    if [[ -f ~/$1 ]]; then
+      echo >> ~/$1
+    else
+      touch ~/$1
+    fi
+    loader "${dotfiles}zsh/$1" >> ~/$1
+  }
+
+  maker '.zshenv'
+  maker '.zlogin'
+  maker '.zshrc'
 else
   echo "${0##*/}: Zsh isn't found." >&1
 fi
