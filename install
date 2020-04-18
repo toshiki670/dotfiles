@@ -4,6 +4,7 @@ dotfiles=~/dotfiles/
 
 # Zsh Setup
 if type "zsh" > /dev/null 2>&1; then
+  echo -n 'Zsh installing .'
 
   loader() {
     echo "### Dotfiles script ###"
@@ -20,11 +21,13 @@ if type "zsh" > /dev/null 2>&1; then
       touch ~/$1
     fi
     loader "${dotfiles}zsh/$1" >> ~/$1
+    echo -n '.'
   }
 
   maker '.zshenv'
   maker '.zlogin'
   maker '.zshrc'
+  echo ' ok!'
 else
   echo "${0##*/}: Zsh isn't found." 1>&2
 fi
@@ -32,17 +35,25 @@ fi
 # Nvim Setup
 nvim_comf_path=~/.config/nvim/
 if type "nvim" > /dev/null 2>&1; then
+  echo -n 'Neovim installing .'
+
   mkdir -p ${nvim_comf_path}
   ln -sf ${dotfiles}vim/.vimrc ${nvim_comf_path}init.vim
+
+  echo ' ok!'
 else
   echo "${0##*/}: Neovim isn't found." 1>&2
 fi
 
 # Tmux Setup
 if type "tmux" > /dev/null 2>&1; then
+  echo -n 'Tmux installing .'
+
   ln -sf ${dotfiles}tmux/.tmux.conf ~/.tmux.conf
   if type "git" > /dev/null 2>&1; then
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
   fi
+
+  echo ' ok!'
 fi
 
