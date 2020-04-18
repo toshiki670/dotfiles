@@ -16,3 +16,7 @@ $ pip2 install neovim
 
 # Install
 `$ sh install.sh`
+
+# Version History
+## 1.3.0
+- Git flow の導入
