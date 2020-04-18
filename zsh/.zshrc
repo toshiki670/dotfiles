@@ -161,6 +161,9 @@ alias gpush='git push'
 alias glog="git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
 alias g-reset-hard='git reset --hard HEAD'
 
+# Git flow
+alias @='git flow'
+
 # For Rails
 alias be='bundle exec'
 
