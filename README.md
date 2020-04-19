@@ -15,7 +15,7 @@ $ pip2 install neovim
 ```
 
 # Install
-`$ sh install.sh`
+`$ ./install`
 
 # Version History
 ## 1.4.0
