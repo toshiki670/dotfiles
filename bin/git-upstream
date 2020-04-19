@@ -1,40 +1,129 @@
 #!/bin/bash
 
-repository="upstream"
-branch="master"
-upstream_path="${repository}/${branch}"
+# Constant
+readonly CMDNAME=${0##*/}
+readonly TRUE='true'
+readonly FALSE='false'
+
+readonly REPOSITORY="upstream"
+readonly UPSTREAM_PATH="${REPOSITORY}/master"
+
 
 # It's not necessary to running as root.
 if [[ ${EUID:-${UID}} -eq 0 ]]; then
-  echo "${0##*/}: Running this script as root is no supported." >&1
-  exit 1
+  echo "${CMDNAME}: Running this script as root is no supported." 1>&2
+  exit 4
 fi
 
 
 # Check installed the required shell.
 if ! type "git" > /dev/null 2>&1; then
-  echo "${0##*/}: Git command not found." >&1
-  exit 127
+  echo "${CMDNAME}: Git command not found." 1>&2
+  exit 8
 fi
 
-# Check exist upstream repository in git's remote list.
-if ! git branch -a | grep "${upstream_path}" > /dev/null 2>&1; then
-  {
-    echo "${0##*/}: \`${upstream_path}' not found in git branch."
-    echo "${0##*/}: Please command below:"
-    echo "${0##*/}: $ git remote add upstream ${ssh_path}"
-    echo "${0##*/}: $ git fetch upstream"
-  } >&1
-  exit 63
-fi
 
-# Fetch & Merge
-if ! git fetch ${repository}; then
+function usage() {
+  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+
+  cat << __USAGE_TEXT__
+Usage:
+  $CMDNAME
+  $CMDNAME [-i <remote_url>]
+  $cmdname_space [-h]
+__USAGE_TEXT__
+}
+
+function description() {
+  cat << __DESCRIPTION_TEXT__
+Description:
+  Upstream merger.
+
+Example:
+  $ ${CMDNAME} -m
+  $ ${CMDNAME} -i https://github.com/toshiki670/dotfiles.git
+
+Options:
+  -i Initialize
+  -h Show help
+__DESCRIPTION_TEXT__
+}
+
+function show_help() {
+  usage
+  echo
+  description
+}
+
+
+# Option analysis
+is_initialize=$FALSE
+while getopts mi:h OPT
+do
+  case $OPT in
+    "i" ) is_initialize=$TRUE ; remote_url=$OPTARG ;;
+    "h" ) show_help >&1
+          exit 0
+          ;;
+    # Invalid options
+      * ) usage 1>&2
+          exit 16 ;;
+  esac
+done
+# Trim options from $*
+shift $(($OPTIND - 1))
+
+
+function has_upstream() {
+  [[ $(git remote | grep $REPOSITORY) == $REPOSITORY ]]
+}
+
+
+function merge() {
+  # Check exist upstream REPOSITORY in git's remote list.
+  if ! has_upstream; then
+    {
+      echo "${CMDNAME}: Git hasn't \`${REPOSITORY}' REPOSITORY."
+      echo "${CMDNAME}: Please command below:"
+      echo "${CMDNAME}: $ ${CMDNAME} -i <remote_url>"
+    } >&1
+    return 32
+  fi
+
+  # Fetch & Merge
+  if ! git fetch ${REPOSITORY}; then
+    return $?
+  fi
+  if ! git merge ${UPSTREAM_PATH}; then
+    return $?
+  fi
+  return 0
+}
+
+
+function initialize() {
+  if has_upstream; then
+    echo "${CMDNAME}: Already nitialized." 1>&2
+    return 64
+  fi
+
+  if ! git remote add ${REPOSITORY} ${remote_url}; then
+    return $?
+  fi
+  if ! git fetch ${REPOSITORY}; then
+    return $?
+  fi
+  return 0
+}
+
+
+if [[ $is_initialize == $TRUE ]]; then
+  initialize
   exit $?
-fi
-
-if ! git merge ${upstream_path}; then
+elif [[ $is_initialize == $FALSE ]]; then
+  merge
   exit $?
+else
+  echo "${0##*/}: Unknown error." 1>&2
+  exit 128
 fi
-
-exit 0
