@@ -15,8 +15,11 @@ $ pip2 install neovim
 ```
 
 # Install
-`$ sh install.sh`
+`$ ./install`
 
 # Version History
+## 1.4.0
+- git-upstream に初期化機能を追加
+
 ## 1.3.0
 - Git flow の導入
