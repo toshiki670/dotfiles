@@ -1,4 +1,6 @@
 #!/bin/bash
+# # Reference
+# - [GitHubでFork/cloneしたリポジトリを本家リポジトリに追従する](https://qiita.com/xtetsuji/items/555a1ef19ed21ee42873)
 
 # Constant
 readonly CMDNAME=${0##*/}
