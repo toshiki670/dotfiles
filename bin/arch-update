@@ -1,0 +1,76 @@
+#!/bin/bash
+
+
+# Constant
+readonly CMDNAME=${0##*/}
+readonly TRUE=1
+readonly FALSE=0
+
+
+# Only root user
+if [[ ${EUID:-${UID}} -ne 0 ]]; then
+  echo "${CMDNAME}:  Permission denied." 1>&2
+  exit 1
+fi
+
+
+function usage() {
+cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+
+  cat << __USAGE_TEXT__
+Usage:
+  $CMDNAME
+  $CMDNAME [-h]
+__USAGE_TEXT__
+}
+
+function description() {
+  cat << '__DESCRIPTION_TEXT__'
+Description:
+  Archlinux full update tool.
+
+Options:
+  -h Show help
+__DESCRIPTION_TEXT__
+}
+
+function show_help() {
+  usage
+  echo
+  description
+}
+
+
+# Option analysis
+while getopts h OPT
+do
+  case $OPT in
+    "h" ) show_help >&1
+          exit 0
+          ;;
+    # Invalid options
+      * ) usage 1>&2
+          exit 1 ;;
+  esac
+done
+# Trim options from $*
+shift $(($OPTIND - 1))
+
+
+if type '/usr/sbin/pacman' > /dev/null 2>&1; then
+  /usr/sbin/pacman -Syu
+fi
+
+
+if type '/usr/sbin/paccache' > /dev/null 2>&1; then
+  /usr/sbin/paccache -r
+  /usr/sbin/paccache -ruk0
+fi
+
+
+if type '/usr/sbin/gem' > /dev/null 2>&1; then
+  /usr/sbin/gem update
+fi
+
+
+echo 'Success!'
