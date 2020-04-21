@@ -18,6 +18,9 @@ $ pip2 install neovim
 `$ ./install`
 
 # Version History
+## new
+- git flow のショートカットを追加
+
 ## 1.4.0
 - git-upstream に初期化機能を追加
 
