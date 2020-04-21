@@ -162,7 +162,13 @@ alias glog="git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset
 alias g-reset-hard='git reset --hard HEAD'
 
 # Git flow
-alias @='git flow'
+alias @='git flow' # deprecated for next version
+alias @feature='git flow feature'
+alias @hotfix='git flow hotfix'
+alias @init='git flow init'
+alias @release='git flow release'
+alias @support='git flow support'
+alias @version='git flow version'
 
 # For Rails
 alias be='bundle exec'
