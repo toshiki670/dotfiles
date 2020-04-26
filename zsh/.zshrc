@@ -22,10 +22,6 @@ if type "brew" > /dev/null 2>&1; then
 fi
 
 
-# For comporser (Laravel)
-# export PATH=$PATH:~/.composer/vendor/bin
-
-
 # Setting completions
 require 'zshrc/docker.zsh'
 
@@ -87,7 +83,6 @@ alias reload='exec $SHELL -l'
 # グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
 
-# alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 # 拡張子に応じたコマンドを実行
 alias -s txt='vim'
