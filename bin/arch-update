@@ -68,6 +68,12 @@ if type '/usr/sbin/paccache' > /dev/null 2>&1; then
 fi
 
 
+# `Command not found' hook
+if type 'pkgfile' > /dev/null 2>&1; then
+  pkgfile --update
+fi
+
+
 if type '/usr/sbin/gem' > /dev/null 2>&1; then
   /usr/sbin/gem update
 fi
