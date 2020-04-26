@@ -15,7 +15,6 @@ function require() {
 }
 
 
-export PATH="/usr/local/sbin:$PATH"
 export PATH="${DOTFILES}/bin:$PATH"
 
 if type "brew" > /dev/null 2>&1; then
