@@ -8,6 +8,7 @@
 `$ ./install`
 
 # Version History
+## 1.5.0
 - git flow のショートカットを追加
 - .zshrc の整理
 - zsh に `Command not found` ホック機能を追加
