@@ -20,7 +20,7 @@ zsh/bundle/*
 zsh/plugin/*
 !.keep
 zsh/completions/*
-!setup.sh
+!.keep
 
 # Vim
 vim/plugin/*

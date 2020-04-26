@@ -7,6 +7,7 @@ export KCODE=u
 
 # 基本パス設定
 export PATH="/usr/local/bin:$PATH"
+export PATH="/usr/local/sbin:$PATH"
 export PATH="/usr/sbin:$PATH"
 
 #ZSHの起動した関数の時間計測 .zshrc参照
