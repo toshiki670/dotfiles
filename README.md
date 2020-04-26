@@ -9,8 +9,12 @@
 
 # Version History
 - git flow のショートカットを追加
+<<<<<<< HEAD
 - .zshrc の整理
 - zsh に `Command not found` ホック機能を追加
+=======
+- Archlinuxを最新にする `arch-update` コマンドを追加
+>>>>>>> feature/#19
 
 ## 1.4.0
 - git-upstream に初期化機能を追加
