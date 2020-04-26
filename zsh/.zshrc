@@ -40,6 +40,9 @@ require 'zshrc/ruby.zsh'
 # python config
 require 'zshrc/python.zsh'
 
+# C language config
+require 'zshrc/c.zsh'
+
 # git config
 require 'zshrc/git.zsh'
 
@@ -88,16 +91,6 @@ alias ipecho='curl ipecho.net/plain; echo'
 alias -s txt='vim'
 alias -s html='open'
 alias -s php='php -f'
-
-function rungcc(){
-    gcc $1
-    base=$1
-    file=${base%.*}
-    ./a.out
-    rm -f a.out
-}
-
-alias -s {c,cpp}=rungcc
 
 # Dotfiles Config
 alias zshrc="vim ${DOTFILES}/zsh/.zshrc"
