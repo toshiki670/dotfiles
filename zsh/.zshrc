@@ -21,11 +21,6 @@ if type "brew" > /dev/null 2>&1; then
   export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 fi
 
-# For pyenv
-# export PYENV_ROOT="$HOME/.pyenv"
-# export PATH="$PYENV_ROOT/bin:$PATH"
-# eval "$(pyenv init --no-rehash -)"
-
 
 # For comporser (Laravel)
 # export PATH=$PATH:~/.composer/vendor/bin
@@ -45,6 +40,9 @@ require 'zshrc/ls.zsh'
 
 # ruby and rails config
 require 'zshrc/ruby.zsh'
+
+# python config
+require 'zshrc/python.zsh'
 
 # git config
 require 'zshrc/git.zsh'
@@ -86,7 +84,6 @@ setopt correct
 # Reload
 alias reload='exec $SHELL -l'
 
-
 # グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
 
@@ -95,7 +92,6 @@ alias ipecho='curl ipecho.net/plain; echo'
 # 拡張子に応じたコマンドを実行
 alias -s txt='vim'
 alias -s html='open'
-alias -s py='python'
 alias -s php='php -f'
 
 function rungcc(){
