@@ -93,6 +93,11 @@ if [ -n $LS_COLORS ]; then
   zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 fi
 
+# `Command not found' hook
+if type 'pkgfile' > /dev/null 2>&1; then
+  source /usr/share/doc/pkgfile/command-not-found.zsh
+fi
+
 # Printable 8bit
 setopt print_eight_bit
 setopt auto_cd
