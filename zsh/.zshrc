@@ -28,6 +28,9 @@ require 'zshrc/docker.zsh'
 # History config
 require 'zshrc/history.zsh'
 
+# Completion config
+require 'zshrc/completion.zsh'
+
 # Initialize and Install the Zplug
 require "zshrc/zplug.zsh"
 
@@ -53,26 +56,6 @@ require 'zshrc/vim.zsh'
 # https://github.com/zsh-users/zsh-autosuggestions
 # ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
-
-# 補完機能
-bindkey "^[[Z" reverse-menu-complete
-
-# complete 普通の補完関数; approximate ミススペルを訂正した上で補完を行う。; prefixカーソルの位置で補完を行う
-zstyle ':completion:*' completer _complete _prefix #_approzimate
-
-# 多部補完時に大文字小文字を区別しない
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
-
-# タブを１回押すと、補完候補が表示され、さらにタブを押すことで、選択モードに入る
-zstyle ':completion:*:default' menu select=2
-if [ -n $LS_COLORS ]; then
-  zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
-fi
-
-# `Command not found' hook
-if type 'pkgfile' > /dev/null 2>&1; then
-  source /usr/share/doc/pkgfile/command-not-found.zsh
-fi
 
 # Printable 8bit
 setopt print_eight_bit
