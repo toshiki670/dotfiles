@@ -46,6 +46,9 @@ require 'zshrc/ruby.zsh'
 # git config
 require 'zshrc/git.zsh'
 
+# vim config
+require 'zshrc/vim.zsh'
+
 # zsh-users/zsh-autosuggestions
 # https://github.com/zsh-users/zsh-autosuggestions
 # ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
@@ -84,13 +87,6 @@ alias reload='exec $SHELL -l'
 # グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
 
-# For vim
-alias vim=nvim
-alias v=vim
-alias vim-utf8='vim -c ":e ++enc=utf8"'
-alias vim-euc_jp='vim -c ":e ++enc=euc-jp"'
-alias vim-shift_jis='vim -c ":e ++enc=shift_jis"'
-alias vim-cheat="vim ${DOTFILES}/vim/cheatsheet/common.md"
 # alias eclipse='open -a eclipse -data /User/tsk/Documents/workspace &'
 
 # 拡張子に応じたコマンドを実行
@@ -110,7 +106,6 @@ function rungcc(){
 alias -s {c,cpp}=rungcc
 
 # Dotfiles Config
-alias vimrc="vim ${DOTFILES}/vim/.vimrc"
 alias zshrc="vim ${DOTFILES}/zsh/.zshrc"
 
 # 履歴ファイルの保存先
