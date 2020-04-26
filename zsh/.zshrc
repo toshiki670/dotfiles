@@ -14,14 +14,6 @@ function require() {
   return 0
 }
 
-
-export PATH="${DOTFILES}/bin:$PATH"
-
-if type "brew" > /dev/null 2>&1; then
-  export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
-fi
-
-
 # Setting completions
 require 'zshrc/docker.zsh'
 
@@ -52,6 +44,17 @@ require 'zshrc/git.zsh'
 # vim config
 require 'zshrc/vim.zsh'
 
+
+### Common config
+
+# for macOS
+export PATH="${DOTFILES}/bin:$PATH"
+
+if type "brew" > /dev/null 2>&1; then
+  export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+fi
+
+
 # zsh-users/zsh-autosuggestions
 # https://github.com/zsh-users/zsh-autosuggestions
 # ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
@@ -63,8 +66,10 @@ setopt auto_cd
 setopt auto_pushd
 setopt correct
 
+
 # Reload
 alias reload='exec $SHELL -l'
+
 
 # グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
@@ -75,13 +80,18 @@ alias -s txt='vim'
 alias -s html='open'
 alias -s php='php -f'
 
+
 # Dotfiles Config
 alias zshrc="vim ${DOTFILES}/zsh/.zshrc"
+
 
 # Process grep
 function ps-grep {
   ps aux | grep $1 | grep -v grep
 }
+
+
+### end
 
 
 # ターミナル起動時に実行
@@ -90,4 +100,3 @@ function ps-grep {
 # if (which zprof > /dev/null 2>&1) ;then
 #   zprof
 # fi
-
