@@ -35,13 +35,6 @@ fi
 # Setting completions
 require 'zshrc/docker.zsh'
 
-
-# Add directory
-if [ -e ${completions} ]; then
-  fpath=(${completions} $fpath)
-fi
-
-
 # Initialize and Install the Zplug
 require "zshrc/zplug.zsh"
 
