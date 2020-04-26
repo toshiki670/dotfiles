@@ -4,20 +4,17 @@
 - Simplification of environment construction
 - unification of environment
 
-
-# Require
-- Zsh
-- Neovim  
-```
-$ gem install neovim
-$ pip install neovim
-$ pip2 install neovim
-```
-
 # Install
 `$ ./install`
 
 # Version History
+## 1.5.0
+- git flow のショートカットを追加
+- .zshrc の整理
+- zsh に `Command not found` ホック機能を追加
+- Archlinuxを最新にする `arch-update` コマンドを追加
+- `git difftool` と `git mergetool` で Neovim を使うように変更
+
 ## 1.4.0
 - git-upstream に初期化機能を追加
 
