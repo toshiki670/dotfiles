@@ -7,13 +7,6 @@ readonly TRUE=1
 readonly FALSE=0
 
 
-# Only root user
-if [[ ${EUID:-${UID}} -ne 0 ]]; then
-  echo "${CMDNAME}:  Permission denied." 1>&2
-  exit 1
-fi
-
-
 function usage() {
 cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
 
@@ -57,26 +50,40 @@ done
 shift $(($OPTIND - 1))
 
 
-if type '/usr/sbin/pacman' > /dev/null 2>&1; then
-  /usr/sbin/pacman -Syu
-fi
+function all_update() {
+  # Only root user
+  if [[ ${EUID:-${UID}} -ne 0 ]]; then
+    echo "${CMDNAME}:  Permission denied." 1>&2
+    return 1
+  fi
 
 
-if type '/usr/sbin/paccache' > /dev/null 2>&1; then
-  /usr/sbin/paccache -r
-  /usr/sbin/paccache -ruk0
-fi
+  if type '/usr/sbin/pacman' > /dev/null 2>&1; then
+    /usr/sbin/pacman -Syu
+  fi
 
 
-# `Command not found' hook
-if type 'pkgfile' > /dev/null 2>&1; then
-  pkgfile --update
-fi
+  if type '/usr/sbin/paccache' > /dev/null 2>&1; then
+    /usr/sbin/paccache -r
+    /usr/sbin/paccache -ruk0
+  fi
 
 
-if type '/usr/sbin/gem' > /dev/null 2>&1; then
-  /usr/sbin/gem update
-fi
+  # `Command not found' hook
+  if type 'pkgfile' > /dev/null 2>&1; then
+    pkgfile --update
+  fi
 
 
-echo 'Success!'
+  if type '/usr/sbin/gem' > /dev/null 2>&1; then
+    /usr/sbin/gem update
+  fi
+
+
+  echo 'Success!'
+  return 0
+}
+
+
+all_update
+exit $?
