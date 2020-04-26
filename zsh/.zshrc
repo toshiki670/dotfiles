@@ -68,7 +68,9 @@ fi
 # Initialize and Install the Zplug
 require "zshrc/zplug.zsh"
 
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
+# zsh-users/zsh-autosuggestions
+# https://github.com/zsh-users/zsh-autosuggestions
+# ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
 
 
 # Theme configure
