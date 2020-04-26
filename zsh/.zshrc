@@ -125,9 +125,6 @@ fi
 # For Rails
 alias be='bundle exec'
 
-# For docker
-alias dce='docker-compose exec'
-
 # グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
 
