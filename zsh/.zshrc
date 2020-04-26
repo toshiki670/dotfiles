@@ -32,18 +32,6 @@ fi
 # export PATH=$PATH:~/.composer/vendor/bin
 
 
-# For rbenv
-if type "rbenv" > /dev/null 2>&1; then
-  eval "$(rbenv init --no-rehash -)";
-  export PATH="$HOME/.rbenv/shims:$PATH"
-fi
-
-# For gem
-if type "gem" > /dev/null 2>&1; then
-  PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
-fi
-
-
 # Setting completions
 require 'zshrc/docker.zsh'
 
@@ -59,6 +47,9 @@ require "zshrc/zplug.zsh"
 
 # ls or exa command config
 require 'zshrc/ls.zsh'
+
+# ruby and rails config
+require 'zshrc/ruby.zsh'
 
 # zsh-users/zsh-autosuggestions
 # https://github.com/zsh-users/zsh-autosuggestions
@@ -122,8 +113,6 @@ if type "git-flow" > /dev/null 2>&1; then
   alias @version='git-flow version'
 fi
 
-# For Rails
-alias be='bundle exec'
 
 # グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
@@ -140,7 +129,6 @@ alias vim-cheat="vim ${DOTFILES}/vim/cheatsheet/common.md"
 # 拡張子に応じたコマンドを実行
 alias -s txt='vim'
 alias -s html='open'
-alias -s rb='ruby'
 alias -s py='python'
 alias -s php='php -f'
 
