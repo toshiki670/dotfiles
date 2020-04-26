@@ -3,6 +3,18 @@
 # 
 export DOTFILES="${HOME%/}/dotfiles"
 
+
+function require() {
+  dir="${DOTFILES}/zsh/${1}"
+  if [[ ! -f $dir ]]; then
+    echo "${0##*/}: LoadError (cannot load such file -- \`${dir}')." 1>&2
+    return 1
+  fi
+  . "$dir"
+  return 0
+}
+
+
 export PATH="/usr/local/sbin:$PATH"
 export PATH="${DOTFILES}/bin:$PATH"
 
