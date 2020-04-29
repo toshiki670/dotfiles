@@ -42,7 +42,7 @@ Description:
   Upstream merger.
 
 Example:
-  $ ${CMDNAME} -m
+  $ ${CMDNAME}
   $ ${CMDNAME} -i https://github.com/toshiki670/dotfiles.git
 
 Options:
@@ -60,7 +60,7 @@ function show_help() {
 
 # Option analysis
 is_initialize=$FALSE
-while getopts mi:h OPT
+while getopts i:h OPT
 do
   case $OPT in
     "i" ) is_initialize=$TRUE ; remote_url=$OPTARG ;;
