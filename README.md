@@ -8,6 +8,8 @@
 `$ ./install`
 
 # Version History
+- `chown-current-user` をアップデート
+
 ## 1.5.0
 - git flow のショートカットを追加
 - .zshrc の整理
