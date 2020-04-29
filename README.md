@@ -8,6 +8,9 @@
 `$ ./install`
 
 # Version History
+## 1.5.1
+- 誤記修正
+
 ## 1.5.0
 - git flow のショートカットを追加
 - .zshrc の整理
