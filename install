@@ -17,8 +17,6 @@ if type "zsh" > /dev/null 2>&1; then
   maker() {
     if [[ -f ~/$1 ]]; then
       echo >> ~/$1
-    else
-      touch ~/$1
     fi
     loader "${dotfiles}zsh/$1" >> ~/$1
     echo -n '.'
