@@ -10,6 +10,25 @@ loader() {
   echo "### End ###"
 }
 
+# Bash Setup
+if type "bash" > /dev/null 2>&1; then
+  echo -n 'Bash installing .'
+
+  maker() {
+    if [[ -f ~/$1 ]]; then
+      echo >> ~/$1
+    fi
+    loader "${dotfiles}bash/$1" >> ~/$1
+    echo -n '.'
+  }
+
+  maker '.bash_profile'
+  maker '.bashrc'
+  echo ' ok!'
+else
+  echo "${0##*/}: Bash isn't found." 1>&2
+fi
+
 # Zsh Setup
 if type "zsh" > /dev/null 2>&1; then
   echo -n 'Zsh installing .'
