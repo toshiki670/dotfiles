@@ -2,17 +2,17 @@
 
 dotfiles=~/dotfiles/
 
+loader() {
+  echo "### Dotfiles script ###"
+  echo "if [[ -f $1 ]]; then"
+  echo "  . $1"
+  echo "fi"
+  echo "### End ###"
+}
+
 # Zsh Setup
 if type "zsh" > /dev/null 2>&1; then
   echo -n 'Zsh installing .'
-
-  loader() {
-    echo "### Dotfiles script ###"
-    echo "if [[ -f $1 ]]; then"
-    echo "  . $1"
-    echo "fi"
-    echo "### End ###"
-  }
 
   maker() {
     if [[ -f ~/$1 ]]; then
