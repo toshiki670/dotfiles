@@ -14,3 +14,5 @@ else
   alias lla='ls -la'
 fi
 
+
+export HISTCONTROL=ignoredups
