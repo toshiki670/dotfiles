@@ -1,22 +1,97 @@
 #!/bin/bash
 
-# 実行時の管理者権限がRootの場合、現在のユーザ名が取得できないため、エラーとする
-if [[ $EUID -eq 0 ]]; then
-  echo "${0##*/}: Parmission error." >&1
-  exit 1
+# Constant
+readonly CMDNAME=${0##*/}
+readonly TRUE='true'
+readonly FALSE='false'
+
+
+# Check installed the required shell.
+if ! type "git" > /dev/null 2>&1; then
+  echo "${CMDNAME}: Git command not found." 1>&2
+  exit 8
 fi
 
-dir=$1
 
-# パスが正しく入力されていない場合
-if [[ ! -e $dir ]]; then
-  echo "${0##*/}: Invalid Argument." >&1
-  exit 2
-fi
+function usage() {
+  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
 
-# 引数を指定しなかった場合
-if [[ -z $dir ]]; then
+  cat << __USAGE_TEXT__
+Usage:
+  $CMDNAME
+  $CMDNAME [-p <path>]
+  $cmdname_space [-h]
+__USAGE_TEXT__
+}
+
+
+function description() {
+  cat << __DESCRIPTION_TEXT__
+Description:
+  Change owner current user.
+
+Example:
+  $ ${CMDNAME}
+    * Current directory if not given option.
+  $ ${CMDNAME} -p ~/path/to/
+
+Options:
+  -p Path
+  -h Show help
+__DESCRIPTION_TEXT__
+}
+
+function show_help() {
+  usage
+  echo
+  description
+}
+
+
+# Option analysis
+has_path=$FALSE
+while getopts p:h OPT
+do
+  case $OPT in
+    "p" ) has_path=$TRUE
+          custom_path=$OPTARG
+
+          # パスが正しく入力されていない場合
+          if [[ ! -e $custom_path ]]; then
+            echo "${CMDNAME}: Invalid path." >&1
+            exit 2
+          fi
+          ;;
+    "h" ) show_help >&1
+          exit 0
+          ;;
+    # Invalid options
+      * ) usage 1>&2
+          exit 16 ;;
+  esac
+done
+# Trim options from $*
+shift $(($OPTIND - 1))
+
+
+function chown_current_user() {
+
+  # 実行時の管理者権限がRootの場合、現在のユーザ名が取得できないため、エラーとする
+  if [[ $EUID -eq 0 ]]; then
+    echo "${0##*/}: Parmission error." >&1
+    exit 1
+  fi
+
   dir='.'
-fi
 
-sudo chown -R ${USER}:${USER} $dir
+  if [[ $has_path == $TRUE ]]; then
+    dir=$custom_path
+  fi
+
+  sudo chown -R ${USER}:${USER} $dir
+  return $?
+}
+
+
+chown_current_user
+exit $?

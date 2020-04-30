@@ -8,6 +8,8 @@
 `$ ./install`
 
 # Version History
+- `chown-current-user` をアップデート
+
 ## 1.5.1
 - 誤記修正
 
