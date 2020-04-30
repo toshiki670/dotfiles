@@ -9,6 +9,7 @@
 
 # Version History
 - `chown-current-user` をアップデート
+- Bash のエイリアス追加
 
 ## 1.5.1
 - 誤記修正
