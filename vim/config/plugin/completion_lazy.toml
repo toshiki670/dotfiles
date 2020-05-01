@@ -43,6 +43,18 @@ hook_add = '''
   "   \ "ruby" : '[^. *\t]\.\w*\|\h\w*::',
   "   \}
 '''
+hook_post_source = '''
+  cal deoplete#custom#option({
+  \ 'smart_case': v:true,
+  \ 'auto_complete_delay': 1,
+  \ 'min_pattern_length': 2,
+  \ 'max_list': 100,
+  \ })
+
+  cal deoplete#custom#var('file', {
+  \ 'enable_buffer_path': v:true,
+  \ })
+'''
 
 
 # depends = 'nvim-yarp'
