@@ -8,6 +8,9 @@
 `$ ./install`
 
 # Version History
+## 1.5.2
+- Deoplete の非推奨設定を修正
+
 ## 1.5.1
 - 誤記修正
 
