@@ -106,6 +106,7 @@ if [[ $is_all_update == $TRUE ]]; then
   update_pacman
   remove_cache
   update_gem
+  update_neovim
 else
   if [[ $can_update_pacman == $TRUE ]]; then
     update_pacman
@@ -117,6 +118,10 @@ else
 
   if [[ $can_update_gem == $TRUE ]]; then
     update_gem
+  fi
+
+  if [[ $can_update_neovim == $TRUE ]]; then
+    update_neovim
   fi
 fi
 
