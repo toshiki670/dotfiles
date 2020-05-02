@@ -30,17 +30,24 @@ on_i = 1
 depends = ['neco-vim', 'neco-syntax', 'neco-look']
 hook_add = '''
   let g:deoplete#enable_at_startup = 1
-  let g:deoplete#enable_smart_case = 1
   let g:deoplete#enable_camel_case = 0
   let g:deoplete#enable_ignore_case = 0
-  let g:deoplete#auto_complete_delay = 1
-  let g:deoplete#auto_complete_start_length = 2
-  let g:deoplete#max_list = 100
-  let g:deoplete#file#enable_buffer_path = 1
 
   " le:deoplete#sources#omni#input_patterns = {
   "   \ "ruby" : '[^. *\t]\.\w*\|\h\w*::',
   "   \}
+'''
+hook_post_source = '''
+  cal deoplete#custom#option({
+  \ 'smart_case': v:true,
+  \ 'auto_complete_delay': 1,
+  \ 'min_pattern_length': 2,
+  \ 'max_list': 100,
+  \ })
+
+  cal deoplete#custom#var('file', {
+  \ 'enable_buffer_path': v:true,
+  \ })
 '''
 
 
