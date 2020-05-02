@@ -95,6 +95,13 @@ function update_gem() {
 }
 
 
+function update_neovim() {
+  if type '/usr/sbin/nvim' > /dev/null 2>&1; then
+    nvim -c "cal dein#update()" -c "UpdateRemotePlugins" -c "qa\!"
+  fi
+}
+
+
 if [[ $is_all_update == $TRUE ]]; then
   update_pacman
   remove_cache
