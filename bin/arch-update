@@ -45,7 +45,7 @@ is_all_update=$TRUE
 can_update_pacman=$FALSE
 can_remove_cache=$FALSE
 can_update_gem=$FALSE
-# can_update_neovim=$FALSE
+can_update_neovim=$FALSE
 
 # Option analysis
 while getopts ApRgnh OPT
@@ -55,7 +55,7 @@ do
     "p" ) can_update_pacman=$TRUE; is_all_update=$FALSE ;;
     "R" ) can_remove_cache=$TRUE; is_all_update=$FALSE ;;
     "g" ) can_update_gem=$TRUE; is_all_update=$FALSE ;;
-    "n" ) :; is_all_update=$FALSE ;;
+    "n" ) can_update_neovim=$TRUE; is_all_update=$FALSE ;;
     "h" ) show_help >&1
           exit 0
           ;;
