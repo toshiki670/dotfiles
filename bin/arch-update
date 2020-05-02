@@ -42,9 +42,14 @@ function show_help() {
 
 
 # Option analysis
-while getopts h OPT
+while getopts ApRgnh OPT
 do
   case $OPT in
+    "A" )  ;;
+    "p" )  ;;
+    "R" )  ;;
+    "g" )  ;;
+    "n" )  ;;
     "h" ) show_help >&1
           exit 0
           ;;
