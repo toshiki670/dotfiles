@@ -13,6 +13,8 @@ cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
   cat << __USAGE_TEXT__
 Usage:
   $CMDNAME
+  $CMDNAME [-A] [-p] [-R]
+  $CMDNAME [-g] [-n]
   $CMDNAME [-h]
 __USAGE_TEXT__
 }
@@ -23,7 +25,12 @@ Description:
   Archlinux full update tool.
 
 Options:
-  -h Show help
+  -A All update. (Alias to arch-update)
+  -p pacman and pkgfile update.
+  -R Remove cached package by using paccache.
+  -g gem update.
+  -n Neovim update.
+  -h Show help.
 __DESCRIPTION_TEXT__
 }
 
