@@ -41,15 +41,23 @@ function show_help() {
 }
 
 
+can_update_pacman=$FALSE
+can_remove_cache=$FALSE
+can_update_gem=$FALSE
+# can_update_neovim=$FALSE
+
 # Option analysis
 while getopts ApRgnh OPT
 do
   case $OPT in
-    "A" )  ;;
-    "p" )  ;;
-    "R" )  ;;
-    "g" )  ;;
-    "n" )  ;;
+    "A" ) can_update_pacman=$TRUE
+          can_remove_cache=$TRUE
+          can_update_gem=$TRUE
+          ;;
+    "p" ) can_update_pacman=$TRUE ;;
+    "R" ) can_remove_cache=$TRUE ;;
+    "g" ) can_update_gem=$TRUE ;;
+    "n" ) : ;;
     "h" ) show_help >&1
           exit 0
           ;;
