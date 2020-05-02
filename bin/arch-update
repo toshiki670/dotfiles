@@ -70,6 +70,44 @@ done
 shift $(($OPTIND - 1))
 
 
+function update_pacman() {
+  if type '/usr/sbin/pacman' > /dev/null 2>&1; then
+    sudo /usr/sbin/pacman -Syu
+  fi
+
+  # `Command not found' hook
+  if type '/usr/sbin/pkgfile' > /dev/null 2>&1; then
+    sudo /usr/sbin/pkgfile --update
+  fi
+}
+
+
+function remove_cache() {
+  if type '/usr/sbin/paccache' > /dev/null 2>&1; then
+    sudo /usr/sbin/paccache -r
+    sudo /usr/sbin/paccache -ruk0
+  fi
+}
+
+
+function update_gem() {
+  if type '/usr/sbin/gem' > /dev/null 2>&1; then
+    /usr/sbin/gem update
+  fi
+}
+
+
+if [[ $can_update_pacman == $TRUE ]]; then
+  update_pacman
+fi
+
+if [[ $can_remove_cache == $TRUE ]]; then
+  remove_cache
+fi
+
+if [[ $can_update_gem == $TRUE ]]; then
+  update_gem
+fi
 
 
 exit $?
