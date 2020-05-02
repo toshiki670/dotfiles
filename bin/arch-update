@@ -41,6 +41,7 @@ function show_help() {
 }
 
 
+is_all_update=$TRUE
 can_update_pacman=$FALSE
 can_remove_cache=$FALSE
 can_update_gem=$FALSE
@@ -50,14 +51,11 @@ can_update_gem=$FALSE
 while getopts ApRgnh OPT
 do
   case $OPT in
-    "A" ) can_update_pacman=$TRUE
-          can_remove_cache=$TRUE
-          can_update_gem=$TRUE
-          ;;
-    "p" ) can_update_pacman=$TRUE ;;
-    "R" ) can_remove_cache=$TRUE ;;
-    "g" ) can_update_gem=$TRUE ;;
-    "n" ) : ;;
+    "A" ) is_all_update=$TRUE ;;
+    "p" ) can_update_pacman=$TRUE; is_all_update=$FALSE ;;
+    "R" ) can_remove_cache=$TRUE; is_all_update=$FALSE ;;
+    "g" ) can_update_gem=$TRUE; is_all_update=$FALSE ;;
+    "n" ) :; is_all_update=$FALSE ;;
     "h" ) show_help >&1
           exit 0
           ;;
@@ -97,16 +95,22 @@ function update_gem() {
 }
 
 
-if [[ $can_update_pacman == $TRUE ]]; then
+if [[ $is_all_update == $TRUE ]]; then
   update_pacman
-fi
-
-if [[ $can_remove_cache == $TRUE ]]; then
   remove_cache
-fi
-
-if [[ $can_update_gem == $TRUE ]]; then
   update_gem
+else
+  if [[ $can_update_pacman == $TRUE ]]; then
+    update_pacman
+  fi
+
+  if [[ $can_remove_cache == $TRUE ]]; then
+    remove_cache
+  fi
+
+  if [[ $can_update_gem == $TRUE ]]; then
+    update_gem
+  fi
 fi
 
 
