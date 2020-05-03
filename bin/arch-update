@@ -45,7 +45,7 @@ is_all_update=$TRUE
 can_update_pacman=$FALSE
 can_remove_cache=$FALSE
 can_update_gem=$FALSE
-# can_update_neovim=$FALSE
+can_update_neovim=$FALSE
 
 # Option analysis
 while getopts ApRgnh OPT
@@ -55,7 +55,7 @@ do
     "p" ) can_update_pacman=$TRUE; is_all_update=$FALSE ;;
     "R" ) can_remove_cache=$TRUE; is_all_update=$FALSE ;;
     "g" ) can_update_gem=$TRUE; is_all_update=$FALSE ;;
-    "n" ) :; is_all_update=$FALSE ;;
+    "n" ) can_update_neovim=$TRUE; is_all_update=$FALSE ;;
     "h" ) show_help >&1
           exit 0
           ;;
@@ -95,10 +95,20 @@ function update_gem() {
 }
 
 
+function update_neovim() {
+  if type '/usr/sbin/nvim' > /dev/null 2>&1; then
+    /usr/sbin/nvim -c 'cal dein#update()' -c 'qa!'
+    # TODO: 外部から`UpdateRemotePlugins`を実行できないため、コメントアウト
+    # /usr/sbin/nvim -c 'UpdateRemotePlugins'
+  fi
+}
+
+
 if [[ $is_all_update == $TRUE ]]; then
   update_pacman
   remove_cache
   update_gem
+  update_neovim
 else
   if [[ $can_update_pacman == $TRUE ]]; then
     update_pacman
@@ -110,6 +120,10 @@ else
 
   if [[ $can_update_gem == $TRUE ]]; then
     update_gem
+  fi
+
+  if [[ $can_update_neovim == $TRUE ]]; then
+    update_neovim
   fi
 fi
 

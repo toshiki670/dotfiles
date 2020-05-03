@@ -57,6 +57,8 @@ if type "nvim" > /dev/null 2>&1; then
   mkdir -p ${nvim_comf_path}
   ln -sf ${dotfiles}vim/.vimrc ${nvim_comf_path}init.vim
 
+  nvim -c 'cal dein#update()' -c 'qa!'
+
   echo ' ok!'
 else
   echo "${0##*/}: Neovim isn't found." 1>&2
