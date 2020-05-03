@@ -11,6 +11,7 @@
 - `chown-current-user` をアップデート
 - Bash のエイリアス追加
 - `arch-update`のアップデート処理を個別で実行できるように変更
+  * Neovim のアップデート機能を追加
 
 ## 1.5.2
 - Deoplete の非推奨設定を修正
