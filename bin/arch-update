@@ -97,7 +97,9 @@ function update_gem() {
 
 function update_neovim() {
   if type '/usr/sbin/nvim' > /dev/null 2>&1; then
-    nvim -c "cal dein#update()" -c "UpdateRemotePlugins" -c "qa\!"
+    /usr/sbin/nvim -c 'cal dein#update()' -c 'qa!'
+    # TODO: 外部から`UpdateRemotePlugins`を実行できないため、コメントアウト
+    # /usr/sbin/nvim -c 'UpdateRemotePlugins'
   fi
 }
 
