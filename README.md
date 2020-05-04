@@ -8,6 +8,7 @@
 `$ ./install`
 
 # Version History
+## 1.6.0
 - Archlinuxのインストール時に利用するファイルを分離
 - `chown-current-user` をアップデート
 - Bash のエイリアス追加
