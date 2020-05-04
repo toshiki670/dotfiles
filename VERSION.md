@@ -1,4 +1,6 @@
 # Version History
+- Gitignore を更新
+
 ## 1.6.2
 - Git log の表示を改善
 
