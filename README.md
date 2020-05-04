@@ -18,7 +18,8 @@ $ pip2 install neovim
 `$ ./install`
 
 # Version History
-- ファイル整理
+- Archlinuxのインストール時に利用するファイルを分離
+
 ## 1.4.0
 - git-upstream に初期化機能を追加
 
