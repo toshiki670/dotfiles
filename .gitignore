@@ -1,8 +1,9 @@
-# Color
+# Dotfiles
+## Color
 color/*
 !.keep
 
-# Zsh
+## Zsh
 zsh/bundle/*
 !.keep
 zsh/plugin/*
@@ -10,7 +11,7 @@ zsh/plugin/*
 zsh/completions/*
 !.keep
 
-# Vim
+## Vim
 vim/plugin/*
 !.keep
 
