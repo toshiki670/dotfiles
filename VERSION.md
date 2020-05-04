@@ -1,4 +1,5 @@
 # Version History
+## 1.6.1
 - Version History を別ファイル化
 
 ## 1.6.0
