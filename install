@@ -2,23 +2,40 @@
 
 dotfiles=~/dotfiles/
 
-# Zsh Setup
-if type "zsh" > /dev/null 2>&1; then
-  echo -n 'Zsh installing .'
+loader() {
+  echo "### Dotfiles script ###"
+  echo "if [[ -f $1 ]]; then"
+  echo "  . $1"
+  echo "fi"
+  echo "### End ###"
+}
 
-  loader() {
-    echo "### Dotfiles script ###"
-    echo "if [[ -f $1 ]]; then"
-    echo "  . $1"
-    echo "fi"
-    echo "### End ###"
-  }
+# Bash Setup
+if type "bash" > /dev/null 2>&1; then
+  echo -n 'Bash installing .'
 
   maker() {
     if [[ -f ~/$1 ]]; then
       echo >> ~/$1
-    else
-      touch ~/$1
+    fi
+    loader "${dotfiles}bash/$1" >> ~/$1
+    echo -n '.'
+  }
+
+  maker '.bash_profile'
+  maker '.bashrc'
+  echo ' ok!'
+else
+  echo "${0##*/}: Bash isn't found." 1>&2
+fi
+
+# Zsh Setup
+if type "zsh" > /dev/null 2>&1; then
+  echo -n 'Zsh installing .'
+
+  maker() {
+    if [[ -f ~/$1 ]]; then
+      echo >> ~/$1
     fi
     loader "${dotfiles}zsh/$1" >> ~/$1
     echo -n '.'
@@ -39,6 +56,8 @@ if type "nvim" > /dev/null 2>&1; then
 
   mkdir -p ${nvim_comf_path}
   ln -sf ${dotfiles}vim/.vimrc ${nvim_comf_path}init.vim
+
+  nvim -c 'cal dein#update()' -c 'qa!'
 
   echo ' ok!'
 else

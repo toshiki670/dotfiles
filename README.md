@@ -7,7 +7,29 @@
 # Install
 `$ ./install`
 
+# Tools
+## arch-update
+- Archlinux を最新化
+
+## chown-current-user
+- 指定したディレクトリ/ファイルを現在のユーザに変更
+
+## gcm
+- `git commit -m`のエイリアス
+- Gitのコミットメッセージにブランチ名を付加
+
+## git-upstream
+- fork したプロジェクトでupstreamの変更の取込み
+
 # Version History
+## 1.6.0
+- Archlinuxのインストール時に利用するファイルを分離
+- `chown-current-user` をアップデート
+- Bash のエイリアス追加
+- `arch-update`のアップデート処理を個別で実行できるように変更
+  * Neovim のアップデート機能を追加
+- Bugfix: Nvimdiff を有効化
+
 ## 1.5.2
 - Deoplete の非推奨設定を修正
 
