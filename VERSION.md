@@ -1,4 +1,7 @@
 # Version History
+## 1.6.2
+- Git log の表示を改善
+
 ## 1.6.1
 - Version History を別ファイル化
 
