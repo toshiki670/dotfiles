@@ -1,8 +1,4 @@
 # Dotfiles
-## Color
-color/*
-!.keep
-
 ## Zsh
 zsh/bundle/*
 !.keep
