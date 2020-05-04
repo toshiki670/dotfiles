@@ -7,6 +7,20 @@
 # Install
 `$ ./install`
 
+# Tools
+## arch-update
+- Archlinux を最新化
+
+## chown-current-user
+- 指定したディレクトリ/ファイルを現在のユーザに変更
+
+## gcm
+- `git commit -m`のエイリアス
+- Gitのコミットメッセージにブランチ名を付加
+
+## git-upstream
+- fork したプロジェクトでupstreamの変更の取込み
+
 # Version History
 ## 1.6.0
 - Archlinuxのインストール時に利用するファイルを分離
