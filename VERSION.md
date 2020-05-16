@@ -1,4 +1,7 @@
 # Version History
+## 1.6.4
+- Add a common `gitignore_dotfiles`.
+
 ## 1.6.3
 - Gitignore を更新
 
