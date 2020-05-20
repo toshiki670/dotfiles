@@ -20,6 +20,3 @@
 
 ## git-upstream
 - fork したプロジェクトでupstreamの変更の取込み
-
-# Other links
-- [Version History](VERSION.md)
