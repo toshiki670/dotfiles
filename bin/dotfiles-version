@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if ! type 'git' > /dev/null 2>&1; then
+  echo "${CMDNAME}: Git command not found." 1>&2
+  exit 1
+elif [[ ! -d $DOTFILES ]]; then
+  echo "${0##*/}: Not found the dotfiles directory." 1>&2
+  exit 2
+else
+  git -C ~/dotfiles tag | tail -qn 1
+fi
