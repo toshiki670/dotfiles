@@ -51,14 +51,10 @@ module Dotfiles
     LONG = '--update'
     DESC = 'Update dotfiles.'
 
-    def self.procedure
-      proc do |value|
+    def self.addon(opt)
+      opt.on(SHORT, LONG, DESC) do |value|
         update if value
       end
-    end
-
-    def self.addon(opt)
-      opt.on(SHORT, LONG, DESC, &procedure)
     end
 
     def self.update
