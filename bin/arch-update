@@ -26,7 +26,7 @@ Description:
 
 Options:
   -A All update. (Alias to arch-update)
-  -p pacman and pkgfile update.
+  -p pacman update.
   -R Remove cached package by using paccache.
   -g gem update.
   -n Neovim update.
@@ -71,11 +71,6 @@ shift $(($OPTIND - 1))
 function update_pacman() {
   if type '/usr/sbin/pacman' > /dev/null 2>&1; then
     sudo /usr/sbin/pacman -Syu
-  fi
-
-  # `Command not found' hook
-  if type '/usr/sbin/pkgfile' > /dev/null 2>&1; then
-    sudo /usr/sbin/pkgfile --update
   fi
 }
 
