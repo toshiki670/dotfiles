@@ -29,6 +29,7 @@ require 'optparse'
 # Dotfiles management tool.
 module Dotfiles
   VERSION = `dotfiles-version`.freeze
+
   def self.start
     parser = Dotfiles::OptionParser.new
     parser.build
@@ -50,14 +51,10 @@ module Dotfiles
     LONG = '--update'
     DESC = 'Update dotfiles.'
 
-    def self.procedure
-      proc do |value|
+    def self.addon(opt)
+      opt.on(SHORT, LONG, DESC) do |value|
         update if value
       end
-    end
-
-    def self.addon(opt)
-      opt.on(SHORT, LONG, DESC, &procedure)
     end
 
     def self.update
