@@ -30,7 +30,7 @@ Options:
   -R Remove cached package by using paccache.
   -y yay update.
   -g gem update.
-  -n Neovim update.
+  -n neovim update.
   -h Show help.
 __DESCRIPTION_TEXT__
 }
