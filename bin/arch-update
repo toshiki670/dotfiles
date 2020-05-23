@@ -3,6 +3,7 @@
 
 # Constant
 readonly CMDNAME=${0##*/}
+readonly VERSION='0.4.0'
 readonly TRUE=1
 readonly FALSE=0
 
@@ -15,7 +16,7 @@ Usage:
   $CMDNAME
   $CMDNAME [-A] [-p] [-R]
   $CMDNAME [-y] [-g] [-n]
-  $CMDNAME [-h]
+  $CMDNAME [-h] [-v]
 __USAGE_TEXT__
 }
 
@@ -32,6 +33,7 @@ Options:
   -g gem update.
   -n neovim update.
   -h Show help.
+  -v Show version.
 __DESCRIPTION_TEXT__
 }
 
@@ -50,7 +52,7 @@ can_update_gem=$FALSE
 can_update_neovim=$FALSE
 
 # Option analysis
-while getopts ApRygnh OPT
+while getopts ApRygnhv OPT
 do
   case $OPT in
     "A" ) is_all_update=$TRUE ;;
@@ -60,6 +62,9 @@ do
     "g" ) can_update_gem=$TRUE; is_all_update=$FALSE ;;
     "n" ) can_update_neovim=$TRUE; is_all_update=$FALSE ;;
     "h" ) show_help >&1
+          exit 0
+          ;;
+    "v" ) echo "$CMDNAME $VERSION"
           exit 0
           ;;
     # Invalid options
