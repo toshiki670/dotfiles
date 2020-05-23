@@ -103,27 +103,30 @@ function update_neovim() {
   fi
 }
 
-
-if [[ $is_all_update == $TRUE ]]; then
-  update_pacman
-  remove_cache
-  update_gem
-  update_neovim
+if [[ 'archlinux' != `uname --nodename` ]]; then
+  echo "${0##*/}: The current distribution isn't the Archlinux." 1>&2
 else
-  if [[ $can_update_pacman == $TRUE ]]; then
+  if [[ $is_all_update == $TRUE ]]; then
     update_pacman
-  fi
-
-  if [[ $can_remove_cache == $TRUE ]]; then
     remove_cache
-  fi
-
-  if [[ $can_update_gem == $TRUE ]]; then
     update_gem
-  fi
-
-  if [[ $can_update_neovim == $TRUE ]]; then
     update_neovim
+  else
+    if [[ $can_update_pacman == $TRUE ]]; then
+      update_pacman
+    fi
+
+    if [[ $can_remove_cache == $TRUE ]]; then
+      remove_cache
+    fi
+
+    if [[ $can_update_gem == $TRUE ]]; then
+      update_gem
+    fi
+
+    if [[ $can_update_neovim == $TRUE ]]; then
+      update_neovim
+    fi
   fi
 fi
 
