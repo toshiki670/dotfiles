@@ -29,6 +29,7 @@ require 'optparse'
 # Dotfiles management tool.
 module Dotfiles
   VERSION = `dotfiles-version`.freeze
+
   def self.start
     parser = Dotfiles::OptionParser.new
     parser.build
