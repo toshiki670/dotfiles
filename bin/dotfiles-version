@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [[ ! -d $DOTFILES ]]; then
+  echo "${0##*/}: Not found the dotfiles directory." 1>&2
+  exit 2
+else
+  tail -qn 1 $DOTFILES/version
+fi

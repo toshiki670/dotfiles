@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo -n 'Writing ...'
 {
   echo "### Dotfile's config ###"
