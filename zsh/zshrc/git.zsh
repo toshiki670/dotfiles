@@ -15,6 +15,7 @@ alias g-reset-hard='git reset --hard HEAD'
 
 # Git flow
 # yay -S gitflow-avh
+# apt install git-flow
 if type "git-flow" > /dev/null 2>&1; then
   alias @='git-flow' # deprecated for next version
   alias @feature='git-flow feature'
