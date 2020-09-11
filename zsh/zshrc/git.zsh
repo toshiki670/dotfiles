@@ -31,11 +31,11 @@ elif dpkg -l | grep git-flow > /dev/null 2>&1; then
 fi
 
 if [[ $git_flow_exists == $TRUE ]]; then
-  alias @='git-flow' # deprecated for next version
-  alias @feature='git-flow feature'
-  alias @hotfix='git-flow hotfix'
-  alias @init='git-flow init'
-  alias @release='git-flow release'
-  alias @support='git-flow support'
-  alias @version='git-flow version'
+  alias @='git flow' # deprecated for next version
+  alias @feature='git flow feature'
+  alias @hotfix='git flow hotfix'
+  alias @init='git flow init'
+  alias @release='git flow release'
+  alias @support='git flow support'
+  alias @version='git flow version'
 fi
