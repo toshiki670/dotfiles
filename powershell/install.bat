@@ -14,6 +14,11 @@ for /F %%i in ('pwsh -c echo $profile') do set PWSH_PROFILE_PATH=%%i
 rem Make simbolic link
 mklink %PWSH_PROFILE_PATH% %USERPROFILE%\dotfiles\powershell\Microsoft.PowerShell_profile.ps1
 
-echo Success!
+echo Profile placement successful!
+
+
+rem PowerShell setting
+pwsh -c 'Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete'
+echo setting successful!
 
 pause
