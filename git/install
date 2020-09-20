@@ -1,11 +1,7 @@
 #!/bin/bash
 
 echo -n 'Writing ...'
-{
-  echo "### Dotfile's config ###"
-  echo -e "[include]\n  path = ~/dotfiles/git/git.config\n"
-  echo -e "[include]\n  path = ~/dotfiles/git/user.config\n"
-  echo "### End ###"
-} >> ~/.gitconfig
+
+cat ~/dotfiles/git/.gitconfig >> ~/.gitconfig
 
 echo ' ok'

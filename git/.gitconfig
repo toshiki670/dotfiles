@@ -1,0 +1,9 @@
+### Dotfile's config ###
+[include]
+  path = ~/dotfiles/git/git.config
+
+[include]
+  path = ~/dotfiles/git/user.config
+
+### End ###
+
