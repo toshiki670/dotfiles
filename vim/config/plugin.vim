@@ -12,7 +12,7 @@ if &runtimepath !~# 'dein.vim'
   if !isdirectory(s:dein_repo_dir)
     exe '!git clone https://github.com/Shougo/dein.vim' s:dein_repo_dir
   endif
-  exe 'set runtimepath^=' . fnamemodify(s:dein_repo_dir, ':p')
+  exe 'set runtimepath^=' . s:dein_repo_dir
 endif
 
 " Add the dein installation directory into runtimepath
