@@ -1,5 +1,5 @@
 # Pure-pwsh
-Import-Module pure-pwsh
+# Import-Module pure-pwsh
 Import-Module posh-git
 
 # For git
