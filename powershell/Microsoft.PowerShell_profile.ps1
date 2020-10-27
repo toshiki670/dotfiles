@@ -53,3 +53,21 @@ Set-Alias Ginit Git-Custom-Flow-Init
 Set-Alias Grelease Git-Custom-Flow-Release
 Set-Alias Gsupport Git-Custom-Flow-Support
 Set-Alias Gversion Git-Custom-Flow-Version
+
+
+# For Neovim
+function Vim-Utf8 {
+    nvim -c ":e ++enc=utf8"
+}
+function Vim-Euc-Jp {
+    vim -c ":e ++enc=euc-jp"
+}
+function Vim-Shift-Jis {
+    vim -c ":e ++enc=shift_jis"
+}
+
+Set-Alias vim nvim
+Set-Alias v vim
+Set-Alias vim-utf8 Vim-Utf8
+Set-Alias vim-euc_jp Vim-Euc-Jp
+Set-Alias vim-shift_jis Vim-Shift-Jis
