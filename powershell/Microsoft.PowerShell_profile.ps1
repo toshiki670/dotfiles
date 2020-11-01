@@ -3,28 +3,28 @@
 Import-Module posh-git
 
 # For git
-function Git-Custom-Add-Stage($Path) {
+function Add-To-Git-Stage($Path) {
     git add $Path
 }
-function Git-Custom-Add-Stage-by-Patch {
+function Add-To-Git-Stage-by-Patch {
     git add -p
 }
-function Git-Custom-Show-Diff {
+function Show-Git-Diff {
     git diff
 }
-function Git-Custom-Show-Diff-On-Staged {
+function Show-Git-Diff-On-Staged {
     git diff --staged
 }
-function Git-Custom-Show-Status {
+function Show-Git-Status {
     git status
 }
 
 Set-Alias g git
-Set-Alias gad Git-Custom-Add-Stage
-Set-Alias gap Git-Custom-Add-Stage-by-Patch
-Set-Alias gd Git-Custom-Show-Diff
-Set-Alias gds Git-Custom-Show-Diff-On-Staged
-Set-Alias gs Git-Custom-Show-Status
+Set-Alias gad Add-To-Git-Stage
+Set-Alias gap Add-To-Git-Stage-by-Patch
+Set-Alias gd Show-Git-Diff
+Set-Alias gds Show-Git-Diff-On-Staged
+Set-Alias gs Show-Git-Status
 
 
 # For git flow
