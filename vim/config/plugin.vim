@@ -1,18 +1,18 @@
 " プラグインが実際にインストールされるディレクトリ
-let s:dein_dir = g:vimrc_root . 'plugin/'
+let s:dein_dir = expand(g:vimrc_root . 'plugin/')
 
 " dein.vim 本体
-let s:dein_repo_dir = s:dein_dir . 'repos/github.com/Shougo/dein.vim'
+let s:dein_repo_dir = expand(s:dein_dir . 'repos/github.com/Shougo/dein.vim')
 
 " Plugin's config directory
-let s:plugin_dir = g:config_dir . 'plugin/'
+let s:plugin_dir = expand(g:config_dir . 'plugin/')
 
 " dein.vim がなければ github から落としてくる
 if &runtimepath !~# 'dein.vim'
   if !isdirectory(s:dein_repo_dir)
     exe '!git clone https://github.com/Shougo/dein.vim' s:dein_repo_dir
   endif
-  exe 'set runtimepath^=' . fnamemodify(s:dein_repo_dir, ':p')
+  exe 'set runtimepath^=' . s:dein_repo_dir
 endif
 
 " Add the dein installation directory into runtimepath

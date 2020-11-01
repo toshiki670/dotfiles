@@ -9,7 +9,7 @@
 let g:vimrc_root = expand('~/dotfiles/vim/')
 
 " config's directory
-let g:config_dir = g:vimrc_root . 'config/'
+let g:config_dir = expand(g:vimrc_root . 'config/')
 
 
 let s:config_names = [

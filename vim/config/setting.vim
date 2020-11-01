@@ -6,7 +6,7 @@ endif
 " 文字コードをUTF-8に設定
 se fenc=utf-8
 
-if has('nvim')
+if has('nvim') && (has('unix') || has('mac'))
   se sh=bash
 endif
 
