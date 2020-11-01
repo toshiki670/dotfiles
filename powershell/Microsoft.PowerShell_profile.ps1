@@ -28,46 +28,46 @@ Set-Alias gs Git-Custom-Show-Status
 
 
 # For git flow
-function Git-Custom-Flow-Feature {
+function Use-Git-Flow-Feature {
     git flow feature $args
 }
-function Git-Custom-Flow-Hotfix {
+function Use-Git-Flow-Hotfix {
     git flow hotfix $args
 }
-function Git-Custom-Flow-Init {
+function Use-Git-Flow-Init {
     git flow init $args
 }
-function Git-Custom-Flow-Release {
+function Use-Git-Flow-Release {
     git flow release $args
 }
-function Git-Custom-Flow-Support {
+function Use-Git-Flow-Support {
     git flow support $args
 }
-function Git-Custom-Flow-Version {
+function Use-Git-Flow-Version {
     git flow version $args
 }
 
-Set-Alias Gfeature Git-Custom-Flow-Feature
-Set-Alias Ghotfix Git-Custom-Flow-Hotfix
-Set-Alias Ginit Git-Custom-Flow-Init
-Set-Alias Grelease Git-Custom-Flow-Release
-Set-Alias Gsupport Git-Custom-Flow-Support
-Set-Alias Gversion Git-Custom-Flow-Version
+Set-Alias Gfeature Use-Git-Flow-Feature
+Set-Alias Ghotfix Use-Git-Flow-Hotfix
+Set-Alias Ginit Use-Git-Flow-Init
+Set-Alias Grelease Use-Git-Flow-Release
+Set-Alias Gsupport Use-Git-Flow-Support
+Set-Alias Gversion Use-Git-Flow-Version
 
 
 # For Neovim
-function Vim-Utf8 {
+function Open-Nvim-As-Utf8 {
     nvim -c ":e ++enc=utf8"
 }
-function Vim-Euc-Jp {
+function Open-Nvim-As-Euc-Jp {
     vim -c ":e ++enc=euc-jp"
 }
-function Vim-Shift-Jis {
+function Open-Nvim-As-Shift-Jis {
     vim -c ":e ++enc=shift_jis"
 }
 
 Set-Alias vim nvim
 Set-Alias v vim
-Set-Alias vim-utf8 Vim-Utf8
-Set-Alias vim-euc_jp Vim-Euc-Jp
-Set-Alias vim-shift_jis Vim-Shift-Jis
+Set-Alias vim-utf8 Open-Nvim-As-Utf8
+Set-Alias vim-euc_jp Open-Nvim-As-Euc-Jp
+Set-Alias vim-shift_jis Open-Nvim-As-Shift-Jis
