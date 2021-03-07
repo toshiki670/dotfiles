@@ -12,6 +12,8 @@ fi
 
 # For Rails
 alias be='bundle exec'
+alias kill-rails='cat tmp/pids/server.pid | xargs kill -9'
+alias check-rails='cat tmp/pids/server.pid'
 
 # 拡張子に応じたコマンドを実行
 alias -s rb='ruby'
