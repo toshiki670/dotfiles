@@ -9,10 +9,10 @@ hook_add = '''
     \ 'typescript': ['javascript-typescript-stdio'],
     \ 'ruby': ['solargraph', 'stdio'],
   \}
+  " other root markers....
   let g:LanguageClient_rootMarkers = {
-    " other root markers....
     \ 'javascript': ['jsconfig.json'],
     \ 'typescript': ['tsconfig.json'],
-    \ }
+  \}
 '''
 
