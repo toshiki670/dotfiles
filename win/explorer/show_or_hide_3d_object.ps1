@@ -18,7 +18,7 @@ function Start-ScriptAsAdmin {
     if($null -ne $ArgumentList) {
         $list += @($ArgumentList)
     }
-    Start-Process powershell -ArgumentList $list -Verb RunAs -Wait
+    Start-Process pwsh -ArgumentList $list -Verb RunAs -Wait
 }
 
 
