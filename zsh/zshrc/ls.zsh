@@ -23,7 +23,7 @@ if type "exa" > /dev/null 2>&1; then
   alias lla='exa -la -gh --time-style long-iso --git'
 else
   alias ls='ls  --color=auto'
-  alias ll='ls  -l'
+  alias ll='ls  -lh'
   alias la='ls  -a'
-  alias lla='ls -la'
+  alias lla='ls -lah'
 fi
