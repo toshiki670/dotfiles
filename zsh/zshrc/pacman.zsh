@@ -16,11 +16,11 @@ function swap-pacman-mirrorlist {
   fi
 
   if [[ -e $old_list ]]; then
-    rm $old_list
+    sudo rm --verbose $old_list
   fi
 
-  mv $current_list $old_list
-  mv $new_list $current_list
+  sudo mv --verbose $current_list $old_list
+  sudo mv --verbose $new_list $current_list
 
   return 0
 }
