@@ -6,7 +6,7 @@ function swap-pacman-mirrorlist {
   new_list='/etc/pacman.d/mirrorlist.pacnew'
 
   if [[ ! -e $pacman_conf ]]; then
-    echo "${0##*/}: No archlinux distribution" 1>&2
+    echo "${0##*/}: The current distribution isn't the Archlinux." 1>&2
     return 2
   fi
 
