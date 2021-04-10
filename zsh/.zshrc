@@ -24,7 +24,7 @@ require 'zshrc/history.zsh'
 require 'zshrc/completion.zsh'
 
 # Initialize and Install the Zplug
-require "zshrc/zplug.zsh"
+require 'zshrc/zplug.zsh'
 
 # ls or exa command config
 require 'zshrc/ls.zsh'
@@ -53,7 +53,7 @@ require 'zshrc/vim.zsh'
 # for macOS
 export PATH="${DOTFILES}/bin:$PATH"
 
-if type "brew" > /dev/null 2>&1; then
+if type 'brew' > /dev/null 2>&1; then
   export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
 fi
 
