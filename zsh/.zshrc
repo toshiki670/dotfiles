@@ -29,9 +29,6 @@ require 'zshrc/zplug.zsh'
 # ls or exa command config
 require 'zshrc/ls.zsh'
 
-# df config
-require 'zshrc/df.zsh'
-
 # ruby and rails config
 require 'zshrc/ruby.zsh'
 
@@ -93,6 +90,9 @@ function ps-grep {
   ps aux | grep $1 | grep -v grep
 }
 
+
+# df config
+alias df='df -h'
 
 ### end
 
