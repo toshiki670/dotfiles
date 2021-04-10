@@ -94,8 +94,16 @@ function ps-grep {
 # df config
 alias df='df -h'
 
-### end
 
+# cp config
+alias cp='cp --verbose'
+
+
+# mv config
+alias mv='mv --verbose'
+
+
+# Common config end
 
 # ターミナル起動時に実行
 
