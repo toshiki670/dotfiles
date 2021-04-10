@@ -44,6 +44,9 @@ require 'zshrc/git.zsh'
 # vim config
 require 'zshrc/vim.zsh'
 
+# pacman config
+require 'zshrc/pacman.zsh'
+
 
 ### Common config
 
