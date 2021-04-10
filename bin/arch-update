@@ -3,7 +3,7 @@
 
 # Constant
 readonly CMDNAME=${0##*/}
-readonly VERSION='0.5.0'
+readonly VERSION='1.0.0'
 readonly TRUE=1
 readonly FALSE=0
 
@@ -15,7 +15,8 @@ cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
 Usage:
   $CMDNAME
   $CMDNAME [-A] [-P] [-R]
-  $CMDNAME [-y] [-g] [-n]
+  $CMDNAME [-y] [-p]
+  $CMDNAME [-g] [-n]
   $CMDNAME [-h] [-v]
 __USAGE_TEXT__
 }
@@ -30,6 +31,7 @@ Options:
   -P pacman update.
   -R Remove cached package by using paccache.
   -y yay update.
+  -p paru update.
   -g gem update.
   -n neovim update.
   -h Show help.
@@ -48,17 +50,19 @@ is_all_update=$TRUE
 can_update_pacman=$FALSE
 can_remove_cache=$FALSE
 can_update_yay=$FALSE
+can_update_paru=$FALSE
 can_update_gem=$FALSE
 can_update_neovim=$FALSE
 
 # Option analysis
-while getopts APRygnhv OPT
+while getopts APRypgnhv OPT
 do
   case $OPT in
     "A" ) is_all_update=$TRUE ;;
     "P" ) can_update_pacman=$TRUE; is_all_update=$FALSE ;;
     "R" ) can_remove_cache=$TRUE; is_all_update=$FALSE ;;
     "y" ) can_update_yay=$TRUE; is_all_update=$FALSE ;;
+    "p" ) can_update_paru=$TRUE; is_all_update=$FALSE ;;
     "g" ) can_update_gem=$TRUE; is_all_update=$FALSE ;;
     "n" ) can_update_neovim=$TRUE; is_all_update=$FALSE ;;
     "h" ) show_help >&1
@@ -98,6 +102,13 @@ function update_yay() {
 }
 
 
+function update_paru() {
+  if type '/usr/sbin/paru' > /dev/null 2>&1; then
+    /usr/sbin/paru -Syu
+  fi
+}
+
+
 function update_gem() {
   if type '/usr/sbin/gem' > /dev/null 2>&1; then
     /usr/sbin/gem update
@@ -120,6 +131,7 @@ else
     update_pacman
     remove_cache
     update_yay
+    update_paru
     update_gem
     update_neovim
   else
@@ -133,6 +145,10 @@ else
 
     if [[ $can_update_yay == $TRUE ]]; then
       update_yay
+    fi
+
+    if [[ $can_update_paru == $TRUE ]]; then
+      update_paru
     fi
 
     if [[ $can_update_gem == $TRUE ]]; then
