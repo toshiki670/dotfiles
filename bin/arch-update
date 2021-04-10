@@ -3,7 +3,7 @@
 
 # Constant
 readonly CMDNAME=${0##*/}
-readonly VERSION='0.4.1'
+readonly VERSION='0.5.0'
 readonly TRUE=1
 readonly FALSE=0
 
@@ -14,7 +14,7 @@ cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
   cat << __USAGE_TEXT__
 Usage:
   $CMDNAME
-  $CMDNAME [-A] [-p] [-R]
+  $CMDNAME [-A] [-P] [-R]
   $CMDNAME [-y] [-g] [-n]
   $CMDNAME [-h] [-v]
 __USAGE_TEXT__
@@ -27,7 +27,7 @@ Description:
 
 Options:
   -A All update. (Alias to arch-update)
-  -p pacman update.
+  -P pacman update.
   -R Remove cached package by using paccache.
   -y yay update.
   -g gem update.
@@ -52,11 +52,11 @@ can_update_gem=$FALSE
 can_update_neovim=$FALSE
 
 # Option analysis
-while getopts ApRygnhv OPT
+while getopts APRygnhv OPT
 do
   case $OPT in
     "A" ) is_all_update=$TRUE ;;
-    "p" ) can_update_pacman=$TRUE; is_all_update=$FALSE ;;
+    "P" ) can_update_pacman=$TRUE; is_all_update=$FALSE ;;
     "R" ) can_remove_cache=$TRUE; is_all_update=$FALSE ;;
     "y" ) can_update_yay=$TRUE; is_all_update=$FALSE ;;
     "g" ) can_update_gem=$TRUE; is_all_update=$FALSE ;;
