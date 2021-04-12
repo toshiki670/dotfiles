@@ -3,7 +3,7 @@
 
 # Constant
 readonly CMDNAME=${0##*/}
-readonly VERSION='1.0.1'
+readonly VERSION='1.1.0'
 readonly TRUE=1
 readonly FALSE=0
 
@@ -17,6 +17,7 @@ Usage:
   $CMDNAME [-A] [-P] [-R]
   $cmdname_space [-y] [-p]
   $cmdname_space [-g] [-n]
+  $cmdname_space [-d]
   $cmdname_space [-h] [-v]
 __USAGE_TEXT__
 }
@@ -34,6 +35,7 @@ Options:
   -p paru update.
   -g gem update.
   -n neovim update.
+  -d dotfiles update.
   -h Show help.
   -v Show version.
 __DESCRIPTION_TEXT__
@@ -53,9 +55,10 @@ can_update_yay=$FALSE
 can_update_paru=$FALSE
 can_update_gem=$FALSE
 can_update_neovim=$FALSE
+can_update_dotfiles=$FALSE
 
 # Option analysis
-while getopts APRypgnhv OPT
+while getopts APRypgndhv OPT
 do
   case $OPT in
     "A" ) is_all_update=$TRUE ;;
@@ -65,6 +68,7 @@ do
     "p" ) can_update_paru=$TRUE; is_all_update=$FALSE ;;
     "g" ) can_update_gem=$TRUE; is_all_update=$FALSE ;;
     "n" ) can_update_neovim=$TRUE; is_all_update=$FALSE ;;
+    "d" ) can_update_dotfiles=$TRUE; is_all_update=$FALSE ;;
     "h" ) show_help >&1
           exit 0
           ;;
@@ -124,6 +128,14 @@ function update_neovim() {
   fi
 }
 
+
+function update_dotfiles() {
+  if type 'dotfiles' > /dev/null 2>&1; then
+    dotfiles -u
+  fi
+}
+
+
 if [[ 'archlinux' != `uname --nodename` ]]; then
   echo "${0##*/}: The current distribution isn't the Archlinux." 1>&2
 else
@@ -134,6 +146,7 @@ else
     update_paru
     update_gem
     update_neovim
+    update_dotfiles
   else
     if [[ $can_update_pacman == $TRUE ]]; then
       update_pacman
@@ -157,6 +170,10 @@ else
 
     if [[ $can_update_neovim == $TRUE ]]; then
       update_neovim
+    fi
+
+    if [[ $can_update_dotfiles == $TRUE ]]; then
+      update_dotfiles
     fi
   fi
 fi
