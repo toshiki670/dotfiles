@@ -3,7 +3,7 @@
 
 # Constant
 readonly CMDNAME=${0##*/}
-readonly VERSION='1.0.0'
+readonly VERSION='1.0.1'
 readonly TRUE=1
 readonly FALSE=0
 
@@ -15,9 +15,9 @@ cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
 Usage:
   $CMDNAME
   $CMDNAME [-A] [-P] [-R]
-  $CMDNAME [-y] [-p]
-  $CMDNAME [-g] [-n]
-  $CMDNAME [-h] [-v]
+  $cmdname_space [-y] [-p]
+  $cmdname_space [-g] [-n]
+  $cmdname_space [-h] [-v]
 __USAGE_TEXT__
 }
 
