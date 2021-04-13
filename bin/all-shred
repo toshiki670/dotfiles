@@ -1,0 +1,70 @@
+#!/bin/bash
+
+
+# Constant
+readonly CMDNAME=${0##*/}
+readonly VERSION='1.0.0'
+
+
+function usage() {
+  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+
+  cat << __USAGE_TEXT__
+Usage:
+  $CMDNAME [path]
+  $CMDNAME [-v] [-h]
+__USAGE_TEXT__
+}
+
+
+function description() {
+  cat << __DESCRIPTION_TEXT__
+Description:
+  Recursive shred.
+
+Example:
+  $ ${CMDNAME}
+    * Current directory if not given path.
+  $ ${CMDNAME} ~/path/to/
+
+Options:
+  -h Show help
+  -v Show version
+__DESCRIPTION_TEXT__
+}
+
+
+function show_help() {
+  usage
+  echo
+  description
+}
+
+
+# Option analysis
+while getopts hv OPT
+do
+  case $OPT in
+    "h" ) show_help >&1
+          exit 0
+          ;;
+    "v" ) echo "$CMDNAME $VERSION"
+          exit 0
+          ;;
+    # Invalid options
+      * ) usage 1>&2
+          exit 1 ;;
+  esac
+done
+# Trim options from $*
+shift $(($OPTIND - 1))
+
+
+if ! type 'shred' > /dev/null 2>&1; then
+  echo "$CMDNAME: Not found the shred command." 1>&2
+  exit 1
+fi
+
+
+
+
