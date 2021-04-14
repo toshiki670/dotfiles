@@ -95,6 +95,7 @@ fi
 
 # Uniq paths
 paths=$( printf "%s\n" $* | sort -u )
+if [[ $* == '' ]]; then paths=$(ls -A1); fi
 
 
 # Check
