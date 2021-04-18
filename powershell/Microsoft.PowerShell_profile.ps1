@@ -71,3 +71,12 @@ Set-Alias v vim
 Set-Alias vim-utf8 Open-Nvim-As-Utf8
 Set-Alias vim-euc_jp Open-Nvim-As-Euc-Jp
 Set-Alias vim-shift_jis Open-Nvim-As-Shift-Jis
+
+
+# For scoop
+function Update-Scoop-All {
+    scoop update
+    scoop update *
+    scoop cache rm *
+    scoop cleanup *
+}
