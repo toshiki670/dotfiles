@@ -59,10 +59,10 @@ function check_path_exist() {
 
 function destroy_each_completely() {
   while read -r path; do
-    find $path -type f -print0 | xargs -0 shred -uvz
+    find "$path" -type f -print0 | xargs -0 shred -uvz
     q=$?; if [[ $q != 0 ]]; then return $q;fi
 
-    rm --verbose -rf $path
+    rm --verbose -rf "$path"
     q=$?; if [[ $q != 0 ]]; then return $q;fi
   done
 }
@@ -94,7 +94,7 @@ fi
 
 
 # Uniq paths
-paths=$( printf "%s\n" $* | sort -u )
+paths="$*"
 if [[ $* == '' ]]; then paths=$(ls -A1); fi
 
 
