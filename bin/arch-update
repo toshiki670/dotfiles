@@ -136,8 +136,8 @@ function update_dotfiles() {
 }
 
 
-if [[ 'archlinux' != `uname --nodename` ]]; then
-  echo "${0##*/}: The current distribution isn't the Archlinux." 1>&2
+if [[ ! -e '/etc/arch-release' ]]; then
+  echo "$CMDNAME: The current distribution isn't the Archlinux." 1>&2
 else
   if [[ $is_all_update == $TRUE ]]; then
     update_pacman
