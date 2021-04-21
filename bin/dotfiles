@@ -58,7 +58,7 @@ module Dotfiles
     end
 
     def self.update
-      `git -C $DOTFILES switch master`
+      `git -C $DOTFILES switch main`
       `git -C $DOTFILES pull`
     end
   end
