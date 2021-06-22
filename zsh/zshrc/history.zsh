@@ -10,6 +10,15 @@ export SAVEHIST=1000000
 # 重複を記録しない
 setopt hist_ignore_dups
 
+# ヒストリに追加されるコマンド行が古いものと同じなら古いものを削除
+setopt hist_ignore_all_dups
+
+# 余分な空白は詰めて記録
+setopt hist_reduce_blanks
+
+# 複数のセッションで履歴を共有する
+setopt share_history
+
 # 開始と終了を記録
 setopt EXTENDED_HISTORY
 
