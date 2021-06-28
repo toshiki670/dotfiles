@@ -20,6 +20,7 @@ if type "git" > /dev/null 2>&1; then
     zplug "zsh-users/zsh-completions"
     zplug "zsh-users/zsh-syntax-highlighting"
     zplug "zsh-users/zsh-autosuggestions"
+    zplug "zsh-users/zaw"
     zplug "mafredri/zsh-async", from:github
     zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
     zplug "mollifier/cd-gitroot"
