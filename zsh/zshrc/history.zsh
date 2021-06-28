@@ -23,4 +23,7 @@ setopt share_history
 setopt EXTENDED_HISTORY
 
 # 全履歴を一覧表示する
-function history-all { history -E 1 }
+function history-all { history -iD 1 }
+
+# Zaw keybind
+bindkey '^h' zaw-history
