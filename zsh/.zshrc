@@ -106,6 +106,9 @@ alias cp='cp --verbose'
 alias mv='mv --verbose'
 
 
+# Rust env
+export PATH="$HOME/.cargo/bin:$PATH"
+
 # Common config end
 
 # ターミナル起動時に実行
