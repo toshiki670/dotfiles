@@ -25,7 +25,6 @@ if type "git" > /dev/null 2>&1; then
     zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
     zplug "mollifier/cd-gitroot"
     zplug "Tarrasch/zsh-bd"
-    zplug "supercrabtree/k"
     # zplug "docker/cli", use:"contrib/completion/zsh/_docker"
     # zplug "starcraftman/zsh-git-prompt"
 
