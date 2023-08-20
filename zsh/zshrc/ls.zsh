@@ -1,17 +1,17 @@
-# Theme configure
-# Install location
-DIRCOLORS=${DOTFILES}/zsh/bundle/dircolors-solarized
+# # Theme configure
+# # Install location
+# DIRCOLORS=${DOTFILES}/zsh/bundle/dircolors-solarized
 
-# Dircolors installation
-if $(type "git" > /dev/null 2>&1) && [[ ! -d $DIRCOLORS ]]; then
-  git clone https://github.com/seebi/dircolors-solarized.git $DIRCOLORS
-fi
+# # Dircolors installation
+# if $(type "git" > /dev/null 2>&1) && [[ ! -d $DIRCOLORS ]]; then
+#   git clone https://github.com/seebi/dircolors-solarized.git $DIRCOLORS
+# fi
 
-# Dircolors activation
-if [[ -d $DIRCOLORS ]]; then
-  eval $(dircolors $DIRCOLORS)
-  eval $(dircolors $DIRCOLORS/dircolors.ansi-universal)
-fi
+# # Dircolors activation
+# if [[ -d $DIRCOLORS ]]; then
+#   eval $(dircolors $DIRCOLORS)
+#   eval $(dircolors $DIRCOLORS/dircolors.ansi-universal)
+# fi
 
 
 # ls command series
