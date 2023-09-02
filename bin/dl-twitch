@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# yt-dlp のオプションの説明が書いてあるサイト
+# https://masayoshi-9a7ee.hatenablog.com/entry/2021/11/06/112639
+
+# Constant
+readonly CMDNAME=${0##*/}
+readonly VERSION='0.1.0'
+readonly TRUE=1
+readonly FALSE=0
+
+
+function usage() {
+  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+
+  cat << __USAGE_TEXT__
+Usage:
+  $CMDNAME [path]
+  $CMDNAME [-v] [-h]
+__USAGE_TEXT__
+}
+
+
+function description() {
+  cat << __DESCRIPTION_TEXT__
+Description:
+  Download twitch and Format XXX.
+
+Example:
+  $ ${CMDNAME} {video_id}
+
+Options:
+  -h Show help
+  -v Show version
+__DESCRIPTION_TEXT__
+}
+
+
+function show_help() {
+  usage
+  echo
+  description
+}
+
+
+# Option analysis
+while getopts hv OPT
+do
+  case $OPT in
+    "h" ) show_help >&1
+          exit 0
+          ;;
+    "v" ) echo "$CMDNAME $VERSION"
+          exit 0
+          ;;
+    # Invalid options
+      * ) usage 1>&2
+          exit 1 ;;
+  esac
+done
+# Trim options from $*
+shift $(($OPTIND - 1))
+
+
+if ! type 'yt-dlp' > /dev/null 2>&1; then
+  echo "$CMDNAME: Not found the yt-dlp command." 1>&2
+  exit 1
+fi
+
+if ! type 'ffmpeg' > /dev/null 2>&1; then
+  echo "$CMDNAME: Not found the ffmpeg command." 1>&2
+  exit 1
+fi
+
+
+file_full_name=`yt-dlp --get-filename "https://www.twitch.tv/videos/$1"`
+file_name="${file_full_name%.*}"
+file_ext="${file_full_name##*.}"
+
+echo $file_full_name
+echo $file_name
+echo $file_ext
+
+yt-dlp --path="~/Downloads/" --output="$file_name.$file_ext" "https://www.twitch.tv/videos/$1"
+
+ffmpeg -i ~/Downloads/"$file_name.$file_ext" -c:v libx265 ~/Downloads/"${file_name}_H265.mp4"
+
+
+exit 0
