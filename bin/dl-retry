@@ -75,27 +75,27 @@ INTERVAL=10
 
 # コマンドが正常終了するまで繰り返すループ
 for attempt in $(seq 1 $MAX_RETRY); do
-    cookies=~/Local/cookies.txt
-    if [[ -f $cookies ]]; then
-        yt-dlp --cookies=$cookies --path="~/Downloads/" --format="mp4" "https://www.youtube.com/watch?v=$1"
-    else
-        yt-dlp --path="~/Downloads/" --format="mp4" "https://www.youtube.com/watch?v=$1"
+  cookies=~/Local/cookies.txt
+  if [[ -f $cookies ]]; then
+    yt-dlp --cookies=$cookies --path="~/Downloads/" --format="mp4" "https://www.youtube.com/watch?v=$1"
+  else
+    yt-dlp --path="~/Downloads/" --format="mp4" "https://www.youtube.com/watch?v=$1"
+  fi
+  
+  # 直前に実行したコマンドの終了ステータスをチェック
+  if [[ $? -eq 0 ]]; then
+    echo "Command executed successfully."
+    break
+  else
+    echo "Command failed. Retrying..."
+    if [ $attempt -lt $MAX_RETRY ]; then
+      sleep $INTERVAL
     fi
-    
-    # 直前に実行したコマンドの終了ステータスをチェック
-    if [[ $? -eq 0 ]]; then
-        echo "Command executed successfully."
-        break
-    else
-        echo "Command failed. Retrying..."
-        if [ $attempt -lt $MAX_RETRY ]; then
-            sleep $INTERVAL
-        fi
-    fi
+  fi
 done
 
 if [[ $attempt -gt $max_attempts ]]; then
-    echo "Command did not succeed within the specified attempts."
+  echo "Command did not succeed within the specified attempts."
 fi
 
 exit 0
