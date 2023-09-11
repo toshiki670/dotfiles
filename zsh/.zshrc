@@ -98,12 +98,14 @@ function ps-grep {
 alias df='df -h'
 
 
-# cp config
-alias cp='cp --verbose'
+if [[ "$OSTYPE" != "darwin"* ]]; then
+  # cp config
+  alias cp='cp --verbose'
 
 
-# mv config
-alias mv='mv --verbose'
+  # mv config
+  alias mv='mv --verbose'
+fi
 
 
 # Rust env
