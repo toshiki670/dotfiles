@@ -77,10 +77,6 @@ file_full_name=`yt-dlp --get-filename "https://www.twitch.tv/videos/$1"`
 file_name="${file_full_name%.*}"
 file_ext="${file_full_name##*.}"
 
-echo $file_full_name
-echo $file_name
-echo $file_ext
-
 yt-dlp --path="~/Downloads/" --output="$file_name.$file_ext" "https://www.twitch.tv/videos/$1"
 
 ffmpeg -i ~/Downloads/"$file_name.$file_ext" -c:v libx265 ~/Downloads/"${file_name}_H265.mp4"
