@@ -5,7 +5,7 @@
 
 # Constant
 readonly CMDNAME=${0##*/}
-readonly VERSION='0.1.0'
+readonly VERSION='0.2.0'
 readonly TRUE=1
 readonly FALSE=0
 
