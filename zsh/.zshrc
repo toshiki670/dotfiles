@@ -111,6 +111,9 @@ fi
 # Rust env
 export PATH="$HOME/.cargo/bin:$PATH"
 
+# For yt-dlp
+alias yt='yt-dlp'
+
 # Common config end
 
 # ターミナル起動時に実行
