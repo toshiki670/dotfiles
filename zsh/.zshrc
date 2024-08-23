@@ -1,6 +1,6 @@
 # ログインシェルとインタラクティブシェルの場合だけ読み込まれる。
 # シェルスクリプトでは不要な場合に記述する。
-# 
+
 export DOTFILES="${HOME%/}/dotfiles"
 
 
@@ -113,6 +113,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 # For yt-dlp
 alias yt='yt-dlp'
+alias yt-safari='yt --cookies-from-browser safari'
 
 # Common config end
 
