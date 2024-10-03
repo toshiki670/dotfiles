@@ -114,6 +114,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 # For yt-dlp
 alias yt='yt-dlp'
 alias yt-safari='yt --cookies-from-browser safari'
+alias yt-comment='yt --write-subs --write-comments'
 
 # Common config end
 
