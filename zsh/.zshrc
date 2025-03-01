@@ -112,9 +112,10 @@ fi
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # For yt-dlp
-alias yt='yt-dlp'
-alias yt-safari='yt --cookies-from-browser safari'
+alias yt='yt-dlp --cookies-from-browser "chrome:Profile 2"'
 alias yt-comment='yt --write-subs --write-comments'
+alias yt-chat='yt --write-subs --write-comments'
+alias yt-vr='yt "https://www.nhk.or.jp/radio/ondemand/detail.html?p=6N87LJL8ZM_01"'
 
 # Common config end
 
