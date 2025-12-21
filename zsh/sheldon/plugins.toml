@@ -1,0 +1,35 @@
+shell = "zsh"
+
+# zsh-completions: 追加のコマンド補完定義を提供
+[plugins.zsh-completions]
+github = "zsh-users/zsh-completions"
+apply = ["fpath"]
+
+# zsh-syntax-highlighting: コマンドラインのシンタックスハイライトを提供
+[plugins.zsh-syntax-highlighting]
+github = "zsh-users/zsh-syntax-highlighting"
+
+# zsh-autosuggestions: fish風の自動提案機能（履歴と補完から提案）
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+
+# zaw: インタラクティブな選択ウィジェット（リストから項目を選択）
+[plugins.zaw]
+github = "zsh-users/zaw"
+
+# zsh-async: Zshで非同期処理を実行するライブラリ（pureの依存関係）
+[plugins.zsh-async]
+github = "mafredri/zsh-async"
+
+# pure: ミニマルで高速なZshプロンプトテーマ（非同期Git統合、コマンド実行時間表示）
+[plugins.pure]
+github = "sindresorhus/pure"
+use = ["pure.zsh"]
+
+# cd-gitroot: Gitリポジトリのルートディレクトリに移動するコマンド
+[plugins.cd-gitroot]
+github = "mollifier/cd-gitroot"
+
+# zsh-bd: 親ディレクトリに素早く戻る（bd <directory_name>で指定した親ディレクトリへ移動）
+[plugins.zsh-bd]
+github = "Tarrasch/zsh-bd"

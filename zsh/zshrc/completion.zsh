@@ -1,3 +1,7 @@
+# 補完機能の初期化
+autoload -Uz compinit
+compinit
+
 # 補完機能
 bindkey "^[[Z" reverse-menu-complete
 
