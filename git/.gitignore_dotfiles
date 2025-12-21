@@ -165,10 +165,10 @@ build-iPhoneSimulator/
 # vendor/Pods/
 
 ## Documentation cache and generated files:
-/.yardoc/
-/_yardoc/
-/doc/
-/rdoc/
+# /.yardoc/
+# /_yardoc/
+# /doc/
+# /rdoc/
 
 /.bundle/
 /lib/bundler/man/
