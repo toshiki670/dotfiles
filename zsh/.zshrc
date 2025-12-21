@@ -23,8 +23,8 @@ require 'zshrc/history.zsh'
 # Completion config
 require 'zshrc/completion.zsh'
 
-# Initialize and Install the Zplug
-require 'zshrc/zplug.zsh'
+# Initialize and Load Sheldon
+require 'zshrc/sheldon.zsh'
 
 # ls or exa command config
 require 'zshrc/ls.zsh'

@@ -1,3 +1,9 @@
+# 補完機能の初期化
+autoload -Uz compinit
+
+# Initialize completion system (first time - makes compdef available for plugins)
+compinit
+
 # 補完機能
 bindkey "^[[Z" reverse-menu-complete
 
