@@ -47,6 +47,8 @@ require 'zshrc/vim.zsh'
 # pacman config
 require 'zshrc/pacman.zsh'
 
+# mise config
+require 'zshrc/mise.zsh'
 
 ### Common config
 
