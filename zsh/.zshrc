@@ -55,11 +55,6 @@ require 'zshrc/mise.zsh'
 # for macOS
 export PATH="${DOTFILES}/bin:$PATH"
 
-if type 'brew' > /dev/null 2>&1; then
-  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
-  export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
-fi
-
 
 # zsh-users/zsh-autosuggestions
 # https://github.com/zsh-users/zsh-autosuggestions
