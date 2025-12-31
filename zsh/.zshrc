@@ -50,6 +50,9 @@ require 'zshrc/pacman.zsh'
 # mise config
 require 'zshrc/mise.zsh'
 
+# Homebrew config - Must be loaded AFTER all plugins (sheldon)
+require 'zshrc/brew.zsh'
+
 ### Common config
 
 # for macOS
