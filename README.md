@@ -12,18 +12,11 @@
 ## Required Tools
 
 ```bash
-# macOS
 $ brew install git gh zsh nvim mise sheldon
-
-# Linux (Arch)
-$ sudo pacman -S git github-cli zsh neovim
-# Install mise
-$ curl https://mise.run | sh
-# Install sheldon
-$ curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh | bash -s -- --repo rossmacarthur/sheldon --to ~/.local/bin
 ```
 
 ### Tool Descriptions
+
 - `git` - Version control system
 - `gh` - GitHub CLI
 - `zsh` - Z shell (recommended shell)
@@ -34,15 +27,11 @@ $ curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh |
 ## Optional Tools
 
 ```bash
-# macOS / Linux
 $ brew install ffmpeg marp-cli
-
-# Linux (Arch)
-$ sudo pacman -S ffmpeg
-$ npm install -g @marp-team/marp-cli
 ```
 
 ### Optional Tool Descriptions
+
 - `ffmpeg` - Multimedia framework (required for video/audio processing)
 - `marp-cli` - Markdown to PDF/PowerPoint converter
 
