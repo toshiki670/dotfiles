@@ -66,9 +66,11 @@ Create global configuration file: `~/.config/mise/config.toml`
 ```toml
 [env]
 # yt-dlp browser selection
-# Options: "chrome:Default", "firefox", "safari", "edge"
+# Options: "chrome:Default", "chrome:Profile 1", "firefox", "safari", "edge"
 YT_BROWSER = "chrome:Default"
 ```
+
+**Note:** To check your Chrome profile name, visit `chrome://version/` and look for the "Profile Path".
 
 Apply changes:
 
