@@ -3,55 +3,67 @@
 <a href="https://github.com/toshiki670/dotfiles/releases"><img alt="GitHub Releases" src="https://img.shields.io/github/v/tag/toshiki670/dotfiles?label=release&style=flat-square"></a>
 
 # Overview
+
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
 # Prerequisites
 
-## Required
-- Git
+## Required Tools
 
-## Recommended
-- Zsh
-- [Mise](https://mise.jdx.dev/) - Runtime version manager
-- [Sheldon](https://sheldon.cli.rs/) - Zsh plugin manager
-
-## Install Mise (Optional but Recommended)
 ```bash
 # macOS
-$ brew install mise
+$ brew install git gh zsh nvim mise sheldon
 
-# Linux
+# Linux (Arch)
+$ sudo pacman -S git github-cli zsh neovim
+# Install mise
 $ curl https://mise.run | sh
-
-# After installation
-$ mise --version
-```
-
-## Install Sheldon (For Zsh)
-```bash
-# macOS
-$ brew install sheldon
-
-# Linux
+# Install sheldon
 $ curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh | bash -s -- --repo rossmacarthur/sheldon --to ~/.local/bin
 ```
+
+### Tool Descriptions
+- `git` - Version control system
+- `gh` - GitHub CLI
+- `zsh` - Z shell (recommended shell)
+- `nvim` - Neovim text editor
+- `mise` - Runtime version manager
+- `sheldon` - Zsh plugin manager
+
+## Optional Tools
+
+```bash
+# macOS / Linux
+$ brew install ffmpeg marp-cli
+
+# Linux (Arch)
+$ sudo pacman -S ffmpeg
+$ npm install -g @marp-team/marp-cli
+```
+
+### Optional Tool Descriptions
+- `ffmpeg` - Multimedia framework (required for video/audio processing)
+- `marp-cli` - Markdown to PDF/PowerPoint converter
 
 # Installation
 
 ## 1. Clone Repository
+
 ```bash
 $ cd ~
 $ git clone https://github.com/toshiki670/dotfiles.git
 ```
 
 ## 2. Run Install Script
+
 ```bash
 $ cd ~/dotfiles
 $ ./install
 ```
 
 ## 3. Restart Shell
+
 ```bash
 $ exec $SHELL -l
 ```
@@ -70,6 +82,7 @@ YT_BROWSER = "chrome:Default"
 ```
 
 Apply changes:
+
 ```bash
 $ exec $SHELL -l
 ```
@@ -77,13 +90,16 @@ $ exec $SHELL -l
 ## Platform-Specific Notes
 
 ### macOS
+
 - Homebrew configurations will be applied automatically
 - Custom binaries in `bin/` will be added to PATH
 
 ### Linux (Arch)
+
 - GNOME autostart configurations available in `linux/gnome/autostart/`
 - systemd service files available in `linux/systemd/`
 
 ### Windows
+
 - Run `install_win.ps1` for PowerShell configuration
 - Windows Terminal settings available in `win/windows_terminal/`
