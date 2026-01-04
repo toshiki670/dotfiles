@@ -101,7 +101,15 @@ git commit -m "docs: update installation instructions in README"
 pnpm commitlint --from HEAD~1 --to HEAD
 ```
 
-## ブランチ戦略
+## ブランチ戦略（GitHub Flow）
+
+このプロジェクトは **GitHub Flow** を採用しています。
+
+### 重要なルール
+
+⚠️ **mainブランチへの直接コミット・プッシュは禁止**
+
+すべての変更は Pull Request 経由で行います。
 
 ### ブランチ命名規則
 
@@ -109,16 +117,28 @@ pnpm commitlint --from HEAD~1 --to HEAD
 - `fix/バグ名` - バグ修正
 - `docs/ドキュメント名` - ドキュメント更新
 - `refactor/対象` - リファクタリング
+- `chore/タスク名` - ビルドタスクやツールの変更
 
-### 開発フロー
+### 開発フロー（GitHub Flow）
 
-1. **ブランチを作成**
+#### 1. mainブランチを最新に更新
 
 ```bash
-git checkout -b feature/your-feature-name
+git checkout main
+git pull origin main
 ```
 
-2. **変更を加える**
+#### 2. 作業ブランチを作成
+
+```bash
+# 新機能の場合
+git checkout -b feature/your-feature-name
+
+# バグ修正の場合
+git checkout -b fix/bug-description
+```
+
+#### 3. 変更を加える
 
 ```bash
 # 変更を実施
@@ -129,17 +149,54 @@ git add zsh/.zshrc
 
 # Conventional Commits形式でコミット
 git commit -m "feat: add new alias for git operations"
+
+# 複数のコミットを行ってもOK
+git commit -m "test: add tests for new alias"
+git commit -m "docs: update alias documentation"
 ```
 
-3. **プッシュ**
+#### 4. リモートにプッシュ
 
 ```bash
 git push origin feature/your-feature-name
 ```
 
-4. **Pull Requestを作成**
+#### 5. Pull Requestを作成
 
-GitHub上でPull Requestを作成してください。
+1. GitHub上でPull Requestを作成
+2. **Base branch**: `main`（通常の開発）または `pre`（プレリリース）
+3. PRのタイトルと説明を記入
+4. レビューを依頼（該当する場合）
+
+#### 6. レビューとテスト
+
+- コードレビューを実施
+- 必要に応じて修正を加える
+- CIチェックが通ることを確認
+
+#### 7. mainブランチにマージ
+
+- Pull Requestを承認
+- **Squash and merge** を推奨（コミット履歴を整理）
+- マージ後、GitHub Actionsが自動的にリリースを実行
+
+### マージ方法の推奨
+
+**Squash and merge（推奨）:**
+
+複数のコミットを1つにまとめてマージ。マージ時にConventional Commits形式のメッセージを記述。
+
+```
+feat: add new git aliases
+
+- Add alias for git status
+- Add alias for git log
+- Update documentation
+```
+
+**通常のMerge:**
+
+すべてのコミットがConventional Commits形式に従っている場合のみ使用。
 
 ## リリースプロセス
 
@@ -147,21 +204,50 @@ GitHub上でPull Requestを作成してください。
 
 ### 自動リリースの仕組み
 
-1. mainブランチにマージ
+1. **Pull Requestをmainブランチにマージ**
 2. GitHub Actionsが自動起動
 3. semantic-releaseがコミットメッセージを解析
 4. バージョン番号を自動決定
-5. CHANGELOGを自動生成・更新
-6. Gitタグを作成（例: `v0.29.0`）
-7. GitHub Releaseを作成
-8. package.jsonを更新
+5. Gitタグを作成（例: `v0.29.0`）
+6. GitHub Releaseを作成（リリースノート自動生成）
+7. package.jsonを更新
+
+### リリースノートについて
+
+- GitHub Releasesの自動生成機能を使用
+- CHANGELOG.mdファイルは管理しない
+- リリースノートはGitHub Releasesページで確認
 
 ### バージョンアップのルール
 
-- `feat:` コミット → **MINOR** アップ（0.28.0 → 0.29.0）
-- `fix:` コミット → **PATCH** アップ（0.28.0 → 0.28.1）
+Pull Requestに含まれるコミットを解析：
+
+- `feat:` コミットが含まれる → **MINOR** アップ（0.28.0 → 0.29.0）
+- `fix:` コミットのみ → **PATCH** アップ（0.28.0 → 0.28.1）
 - `BREAKING CHANGE` → **MINOR** アップ（0.x.x系では）
-- その他 → バージョン変更なし
+- その他（`docs:`, `chore:`など）→ バージョン変更なし
+
+### 複数のPRをまとめてリリース
+
+複数のPRをマージしてからリリースされるため、関連する変更をまとめて1つのバージョンとしてリリースできます。
+
+**例:**
+```
+PR#1: feat: add zsh completion (マージ)
+PR#2: fix: PATH order bug (マージ)
+PR#3: feat: add vim config (マージ)
+→ 次のリリースで v0.29.0 として一括リリース
+```
+
+### プレリリース（preブランチ）
+
+実験的な機能をテストする場合：
+
+1. feature/fixブランチで開発
+2. **preブランチ**へのPull Requestを作成
+3. preブランチにマージ → プレリリース版が作成（例: v0.29.0-pre.1）
+4. テスト完了後、preブランチからmainへPull Request
+5. mainにマージ → 正式リリース（例: v0.29.0）
 
 詳細は [`VERSIONING.md`](VERSIONING.md) を参照してください。
 

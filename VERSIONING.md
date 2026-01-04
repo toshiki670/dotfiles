@@ -67,23 +67,111 @@ BREAKING CHANGE: zinitからsheldonに移行したため、再インストール
 
 破壊的変更（`BREAKING CHANGE`）は0.x.xではMINORバージョンをアップします。
 
-### 自動リリースフロー
+### 自動リリースフロー（GitHub Flow）
 
-1. mainブランチにpush
-2. GitHub Actionsが自動的に起動
-3. semantic-releaseがコミットメッセージを解析
-4. バージョン番号を自動決定
-5. CHANGELOGを自動生成
-6. Gitタグを作成（`v`プレフィックス付き）
-7. GitHub Releaseを作成
-8. package.jsonを更新してコミット
+このプロジェクトは **GitHub Flow** に基づいた開発フローを採用しています。
+
+**開発からリリースまでの流れ：**
+
+1. **feature/fixブランチで開発**
+   - `feature/機能名` または `fix/バグ名` ブランチを作成
+   - Conventional Commits形式でコミット
+   
+2. **Pull Requestを作成**
+   - mainブランチへのPull Requestを作成
+   - レビュー・テストを実施
+   
+3. **mainブランチにマージ**
+   - Pull Requestをマージ（Squash & Merge推奨）
+   - GitHub Actionsが自動的に起動
+   
+4. **自動リリース実行**
+   - semantic-releaseがコミットメッセージを解析
+   - バージョン番号を自動決定
+   - Gitタグを作成（`v`プレフィックス付き）
+   - GitHub Releaseを作成（リリースノート自動生成）
+   - package.jsonを更新してコミット
+
+**重要：mainブランチへの直接コミットは禁止**
+
+```bash
+# ❌ 直接mainにコミット（禁止）
+git checkout main
+git commit -m "feat: new feature"
+git push origin main
+
+# ✅ Pull Request経由（推奨）
+git checkout -b feature/new-feature
+git commit -m "feat: add new feature"
+git push origin feature/new-feature
+# → GitHubでPull Requestを作成してマージ
+```
 
 **バージョンアップのルール（自動判定）：**
 
-- `feat:` コミット → MINOR バージョンアップ（0.x.0 → 0.(x+1).0）
-- `fix:` コミット → PATCH バージョンアップ（0.x.y → 0.x.(y+1)）
-- `BREAKING CHANGE:` → MINOR バージョンアップ（0.x.x系では）
-- その他のコミット → バージョンアップなし
+Pull Requestに含まれるコミットを解析してバージョンを決定：
+
+- `feat:` コミットが1つでも含まれる → MINOR バージョンアップ（0.x.0 → 0.(x+1).0）
+- `fix:` コミットのみ → PATCH バージョンアップ（0.x.y → 0.x.(y+1)）
+- `BREAKING CHANGE:` が含まれる → MINOR バージョンアップ（0.x.x系では）
+- `docs:`, `chore:` など → バージョンアップなし
+
+**複数の変更をまとめてリリース：**
+
+```bash
+# 例：3つのPRをまとめてマージ
+# PR#1: feat: add zsh completion
+# PR#2: fix: correct PATH order
+# PR#3: feat: add vim configuration
+
+# → 次のmainへのpushで v0.29.0 として一括リリース
+# （2つのfeatがあるのでMINORバージョンアップ）
+```
+
+### プレリリース（preブランチ）
+
+実験的な機能をテストリリースする場合は、`pre`ブランチを使用します。
+
+**使用方法：**
+
+1. **preブランチへのPull Request作成**
+
+```bash
+# feature/fixブランチで開発
+git checkout -b feature/experimental-feature
+
+# Conventional Commits形式でコミット
+git commit -m "feat: add experimental AI feature"
+
+# preブランチに向けてPull Requestを作成
+git push origin feature/experimental-feature
+# → GitHub上でbase branchを「pre」にしてPRを作成
+```
+
+2. **preブランチにマージ**
+
+```bash
+# PRをpreブランチにマージすると自動的にプレリリースが作成される
+# → v0.29.0-pre.1 がリリースされる
+```
+
+3. **プレリリースのテスト**
+
+プレリリース版で問題がないか確認
+
+4. **正式リリースへ昇格**
+
+```bash
+# preブランチからmainブランチへPull Requestを作成
+# レビュー・承認後にマージ
+# → v0.29.0 として正式リリース
+```
+
+**注意事項：**
+
+- プレリリース版はGitHub Releaseで「Pre-release」マークが付く
+- プレリリース版は本番環境での使用は推奨されない
+- 通常の開発はmainブランチ向けのPRで行う（preは特別な場合のみ）
 
 ## バージョンアップの例
 
@@ -159,7 +247,17 @@ git commit -m "docs: update README installation instructions"
 
 ## 開発者向け情報
 
-### ローカルでのリリース確認
+### リリースノートについて
+
+リリースノートは **GitHub Releases の自動生成機能** を使用します。
+
+- semantic-releaseがConventional Commitsから自動的に生成
+- `feat:` は「Features」セクションに表示
+- `fix:` は「Bug Fixes」セクションに表示
+- `BREAKING CHANGE:` は「Breaking Changes」セクションに表示
+- CHANGELOGファイルは管理しない（GitHub Releases参照）
+
+### ローカルでの確認
 
 ```bash
 # 依存関係のインストール
