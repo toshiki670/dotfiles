@@ -128,18 +128,66 @@ echo -e "${GREEN}✓ Environment check passed${NC}"
 echo ""
 
 # 必要なコマンドの確認
-for cmd in gh git jq; do
-    if ! command -v $cmd >/dev/null 2>&1; then
-        echo -e "${RED}Error: $cmd is required but not installed.${NC}" >&2
-        exit 1
+echo -e "${BLUE}Checking required commands...${NC}"
+
+# 必須の外部コマンド
+required_commands=(
+    "git"      # Git version control
+    "gh"       # GitHub CLI
+    "jq"       # JSON processor
+    "sed"      # Stream editor
+    "sort"     # Sort utility
+    "mktemp"   # Temporary file creation
+    "date"     # Date utility
+)
+
+missing_commands=()
+
+for cmd in "${required_commands[@]}"; do
+    cmd_name="${cmd%% *}"  # コマンド名のみ抽出
+    if ! command -v "$cmd_name" >/dev/null 2>&1; then
+        missing_commands+=("$cmd_name")
     fi
 done
 
-# 認証確認
-if ! gh auth status >/dev/null 2>&1; then
-    echo -e "${RED}Error: Not authenticated with GitHub CLI. Run 'gh auth login'${NC}"
+if [[ ${#missing_commands[@]} -gt 0 ]]; then
+    echo -e "${RED}Error: The following required commands are not installed:${NC}"
+    for cmd in "${missing_commands[@]}"; do
+        echo "  - $cmd"
+    done
+    echo ""
+    echo "Please install missing commands:"
+    echo "  ${BLUE}brew install git gh jq${NC}  # macOS with Homebrew"
+    echo "  ${BLUE}apt install git gh jq${NC}    # Debian/Ubuntu"
+    echo "  ${BLUE}yum install git gh jq${NC}    # RHEL/CentOS"
     exit 1
 fi
+
+echo -e "${GREEN}✓ All required commands are available${NC}"
+
+# コマンドバージョン情報を表示（詳細モード）
+if [[ "${VERBOSE:-false}" == "true" ]]; then
+    echo ""
+    echo "Command versions:"
+    git --version 2>/dev/null | head -1 || echo "  git: version unknown"
+    gh --version 2>/dev/null | head -1 || echo "  gh: version unknown"
+    jq --version 2>/dev/null || echo "  jq: version unknown"
+    echo ""
+fi
+
+# 認証確認
+echo -e "${BLUE}Checking GitHub authentication...${NC}"
+if ! gh auth status >/dev/null 2>&1; then
+    echo -e "${RED}Error: Not authenticated with GitHub CLI.${NC}"
+    echo ""
+    echo "Please authenticate with GitHub:"
+    echo "  ${BLUE}gh auth login${NC}"
+    echo ""
+    echo "Required scopes: repo (for tags and releases)"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ GitHub authentication verified${NC}"
 
 # 完全なバージョン対応表（時系列順、PATCH保持）
 declare -A VERSION_MAP=(
