@@ -2,8 +2,19 @@
 # migrate-to-semver-0x.sh
 # 全既存タグとリリースを0.x.x形式に移行
 # MINORは時系列順に連番、PATCHは元の番号を保持
+#
+# Requirements:
+# - Bash 3.2+ (macOS compatible)
+# - git, gh (GitHub CLI), jq
 
 set -e
+
+# Bashバージョンチェック（3.2以上）
+if [[ "${BASH_VERSINFO[0]}" -lt 3 ]] || [[ "${BASH_VERSINFO[0]}" -eq 3 && "${BASH_VERSINFO[1]}" -lt 2 ]]; then
+    echo "Error: This script requires Bash 3.2 or higher"
+    echo "Current version: $BASH_VERSION"
+    exit 1
+fi
 
 REPO="toshiki670/dotfiles"
 TEMP_DIR=$(mktemp -d)
@@ -253,7 +264,11 @@ skipped=0
 failed=0
 
 # タグを時系列順に処理（VERSION_MAPのキーをソート）
-readarray -t sorted_tags < <(printf '%s\n' "${!VERSION_MAP[@]}" | sort -V)
+# Bash 3.2互換: readarrayの代わりにwhile readを使用
+sorted_tags=()
+while IFS= read -r tag; do
+    sorted_tags+=("$tag")
+done < <(printf '%s\n' "${!VERSION_MAP[@]}" | sort -V)
 
 for old_version in "${sorted_tags[@]}"; do
     new_version="${VERSION_MAP[$old_version]}"
