@@ -4,25 +4,10 @@
 # MINORは時系列順に連番、PATCHは元の番号を保持
 #
 # Requirements:
-# - Bash 4.0+ (for associative arrays)
+# - Bash 3.2+
 # - git, gh (GitHub CLI), jq
 
 set -e
-
-# Bashバージョンチェック（4.0以上が必要 - 連想配列のため）
-if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
-    echo -e "${RED}Error: This script requires Bash 4.0 or higher (for associative arrays)${NC}"
-    echo "Current version: $BASH_VERSION"
-    echo ""
-    echo "On macOS, install newer bash:"
-    echo "  ${BLUE}brew install bash${NC}"
-    echo "  ${BLUE}sudo bash -c 'echo /opt/homebrew/bin/bash >> /etc/shells'${NC}"
-    echo "  ${BLUE}chsh -s /opt/homebrew/bin/bash${NC}"
-    echo ""
-    echo "Or run with newer bash:"
-    echo "  ${BLUE}/opt/homebrew/bin/bash ./migrate-to-semver-0x.sh${NC}"
-    exit 1
-fi
 
 REPO="toshiki670/dotfiles"
 TEMP_DIR=$(mktemp -d)
@@ -149,6 +134,15 @@ required_commands=(
     "date"     # Date utility
 )
 
+# Bash バージョンチェックも追加
+echo "Checking Bash version..."
+if [[ "${BASH_VERSINFO[0]}" -lt 3 ]] || [[ "${BASH_VERSINFO[0]}" -eq 3 && "${BASH_VERSINFO[1]}" -lt 2 ]]; then
+    echo -e "${RED}Error: This script requires Bash 3.2 or higher${NC}"
+    echo "Current version: $BASH_VERSION"
+    exit 1
+fi
+echo -e "${GREEN}✓ Bash version: $BASH_VERSION${NC}"
+
 missing_commands=()
 
 for cmd in "${required_commands[@]}"; do
@@ -197,68 +191,55 @@ fi
 
 echo -e "${GREEN}✓ GitHub authentication verified${NC}"
 
-# 完全なバージョン対応表（時系列順、PATCH保持）
-declare -A VERSION_MAP=(
-    # 時系列順に0.1.0から開始、PATCHは保持
-    ["1.0.0"]="0.1.0"
-    ["1.1.0"]="0.2.0"
-    ["1.1.1"]="0.2.1"
-    ["1.2.0"]="0.3.0"
-    ["1.2.1"]="0.3.1"
-    ["1.2.2"]="0.3.2"
-    ["1.2.3"]="0.3.3"
-    ["1.3.0"]="0.4.0"
-    ["1.4.0"]="0.5.0"
-    ["1.5.0"]="0.6.0"
-    ["1.5.1"]="0.6.1"
-    ["1.5.2"]="0.6.2"
-    ["1.6.0"]="0.7.0"
-    ["1.6.1"]="0.7.1"
-    ["1.6.2"]="0.7.2"
-    ["1.6.3"]="0.7.3"
-    ["1.6.4"]="0.7.4"
-    ["1.6.5"]="0.7.5"
-    ["1.6.6"]="0.7.6"
-    ["1.6.7"]="0.7.7"
-    ["1.7.0"]="0.8.0"
-    ["1.7.1"]="0.8.1"
-    ["2.0.0"]="0.9.0"
-    ["2.1.0"]="0.10.0"
-    ["2.1.1"]="0.10.1"
-    ["2.2.0"]="0.11.0"
-    ["2.2.1"]="0.11.1"
-    ["2.2.2"]="0.11.2"
-    ["2.3.0"]="0.12.0"
-    ["3.0"]="0.13.0"
-    ["4.0"]="0.14.0"
-    ["5.0"]="0.15.0"
-    ["6.0"]="0.16.0"
-    ["7.0"]="0.17.0"
-    ["8.0"]="0.18.0"
-    ["8.1"]="0.18.1"
-    ["8.2"]="0.18.2"
-    ["8.3"]="0.18.3"
-    ["8.4"]="0.18.4"
-    ["9.0"]="0.19.0"
-    ["v10.0"]="0.20.0"
-    ["v11.0"]="0.21.0"
-    ["v12.0"]="0.22.0"
-    ["v13.0"]="0.23.0"
-    ["v14.0"]="0.24.0"
-    ["v14.1"]="0.24.1"
-    ["v14.2"]="0.24.2"
-    ["v15.0"]="0.25.0"
-    ["v16.0"]="0.26.0"
-    ["v17.0"]="0.27.0"
-    ["v18.0"]="0.28.0"
+# バージョン対応表（Bash 3.2互換：連想配列を使わない）
+# 2つの並行配列で管理
+OLD_VERSIONS=(
+    "1.0.0" "1.1.0" "1.1.1" "1.2.0" "1.2.1" "1.2.2" "1.2.3"
+    "1.3.0" "1.4.0" "1.5.0" "1.5.1" "1.5.2"
+    "1.6.0" "1.6.1" "1.6.2" "1.6.3" "1.6.4" "1.6.5" "1.6.6" "1.6.7"
+    "1.7.0" "1.7.1"
+    "2.0.0" "2.1.0" "2.1.1" "2.2.0" "2.2.1" "2.2.2" "2.3.0"
+    "3.0" "4.0" "5.0" "6.0" "7.0"
+    "8.0" "8.1" "8.2" "8.3" "8.4"
+    "9.0"
+    "v10.0" "v11.0" "v12.0" "v13.0"
+    "v14.0" "v14.1" "v14.2"
+    "v15.0" "v16.0" "v17.0" "v18.0"
 )
+
+NEW_VERSIONS=(
+    "0.1.0" "0.2.0" "0.2.1" "0.3.0" "0.3.1" "0.3.2" "0.3.3"
+    "0.4.0" "0.5.0" "0.6.0" "0.6.1" "0.6.2"
+    "0.7.0" "0.7.1" "0.7.2" "0.7.3" "0.7.4" "0.7.5" "0.7.6" "0.7.7"
+    "0.8.0" "0.8.1"
+    "0.9.0" "0.10.0" "0.10.1" "0.11.0" "0.11.1" "0.11.2" "0.12.0"
+    "0.13.0" "0.14.0" "0.15.0" "0.16.0" "0.17.0"
+    "0.18.0" "0.18.1" "0.18.2" "0.18.3" "0.18.4"
+    "0.19.0"
+    "0.20.0" "0.21.0" "0.22.0" "0.23.0"
+    "0.24.0" "0.24.1" "0.24.2"
+    "0.25.0" "0.26.0" "0.27.0" "0.28.0"
+)
+
+# バージョンマッピング関数（Bash 3.2互換）
+get_new_version() {
+    local old_ver="$1"
+    local i
+    for i in "${!OLD_VERSIONS[@]}"; do
+        if [[ "${OLD_VERSIONS[$i]}" == "$old_ver" ]]; then
+            echo "${NEW_VERSIONS[$i]}"
+            return 0
+        fi
+    done
+    return 1
+}
 
 echo -e "${BLUE}Current tags found:${NC}"
 git tag -l | sort -V
 echo ""
 
 echo -e "${BLUE}Migration Strategy:${NC}"
-echo "• Total tags to migrate: ${#VERSION_MAP[@]}"
+echo "• Total tags to migrate: ${#OLD_VERSIONS[@]}"
 echo "• MINOR: Sequential numbering (0.1.0 → 0.28.0)"
 echo "• PATCH: Preserved from original version"
 echo "• Latest: v18.0 → 0.28.0"
@@ -292,10 +273,10 @@ if [[ "$DRY_RUN" == false ]]; then
         {
             echo "# Version Mapping"
             echo "# Old Tag -> New Tag"
-            for old in "${!VERSION_MAP[@]}"; do
-                echo "$old -> ${VERSION_MAP[$old]}"
+            for i in "${!OLD_VERSIONS[@]}"; do
+                echo "${OLD_VERSIONS[$i]} -> ${NEW_VERSIONS[$i]}"
             done
-        } > "$BACKUP_DIR/mapping_$(date +%Y%m%d_%H%M%S).txt" | sort
+        } | sort > "$BACKUP_DIR/mapping_$(date +%Y%m%d_%H%M%S).txt"
         echo -e "${GREEN}✓ Mapping backed up to $BACKUP_DIR${NC}"
         echo ""
     fi
@@ -319,19 +300,14 @@ processed=0
 skipped=0
 failed=0
 
-# タグを時系列順に処理（VERSION_MAPのキーをソート）
-# Bash 3.2互換: プロセス置換を避ける
-sorted_tags=()
-while IFS= read -r tag; do
-    [[ -n "$tag" ]] && sorted_tags+=("$tag")
-done <<< "$(printf '%s\n' "${!VERSION_MAP[@]}" | sort -V)"
-
+# タグを時系列順に処理（OLD_VERSIONSの順序で）
 # デバッグ: 処理するタグ数を表示
-echo "Processing ${#sorted_tags[@]} version mappings..."
+echo "Processing ${#OLD_VERSIONS[@]} version mappings..."
 echo ""
 
-for old_version in "${sorted_tags[@]}"; do
-    new_version="${VERSION_MAP[$old_version]}"
+for i in "${!OLD_VERSIONS[@]}"; do
+    old_version="${OLD_VERSIONS[$i]}"
+    new_version="${NEW_VERSIONS[$i]}"
     
     # タグが存在するか確認
     if ! git rev-parse "$old_version" >/dev/null 2>&1; then
