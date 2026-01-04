@@ -98,16 +98,48 @@ GitHub リリースに記載されていた全てのリリースノートは、�
 
 移行は以下のスクリプトを使用して実行されます：
 
-```bash
-# 移行の実行
-./migrate-to-semver-0x.sh
+### 事前確認（ドライラン）
 
-# 事前確認
-git tag -l | sort -V                    # 現在のタグ確認
-gh release list --repo toshiki670/dotfiles  # 現在のリリース確認
+実際の変更を行う前に、ドライランモードで確認することを強く推奨します：
+
+```bash
+# ドライラン実行（変更なし）
+./migrate-to-semver-0x.sh --dry-run
+
+# 出力例：
+# [DRY RUN] Would create tag 0.1.0
+# [DRY RUN] Would migrate release
+# [DRY RUN] Would delete old tag 1.0.0
 ```
 
-詳細は `migrate-to-semver-0x.sh` を参照してください。
+### 本番実行
+
+ドライランで問題がないことを確認してから実行：
+
+```bash
+# 自動バックアップ付きで実行（推奨）
+./migrate-to-semver-0x.sh
+
+# バックアップなしで実行（非推奨）
+./migrate-to-semver-0x.sh --no-backup
+```
+
+### 品質担保機能
+
+1. **自動バックアップ**: タグとリリース情報を`migration-backup/`に保存
+2. **ドライランモード**: 実際の変更前に動作を確認
+3. **エラーハンドリング**: 失敗時の統計情報を表示
+4. **ロールバックスクリプト**: `rollback-migration.sh`で復元可能
+
+### 現在のタグの確認
+
+```bash
+# 現在のタグ確認
+git tag -l | sort -V
+
+# 現在のリリース確認
+gh release list --repo toshiki670/dotfiles
+```
 
 ## 移行後の確認
 
@@ -133,20 +165,196 @@ git commit -m "chore: update version to 0.28.0 (post-migration)"
 git push
 ```
 
+## 品質担保
+
+### テスト手順
+
+移行前に以下の手順でテストすることを推奨します：
+
+#### 1. ドライラン実行
+
+```bash
+./migrate-to-semver-0x.sh --dry-run
+```
+
+出力を確認：
+- すべてのタグが正しくマッピングされているか
+- 欠損しているタグはないか
+- 警告やエラーが表示されていないか
+
+#### 2. バックアップの確認
+
+```bash
+# バックアップディレクトリの作成を確認
+ls -la migration-backup/
+
+# 以下のファイルが存在することを確認：
+# - tags_backup_<timestamp>.txt
+# - releases_backup_<timestamp>.txt
+# - mapping_<timestamp>.txt
+```
+
+#### 3. Git の状態確認
+
+```bash
+# 未コミットの変更がないことを確認
+git status
+
+# 現在のブランチを確認
+git branch --show-current
+
+# リモートと同期していることを確認
+git fetch
+git status
+```
+
+#### 4. 権限確認
+
+```bash
+# GitHub CLI の認証状態を確認
+gh auth status
+
+# リポジトリへのアクセス権限を確認
+gh repo view toshiki670/dotfiles
+```
+
+### 失敗時の対応
+
+#### ケース1: ネットワークエラー
+
+```bash
+# ネットワーク接続を確認
+ping github.com
+
+# GitHub の状態を確認
+curl -s https://www.githubstatus.com/api/v2/status.json | jq
+
+# 再実行
+./migrate-to-semver-0x.sh
+```
+
+#### ケース2: 認証エラー
+
+```bash
+# 再認証
+gh auth login
+
+# トークンの権限を確認（repo権限が必要）
+gh auth status
+```
+
+#### ケース3: 部分的な失敗
+
+スクリプトが途中で停止した場合：
+
+```bash
+# 1. 現在の状態を確認
+git tag -l | grep -E '^0\.[0-9]+\.[0-9]+$'
+
+# 2. 新しく作成されたタグを削除
+./rollback-migration.sh
+
+# 3. 問題を解決してから再実行
+./migrate-to-semver-0x.sh
+```
+
+### 検証チェックリスト
+
+移行後に以下を確認：
+
+- [ ] タグ数が52個である
+- [ ] 最新タグが`0.28.0`である
+- [ ] すべてのタグが`0.x.x`形式である
+- [ ] 古い形式のタグ（`1.0.0`, `v10.0`など）が存在しない
+- [ ] GitHubリリースが52個存在する
+- [ ] すべてのリリースが`0.x.x`形式である
+- [ ] リリースノートが保持されている
+- [ ] バージョンファイルが`0.28.0`を指している
+- [ ] バックアップが`migration-backup/`に存在する
+
 ## ロールバック
 
 万が一、移行に問題があった場合のロールバック手順：
 
-```bash
-# バックアップから復元（事前にバックアップを取っておく）
-# タグのバックアップ
-git tag -l > tags_backup_YYYYMMDD.txt
+### 自動バックアップからの復元
 
-# リリースのバックアップ
-gh release list --repo toshiki670/dotfiles > releases_backup_YYYYMMDD.txt
+移行スクリプトは自動的にバックアップを作成します（`migration-backup/`ディレクトリ）。
+
+```bash
+# バックアップの確認
+ls -la migration-backup/
+
+# ロールバックスクリプトを実行
+./rollback-migration.sh
+
+# 以下の手順を実行：
+# 1. 0.x.x タグを全て削除
+# 2. 元のタグを復元（制限付き）
+# 3. GitHub リリースは手動で削除が必要
 ```
 
-ロールバックが必要な場合は、GitHub サポートに連絡するか、バックアップから手動で復元してください。
+### 手動でのロールバック
+
+#### 1. 新しいタグの削除
+
+```bash
+# 0.x.x 形式のタグを全て削除
+for tag in $(git tag -l | grep -E '^0\.[0-9]+\.[0-9]+$'); do
+    echo "Deleting: $tag"
+    git tag -d "$tag"
+    git push origin ":refs/tags/$tag"
+done
+```
+
+#### 2. 元のタグの復元
+
+残念ながら、削除されたタグを自動的に復元することはできません。以下の方法で手動復元が必要です：
+
+```bash
+# 1. バックアップファイルを確認
+cat migration-backup/tags_backup_*.txt
+
+# 2. Git reflog から元のコミットを見つける
+git reflog | grep "tag:"
+
+# 3. 元のコミットハッシュでタグを再作成
+git tag -a <tag-name> <commit-hash> -m "<message>"
+git push origin <tag-name>
+```
+
+#### 3. GitHub リリースのクリーンアップ
+
+```bash
+# 0.x.x リリースを削除
+gh release list --repo toshiki670/dotfiles
+gh release delete <version> --repo toshiki670/dotfiles --yes
+```
+
+### 部分的な失敗からの復旧
+
+移行が途中で失敗した場合：
+
+```bash
+# 1. 現在の状態を確認
+git tag -l | sort -V
+
+# 2. 成功した分の新しいタグと古いタグが混在している場合
+# 新しいタグを削除して再実行
+for tag in $(git tag -l | grep -E '^0\.[0-9]+\.[0-9]+$'); do
+    git tag -d "$tag"
+    git push origin ":refs/tags/$tag"
+done
+
+# 3. 移行スクリプトを再実行
+./migrate-to-semver-0x.sh
+```
+
+### 連絡先
+
+復旧が困難な場合：
+- GitHub サポートに連絡
+- バックアップから手動で復元
+- Issue を作成: https://github.com/toshiki670/dotfiles/issues
 
 ## 参考情報
 

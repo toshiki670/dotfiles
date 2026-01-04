@@ -7,6 +7,9 @@ set -e
 
 REPO="toshiki670/dotfiles"
 TEMP_DIR=$(mktemp -d)
+BACKUP_DIR="./migration-backup"
+DRY_RUN=false
+BACKUP_ENABLED=true
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -14,12 +17,54 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# 使用方法
+usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --dry-run        Show what would be done without making changes"
+    echo "  --no-backup      Skip automatic backup creation"
+    echo "  -h, --help       Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0                    # Run migration with backup"
+    echo "  $0 --dry-run          # Preview changes without applying"
+    echo "  $0 --no-backup        # Run without creating backup"
+    exit 0
+}
+
+# 引数解析
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        --no-backup)
+            BACKUP_ENABLED=false
+            shift
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            echo "Unknown option: $1"
+            usage
+            ;;
+    esac
+done
+
 cleanup() {
     rm -rf "$TEMP_DIR"
 }
 trap cleanup EXIT
 
-echo -e "${YELLOW}=== Semantic Versioning Migration to 0.x.x ===${NC}\n"
+if [[ "$DRY_RUN" == true ]]; then
+    echo -e "${YELLOW}=== DRY RUN: Semantic Versioning Migration to 0.x.x ===${NC}\n"
+    echo -e "${YELLOW}No changes will be made to tags or releases${NC}\n"
+else
+    echo -e "${YELLOW}=== Semantic Versioning Migration to 0.x.x ===${NC}\n"
+fi
 
 # 必要なコマンドの確認
 for cmd in gh git jq; do
@@ -102,22 +147,51 @@ echo "• PATCH: Preserved from original version"
 echo "• Latest: v18.0 → 0.28.0"
 echo ""
 
-echo -e "${YELLOW}This script will:${NC}"
-echo "1. Create new tags at the same commits"
-echo "2. Preserve all release notes and assets"
-echo "3. Delete old tags and releases"
-echo ""
-echo -e "${RED}WARNING: This is a one-way operation!${NC}"
-echo ""
-echo "Recommended: Create backup first:"
-echo "  ${BLUE}git tag -l > tags_backup_\$(date +%Y%m%d).txt${NC}"
-echo "  ${BLUE}gh release list --repo $REPO --limit 100 > releases_backup_\$(date +%Y%m%d).txt${NC}"
-echo ""
-read -p "Continue with migration? (yes/no): " confirm
-
-if [[ "$confirm" != "yes" ]]; then
-    echo "Migration cancelled."
-    exit 0
+if [[ "$DRY_RUN" == false ]]; then
+    echo -e "${YELLOW}This script will:${NC}"
+    echo "1. Create automatic backup"
+    echo "2. Create new tags at the same commits"
+    echo "3. Preserve all release notes and assets"
+    echo "4. Delete old tags and releases"
+    echo ""
+    echo -e "${RED}WARNING: This is a one-way operation!${NC}"
+    echo ""
+    
+    # バックアップ作成
+    if [[ "$BACKUP_ENABLED" == true ]]; then
+        echo -e "${BLUE}Creating backup...${NC}"
+        mkdir -p "$BACKUP_DIR"
+        
+        # タグのバックアップ
+        git tag -l > "$BACKUP_DIR/tags_backup_$(date +%Y%m%d_%H%M%S).txt"
+        echo -e "${GREEN}✓ Tags backed up to $BACKUP_DIR${NC}"
+        
+        # リリースのバックアップ
+        if gh release list --repo "$REPO" --limit 100 > "$BACKUP_DIR/releases_backup_$(date +%Y%m%d_%H%M%S).txt" 2>/dev/null; then
+            echo -e "${GREEN}✓ Releases backed up to $BACKUP_DIR${NC}"
+        fi
+        
+        # マッピング情報のバックアップ
+        {
+            echo "# Version Mapping"
+            echo "# Old Tag -> New Tag"
+            for old in "${!VERSION_MAP[@]}"; do
+                echo "$old -> ${VERSION_MAP[$old]}"
+            done
+        } > "$BACKUP_DIR/mapping_$(date +%Y%m%d_%H%M%S).txt" | sort
+        echo -e "${GREEN}✓ Mapping backed up to $BACKUP_DIR${NC}"
+        echo ""
+    fi
+    
+    read -p "Continue with migration? (yes/no): " confirm
+    
+    if [[ "$confirm" != "yes" ]]; then
+        echo "Migration cancelled."
+        exit 0
+    fi
+else
+    echo -e "${BLUE}Dry run: showing planned operations...${NC}"
+    echo ""
 fi
 
 echo ""
@@ -146,6 +220,19 @@ for old_version in "${sorted_tags[@]}"; do
     
     echo -e "${GREEN}→ $old_version → $new_version${NC}"
     echo "  Commit: ${commit_hash:0:8} ($commit_date)"
+    
+    # ドライランモードの場合はここでスキップ
+    if [[ "$DRY_RUN" == true ]]; then
+        # リリースが存在するかチェック
+        if gh release view "$old_version" --repo "$REPO" >/dev/null 2>&1; then
+            echo "  [DRY RUN] Would migrate release"
+        fi
+        echo "  [DRY RUN] Would create tag $new_version"
+        echo "  [DRY RUN] Would delete old tag $old_version"
+        echo ""
+        ((processed++))
+        continue
+    fi
     
     # タグメッセージを取得
     tag_message=$(git tag -l --format='%(contents)' "$old_version")
