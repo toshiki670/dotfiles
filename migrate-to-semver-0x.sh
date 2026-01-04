@@ -66,6 +66,73 @@ else
     echo -e "${YELLOW}=== Semantic Versioning Migration to 0.x.x ===${NC}\n"
 fi
 
+# 実行環境の確認
+echo -e "${BLUE}Checking environment...${NC}"
+
+# 1. Gitリポジトリ内かチェック
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo -e "${RED}Error: Not in a git repository${NC}"
+    exit 1
+fi
+
+# 2. リポジトリのルートディレクトリかチェック
+REPO_ROOT=$(git rev-parse --show-toplevel)
+CURRENT_DIR=$(pwd)
+
+if [[ "$REPO_ROOT" != "$CURRENT_DIR" ]]; then
+    echo -e "${RED}Error: Script must be run from repository root${NC}"
+    echo "Current directory: $CURRENT_DIR"
+    echo "Repository root:   $REPO_ROOT"
+    echo ""
+    echo "Please run:"
+    echo "  ${BLUE}cd $REPO_ROOT${NC}"
+    echo "  ${BLUE}./migrate-to-semver-0x.sh${NC}"
+    exit 1
+fi
+
+# 3. 現在のブランチを確認
+CURRENT_BRANCH=$(git branch --show-current)
+echo "Current branch: ${YELLOW}$CURRENT_BRANCH${NC}"
+
+if [[ "$CURRENT_BRANCH" != "main" ]] && [[ "$CURRENT_BRANCH" != "master" ]]; then
+    echo ""
+    echo -e "${YELLOW}Warning: Not on main/master branch${NC}"
+    echo "Tags are global to the repository, but backup files will be created on this branch."
+    echo ""
+    
+    if [[ "$DRY_RUN" == false ]]; then
+        read -p "Continue anyway? (yes/no): " branch_confirm
+        if [[ "$branch_confirm" != "yes" ]]; then
+            echo "Migration cancelled."
+            echo ""
+            echo "To switch to main branch:"
+            echo "  ${BLUE}git checkout main${NC}"
+            exit 0
+        fi
+    fi
+fi
+
+# 4. 未コミットの変更を確認
+if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+    echo ""
+    echo -e "${YELLOW}Warning: You have uncommitted changes${NC}"
+    git status --short
+    echo ""
+    
+    if [[ "$DRY_RUN" == false ]]; then
+        read -p "Continue anyway? (yes/no): " changes_confirm
+        if [[ "$changes_confirm" != "yes" ]]; then
+            echo "Migration cancelled."
+            echo ""
+            echo "Please commit or stash your changes first."
+            exit 0
+        fi
+    fi
+fi
+
+echo -e "${GREEN}✓ Environment check passed${NC}"
+echo ""
+
 # 必要なコマンドの確認
 for cmd in gh git jq; do
     if ! command -v $cmd >/dev/null 2>&1; then
