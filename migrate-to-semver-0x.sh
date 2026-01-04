@@ -90,27 +90,10 @@ if [[ "$REPO_ROOT" != "$CURRENT_DIR" ]]; then
     exit 1
 fi
 
-# 3. 現在のブランチを確認
+# 3. 現在のブランチを確認して表示
 CURRENT_BRANCH=$(git branch --show-current)
 echo "Current branch: ${YELLOW}$CURRENT_BRANCH${NC}"
-
-if [[ "$CURRENT_BRANCH" != "main" ]] && [[ "$CURRENT_BRANCH" != "master" ]]; then
-    echo ""
-    echo -e "${YELLOW}Warning: Not on main/master branch${NC}"
-    echo "Tags are global to the repository, but backup files will be created on this branch."
-    echo ""
-    
-    if [[ "$DRY_RUN" == false ]]; then
-        read -p "Continue anyway? (yes/no): " branch_confirm
-        if [[ "$branch_confirm" != "yes" ]]; then
-            echo "Migration cancelled."
-            echo ""
-            echo "To switch to main branch:"
-            echo "  ${BLUE}git checkout main${NC}"
-            exit 0
-        fi
-    fi
-fi
+echo ""
 
 # 4. 未コミットの変更を確認
 if ! git diff-index --quiet HEAD -- 2>/dev/null; then

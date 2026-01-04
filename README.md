@@ -108,12 +108,11 @@ This project follows [Semantic Versioning 2.0.0](https://semver.org/) with `0.x.
 
 For maintainers: Scripts to migrate version tags to semantic versioning format.
 
-**Requirements**: Run from repository root on `main` branch.
+**Requirements**: Run from repository root.
 
 ```bash
-# Ensure you're in the right place
+# Ensure you're in the repository root
 cd ~/dotfiles
-git checkout main
 
 # Preview changes (dry run)
 ./migrate-to-semver-0x.sh --dry-run
