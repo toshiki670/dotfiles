@@ -76,40 +76,6 @@ v0.18.1 → v0.18.2
 v0.18.2 → v0.18.3
 ```
 
-## リリースプロセス
-
-### 1. バージョンの更新
-
-```bash
-# MINOR バージョンアップ
-./bump-version.sh minor
-
-# PATCH バージョンアップ
-./bump-version.sh patch
-```
-
-### 2. リリースの作成
-
-```bash
-# 統合スクリプト（推奨）
-./release.sh minor  # または patch
-# → リリースノートを入力してCtrl+D
-
-# 段階的に実行する場合
-git add version
-git commit -m "chore: bump version to v0.x.y"
-./create-release.sh
-```
-
-### 3. ドラフトリリース
-
-テストや確認が必要な場合：
-
-```bash
-./release.sh minor --draft
-# → 後でGitHubでPublish
-```
-
 ## タグの命名規則
 
 - **形式**: `v0.x.y`（`v` プレフィックス付き）
@@ -137,11 +103,3 @@ git commit -m "chore: bump version to v0.x.y"
 - [Semantic Versioning 2.0.0](https://semver.org/)
 - [Semantic Versioning 2.0.0（日本語）](https://semver.org/lang/ja/)
 - [GitHub Releases Documentation](https://docs.github.com/en/repositories/releasing-projects-on-github)
-
-## 関連ファイル
-
-- `version` - 現在のバージョンを記録するファイル
-- `bump-version.sh` - バージョンを更新するスクリプト
-- `create-release.sh` - Git タグと GitHub リリースを作成するスクリプト
-- `release.sh` - バージョン更新からリリース作成までの統合スクリプト
-- `MIGRATION.md` - 旧バージョンから新バージョンへの完全な移行マッピング
