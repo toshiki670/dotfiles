@@ -94,3 +94,9 @@ $ exec $SHELL -l
 
 - Run `install_win.ps1` for PowerShell configuration
 - Windows Terminal settings available in `win/windows_terminal/`
+
+# Documentation
+
+- [VERSIONING.md](VERSIONING.md) - Versioning rules and release process
+- [MIGRATION.md](MIGRATION.md) - Version migration mapping from old to new format
+- [LICENSE](LICENSE) - MIT License
