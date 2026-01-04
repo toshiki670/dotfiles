@@ -123,7 +123,70 @@ echo ""
 # 必要なコマンドの確認
 echo -e "${BLUE}Checking required commands...${NC}"
 
-# 必須の外部コマンド
+# 必須のBash機能と外部コマンドの検証
+echo -e "${BLUE}Checking Bash capabilities and required commands...${NC}" 2>/dev/null || echo "Checking Bash capabilities and required commands..."
+
+# 1. Bash基本バージョンチェック
+if ! [[ "${BASH_VERSINFO[0]}" ]] 2>/dev/null; then
+    echo "Error: BASH_VERSINFO not available - not running in Bash?"
+    exit 1
+fi
+
+if [[ "${BASH_VERSINFO[0]}" -lt 3 ]] 2>/dev/null; then
+    echo "Error: This script requires Bash 3.2 or higher"
+    echo "Current: $BASH_VERSION"
+    exit 1
+elif [[ "${BASH_VERSINFO[0]}" -eq 3 && "${BASH_VERSINFO[1]}" -lt 2 ]] 2>/dev/null; then
+    echo "Error: This script requires Bash 3.2 or higher"
+    echo "Current: $BASH_VERSION"
+    exit 1
+fi
+
+echo "Testing Bash features..."
+
+# 2. 必須のBash機能をテスト
+# 配列のテスト
+test_array=("test1" "test2")
+if [[ "${#test_array[@]}" -ne 2 ]] 2>/dev/null; then
+    echo "Error: Bash arrays not supported"
+    echo "Current shell: $BASH_VERSION"
+    exit 1
+fi
+
+# インデックス展開のテスト
+indices="${!test_array[@]}"
+if [[ -z "$indices" ]] 2>/dev/null; then
+    echo "Error: Bash array index expansion not supported"
+    echo "Current shell: $BASH_VERSION"
+    exit 1
+fi
+
+# [[ ]] 条件式のテスト
+if ! [[ "test" == "test" ]] 2>/dev/null; then
+    echo "Error: Bash [[ ]] conditional not supported"
+    echo "Current shell: $BASH_VERSION"
+    exit 1
+fi
+
+# パラメータ展開のテスト
+test_param="cmd desc"
+if [[ "${test_param%% *}" != "cmd" ]] 2>/dev/null; then
+    echo "Error: Bash parameter expansion not supported"
+    echo "Current shell: $BASH_VERSION"
+    exit 1
+fi
+
+# command -v のテスト
+if ! type command >/dev/null 2>&1; then
+    echo "Error: 'command' builtin not available"
+    echo "Current shell: $BASH_VERSION"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Bash version: $BASH_VERSION${NC}" 2>/dev/null || echo "✓ Bash version: $BASH_VERSION"
+echo -e "${GREEN}✓ Required Bash features available${NC}" 2>/dev/null || echo "✓ Required Bash features available"
+
+# 3. 必須の外部コマンド
 required_commands=(
     "git"      # Git version control
     "gh"       # GitHub CLI
@@ -134,38 +197,29 @@ required_commands=(
     "date"     # Date utility
 )
 
-# Bash バージョンチェックも追加
-echo "Checking Bash version..."
-if [[ "${BASH_VERSINFO[0]}" -lt 3 ]] || [[ "${BASH_VERSINFO[0]}" -eq 3 && "${BASH_VERSINFO[1]}" -lt 2 ]]; then
-    echo -e "${RED}Error: This script requires Bash 3.2 or higher${NC}"
-    echo "Current version: $BASH_VERSION"
-    exit 1
-fi
-echo -e "${GREEN}✓ Bash version: $BASH_VERSION${NC}"
-
+# コマンドの存在確認
 missing_commands=()
-
 for cmd in "${required_commands[@]}"; do
-    cmd_name="${cmd%% *}"  # コマンド名のみ抽出
+    cmd_name="${cmd%% *}"
     if ! command -v "$cmd_name" >/dev/null 2>&1; then
         missing_commands+=("$cmd_name")
     fi
 done
 
 if [[ ${#missing_commands[@]} -gt 0 ]]; then
-    echo -e "${RED}Error: The following required commands are not installed:${NC}"
+    echo -e "${RED}Error: The following required commands are not installed:${NC}" 2>/dev/null || echo "Error: The following required commands are not installed:"
     for cmd in "${missing_commands[@]}"; do
         echo "  - $cmd"
     done
     echo ""
     echo "Please install missing commands:"
-    echo "  ${BLUE}brew install git gh jq${NC}  # macOS with Homebrew"
-    echo "  ${BLUE}apt install git gh jq${NC}    # Debian/Ubuntu"
-    echo "  ${BLUE}yum install git gh jq${NC}    # RHEL/CentOS"
+    echo -e "  ${BLUE}brew install git gh jq${NC}  # macOS with Homebrew" 2>/dev/null || echo "  brew install git gh jq  # macOS with Homebrew"
+    echo -e "  ${BLUE}apt install git gh jq${NC}    # Debian/Ubuntu" 2>/dev/null || echo "  apt install git gh jq    # Debian/Ubuntu"
+    echo -e "  ${BLUE}yum install git gh jq${NC}    # RHEL/CentOS" 2>/dev/null || echo "  yum install git gh jq    # RHEL/CentOS"
     exit 1
 fi
 
-echo -e "${GREEN}✓ All required commands are available${NC}"
+echo -e "${GREEN}✓ All required commands are available${NC}" 2>/dev/null || echo "✓ All required commands are available"
 
 # コマンドバージョン情報を表示（詳細モード）
 if [[ "${VERBOSE:-false}" == "true" ]]; then
