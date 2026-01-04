@@ -1,0 +1,7 @@
+# mise configuration for dotfiles project
+# Manages Node.js and pnpm for semantic-release automation
+
+[tools]
+node = "lts"       # Use the latest LTS version of Node.js
+pnpm = "latest"    # Use the latest version of pnpm
+

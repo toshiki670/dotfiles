@@ -1,0 +1,25 @@
+{
+  "name": "dotfiles",
+  "version": "0.28.0",
+  "private": true,
+  "description": "Personal dotfiles for development environment setup",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toshiki670/dotfiles.git"
+  },
+  "author": "toshiki670",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "release": "semantic-release",
+    "commitlint": "commitlint --edit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "semantic-release": "^24.2.0"
+  }
+}
+

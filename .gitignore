@@ -11,3 +11,6 @@ zsh/completions/*
 vim/plugin/*
 !.keep
 
+# Node.js
+node_modules/
+
