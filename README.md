@@ -3,22 +3,94 @@
 <a href="https://github.com/toshiki670/dotfiles/releases"><img alt="GitHub Releases" src="https://img.shields.io/github/v/tag/toshiki670/dotfiles?label=release&style=flat-square"></a>
 
 # Overview
+
 - Simplification of environment construction
-- unification of environment
+- Unification of environment across multiple platforms
 
-# Install
-`$ ./install`
+# Prerequisites
 
-# Tools
-## arch-update
-- Archlinux を最新化
+## Required Tools
 
-## chown-current-user
-- 指定したディレクトリ/ファイルを現在のユーザに変更
+```bash
+$ brew install git gh zsh nvim mise sheldon
+```
 
-## gcm
-- `git commit -m`のエイリアス
-- Gitのコミットメッセージにブランチ名を付加
+### Tool Descriptions
 
-## git-upstream
-- fork したプロジェクトでupstreamの変更の取込み
+- `git` - Version control system
+- `gh` - GitHub CLI
+- `zsh` - Z shell (recommended shell)
+- `nvim` - Neovim text editor
+- `mise` - Runtime version manager
+- `sheldon` - Zsh plugin manager
+
+## Optional Tools
+
+```bash
+$ brew install ffmpeg marp-cli
+```
+
+### Optional Tool Descriptions
+
+- `ffmpeg` - Multimedia framework (required for video/audio processing)
+- `marp-cli` - Markdown to PDF/PowerPoint converter
+
+# Installation
+
+## 1. Clone Repository
+
+```bash
+$ cd ~
+$ git clone https://github.com/toshiki670/dotfiles.git
+```
+
+## 2. Run Install Script
+
+```bash
+$ cd ~/dotfiles
+$ ./install
+```
+
+## 3. Restart Shell
+
+```bash
+$ exec $SHELL -l
+```
+
+# Configuration
+
+## Environment Variables (Using Mise)
+
+Create global configuration file: `~/.config/mise/config.toml`
+
+```toml
+[env]
+# yt-dlp browser selection
+# Options: "chrome:Default", "chrome:Profile 1", "firefox", "safari", "edge"
+YT_BROWSER = "chrome:Default"
+```
+
+**Note:** To check your Chrome profile name, visit `chrome://version/` and look for the "Profile Path".
+
+Apply changes:
+
+```bash
+$ exec $SHELL -l
+```
+
+## Platform-Specific Notes
+
+### macOS
+
+- Homebrew configurations will be applied automatically
+- Custom binaries in `bin/` will be added to PATH
+
+### Linux (Arch)
+
+- GNOME autostart configurations available in `linux/gnome/autostart/`
+- systemd service files available in `linux/systemd/`
+
+### Windows
+
+- Run `install_win.ps1` for PowerShell configuration
+- Windows Terminal settings available in `win/windows_terminal/`
