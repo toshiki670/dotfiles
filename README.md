@@ -97,6 +97,28 @@ $ exec $SHELL -l
 
 # Documentation
 
+## Versioning
+
+This project follows [Semantic Versioning 2.0.0](https://semver.org/) with `0.x.x` format for pre-release development.
+
 - [VERSIONING.md](VERSIONING.md) - Versioning rules and release process
-- [MIGRATION.md](MIGRATION.md) - Version migration mapping from old to new format
+- [MIGRATION.md](MIGRATION.md) - Version migration mapping and procedures
+
+### Migration Scripts
+
+For maintainers: Scripts to migrate version tags to semantic versioning format.
+
+```bash
+# Preview changes (dry run)
+./migrate-to-semver-0x.sh --dry-run
+
+# Execute migration
+./migrate-to-semver-0x.sh
+
+# Rollback if needed
+./rollback-migration.sh
+```
+
+## License
+
 - [LICENSE](LICENSE) - MIT License
