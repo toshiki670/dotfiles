@@ -94,3 +94,38 @@ $ exec $SHELL -l
 
 - Run `install_win.ps1` for PowerShell configuration
 - Windows Terminal settings available in `win/windows_terminal/`
+
+# Documentation
+
+## Versioning
+
+This project follows [Semantic Versioning 2.0.0](https://semver.org/) with `0.x.x` format for pre-release development.
+
+- [VERSIONING.md](VERSIONING.md) - Versioning rules and release process
+- [MIGRATION.md](MIGRATION.md) - Version migration mapping and procedures
+
+### Migration Scripts
+
+For maintainers: Scripts to migrate version tags to semantic versioning format.
+
+**Requirements**: Run from repository root.
+
+```bash
+# Ensure you're in the repository root
+cd ~/dotfiles
+
+# Preview changes (dry run)
+./migrate-to-semver-0x.sh --dry-run
+
+# Execute migration (after review)
+./migrate-to-semver-0x.sh
+
+# Rollback if needed
+./rollback-migration.sh
+```
+
+See [MIGRATION.md](MIGRATION.md) for detailed requirements and procedures.
+
+## License
+
+- [LICENSE](LICENSE) - MIT License
