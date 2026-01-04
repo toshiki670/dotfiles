@@ -4,15 +4,23 @@
 # MINORは時系列順に連番、PATCHは元の番号を保持
 #
 # Requirements:
-# - Bash 3.2+ (macOS compatible)
+# - Bash 4.0+ (for associative arrays)
 # - git, gh (GitHub CLI), jq
 
 set -e
 
-# Bashバージョンチェック（3.2以上）
-if [[ "${BASH_VERSINFO[0]}" -lt 3 ]] || [[ "${BASH_VERSINFO[0]}" -eq 3 && "${BASH_VERSINFO[1]}" -lt 2 ]]; then
-    echo "Error: This script requires Bash 3.2 or higher"
+# Bashバージョンチェック（4.0以上が必要 - 連想配列のため）
+if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
+    echo -e "${RED}Error: This script requires Bash 4.0 or higher (for associative arrays)${NC}"
     echo "Current version: $BASH_VERSION"
+    echo ""
+    echo "On macOS, install newer bash:"
+    echo "  ${BLUE}brew install bash${NC}"
+    echo "  ${BLUE}sudo bash -c 'echo /opt/homebrew/bin/bash >> /etc/shells'${NC}"
+    echo "  ${BLUE}chsh -s /opt/homebrew/bin/bash${NC}"
+    echo ""
+    echo "Or run with newer bash:"
+    echo "  ${BLUE}/opt/homebrew/bin/bash ./migrate-to-semver-0x.sh${NC}"
     exit 1
 fi
 
@@ -312,11 +320,15 @@ skipped=0
 failed=0
 
 # タグを時系列順に処理（VERSION_MAPのキーをソート）
-# Bash 3.2互換: readarrayの代わりにwhile readを使用
+# Bash 3.2互換: プロセス置換を避ける
 sorted_tags=()
 while IFS= read -r tag; do
-    sorted_tags+=("$tag")
-done < <(printf '%s\n' "${!VERSION_MAP[@]}" | sort -V)
+    [[ -n "$tag" ]] && sorted_tags+=("$tag")
+done <<< "$(printf '%s\n' "${!VERSION_MAP[@]}" | sort -V)"
+
+# デバッグ: 処理するタグ数を表示
+echo "Processing ${#sorted_tags[@]} version mappings..."
+echo ""
 
 for old_version in "${sorted_tags[@]}"; do
     new_version="${VERSION_MAP[$old_version]}"
