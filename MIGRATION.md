@@ -121,15 +121,10 @@ GitHub リリースに記載されていた全てのリリースノートは、�
 
 3. **必須ツール**:
 
-   - **Bash 4.0+** - 連想配列のサポートが必要
-     ```bash
-     # macOS の場合、Homebrew でインストール
-     brew install bash
-     
-     # インストール後のバージョン確認
-     /opt/homebrew/bin/bash --version
-     ```
+   - **Bash 3.2+** - macOS デフォルトの Bash で動作
    - `git` - バージョン管理
+   - `gh` - GitHub CLI（認証済み）
+   - `jq` - JSON 処理
    - `gh` - GitHub CLI（認証済み）
    - `jq` - JSON 処理
 
@@ -170,14 +165,11 @@ cd ~/dotfiles
 ドライランで問題がないことを確認してから実行：
 
 ```bash
-# Bash 4.0+ で実行（macOS の場合）
-/opt/homebrew/bin/bash ./migrate-to-semver-0x.sh
-
-# または、デフォルトシェルを変更している場合
+# デフォルトの Bash で実行可能（macOS も OK）
 ./migrate-to-semver-0x.sh
 
 # バックアップなしで実行（非推奨）
-/opt/homebrew/bin/bash ./migrate-to-semver-0x.sh --no-backup
+./migrate-to-semver-0x.sh --no-backup
 ```
 
 ### 品質担保機能
