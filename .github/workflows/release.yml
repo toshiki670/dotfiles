@@ -38,7 +38,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Verify commitlint
-        run: pnpm commitlint --from HEAD~1 --to HEAD --verbose || echo "Commitlint check skipped for this commit"
+        run: pnpm exec commitlint --from HEAD~1 --to HEAD --verbose || echo "Commitlint check skipped for this commit"
 
       - name: Run semantic-release
         env:
