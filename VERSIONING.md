@@ -55,7 +55,7 @@ v0.MINOR.PATCH
 - `perf`: パフォーマンス改善
 - `test`: テストの追加・修正
 - `chore`: ビルドプロセスやツールの変更
-- `ci`: CI設定ファイルの変更
+- `ci`: CI 設定ファイルの変更
 
 **破壊的変更の表記：**
 
@@ -65,34 +65,32 @@ feat!: プラグインマネージャーをsheldonに変更
 BREAKING CHANGE: zinitからsheldonに移行したため、再インストールが必要です
 ```
 
-破壊的変更（`BREAKING CHANGE`）は0.x.xではMINORバージョンをアップします。
+破壊的変更（`BREAKING CHANGE`）は 0.x.x では MINOR バージョンをアップします。
 
-### 自動リリースフロー（GitHub Flow）
+### リリースフロー（GitHub Flow + 手動リリース）
 
-このプロジェクトは **GitHub Flow** に基づいた開発フローを採用しています。
+このプロジェクトは **GitHub Flow** に基づいた開発フローを採用し、**手動でリリースを実行**します。
 
 **開発からリリースまでの流れ：**
 
-1. **feature/fixブランチで開発**
+1. **feature/fix ブランチで開発**
    - `feature/機能名` または `fix/バグ名` ブランチを作成
-   - Conventional Commits形式でコミット
-   
-2. **Pull Requestを作成**
-   - mainブランチへのPull Requestを作成
+   - Conventional Commits 形式でコミット
+2. **Pull Request を作成**
+   - main ブランチへの Pull Request を作成
    - レビュー・テストを実施
-   
-3. **mainブランチにマージ**
-   - Pull Requestをマージ（Squash & Merge推奨）
-   - GitHub Actionsが自動的に起動
-   
-4. **自動リリース実行**
-   - semantic-releaseがコミットメッセージを解析
+3. **main ブランチにマージ**
+   - Pull Request をマージ（Squash & Merge 推奨）
+   - 複数の PR をまとめてマージ可能
+4. **手動でリリースを実行**
+   - エンジニアが GitHub Actions から手動でリリースを実行
+   - semantic-release がコミットメッセージを解析
    - バージョン番号を自動決定
-   - Gitタグを作成（`v`プレフィックス付き）
-   - GitHub Releaseを作成（リリースノート自動生成）
-   - package.jsonを更新してコミット
+   - Git タグを作成（`v`プレフィックス付き）
+   - GitHub Release を作成（リリースノート自動生成）
+   - package.json を更新してコミット
 
-**重要：mainブランチへの直接コミットは禁止**
+**重要：main ブランチへの直接コミットは禁止**
 
 ```bash
 # ❌ 直接mainにコミット（禁止）
@@ -107,71 +105,41 @@ git push origin feature/new-feature
 # → GitHubでPull Requestを作成してマージ
 ```
 
+**リリースの実行方法：**
+
+1. GitHub リポジトリの「Actions」タブを開く
+2. 「Release」ワークフローを選択
+3. 「Run workflow」ボタンをクリック
+4. オプション：
+   - **Dry run**: チェックを入れると実際のリリースは行わず、確認のみ実行
+5. 「Run workflow」を実行
+
 **バージョンアップのルール（自動判定）：**
 
-Pull Requestに含まれるコミットを解析してバージョンを決定：
+前回のリリースから現在の main ブランチまでのコミットを解析してバージョンを決定：
 
-- `feat:` コミットが1つでも含まれる → MINOR バージョンアップ（0.x.0 → 0.(x+1).0）
+- `feat:` コミットが 1 つでも含まれる → MINOR バージョンアップ（0.x.0 → 0.(x+1).0）
 - `fix:` コミットのみ → PATCH バージョンアップ（0.x.y → 0.x.(y+1)）
-- `BREAKING CHANGE:` が含まれる → MINOR バージョンアップ（0.x.x系では）
+- `BREAKING CHANGE:` が含まれる → MINOR バージョンアップ（0.x.x 系では）
 - `docs:`, `chore:` など → バージョンアップなし
 
 **複数の変更をまとめてリリース：**
 
 ```bash
-# 例：3つのPRをまとめてマージ
+# 例：3つのPRをmainにマージ
 # PR#1: feat: add zsh completion
 # PR#2: fix: correct PATH order
 # PR#3: feat: add vim configuration
 
-# → 次のmainへのpushで v0.29.0 として一括リリース
-# （2つのfeatがあるのでMINORバージョンアップ）
+# → エンジニアが手動でReleaseアクションを実行
+# → v0.29.0 として一括リリース（2つのfeatがあるのでMINORアップ）
 ```
 
-### プレリリース（preブランチ）
+**リリースタイミングの柔軟性：**
 
-実験的な機能をテストリリースする場合は、`pre`ブランチを使用します。
-
-**使用方法：**
-
-1. **preブランチへのPull Request作成**
-
-```bash
-# feature/fixブランチで開発
-git checkout -b feature/experimental-feature
-
-# Conventional Commits形式でコミット
-git commit -m "feat: add experimental AI feature"
-
-# preブランチに向けてPull Requestを作成
-git push origin feature/experimental-feature
-# → GitHub上でbase branchを「pre」にしてPRを作成
-```
-
-2. **preブランチにマージ**
-
-```bash
-# PRをpreブランチにマージすると自動的にプレリリースが作成される
-# → v0.29.0-pre.1 がリリースされる
-```
-
-3. **プレリリースのテスト**
-
-プレリリース版で問題がないか確認
-
-4. **正式リリースへ昇格**
-
-```bash
-# preブランチからmainブランチへPull Requestを作成
-# レビュー・承認後にマージ
-# → v0.29.0 として正式リリース
-```
-
-**注意事項：**
-
-- プレリリース版はGitHub Releaseで「Pre-release」マークが付く
-- プレリリース版は本番環境での使用は推奨されない
-- 通常の開発はmainブランチ向けのPRで行う（preは特別な場合のみ）
+- 複数の PR をマージしてから、任意のタイミングでリリース可能
+- 緊急のバグ修正は即座にリリース可能
+- 機能をまとめて計画的にリリース可能
 
 ## バージョンアップの例
 
@@ -251,11 +219,11 @@ git commit -m "docs: update README installation instructions"
 
 リリースノートは **GitHub Releases の自動生成機能** を使用します。
 
-- semantic-releaseがConventional Commitsから自動的に生成
+- semantic-release が Conventional Commits から自動的に生成
 - `feat:` は「Features」セクションに表示
 - `fix:` は「Bug Fixes」セクションに表示
 - `BREAKING CHANGE:` は「Breaking Changes」セクションに表示
-- CHANGELOGファイルは管理しない（GitHub Releases参照）
+- CHANGELOG ファイルは管理しない（GitHub Releases 参照）
 
 ### ローカルでの確認
 
@@ -272,7 +240,7 @@ pnpm semantic-release --dry-run
 
 ### 必要なツール
 
-- **mise**: Node.jsとpnpmのバージョン管理（`.mise.toml`で定義）
+- **mise**: Node.js と pnpm のバージョン管理（`.mise.toml`で定義）
 - **pnpm**: パッケージマネージャー
 - **semantic-release**: 自動リリースツール
 - **commitlint**: コミットメッセージの検証

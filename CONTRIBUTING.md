@@ -164,7 +164,7 @@ git push origin feature/your-feature-name
 #### 5. Pull Requestを作成
 
 1. GitHub上でPull Requestを作成
-2. **Base branch**: `main`（通常の開発）または `pre`（プレリリース）
+2. **Base branch**: `main`
 3. PRのタイトルと説明を記入
 4. レビューを依頼（該当する場合）
 
@@ -178,7 +178,7 @@ git push origin feature/your-feature-name
 
 - Pull Requestを承認
 - **Squash and merge** を推奨（コミット履歴を整理）
-- マージ後、GitHub Actionsが自動的にリリースを実行
+- マージ後、必要に応じてリリースを実行（手動）
 
 ### マージ方法の推奨
 
@@ -200,17 +200,28 @@ feat: add new git aliases
 
 ## リリースプロセス
 
-このプロジェクトは **完全自動リリース** を採用しています。
+このプロジェクトは **手動リリース** を採用しています。
 
-### 自動リリースの仕組み
+### リリースの実行方法
 
-1. **Pull Requestをmainブランチにマージ**
-2. GitHub Actionsが自動起動
-3. semantic-releaseがコミットメッセージを解析
-4. バージョン番号を自動決定
-5. Gitタグを作成（例: `v0.29.0`）
-6. GitHub Releaseを作成（リリースノート自動生成）
-7. package.jsonを更新
+Pull Requestをmainブランチにマージした後、エンジニアが手動でリリースを実行します。
+
+**手順：**
+
+1. GitHub リポジトリの「Actions」タブを開く
+2. 「Release」ワークフローを選択
+3. 「Run workflow」ボタンをクリック
+4. オプション設定：
+   - **Dry run**: チェックを入れると実際のリリースは行わず、確認のみ実行
+5. 「Run workflow」を実行
+
+**リリースアクションが実行すること：**
+
+1. semantic-releaseがコミットメッセージを解析
+2. バージョン番号を自動決定
+3. Gitタグを作成（例: `v0.29.0`）
+4. GitHub Releaseを作成（リリースノート自動生成）
+5. package.jsonを更新してコミット
 
 ### リリースノートについて
 
@@ -220,7 +231,7 @@ feat: add new git aliases
 
 ### バージョンアップのルール
 
-Pull Requestに含まれるコミットを解析：
+前回のリリースから現在のmainブランチまでのコミットを解析：
 
 - `feat:` コミットが含まれる → **MINOR** アップ（0.28.0 → 0.29.0）
 - `fix:` コミットのみ → **PATCH** アップ（0.28.0 → 0.28.1）
@@ -229,25 +240,22 @@ Pull Requestに含まれるコミットを解析：
 
 ### 複数のPRをまとめてリリース
 
-複数のPRをマージしてからリリースされるため、関連する変更をまとめて1つのバージョンとしてリリースできます。
+複数のPRをmainブランチにマージしてから、任意のタイミングでリリースアクションを実行できます。
 
 **例:**
 ```
 PR#1: feat: add zsh completion (マージ)
 PR#2: fix: PATH order bug (マージ)
 PR#3: feat: add vim config (マージ)
-→ 次のリリースで v0.29.0 として一括リリース
+→ エンジニアがリリースアクションを実行
+→ v0.29.0 として一括リリース
 ```
 
-### プレリリース（preブランチ）
+**リリースタイミングの柔軟性：**
 
-実験的な機能をテストする場合：
-
-1. feature/fixブランチで開発
-2. **preブランチ**へのPull Requestを作成
-3. preブランチにマージ → プレリリース版が作成（例: v0.29.0-pre.1）
-4. テスト完了後、preブランチからmainへPull Request
-5. mainにマージ → 正式リリース（例: v0.29.0）
+- 複数のPRをまとめて計画的にリリース
+- 緊急のバグ修正は即座にリリース
+- 機能が揃うまで待ってからリリース
 
 詳細は [`VERSIONING.md`](VERSIONING.md) を参照してください。
 
