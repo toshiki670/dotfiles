@@ -26,9 +26,10 @@ pnpm install
 
 ## コミット規約
 
-このプロジェクトは [Conventional Commits](https://www.conventionalcommits.org/ja/) に従います。
+このプロジェクトでは、わかりやすいコミットメッセージを推奨しています。
+[Conventional Commits](https://www.conventionalcommits.org/ja/) 形式を使用することで、より明確な履歴を残すことができます（任意）。
 
-### コミットメッセージの形式
+### コミットメッセージの形式（推奨）
 
 ```
 <type>(<scope>): <subject>
@@ -38,10 +39,10 @@ pnpm install
 <footer>
 ```
 
-### コミットタイプ
+### コミットタイプ（推奨）
 
-- **feat**: 新機能（MINOR バージョンアップをトリガー）
-- **fix**: バグ修正（PATCH バージョンアップをトリガー）
+- **feat**: 新機能
+- **fix**: バグ修正
 - **docs**: ドキュメントのみの変更
 - **style**: コードの意味に影響しない変更（空白、フォーマットなど）
 - **refactor**: バグ修正でも機能追加でもないコード変更
@@ -50,6 +51,8 @@ pnpm install
 - **chore**: ビルドプロセスやツールの変更
 - **ci**: CI設定ファイルの変更
 - **build**: ビルドシステムや外部依存関係に影響する変更
+
+**注意**: バージョン管理はリリース時に手動で選択するため、コミットメッセージの形式は強制されません。
 
 ### コミット例
 
@@ -92,14 +95,9 @@ git commit -m "docs: update installation instructions in README"
 4. **body**: オプション。変更の詳細な説明
 5. **footer**: オプション。破壊的変更やissue参照
 
-### コミットメッセージの検証
+### コミットメッセージのヒント
 
-コミット前に自動的に検証されます：
-
-```bash
-# 手動で検証する場合
-pnpm commitlint --from HEAD~1 --to HEAD
-```
+わかりやすいコミットメッセージを心がけてください。Conventional Commits形式は推奨されますが、強制ではありません。
 
 ## ブランチ戦略（GitHub Flow）
 
@@ -211,17 +209,18 @@ Pull Requestをmainブランチにマージした後、エンジニアが手動�
 1. GitHub リポジトリの「Actions」タブを開く
 2. 「Release」ワークフローを選択
 3. 「Run workflow」ボタンをクリック
-4. オプション設定：
-   - **Dry run**: チェックを入れると実際のリリースは行わず、確認のみ実行
+4. **Release type** を選択：
+   - **patch**: バグ修正（0.28.0 → 0.28.1）
+   - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
+   - **prerelease**: プレリリース版（0.28.0 → 0.29.0-pre.1）
 5. 「Run workflow」を実行
 
 **リリースアクションが実行すること：**
 
-1. semantic-releaseがコミットメッセージを解析
-2. バージョン番号を自動決定
-3. Gitタグを作成（例: `v0.29.0`）
-4. GitHub Releaseを作成（リリースノート自動生成）
-5. package.jsonを更新してコミット
+1. release-itが選択されたリリースタイプに基づいてバージョンを計算
+2. Gitタグを作成（例: `v0.29.0`）
+3. GitHub Releaseを作成（リリースノート自動生成）
+4. package.jsonを更新してコミット
 
 ### リリースノートについて
 
@@ -231,12 +230,11 @@ Pull Requestをmainブランチにマージした後、エンジニアが手動�
 
 ### バージョンアップのルール
 
-前回のリリースから現在のmainブランチまでのコミットを解析：
+手動で選択したリリースタイプに基づいてバージョンが決定されます：
 
-- `feat:` コミットが含まれる → **MINOR** アップ（0.28.0 → 0.29.0）
-- `fix:` コミットのみ → **PATCH** アップ（0.28.0 → 0.28.1）
-- `BREAKING CHANGE` → **MINOR** アップ（0.x.x系では）
-- その他（`docs:`, `chore:`など）→ バージョン変更なし
+- **patch**: バグ修正・小さな改善（0.28.0 → 0.28.1）
+- **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
+- **prerelease**: テスト版（0.28.0 → 0.29.0-pre.1）
 
 ### 複数のPRをまとめてリリース
 
@@ -263,7 +261,9 @@ PR#3: feat: add vim config (マージ)
 
 ```bash
 # ドライラン（実際には実行されない）
-pnpm semantic-release --dry-run
+pnpm release:patch --dry-run
+pnpm release:minor --dry-run
+pnpm release:pre --dry-run
 ```
 
 ## テスト

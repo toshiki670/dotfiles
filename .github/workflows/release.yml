@@ -3,11 +3,15 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: "Dry run (no actual release)"
-        required: false
-        type: boolean
-        default: false
+      release_type:
+        description: "Release type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - prerelease
+        default: patch
 
 permissions:
   contents: write
@@ -16,7 +20,7 @@ permissions:
 
 jobs:
   release:
-    name: Semantic Release
+    name: Release
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup mise (Node.js & pnpm)
         uses: jdx/mise-action@v2
@@ -34,15 +38,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify commitlint
-        run: pnpm commitlint --from HEAD~1 --to HEAD --verbose || echo "Commitlint check skipped for this commit"
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Run semantic-release
+      - name: Run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
-            pnpm semantic-release --dry-run
-          else
-            pnpm semantic-release
-          fi
+          case "${{ inputs.release_type }}" in
+            patch)
+              pnpm release:patch
+              ;;
+            minor)
+              pnpm release:minor
+              ;;
+            prerelease)
+              pnpm release:pre
+              ;;
+          esac

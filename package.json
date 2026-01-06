@@ -11,14 +11,12 @@
   "license": "MIT",
   "packageManager": "pnpm@9.15.4",
   "scripts": {
-    "release": "semantic-release",
-    "commitlint": "commitlint --edit"
+    "release:patch": "release-it patch --ci",
+    "release:minor": "release-it minor --ci",
+    "release:pre": "release-it prerelease --preRelease=pre --ci"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.6.1",
-    "@commitlint/config-conventional": "^19.6.0",
-    "@semantic-release/git": "^10.0.1",
-    "semantic-release": "^24.2.0"
+    "@release-it/conventional-changelog": "^10.0.4",
+    "release-it": "^19.2.2"
   }
 }
-

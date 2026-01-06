@@ -31,41 +31,7 @@ v0.MINOR.PATCH
 
 ## リリースの自動化
 
-このプロジェクトでは、**semantic-release** と **Conventional Commits** を使用してリリースプロセスを完全自動化しています。
-
-### Conventional Commits
-
-コミットメッセージは [Conventional Commits](https://www.conventionalcommits.org/) 形式に従います：
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**主要なコミットタイプ：**
-
-- `feat`: 新機能（MINOR バージョンアップ）
-- `fix`: バグ修正（PATCH バージョンアップ）
-- `docs`: ドキュメントのみの変更
-- `style`: コードの意味に影響しない変更（空白、フォーマットなど）
-- `refactor`: リファクタリング
-- `perf`: パフォーマンス改善
-- `test`: テストの追加・修正
-- `chore`: ビルドプロセスやツールの変更
-- `ci`: CI 設定ファイルの変更
-
-**破壊的変更の表記：**
-
-```
-feat!: プラグインマネージャーをsheldonに変更
-
-BREAKING CHANGE: zinitからsheldonに移行したため、再インストールが必要です
-```
-
-破壊的変更（`BREAKING CHANGE`）は 0.x.x では MINOR バージョンをアップします。
+このプロジェクトでは、**release-it** を使用してリリースプロセスを自動化しています。リリースタイプを手動で選択することで、より柔軟なバージョン管理を実現しています。
 
 ### リリースフロー（GitHub Flow + 手動リリース）
 
@@ -75,7 +41,7 @@ BREAKING CHANGE: zinitからsheldonに移行したため、再インストール
 
 1. **feature/fix ブランチで開発**
    - `feature/機能名` または `fix/バグ名` ブランチを作成
-   - Conventional Commits 形式でコミット
+   - わかりやすいコミットメッセージで記録（Conventional Commits推奨）
 2. **Pull Request を作成**
    - main ブランチへの Pull Request を作成
    - レビュー・テストを実施
@@ -84,8 +50,8 @@ BREAKING CHANGE: zinitからsheldonに移行したため、再インストール
    - 複数の PR をまとめてマージ可能
 4. **手動でリリースを実行**
    - エンジニアが GitHub Actions から手動でリリースを実行
-   - semantic-release がコミットメッセージを解析
-   - バージョン番号を自動決定
+   - リリースタイプを選択（patch / minor / prerelease）
+   - バージョン番号を自動計算
    - Git タグを作成（`v`プレフィックス付き）
    - GitHub Release を作成（リリースノート自動生成）
    - package.json を更新してコミット
@@ -110,18 +76,19 @@ git push origin feature/new-feature
 1. GitHub リポジトリの「Actions」タブを開く
 2. 「Release」ワークフローを選択
 3. 「Run workflow」ボタンをクリック
-4. オプション：
-   - **Dry run**: チェックを入れると実際のリリースは行わず、確認のみ実行
+4. **Release type** を選択：
+   - **patch**: バグ修正（0.28.0 → 0.28.1）
+   - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
+   - **prerelease**: プレリリース版（0.28.0 → 0.29.0-pre.1）
 5. 「Run workflow」を実行
 
-**バージョンアップのルール（自動判定）：**
+**バージョンアップのルール：**
 
-前回のリリースから現在の main ブランチまでのコミットを解析してバージョンを決定：
+手動で選択したリリースタイプに基づいて、前回のバージョンから自動的にバージョンが計算されます：
 
-- `feat:` コミットが 1 つでも含まれる → MINOR バージョンアップ（0.x.0 → 0.(x+1).0）
-- `fix:` コミットのみ → PATCH バージョンアップ（0.x.y → 0.x.(y+1)）
-- `BREAKING CHANGE:` が含まれる → MINOR バージョンアップ（0.x.x 系では）
-- `docs:`, `chore:` など → バージョンアップなし
+- **patch**: バグ修正・小さな改善（0.x.y → 0.x.(y+1)）
+- **minor**: 新機能・破壊的変更（0.x.0 → 0.(x+1).0）
+- **prerelease**: テスト版（0.x.0 → 0.(x+1).0-pre.1）
 
 **複数の変更をまとめてリリース：**
 
@@ -231,19 +198,30 @@ git commit -m "docs: update README installation instructions"
 # 依存関係のインストール
 pnpm install
 
-# コミットメッセージの検証
-pnpm commitlint --from HEAD~1 --to HEAD
-
-# semantic-releaseのドライラン（実際には実行されない）
-pnpm semantic-release --dry-run
+# release-itのドライラン（実際には実行されない）
+pnpm release:patch --dry-run
+pnpm release:minor --dry-run
+pnpm release:pre --dry-run
 ```
 
 ### 必要なツール
 
 - **mise**: Node.js と pnpm のバージョン管理（`.mise.toml`で定義）
 - **pnpm**: パッケージマネージャー
-- **semantic-release**: 自動リリースツール
-- **commitlint**: コミットメッセージの検証
+- **release-it**: リリース自動化ツール
+
+### ローカルでのリリース（開発者向け）
+
+```bash
+# PATCHリリース
+pnpm release:patch
+
+# MINORリリース
+pnpm release:minor
+
+# プレリリース
+pnpm release:pre
+```
 
 詳細は [`CONTRIBUTING.md`](CONTRIBUTING.md) を参照してください。
 
