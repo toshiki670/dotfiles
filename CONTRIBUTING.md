@@ -1,6 +1,6 @@
 # コントリビューションガイド
 
-dotfilesプロジェクトへのコントリビューションをお考えいただき、ありがとうございます！
+dotfiles プロジェクトへのコントリビューションをお考えいただき、ありがとうございます！
 
 ## 開発環境のセットアップ
 
@@ -40,7 +40,7 @@ brew install git gh zsh nvim mise sheldon
 - **perf**: パフォーマンスを向上させるコード変更
 - **test**: テストの追加・修正
 - **chore**: ビルドプロセスやツールの変更
-- **ci**: CI設定ファイルの変更
+- **ci**: CI 設定ファイルの変更
 - **build**: ビルドシステムや外部依存関係に影響する変更
 
 **注意**: バージョン管理はリリース時に手動で選択するため、コミットメッセージの形式は強制されません。
@@ -82,13 +82,13 @@ git commit -m "docs: update installation instructions in README"
    - 小文字で始める
    - 末尾にピリオドを付けない
    - 命令形を使用（"add" not "added" or "adds"）
-   - 100文字以内
+   - 100 文字以内
 4. **body**: オプション。変更の詳細な説明
-5. **footer**: オプション。破壊的変更やissue参照
+5. **footer**: オプション。破壊的変更や issue 参照
 
 ### コミットメッセージのヒント
 
-わかりやすいコミットメッセージを心がけてください。Conventional Commits形式は推奨されますが、強制ではありません。
+わかりやすいコミットメッセージを心がけてください。Conventional Commits 形式は推奨されますが、強制ではありません。
 
 ## ブランチ戦略（GitHub Flow）
 
@@ -96,7 +96,7 @@ git commit -m "docs: update installation instructions in README"
 
 ### 重要なルール
 
-⚠️ **mainブランチへの直接コミット・プッシュは禁止**
+⚠️ **main ブランチへの直接コミット・プッシュは禁止**
 
 すべての変更は Pull Request 経由で行います。
 
@@ -110,7 +110,7 @@ git commit -m "docs: update installation instructions in README"
 
 ### 開発フロー（GitHub Flow）
 
-#### 1. mainブランチを最新に更新
+#### 1. main ブランチを最新に更新
 
 ```bash
 git checkout main
@@ -150,22 +150,22 @@ git commit -m "docs: update alias documentation"
 git push origin feature/your-feature-name
 ```
 
-#### 5. Pull Requestを作成
+#### 5. Pull Request を作成
 
-1. GitHub上でPull Requestを作成
+1. GitHub 上で Pull Request を作成
 2. **Base branch**: `main`
-3. PRのタイトルと説明を記入
+3. PR のタイトルと説明を記入
 4. レビューを依頼（該当する場合）
 
 #### 6. レビューとテスト
 
 - コードレビューを実施
 - 必要に応じて修正を加える
-- CIチェックが通ることを確認
+- CI チェックが通ることを確認
 
-#### 7. mainブランチにマージ
+#### 7. main ブランチにマージ
 
-- Pull Requestを承認
+- Pull Request を承認
 - **Squash and merge** を推奨（コミット履歴を整理）
 - マージ後、必要に応じてリリースを実行（手動）
 
@@ -173,7 +173,7 @@ git push origin feature/your-feature-name
 
 **Squash and merge（推奨）:**
 
-複数のコミットを1つにまとめてマージ。マージ時にConventional Commits形式のメッセージを記述。
+複数のコミットを 1 つにまとめてマージ。マージ時に Conventional Commits 形式のメッセージを記述。
 
 ```
 feat: add new git aliases
@@ -183,9 +183,9 @@ feat: add new git aliases
 - Update documentation
 ```
 
-**通常のMerge:**
+**通常の Merge:**
 
-すべてのコミットがConventional Commits形式に従っている場合のみ使用。
+すべてのコミットが Conventional Commits 形式に従っている場合のみ使用。
 
 ## リリースプロセス
 
@@ -193,7 +193,7 @@ feat: add new git aliases
 
 ### リリースの実行方法
 
-Pull Requestをmainブランチにマージした後、エンジニアが手動でリリースを実行します。
+Pull Request を main ブランチにマージした後、エンジニアが手動でリリースを実行します。
 
 **手順：**
 
@@ -210,14 +210,14 @@ Pull Requestをmainブランチにマージした後、エンジニアが手動�
 1. `bin/release`スクリプトが`VERSION`ファイルから現在のバージョンを読み取り
 2. 選択されたリリースタイプに基づいてバージョンを計算
 3. `VERSION`ファイルを更新してコミット
-4. Gitタグを作成（例: `v0.29.0`）
-5. GitHub Releaseを作成（前回のタグからのコミットログを自動生成）
+4. Git タグを作成（例: `v0.29.0`）
+5. GitHub Release を作成（前回のタグからのコミットログを自動生成）
 
 ### リリースノートについて
 
-- GitHub Releasesの自動生成機能を使用
-- CHANGELOG.mdファイルは管理しない
-- リリースノートはGitHub Releasesページで確認
+- GitHub Releases の自動生成機能を使用
+- CHANGELOG.md ファイルは管理しない
+- リリースノートは GitHub Releases ページで確認
 
 ### バージョンアップのルール
 
@@ -226,11 +226,12 @@ Pull Requestをmainブランチにマージした後、エンジニアが手動�
 - **patch**: バグ修正・小さな改善（0.28.0 → 0.28.1）
 - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
 
-### 複数のPRをまとめてリリース
+### 複数の PR をまとめてリリース
 
-複数のPRをmainブランチにマージしてから、任意のタイミングでリリースアクションを実行できます。
+複数の PR を main ブランチにマージしてから、任意のタイミングでリリースアクションを実行できます。
 
 **例:**
+
 ```
 PR#1: feat: add zsh completion (マージ)
 PR#2: fix: PATH order bug (マージ)
@@ -241,7 +242,7 @@ PR#3: feat: add vim config (マージ)
 
 **リリースタイミングの柔軟性：**
 
-- 複数のPRをまとめて計画的にリリース
+- 複数の PR をまとめて計画的にリリース
 - 緊急のバグ修正は即座にリリース
 - 機能が揃うまで待ってからリリース
 
@@ -289,25 +290,24 @@ exec $SHELL -l
 
 ### Shell Script
 
-- インデント: スペース2つ
+- インデント: スペース 2 つ
 - 引用符: 変数は原則としてダブルクォートで囲む
 - シバン: `#!/bin/bash` または `#!/bin/zsh`
 
 ### Vim Script
 
-- インデント: スペース2つ
-- コメントは日本語OK
+- インデント: スペース 2 つ
+- コメントは日本語 OK
 
 ### TOML
 
-- インデント: スペース2つ
+- インデント: スペース 2 つ
 - セクションは用途ごとにグループ化
 
 ## ヘルプ・質問
 
-質問や提案がある場合は、GitHubのIssueを作成してください。
+質問や提案がある場合は、GitHub の Issue を作成してください。
 
 ## ライセンス
 
 このプロジェクトへのコントリビューションは、[MIT License](LICENSE)の下でライセンスされます。
-
