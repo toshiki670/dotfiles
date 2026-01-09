@@ -21,12 +21,12 @@ if type "eza" > /dev/null 2>&1; then
   alias ll='eza  -l  -gh --time-style long-iso --git'
   alias la='eza  -a'
   alias lla='eza -la -gh --time-style long-iso --git'
+
+  # Standard ls (always use standard ls command)
+  alias sls='command ls --color=auto'
 else
   alias ls='ls  --color=auto'
   alias ll='ls  -lh'
   alias la='ls  -a'
   alias lla='ls -lah'
 fi
-
-# Raw ls (always use standard ls command)
-alias rawls='command ls --color=auto'
