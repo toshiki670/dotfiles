@@ -10,4 +10,3 @@ zsh/completions/*
 ## Vim
 vim/plugin/*
 !.keep
-

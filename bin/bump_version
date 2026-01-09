@@ -1,0 +1,131 @@
+#!/bin/bash
+
+# Constant
+readonly CMDNAME=${0##*/}
+
+function usage() {
+  cat << __USAGE_TEXT__
+Usage:
+  $CMDNAME <current_version> <major|minor|patch>
+  $CMDNAME [-h]
+
+__USAGE_TEXT__
+}
+
+function description() {
+  cat << __DESCRIPTION_TEXT__
+Description:
+  Bump semantic version based on release type.
+
+  This is a pure function that takes a version string and bump type,
+  and outputs the new version with 'v' prefix.
+
+Arguments:
+  <current_version>        Current version (e.g., v0.28.0 or 0.28.0)
+  <major|minor|patch>      Release type:
+                           major: Bump major version (0.x.y -> 1.0.0)
+                           minor: Bump minor version (0.x.y -> 0.(x+1).0)
+                           patch: Bump patch version (0.x.y -> 0.x.(y+1))
+
+Options:
+  -h, --help               Show help
+
+Examples:
+  $CMDNAME v0.28.0 patch   # Output: v0.28.1
+  $CMDNAME 0.28.0 minor    # Output: v0.29.0
+  $CMDNAME v0.28.0 major   # Output: v1.0.0
+  $CMDNAME v0.0.0 minor    # Output: v0.1.0 (initial release)
+__DESCRIPTION_TEXT__
+}
+
+function show_help() {
+  usage
+  echo
+  description
+}
+
+# Bump version function
+bump_version() {
+  local version=$1
+  local bump_type=$2
+  
+  # Remove 'v' prefix if exists
+  version=${version#v}
+  
+  # Validate version format
+  if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "${CMDNAME}: Invalid version format: $version" >&2
+    echo "${CMDNAME}: Expected format: x.y.z or vx.y.z" >&2
+    return 1
+  fi
+  
+  # Parse version components
+  IFS='.' read -r major minor patch <<< "$version"
+  
+  case $bump_type in
+    major)
+      echo "v$((major + 1)).0.0"
+      ;;
+    minor)
+      echo "v${major}.$((minor + 1)).0"
+      ;;
+    patch)
+      echo "v${major}.${minor}.$((patch + 1))"
+      ;;
+    *)
+      echo "${CMDNAME}: Invalid bump type: $bump_type" >&2
+      echo "${CMDNAME}: Expected: major, minor, or patch" >&2
+      return 1
+      ;;
+  esac
+}
+
+# Parse arguments
+CURRENT_VERSION=""
+BUMP_TYPE=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    *)
+      if [[ -z "$CURRENT_VERSION" ]]; then
+        CURRENT_VERSION=$1
+      elif [[ -z "$BUMP_TYPE" ]]; then
+        BUMP_TYPE=$1
+      else
+        echo "${CMDNAME}: Too many arguments" >&2
+        usage >&2
+        exit 1
+      fi
+      shift
+      ;;
+  esac
+done
+
+# Check required arguments
+if [[ -z "$CURRENT_VERSION" ]]; then
+  echo "${CMDNAME}: Current version is required" >&2
+  usage >&2
+  exit 1
+fi
+
+if [[ -z "$BUMP_TYPE" ]]; then
+  echo "${CMDNAME}: Bump type (major, minor, or patch) is required" >&2
+  usage >&2
+  exit 1
+fi
+
+# Bump version
+NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
+
+if [[ $? -ne 0 ]]; then
+  exit 1
+fi
+
+# Output new version
+echo "$NEW_VERSION"
+
+exit 0
