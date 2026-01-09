@@ -31,7 +31,7 @@ return {
         -- List of servers to ensure are installed
         ensure_installed = {
           "lua_ls",        -- Lua
-          "tsserver",      -- TypeScript/JavaScript
+          "ts_ls",         -- TypeScript/JavaScript (renamed from tsserver)
           "solargraph",    -- Ruby
           "rust_analyzer", -- Rust
           "pyright",       -- Python
@@ -159,7 +159,7 @@ return {
       })
 
       -- TypeScript/JavaScript
-      lspconfig.tsserver.setup({
+      lspconfig.ts_ls.setup({
         capabilities = capabilities,
         on_attach = on_attach,
       })

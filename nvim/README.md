@@ -197,7 +197,7 @@ nvim/
 デフォルトでインストールされるLSPサーバー:
 
 - **lua_ls** - Lua
-- **tsserver** - TypeScript/JavaScript
+- **ts_ls** - TypeScript/JavaScript
 - **solargraph** - Ruby
 - **rust_analyzer** - Rust
 - **pyright** - Python
