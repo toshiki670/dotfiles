@@ -83,6 +83,7 @@ return {
       vim.o.timeout = true
       vim.o.timeoutlen = 300
       require("which-key").setup({
+        preset = "modern",
         plugins = {
           marks = true,
           registers = true,
@@ -100,12 +101,12 @@ return {
             g = true,
           },
         },
-        window = {
+        win = {
           border = "rounded",
-          position = "bottom",
-          margin = { 1, 0, 1, 0 },
           padding = { 2, 2, 2, 2 },
-          winblend = 0,
+          wo = {
+            winblend = 0,
+          },
         },
         layout = {
           height = { min = 4, max = 25 },
