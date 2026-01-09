@@ -10,7 +10,6 @@ on:
         options:
           - patch
           - minor
-          - prerelease
         default: patch
 
 permissions:
@@ -30,13 +29,15 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup mise (Node.js & pnpm)
-        uses: jdx/mise-action@v2
-        with:
-          experimental: true
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup GitHub CLI
+        run: |
+          if ! command -v gh &> /dev/null; then
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+            && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+            && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+            && sudo apt update \
+            && sudo apt install gh -y
+          fi
 
       - name: Configure Git
         run: |
@@ -47,14 +48,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          case "${{ inputs.release_type }}" in
-            patch)
-              pnpm release:patch
-              ;;
-            minor)
-              pnpm release:minor
-              ;;
-            prerelease)
-              pnpm release:pre
-              ;;
-          esac
+          ./bin/release ${{ inputs.release_type }} --ci

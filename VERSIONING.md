@@ -31,7 +31,7 @@ v0.MINOR.PATCH
 
 ## リリースの自動化
 
-このプロジェクトでは、**release-it** を使用してリリースプロセスを自動化しています。リリースタイプを手動で選択することで、より柔軟なバージョン管理を実現しています。
+このプロジェクトでは、**Bash スクリプト + GitHub CLI（`gh`）** を使用してリリースプロセスを自動化しています。リリースタイプを手動で選択することで、より柔軟なバージョン管理を実現しています。外部依存を最小限に抑え、シンプルで理解しやすい仕組みを採用しています。
 
 ### リリースフロー（GitHub Flow + 手動リリース）
 
@@ -41,7 +41,7 @@ v0.MINOR.PATCH
 
 1. **feature/fix ブランチで開発**
    - `feature/機能名` または `fix/バグ名` ブランチを作成
-   - わかりやすいコミットメッセージで記録（Conventional Commits推奨）
+   - わかりやすいコミットメッセージで記録（Conventional Commits 推奨）
 2. **Pull Request を作成**
    - main ブランチへの Pull Request を作成
    - レビュー・テストを実施
@@ -50,11 +50,11 @@ v0.MINOR.PATCH
    - 複数の PR をまとめてマージ可能
 4. **手動でリリースを実行**
    - エンジニアが GitHub Actions から手動でリリースを実行
-   - リリースタイプを選択（patch / minor / prerelease）
+   - リリースタイプを選択（patch / minor）
    - バージョン番号を自動計算
    - Git タグを作成（`v`プレフィックス付き）
    - GitHub Release を作成（リリースノート自動生成）
-   - package.json を更新してコミット
+   - `VERSION`ファイルを更新してコミット
 
 **重要：main ブランチへの直接コミットは禁止**
 
@@ -79,16 +79,14 @@ git push origin feature/new-feature
 4. **Release type** を選択：
    - **patch**: バグ修正（0.28.0 → 0.28.1）
    - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
-   - **prerelease**: プレリリース版（0.28.0 → 0.29.0-pre.1）
 5. 「Run workflow」を実行
 
 **バージョンアップのルール：**
 
-手動で選択したリリースタイプに基づいて、前回のバージョンから自動的にバージョンが計算されます：
+手動で選択したリリースタイプに基づいて、`VERSION`ファイルの現在のバージョンから自動的にバージョンが計算されます：
 
 - **patch**: バグ修正・小さな改善（0.x.y → 0.x.(y+1)）
 - **minor**: 新機能・破壊的変更（0.x.0 → 0.(x+1).0）
-- **prerelease**: テスト版（0.x.0 → 0.(x+1).0-pre.1）
 
 **複数の変更をまとめてリリース：**
 
@@ -186,41 +184,40 @@ git commit -m "docs: update README installation instructions"
 
 リリースノートは **GitHub Releases の自動生成機能** を使用します。
 
-- semantic-release が Conventional Commits から自動的に生成
-- `feat:` は「Features」セクションに表示
-- `fix:` は「Bug Fixes」セクションに表示
-- `BREAKING CHANGE:` は「Breaking Changes」セクションに表示
+- リリーススクリプトが前回のタグからのコミットログを自動的に収集
+- コミットメッセージのリストがリリースノートとして表示される
 - CHANGELOG ファイルは管理しない（GitHub Releases 参照）
 
 ### ローカルでの確認
 
 ```bash
-# 依存関係のインストール
-pnpm install
+# 現在のバージョンを確認
+cat VERSION
 
-# release-itのドライラン（実際には実行されない）
-pnpm release:patch --dry-run
-pnpm release:minor --dry-run
-pnpm release:pre --dry-run
+# リリーススクリプトのヘルプを表示
+./bin/release -h
+
+# リリースの事前確認（実際には実行されない）
+# ローカルでは対話モードで実行し、確認をスキップできます
 ```
 
 ### 必要なツール
 
-- **mise**: Node.js と pnpm のバージョン管理（`.mise.toml`で定義）
-- **pnpm**: パッケージマネージャー
-- **release-it**: リリース自動化ツール
+- **git**: バージョン管理システム
+- **gh**: GitHub CLI（リリース作成に使用）
 
 ### ローカルでのリリース（開発者向け）
 
 ```bash
-# PATCHリリース
-pnpm release:patch
+# PATCHリリース（対話モード）
+./bin/release patch
 
-# MINORリリース
-pnpm release:minor
+# MINORリリース（対話モード）
+./bin/release minor
 
-# プレリリース
-pnpm release:pre
+# CI/CD用（非対話モード）
+./bin/release patch --ci
+./bin/release minor --ci
 ```
 
 詳細は [`CONTRIBUTING.md`](CONTRIBUTING.md) を参照してください。
@@ -231,5 +228,5 @@ pnpm release:pre
 - [Semantic Versioning 2.0.0（日本語）](https://semver.org/lang/ja/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Conventional Commits（日本語）](https://www.conventionalcommits.org/ja/)
-- [semantic-release](https://github.com/semantic-release/semantic-release)
+- [GitHub CLI Documentation](https://cli.github.com/manual/)
 - [GitHub Releases Documentation](https://docs.github.com/en/repositories/releasing-projects-on-github)

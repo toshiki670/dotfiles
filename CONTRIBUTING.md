@@ -10,19 +10,10 @@ dotfilesプロジェクトへのコントリビューションをお考えいた
 
 ```bash
 # Homebrew経由でインストール
-brew install mise
-
-# miseでNode.jsとpnpmをインストール（プロジェクトルートで実行）
-cd ~/dotfiles
-mise install
+brew install git gh zsh nvim mise sheldon
 ```
 
-### 依存関係のインストール
-
-```bash
-# プロジェクトの依存関係をインストール
-pnpm install
-```
+詳細は [`README.md`](README.md) を参照してください。
 
 ## コミット規約
 
@@ -212,15 +203,15 @@ Pull Requestをmainブランチにマージした後、エンジニアが手動�
 4. **Release type** を選択：
    - **patch**: バグ修正（0.28.0 → 0.28.1）
    - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
-   - **prerelease**: プレリリース版（0.28.0 → 0.29.0-pre.1）
 5. 「Run workflow」を実行
 
 **リリースアクションが実行すること：**
 
-1. release-itが選択されたリリースタイプに基づいてバージョンを計算
-2. Gitタグを作成（例: `v0.29.0`）
-3. GitHub Releaseを作成（リリースノート自動生成）
-4. package.jsonを更新してコミット
+1. `bin/release`スクリプトが`VERSION`ファイルから現在のバージョンを読み取り
+2. 選択されたリリースタイプに基づいてバージョンを計算
+3. `VERSION`ファイルを更新してコミット
+4. Gitタグを作成（例: `v0.29.0`）
+5. GitHub Releaseを作成（前回のタグからのコミットログを自動生成）
 
 ### リリースノートについて
 
@@ -234,7 +225,6 @@ Pull Requestをmainブランチにマージした後、エンジニアが手動�
 
 - **patch**: バグ修正・小さな改善（0.28.0 → 0.28.1）
 - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
-- **prerelease**: テスト版（0.28.0 → 0.29.0-pre.1）
 
 ### 複数のPRをまとめてリリース
 
@@ -260,10 +250,15 @@ PR#3: feat: add vim config (マージ)
 ### ローカルでのリリース確認
 
 ```bash
-# ドライラン（実際には実行されない）
-pnpm release:patch --dry-run
-pnpm release:minor --dry-run
-pnpm release:pre --dry-run
+# 現在のバージョンを確認
+cat VERSION
+
+# リリーススクリプトのヘルプを表示
+./bin/release -h
+
+# ローカルでのリリース実行（対話モード）
+./bin/release patch
+./bin/release minor
 ```
 
 ## テスト
