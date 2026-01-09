@@ -4,13 +4,11 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
+    version = false, -- Use latest commit
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter-textobjects",
-    },
-    config = function()
-      require("nvim-treesitter.configs").setup({
+    opts = function()
+      return {
         -- Install parsers synchronously (only applied to `ensure_installed`)
         sync_install = false,
 
@@ -63,8 +61,25 @@ return {
             node_decremental = "<BS>",
           },
         },
+      }
+    end,
+    config = function(_, opts)
+      require("nvim-treesitter.configs").setup(opts)
 
-        -- Textobjects
+      -- Enable folding based on treesitter
+      vim.opt.foldmethod = "expr"
+      vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+      vim.opt.foldenable = false -- Don't fold by default
+    end,
+  },
+  
+  -- Treesitter textobjects (separate plugin)
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    event = { "BufReadPost", "BufNewFile" },
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      require("nvim-treesitter.configs").setup({
         textobjects = {
           select = {
             enable = true,
@@ -98,11 +113,6 @@ return {
           },
         },
       })
-
-      -- Enable folding based on treesitter
-      vim.opt.foldmethod = "expr"
-      vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-      vim.opt.foldenable = false -- Don't fold by default
     end,
   },
 }
