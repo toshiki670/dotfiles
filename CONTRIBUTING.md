@@ -203,15 +203,15 @@ Pull Request を main ブランチにマージした後、エンジニアが手�
 4. **Release type** を選択：
    - **patch**: バグ修正（0.28.0 → 0.28.1）
    - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
+   - **major**: メジャーバージョンアップ（0.x.y → 1.0.0）
 5. 「Run workflow」を実行
 
 **リリースアクションが実行すること：**
 
-1. `bin/release`スクリプトが`VERSION`ファイルから現在のバージョンを読み取り
-2. 選択されたリリースタイプに基づいてバージョンを計算
-3. `VERSION`ファイルを更新してコミット
-4. Git タグを作成（例: `v0.29.0`）
-5. GitHub Release を作成（前回のタグからのコミットログを自動生成）
+1. 最新のGitHubリリースから現在のバージョンを取得
+2. `bin/bump_version` スクリプトに現在のバージョンとリリースタイプを渡してバージョンを計算
+3. Git タグを作成（例: `v0.29.0`）
+4. GitHub Release を作成（前回のタグからのコミットログを自動生成）
 
 ### リリースノートについて
 
@@ -225,6 +225,7 @@ Pull Request を main ブランチにマージした後、エンジニアが手�
 
 - **patch**: バグ修正・小さな改善（0.28.0 → 0.28.1）
 - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
+- **major**: メジャーバージョンアップ（0.x.y → 1.0.0）
 
 ### 複数の PR をまとめてリリース
 
@@ -248,19 +249,24 @@ PR#3: feat: add vim config (マージ)
 
 詳細は [`VERSIONING.md`](VERSIONING.md) を参照してください。
 
-### ローカルでのリリース確認
+### ローカルでのバージョン確認
 
 ```bash
 # 現在のバージョンを確認
-cat VERSION
+gh release view --json tagName -q '.tagName'
+# または
+git describe --tags --abbrev=0
 
-# リリーススクリプトのヘルプを表示
-./bin/release -h
+# バージョンバンプスクリプトのヘルプを表示
+./bin/bump_version -h
 
-# ローカルでのリリース実行（対話モード）
-./bin/release patch
-./bin/release minor
+# 次のバージョンを確認（純粋関数として動作）
+./bin/bump_version v0.28.0 patch   # Output: v0.28.1
+./bin/bump_version v0.28.0 minor   # Output: v0.29.0
+./bin/bump_version v0.28.0 major   # Output: v1.0.0
 ```
+
+**注意**: `bin/bump_version` は純粋関数として設計されており、現在のバージョンとバンプタイプを受け取って新しいバージョンを返すだけです。実際のバージョン取得、タグ作成、GitHubリリース作成はCI/CDワークフローで実行されます。
 
 ## テスト
 

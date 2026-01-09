@@ -10,6 +10,7 @@ on:
         options:
           - patch
           - minor
+          - major
         default: patch
 
 permissions:
@@ -44,8 +45,44 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Run release
+      - name: Get current version
+        id: current
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./bin/release ${{ inputs.release_type }} --ci
+          CURRENT_VERSION=$(gh release view --json tagName -q '.tagName' 2>/dev/null || echo 'v0.0.0')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Bump version
+        id: bump
+        run: |
+          NEW_VERSION=$(./bin/bump_version "${{ steps.current.outputs.current_version }}" "${{ inputs.release_type }}")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Create Git tag
+        run: |
+          git tag -a "${{ steps.bump.outputs.new_version }}" -m "Release ${{ steps.bump.outputs.new_version }}"
+          git push origin "${{ steps.bump.outputs.new_version }}"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ steps.bump.outputs.new_version }}"
+          
+          # Get commits since last tag for release notes
+          LAST_TAG=$(git describe --tags --abbrev=0 "$TAG_NAME^" 2>/dev/null || echo "")
+          if [[ -z "$LAST_TAG" ]]; then
+            NOTES="Release ${TAG_NAME}"
+          else
+            NOTES=$(git log "${LAST_TAG}..${TAG_NAME}" --pretty=format:"- %s (%h)" | head -30)
+            if [[ -z "$NOTES" ]]; then
+              NOTES="Release ${TAG_NAME}"
+            fi
+          fi
+          
+          gh release create "$TAG_NAME" \
+            --title "$TAG_NAME" \
+            --notes "$NOTES"

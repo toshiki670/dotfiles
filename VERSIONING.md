@@ -50,11 +50,11 @@ v0.MINOR.PATCH
    - 複数の PR をまとめてマージ可能
 4. **手動でリリースを実行**
    - エンジニアが GitHub Actions から手動でリリースを実行
-   - リリースタイプを選択（patch / minor）
+   - リリースタイプを選択（patch / minor / major）
+   - 最新のGitHubリリースまたはGitタグから現在のバージョンを取得
    - バージョン番号を自動計算
    - Git タグを作成（`v`プレフィックス付き）
    - GitHub Release を作成（リリースノート自動生成）
-   - `VERSION`ファイルを更新してコミット
 
 **重要：main ブランチへの直接コミットは禁止**
 
@@ -79,14 +79,16 @@ git push origin feature/new-feature
 4. **Release type** を選択：
    - **patch**: バグ修正（0.28.0 → 0.28.1）
    - **minor**: 新機能・破壊的変更（0.28.0 → 0.29.0）
+   - **major**: メジャーバージョンアップ（0.x.y → 1.0.0）
 5. 「Run workflow」を実行
 
 **バージョンアップのルール：**
 
-手動で選択したリリースタイプに基づいて、`VERSION`ファイルの現在のバージョンから自動的にバージョンが計算されます：
+手動で選択したリリースタイプに基づいて、最新のGitHubリリースまたはGitタグから現在のバージョンを取得し、自動的に新しいバージョンが計算されます：
 
 - **patch**: バグ修正・小さな改善（0.x.y → 0.x.(y+1)）
-- **minor**: 新機能・破壊的変更（0.x.0 → 0.(x+1).0）
+- **minor**: 新機能・破壊的変更（0.x.y → 0.(x+1).0）
+- **major**: メジャーバージョンアップ（0.x.y → 1.0.0）
 
 **複数の変更をまとめてリリース：**
 
@@ -192,33 +194,25 @@ git commit -m "docs: update README installation instructions"
 
 ```bash
 # 現在のバージョンを確認
-cat VERSION
+gh release view --json tagName -q '.tagName'
+# または
+git describe --tags --abbrev=0
 
-# リリーススクリプトのヘルプを表示
-./bin/release -h
+# バージョンバンプスクリプトのヘルプを表示
+./bin/bump_version -h
 
-# リリースの事前確認（実際には実行されない）
-# ローカルでは対話モードで実行し、確認をスキップできます
+# 次のバージョンを確認（純粋関数として動作）
+./bin/bump_version v0.28.0 patch   # Output: v0.28.1
+./bin/bump_version v0.28.0 minor   # Output: v0.29.0
+./bin/bump_version v0.28.0 major   # Output: v1.0.0
 ```
 
 ### 必要なツール
 
 - **git**: バージョン管理システム
-- **gh**: GitHub CLI（リリース作成に使用）
+- **gh**: GitHub CLI（バージョン取得とリリース作成に使用、CI/CDで使用）
 
-### ローカルでのリリース（開発者向け）
-
-```bash
-# PATCHリリース（対話モード）
-./bin/release patch
-
-# MINORリリース（対話モード）
-./bin/release minor
-
-# CI/CD用（非対話モード）
-./bin/release patch --ci
-./bin/release minor --ci
-```
+**注意**: `bin/bump_version` は純粋関数として設計されており、現在のバージョンとバンプタイプを受け取って新しいバージョンを返すだけです。実際のバージョン取得、タグ作成、GitHubリリース作成はCI/CDワークフローで実行されます。
 
 詳細は [`CONTRIBUTING.md`](CONTRIBUTING.md) を参照してください。
 
