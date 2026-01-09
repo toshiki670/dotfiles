@@ -70,19 +70,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_NAME="${{ steps.bump.outputs.new_version }}"
-          
-          # Get commits since last tag for release notes
-          LAST_TAG=$(git describe --tags --abbrev=0 "$TAG_NAME^" 2>/dev/null || echo "")
-          if [[ -z "$LAST_TAG" ]]; then
-            NOTES="Release ${TAG_NAME}"
-          else
-            NOTES=$(git log "${LAST_TAG}..${TAG_NAME}" --pretty=format:"- %s (%h)" | head -30)
-            if [[ -z "$NOTES" ]]; then
-              NOTES="Release ${TAG_NAME}"
-            fi
-          fi
-          
-          gh release create "$TAG_NAME" \
-            --title "$TAG_NAME" \
-            --notes "$NOTES"
+          gh release create "${{ steps.bump.outputs.new_version }}" \
+            --title "${{ steps.bump.outputs.new_version }}" \
+            --generate-notes
