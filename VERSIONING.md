@@ -184,10 +184,10 @@ git commit -m "docs: update README installation instructions"
 
 ### リリースノートについて
 
-リリースノートは **GitHub Releases の自動生成機能** を使用します。
+リリースノートは **GitHub Releases の自動生成機能**（`--generate-notes`）を使用します。
 
-- リリーススクリプトが前回のタグからのコミットログを自動的に収集
-- コミットメッセージのリストがリリースノートとして表示される
+- GitHubが前回のタグからのコミットログを自動的に収集
+- PRやコミットメッセージがリリースノートとして表示される
 - CHANGELOG ファイルは管理しない（GitHub Releases 参照）
 
 ### ローカルでの確認
