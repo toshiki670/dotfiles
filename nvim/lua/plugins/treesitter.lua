@@ -8,35 +8,16 @@ return {
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
     config = function()
-      -- Simplified treesitter setup without using configs module
-      -- This avoids compatibility issues with nvim-treesitter.configs
-      
-      -- List of parsers to ensure are installed
-      local parsers = {
-        "lua", "vim", "vimdoc", "query",
-        "javascript", "typescript", "tsx",
-        "json", "html", "css",
-        "ruby", "rust", "python",
-        "bash", "markdown", "markdown_inline",
-        "yaml", "toml", "go", "dockerfile",
-      }
-
-      -- Install parsers
-      local ok, ts_install = pcall(require, "nvim-treesitter.install")
-      if ok then
-        for _, parser in ipairs(parsers) do
-          ts_install.update({ with_sync = false })(parser)
-        end
-      end
-
-      -- Enable highlighting via vim.treesitter
-      vim.treesitter.language.register("python", "python")
-      vim.treesitter.language.register("lua", "lua")
+      -- Minimal treesitter setup
+      -- Parsers should be installed manually via :TSInstall or lazy.nvim build hook
       
       -- Enable treesitter-based folding
       vim.opt.foldmethod = "expr"
       vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
       vim.opt.foldenable = false -- Don't fold by default
+      
+      -- Treesitter highlighting is enabled by default in Neovim 0.9+
+      -- No additional configuration needed for basic functionality
     end,
   },
   
