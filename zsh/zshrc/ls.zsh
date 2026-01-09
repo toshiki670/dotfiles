@@ -27,3 +27,6 @@ else
   alias la='ls  -a'
   alias lla='ls -lah'
 fi
+
+# Raw ls (always use standard ls command)
+alias rawls='command ls --color=auto'
