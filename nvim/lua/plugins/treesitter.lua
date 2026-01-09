@@ -7,68 +7,35 @@ return {
     version = false, -- Use latest commit
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
-    opts = function()
-      return {
-        -- Install parsers synchronously (only applied to `ensure_installed`)
-        sync_install = false,
-
-        -- Automatically install missing parsers when entering buffer
-        auto_install = true,
-
-        -- List of parsers to install
-        ensure_installed = {
-          "lua",
-          "vim",
-          "vimdoc",
-          "query",
-          "javascript",
-          "typescript",
-          "tsx",
-          "json",
-          "html",
-          "css",
-          "ruby",
-          "rust",
-          "python",
-          "bash",
-          "markdown",
-          "markdown_inline",
-          "yaml",
-          "toml",
-          "go",
-          "dockerfile",
-        },
-
-        -- Highlighting
-        highlight = {
-          enable = true,
-          additional_vim_regex_highlighting = false,
-        },
-
-        -- Indentation
-        indent = {
-          enable = true,
-          disable = { "ruby" }, -- Ruby indentation can be problematic
-        },
-
-        -- Incremental selection
-        incremental_selection = {
-          enable = true,
-          keymaps = {
-            init_selection = "<CR>",
-            node_incremental = "<CR>",
-            scope_incremental = "<S-CR>",
-            node_decremental = "<BS>",
-          },
-        },
+    config = function()
+      -- Simplified treesitter setup without using configs module
+      -- This avoids compatibility issues with nvim-treesitter.configs
+      
+      -- List of parsers to ensure are installed
+      local parsers = {
+        "lua", "vim", "vimdoc", "query",
+        "javascript", "typescript", "tsx",
+        "json", "html", "css",
+        "ruby", "rust", "python",
+        "bash", "markdown", "markdown_inline",
+        "yaml", "toml", "go", "dockerfile",
       }
-    end,
-    config = function(_, opts)
-      require("nvim-treesitter.configs").setup(opts)
 
-      -- Enable folding based on treesitter
+      -- Install parsers
+      local ok, ts_install = pcall(require, "nvim-treesitter.install")
+      if ok then
+        for _, parser in ipairs(parsers) do
+          ts_install.update({ with_sync = false })(parser)
+        end
+      end
+
+      -- Enable highlighting via vim.treesitter
+      vim.treesitter.language.register("python", "python")
+      vim.treesitter.language.register("lua", "lua")
+      
+      -- Enable treesitter-based folding
       vim.opt.foldmethod = "expr"
-      vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+      vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
       vim.opt.foldenable = false -- Don't fold by default
     end,
   },
