@@ -26,10 +26,7 @@ return {
       { "<Space>dk", "<cmd>Telescope keymaps<cr>", desc = "Keymaps" },
       { "<Space>ds", "<cmd>Telescope git_status<cr>", desc = "Git Status" },
       { "<Space>dt", "<cmd>Telescope git_commits<cr>", desc = "Git Commits" },
-      -- LSP pickers
-      { "gd", "<cmd>Telescope lsp_definitions<cr>", desc = "Go to Definition" },
-      { "gr", "<cmd>Telescope lsp_references<cr>", desc = "References" },
-      { "gi", "<cmd>Telescope lsp_implementations<cr>", desc = "Go to Implementation" },
+      -- LSP pickers (gd, gr, gi are defined in lsp.lua to avoid conflicts)
       { "<leader>ds", "<cmd>Telescope diagnostics<cr>", desc = "Diagnostics" },
     },
     config = function()

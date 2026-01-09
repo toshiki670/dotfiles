@@ -115,26 +115,22 @@ return {
         },
       })
 
-      -- Register key groups
-      require("which-key").register({
-        ["<leader>"] = {
-          c = { name = "+code" },
-          d = { name = "+debug" },
-          f = { name = "+file/find" },
-          g = { name = "+git" },
-          h = { name = "+hunk" },
-          q = { name = "+quit/session" },
-          s = { name = "+search" },
-          t = { name = "+toggle" },
-          w = { name = "+workspace" },
-          x = { name = "+diagnostics/quickfix" },
-        },
-        ["<Space>"] = {
-          d = { name = "+denite/telescope" },
-          g = { name = "+git" },
-          r = { name = "+rails" },
-        },
-        ["s"] = { name = "+split/window" },
+      -- Register key groups (new format)
+      require("which-key").add({
+        { "<leader>c", group = "code" },
+        { "<leader>d", group = "debug" },
+        { "<leader>f", group = "file/find" },
+        { "<leader>g", group = "git" },
+        { "<leader>h", group = "hunk" },
+        { "<leader>q", group = "quit/session" },
+        { "<leader>s", group = "search" },
+        { "<leader>t", group = "toggle" },
+        { "<leader>w", group = "workspace" },
+        { "<leader>x", group = "diagnostics/quickfix" },
+        { "<Space>d", group = "denite/telescope" },
+        { "<Space>g", group = "git" },
+        { "<Space>r", group = "rails" },
+        { "s", group = "split/window" },
       })
     end,
   },
