@@ -12,7 +12,7 @@
 ## Required Tools
 
 ```bash
-$ brew install git gh zsh nvim mise sheldon
+$ brew install git gh zsh nvim mise sheldon eza
 ```
 
 ### Tool Descriptions
@@ -23,6 +23,7 @@ $ brew install git gh zsh nvim mise sheldon
 - `nvim` - Neovim text editor
 - `mise` - Runtime version manager
 - `sheldon` - Zsh plugin manager
+- `eza` - Modern replacement for ls
 
 ## Optional Tools
 

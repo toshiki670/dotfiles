@@ -15,12 +15,12 @@
 
 
 # ls command series
-if type "exa" > /dev/null 2>&1; then
-  # pacman -S exa
-  alias ls='exa'
-  alias ll='exa  -l  -gh --time-style long-iso --git'
-  alias la='exa  -a'
-  alias lla='exa -la -gh --time-style long-iso --git'
+if type "eza" > /dev/null 2>&1; then
+  # pacman -S eza
+  alias ls='eza'
+  alias ll='eza  -l  -gh --time-style long-iso --git'
+  alias la='eza  -a'
+  alias lla='eza -la -gh --time-style long-iso --git'
 else
   alias ls='ls  --color=auto'
   alias ll='ls  -lh'
