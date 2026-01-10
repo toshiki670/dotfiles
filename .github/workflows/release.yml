@@ -10,7 +10,7 @@ on:
         options:
           - patch
           - minor
-          - major
+          # - major
         default: patch
 
 permissions:
