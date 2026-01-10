@@ -194,6 +194,10 @@ nvim/
 
 ## LSPサーバー
 
+**新しいAPI（Neovim 0.11+）を使用**
+
+従来の`require('lspconfig').server_name.setup()`から、新しい`vim.lsp.config()`と`vim.lsp.enable()`に移行済み。
+
 デフォルトでインストールされるLSPサーバー:
 
 - **lua_ls** - Lua
