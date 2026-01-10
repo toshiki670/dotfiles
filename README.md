@@ -90,8 +90,3 @@ $ exec $SHELL -l
 
 - GNOME autostart configurations available in `linux/gnome/autostart/`
 - systemd service files available in `linux/systemd/`
-
-### Windows
-
-- Run `install_win.ps1` for PowerShell configuration
-- Windows Terminal settings available in `win/windows_terminal/`
