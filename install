@@ -69,18 +69,6 @@ else
   echo "${0##*/}: Neovim isn't found." 1>&2
 fi
 
-# Old Vim setup (commented out - migrated to Lua)
-# nvim_comf_path=~/.config/nvim/
-# if type "nvim" > /dev/null 2>&1; then
-#   echo -n 'Neovim installing .'
-#   mkdir -p ${nvim_comf_path}
-#   ln -sf ${dotfiles}vim/.vimrc ${nvim_comf_path}init.vim
-#   nvim -c 'cal dein#update()' -c 'qa!'
-#   echo ' ok!'
-# else
-#   echo "${0##*/}: Neovim isn't found." 1>&2
-# fi
-
 # Tmux Setup
 if type "tmux" > /dev/null 2>&1; then
   echo -n 'Tmux installing .'
