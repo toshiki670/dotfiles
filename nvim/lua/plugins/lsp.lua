@@ -1,5 +1,6 @@
--- LSP configuration
--- Replaces LanguageClient-neovim with native Neovim LSP
+-- LSP configuration using new vim.lsp.config API (Neovim 0.11+)
+-- Migrated from legacy require('lspconfig') to vim.lsp.config
+-- Reference: https://github.com/neovim/nvim-lspconfig
 
 return {
   -- Mason: LSP server installer
@@ -31,7 +32,7 @@ return {
         -- List of servers to ensure are installed
         ensure_installed = {
           "lua_ls",        -- Lua
-          "ts_ls",         -- TypeScript/JavaScript (renamed from tsserver)
+          "ts_ls",         -- TypeScript/JavaScript
           "solargraph",    -- Ruby
           "rust_analyzer", -- Rust
           "pyright",       -- Python
@@ -44,7 +45,7 @@ return {
     end,
   },
 
-  -- LSP configuration
+  -- LSP configuration using NEW API (vim.lsp.config + vim.lsp.enable)
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
@@ -53,7 +54,6 @@ return {
       "mason-lspconfig.nvim",
     },
     config = function()
-      local lspconfig = require("lspconfig")
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       -- LSP handlers configuration
@@ -106,7 +106,7 @@ return {
         vim.keymap.set("n", "<leader>D", vim.lsp.buf.type_definition, opts)
         vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
         vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
-        -- Use Telescope for references if available, otherwise use built-in
+        -- Use Telescope for references if available
         vim.keymap.set("n", "gr", function()
           require("telescope.builtin").lsp_references()
         end, opts)
@@ -137,11 +137,17 @@ return {
         end
       end
 
-      -- Server configurations
-      -- Lua
-      lspconfig.lua_ls.setup({
+      -- Common configuration for all servers
+      local default_config = {
         capabilities = capabilities,
         on_attach = on_attach,
+      }
+
+      -- Configure LSP servers using NEW API: vim.lsp.config()
+      -- This replaces the old lspconfig.server_name.setup() pattern
+
+      -- Lua
+      vim.lsp.config("lua_ls", vim.tbl_extend("force", default_config, {
         settings = {
           Lua = {
             diagnostics = {
@@ -156,29 +162,22 @@ return {
             },
           },
         },
-      })
+      }))
 
       -- TypeScript/JavaScript
-      lspconfig.ts_ls.setup({
-        capabilities = capabilities,
-        on_attach = on_attach,
-      })
+      vim.lsp.config("ts_ls", default_config)
 
       -- Ruby
-      lspconfig.solargraph.setup({
-        capabilities = capabilities,
-        on_attach = on_attach,
+      vim.lsp.config("solargraph", vim.tbl_extend("force", default_config, {
         settings = {
           solargraph = {
             diagnostics = true,
           },
         },
-      })
+      }))
 
       -- Rust
-      lspconfig.rust_analyzer.setup({
-        capabilities = capabilities,
-        on_attach = on_attach,
+      vim.lsp.config("rust_analyzer", vim.tbl_extend("force", default_config, {
         settings = {
           ["rust-analyzer"] = {
             checkOnSave = {
@@ -186,31 +185,30 @@ return {
             },
           },
         },
-      })
+      }))
 
       -- Python
-      lspconfig.pyright.setup({
-        capabilities = capabilities,
-        on_attach = on_attach,
-      })
+      vim.lsp.config("pyright", default_config)
 
       -- JSON
-      lspconfig.jsonls.setup({
-        capabilities = capabilities,
-        on_attach = on_attach,
-      })
+      vim.lsp.config("jsonls", default_config)
 
       -- YAML
-      lspconfig.yamlls.setup({
-        capabilities = capabilities,
-        on_attach = on_attach,
-      })
+      vim.lsp.config("yamlls", default_config)
 
       -- Bash
-      lspconfig.bashls.setup({
-        capabilities = capabilities,
-        on_attach = on_attach,
-      })
+      vim.lsp.config("bashls", default_config)
+
+      -- Enable LSP servers using NEW API: vim.lsp.enable()
+      -- This activates the configs for their respective filetypes
+      vim.lsp.enable("lua_ls")
+      vim.lsp.enable("ts_ls")
+      vim.lsp.enable("solargraph")
+      vim.lsp.enable("rust_analyzer")
+      vim.lsp.enable("pyright")
+      vim.lsp.enable("jsonls")
+      vim.lsp.enable("yamlls")
+      vim.lsp.enable("bashls")
     end,
   },
 }
