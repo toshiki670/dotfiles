@@ -95,10 +95,6 @@ alias -s html='open'
 alias -s php='php -f'
 
 
-# Dotfiles Config
-alias zshrc="vim ${DOTFILES}/zsh/.zshrc"
-
-
 # Process grep
 function ps-grep {
   ps aux | grep $1 | grep -v grep
