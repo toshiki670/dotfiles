@@ -22,8 +22,8 @@ if type "bash" > /dev/null 2>&1; then
     echo -n '.'
   }
 
-  maker '.bash_profile'
-  maker '.bashrc'
+  maker 'bash_profile'
+  maker 'bashrc'
   echo ' ok!'
 else
   echo "${0##*/}: Bash isn't found." 1>&2
@@ -41,9 +41,9 @@ if type "zsh" > /dev/null 2>&1; then
     echo -n '.'
   }
 
-  maker '.zshenv'
-  maker '.zlogin'
-  maker '.zshrc'
+  maker 'zshenv'
+  maker 'zlogin'
+  maker 'zshrc'
   echo -n '.'
 
   # Sheldon config symlink
@@ -73,11 +73,10 @@ fi
 if type "tmux" > /dev/null 2>&1; then
   echo -n 'Tmux installing .'
 
-  ln -sf ${dotfiles}tmux/.tmux.conf ~/.tmux.conf
+  ln -sf ${dotfiles}tmux/tmux.conf ~/.tmux.conf
   if type "git" > /dev/null 2>&1; then
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
   fi
 
   echo ' ok!'
 fi
-

@@ -15,52 +15,52 @@ function require() {
 }
 
 # Setting completions
-require 'zshrc/docker.zsh'
+require 'config/docker.zsh'
 
 # History config
-require 'zshrc/history.zsh'
+require 'config/history.zsh'
 
 # Completion config
-require 'zshrc/completion.zsh'
+require 'config/completion.zsh'
 
 # Initialize and Load Sheldon
-require 'zshrc/sheldon.zsh'
+require 'config/sheldon.zsh'
 
 # eza command config
-require 'zshrc/eza.zsh'
+require 'config/eza.zsh'
 
 # bat config
-require 'zshrc/bat.zsh'
+require 'config/bat.zsh'
 
 # zoxide config
-require 'zshrc/zoxide.zsh'
+require 'config/zoxide.zsh'
 
 # ruby and rails config
-require 'zshrc/ruby.zsh'
+require 'config/ruby.zsh'
 
 # python config
-require 'zshrc/python.zsh'
+require 'config/python.zsh'
 
 # C language config
-require 'zshrc/c.zsh'
+require 'config/c.zsh'
 
 # git config
-require 'zshrc/git.zsh'
+require 'config/git.zsh'
 
 # vim config
-require 'zshrc/vim.zsh'
+require 'config/vim.zsh'
 
 # pacman config
-require 'zshrc/pacman.zsh'
+require 'config/pacman.zsh'
 
 # mise config
-require 'zshrc/mise.zsh'
+require 'config/mise.zsh'
 
 # yt-dlp config
-require 'zshrc/yt-dlp.zsh'
+require 'config/yt-dlp.zsh'
 
 # Homebrew config - Must be loaded AFTER all plugins (sheldon)
-require 'zshrc/brew.zsh'
+require 'config/brew.zsh'
 
 ### Common config
 
