@@ -29,6 +29,12 @@ require 'zshrc/sheldon.zsh'
 # ls or exa command config
 require 'zshrc/ls.zsh'
 
+# bat config
+require 'zshrc/bat.zsh'
+
+# zoxide config
+require 'zshrc/zoxide.zsh'
+
 # ruby and rails config
 require 'zshrc/ruby.zsh'
 

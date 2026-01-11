@@ -12,7 +12,7 @@
 ## Required Tools
 
 ```bash
-$ brew install git gh zsh nvim mise sheldon eza
+$ brew install git gh zsh nvim mise sheldon eza bat fd ripgrep zoxide fzf
 ```
 
 ### Tool Descriptions
@@ -24,17 +24,23 @@ $ brew install git gh zsh nvim mise sheldon eza
 - `mise` - Runtime version manager
 - `sheldon` - Zsh plugin manager
 - `eza` - Modern replacement for ls
+- `bat` - Modern replacement for cat with syntax highlighting
+- `fd` - Fast and user-friendly alternative to find
+- `ripgrep` - Fast search tool (rg command)
+- `zoxide` - Smarter cd command that learns your habits
+- `fzf` - Command-line fuzzy finder (required for zoxide's zi command)
 
 ## Optional Tools
 
 ```bash
-$ brew install ffmpeg marp-cli
+$ brew install ffmpeg marp-cli gitui
 ```
 
 ### Optional Tool Descriptions
 
 - `ffmpeg` - Multimedia framework (required for video/audio processing)
 - `marp-cli` - Markdown to PDF/PowerPoint converter
+- `gitui` - Terminal UI for git commands
 
 # Installation
 
