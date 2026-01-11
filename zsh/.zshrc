@@ -26,8 +26,8 @@ require 'zshrc/completion.zsh'
 # Initialize and Load Sheldon
 require 'zshrc/sheldon.zsh'
 
-# ls or exa command config
-require 'zshrc/ls.zsh'
+# eza command config
+require 'zshrc/eza.zsh'
 
 # bat config
 require 'zshrc/bat.zsh'
@@ -75,8 +75,9 @@ export PATH="${DOTFILES}/bin:$PATH"
 
 # Printable 8bit
 setopt print_eight_bit
-setopt auto_cd
-setopt auto_pushd
+
+
+# Enable command spell correction
 setopt correct
 
 

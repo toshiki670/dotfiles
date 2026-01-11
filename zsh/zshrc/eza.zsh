@@ -1,4 +1,4 @@
-# ls command series
+# eza - ls command replacement
 if type "eza" > /dev/null 2>&1; then
   alias ls='eza --icons=always -l -gh --time-style long-iso --git'
   alias la='eza --icons=always -la -gh --time-style long-iso --git'
