@@ -12,7 +12,7 @@
 ## Required Tools
 
 ```bash
-$ brew install git gh zsh nvim mise sheldon eza bat fd ripgrep zoxide fzf
+$ brew install git gh zsh nvim mise sheldon eza bat fd ripgrep zoxide fzf git-delta
 ```
 
 ### Tool Descriptions
@@ -29,6 +29,7 @@ $ brew install git gh zsh nvim mise sheldon eza bat fd ripgrep zoxide fzf
 - `ripgrep` - Fast search tool (rg command)
 - `zoxide` - Smarter cd command that learns your habits
 - `fzf` - Command-line fuzzy finder (required for zoxide's zi command)
+- `git-delta` - Syntax-highlighting pager for git, diff, and grep output
 
 ## Optional Tools
 
