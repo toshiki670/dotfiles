@@ -29,6 +29,9 @@ require 'config/sheldon.zsh'
 # eza command config
 require 'config/eza.zsh'
 
+# cd config
+require 'config/cd.zsh'
+
 # zoxide config
 require 'config/zoxide.zsh'
 
