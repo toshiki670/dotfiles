@@ -7,6 +7,15 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
+# Release
+
+To create a new release, see [How to Execute a Release](CONTRIBUTING.md#リリースの実行方法) in the Contributing guide.
+
+**Quick Access:**
+
+- 📖 [Release Guide](CONTRIBUTING.md#リリースの実行方法) - Detailed instructions on how to create a release
+- 🚀 [Run Release Workflow](https://github.com/toshiki670/dotfiles/actions/workflows/release.yml) - Direct link to GitHub Actions release workflow
+
 # Prerequisites
 
 ## Required Tools
@@ -97,12 +106,3 @@ $ exec $SHELL -l
 
 - GNOME autostart configurations available in `linux/gnome/autostart/`
 - systemd service files available in `linux/systemd/`
-
-# Release
-
-To create a new release, see [How to Execute a Release](CONTRIBUTING.md#リリースの実行方法) in the Contributing guide.
-
-**Quick Access:**
-
-- 📖 [Release Guide](CONTRIBUTING.md#リリースの実行方法) - Detailed instructions on how to create a release
-- 🚀 [Run Release Workflow](https://github.com/toshiki670/dotfiles/actions/workflows/release.yml) - Direct link to GitHub Actions release workflow
