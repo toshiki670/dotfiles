@@ -20,6 +20,13 @@ dotfiles-latest() {
     return 1
   fi
 
+  # Fetch the latest tags from remote
+  echo "Fetching latest tags from remote..."
+  if ! git -C "$DOTFILES" fetch --tags 2>&1; then
+    echo "Error: Failed to fetch tags from remote" >&2
+    return 1
+  fi
+
   # Get the latest version tag
   local latest_tag
   latest_tag=$(git -C "$DOTFILES" tag --sort=-v:refname | head -1)
