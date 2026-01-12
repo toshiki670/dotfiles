@@ -1,7 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/git,vim,code,ruby,rails,linux,macos,windows
-# Edit at https://www.toptal.com/developers/gitignore?templates=git,vim,code,ruby,rails,linux,macos,windows
-
-#!! ERROR: code is undefined. Use list command to see defined gitignore types !!#
+# Created by https://www.toptal.com/developers/gitignore/api/git,vim,ruby,rails,linux,macos,windows
+# Edit at https://www.toptal.com/developers/gitignore?templates=git,vim,ruby,rails,linux,macos,windows
 
 ### Git ###
 # Created by git for backups. To disable backups in Git:
@@ -233,7 +231,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/git,vim,code,ruby,rails,linux,macos,windows
+# End of https://www.toptal.com/developers/gitignore/api/git,vim,ruby,rails,linux,macos,windows
 
 # Created by my own rules
 mise.local.toml
