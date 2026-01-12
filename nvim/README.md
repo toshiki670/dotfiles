@@ -202,7 +202,7 @@ nvim/
 
 - **lua_ls** - Lua
 - **ts_ls** - TypeScript/JavaScript
-- **solargraph** - Ruby
+- **solargraph** - Ruby (要手動インストール: `gem install solargraph`)
 - **rust_analyzer** - Rust
 - **pyright** - Python
 - **jsonls** - JSON
@@ -248,6 +248,27 @@ nvim
 :Mason
 :LspInfo
 :checkhealth
+```
+
+### solargraph（Ruby LSP）のインストールエラー
+
+solargraphはMason経由でのインストールが失敗することがあります。以下のコマンドで手動インストールしてください:
+
+```bash
+gem install solargraph
+```
+
+mise（またはrbenv）を使用している場合:
+
+```bash
+# miseの場合
+mise use ruby@latest
+gem install solargraph
+
+# rbenvの場合
+rbenv global 3.x.x
+gem install solargraph
+rbenv rehash
 ```
 
 ### 設定をリセット
