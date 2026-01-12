@@ -33,7 +33,7 @@ return {
         ensure_installed = {
           "lua_ls",        -- Lua
           "ts_ls",         -- TypeScript/JavaScript
-          "solargraph",    -- Ruby
+          -- "solargraph", -- Ruby (install manually via: gem install solargraph)
           "rust_analyzer", -- Rust
           "pyright",       -- Python
           "jsonls",        -- JSON
