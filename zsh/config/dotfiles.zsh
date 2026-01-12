@@ -31,7 +31,7 @@ dotfiles-latest() {
 
   # Checkout the latest tag
   echo "Checking out latest version: $latest_tag"
-  if git -C "$DOTFILES" checkout "$latest_tag" 2>&1; then
+  if git -C "$DOTFILES" -c advice.detachedHead=false checkout "$latest_tag" 2>&1; then
     echo "Successfully checked out $latest_tag"
     return 0
   else
