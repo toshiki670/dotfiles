@@ -44,6 +44,9 @@ require 'config/c.zsh'
 # git config
 require 'config/git.zsh'
 
+# dotfiles version management config
+require 'config/dotfiles.zsh'
+
 # vim config
 require 'config/vim.zsh'
 
