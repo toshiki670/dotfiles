@@ -1,5 +1,0 @@
-[Desktop Entry]
-Type=Application
-Exec=xset r rate 248 48
-X-GNOME-Autostart-enabled=true
-Name=Typematic delay and rate
