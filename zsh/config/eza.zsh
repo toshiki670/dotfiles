@@ -4,8 +4,25 @@ if type "eza" > /dev/null 2>&1; then
   alias la='eza --icons=always -la -gh --time-style long-iso --git'
 
   lt() {
-    local level="${1:-2}"  # デフォルトは2
-    eza --icons=always -la -gh --time-style long-iso --git --tree --level="$level"
+    local level="2"  # デフォルトは2
+    local target="."   # デフォルトはカレントディレクトリ
+
+    if [[ $# -eq 1 ]]; then
+      # 引数が1つの場合
+      if [[ -e "$1" ]]; then
+        # パスとして存在する場合はパスとして扱う
+        target="$1"
+      else
+        # 存在しない場合はレベルとして扱う
+        level="$1"
+      fi
+    elif [[ $# -eq 2 ]]; then
+      # 引数が2つの場合、第1引数をレベル、第2引数をパスとして扱う
+      level="$1"
+      target="$2"
+    fi
+
+    eza --icons=always -la -gh --time-style long-iso --git --tree --level="$level" "$target"
   }
 else
   alias ls='ls --color=auto -lh'
