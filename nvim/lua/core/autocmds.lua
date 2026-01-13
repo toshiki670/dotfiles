@@ -39,3 +39,60 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end
   end,
 })
+
+-- Check if buffer is git-tracked when opened (cache for performance)
+vim.api.nvim_create_autocmd({"BufReadPost", "BufNewFile"}, {
+  group = vim.api.nvim_create_augroup("CheckGitTracked", { clear = true }),
+  callback = function()
+    local filepath = vim.api.nvim_buf_get_name(0)
+    if filepath ~= "" then
+      local result = vim.fn.system("git ls-files --error-unmatch " .. vim.fn.shellescape(filepath) .. " 2>/dev/null")
+      vim.b.is_git_tracked = (vim.v.shell_error == 0)
+    else
+      vim.b.is_git_tracked = false
+    end
+  end,
+})
+
+-- Auto-save git-tracked files after text changes (with debounce)
+local save_timers = {}
+local function debounced_save()
+  local bufnr = vim.api.nvim_get_current_buf()
+  
+  -- Check if file is git-tracked (from cache) - early return for efficiency
+  local is_tracked = vim.b[bufnr].is_git_tracked
+  if not is_tracked then
+    return
+  end
+  
+  -- Cancel existing timer for this buffer
+  if save_timers[bufnr] then
+    vim.fn.timer_stop(save_timers[bufnr])
+  end
+  
+  -- Set new timer (1000ms after last change)
+  save_timers[bufnr] = vim.fn.timer_start(1000, function()
+    -- Check if buffer still exists and is valid
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      save_timers[bufnr] = nil
+      return
+    end
+    
+    -- Check if file is modified and modifiable
+    if not vim.bo[bufnr].modified or not vim.bo[bufnr].modifiable then
+      return
+    end
+    
+    -- Save the file
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.cmd("silent! write")
+    end)
+    
+    save_timers[bufnr] = nil
+  end)
+end
+
+vim.api.nvim_create_autocmd({"TextChanged", "TextChangedI"}, {
+  group = vim.api.nvim_create_augroup("AutoSaveGitFiles", { clear = true }),
+  callback = debounced_save,
+})
