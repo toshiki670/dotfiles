@@ -52,6 +52,49 @@ $ brew install ffmpeg marp-cli gitui
 - `marp-cli` - Markdown to PDF/PowerPoint converter
 - `gitui` - Terminal UI for git commands
 
+## Rust Tools
+
+### Necessary
+
+```bash
+$ cargo install cargo-audit cargo-cache cargo-edit cargo-llvm-cov cargo-make cargo-modules cargo-outdated cargo-tree cargo-update cargo-watch
+```
+
+#### Tool Descriptions
+
+- `cargo-audit` - Scan dependencies for known security vulnerabilities
+- `cargo-cache` - Manage Cargo cache directory, display size, and clean unnecessary files
+- `cargo-edit` - Add, remove, and update dependencies in Cargo.toml from command line
+- `cargo-llvm-cov` - Measure code coverage and generate reports
+- `cargo-make` - Task runner/build tool for automating complex build flows and tasks
+- `cargo-modules` - Visualize project module structure
+- `cargo-outdated` - List available dependency updates
+- `cargo-tree` - Display dependency tree structure
+- `cargo-update` - Batch update installed Cargo binary crates
+- `cargo-watch` - Monitor source code changes and automatically run commands (build, test, etc.) on change
+
+### Optional
+
+```bash
+$ cargo install cargo-release tauri-cli create-tauri-app
+```
+
+#### Optional Tool Descriptions
+
+- `cargo-release` - Automate the release process for new versions
+- `tauri-cli` - Tauri application development CLI
+- `create-tauri-app` - Scaffolding tool for Tauri applications
+
+### Additional Tools
+
+The following tools may already be installed in your environment:
+
+- `sccache` (v0.12.0) - Cache compilation results to reduce build times
+- `sea-orm-cli` (v1.1.19) - SeaORM CLI for migrations and entity generation
+- `taplo-cli` (v0.10.0) - TOML formatter and linter
+- `trunk` (v0.21.14) - Build tool for Rust + WebAssembly applications
+- `wasm-bindgen-cli` - Generate bindings between Rust and JavaScript for WebAssembly
+
 # Installation
 
 ## 1. Clone Repository
