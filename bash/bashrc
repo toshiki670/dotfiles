@@ -1,3 +1,23 @@
 PS1="\[\e[0;36m\]\u@\H \W\[\e[0m\]\$ "
 
 export HISTCONTROL=ignoredups
+
+# mise config
+eval "$(mise activate bash)"
+
+# Homebrew PATH configuration
+# Ensure Homebrew paths come before mise-managed paths
+# mise can reorder PATH, so we need to fix it in PROMPT_COMMAND
+# This must be loaded AFTER mise initialization
+if [[ "$OSTYPE" == "darwin"* ]] && [[ -d "/opt/homebrew/bin" ]]; then
+  _fix_homebrew_path() {
+    if [[ "$PATH" != "/opt/homebrew/bin:"* ]]; then
+      local clean_path="${PATH}"
+      clean_path="${clean_path//:\/opt\/homebrew\/bin/}"
+      clean_path="${clean_path//:\/opt\/homebrew\/sbin/}"
+      clean_path="${clean_path//:\/opt\/homebrew\/opt\/coreutils\/libexec\/gnubin/}"
+      export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/opt/homebrew/opt/coreutils/libexec/gnubin:${clean_path#:}"
+    fi
+  }
+  PROMPT_COMMAND="_fix_homebrew_path${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+fi
