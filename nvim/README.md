@@ -27,27 +27,27 @@
 
 ### インストール方法
 
-#### 方法A: パッケージマネージャー
+#### 1. 基本ツールのインストール
 
 **macOS:**
 
 ```bash
-brew install neovim ripgrep fd node python
+brew install neovim ripgrep fd
 ```
 
 **Arch Linux:**
 
 ```bash
-sudo pacman -S neovim ripgrep fd nodejs npm python python-pip
+sudo pacman -S neovim ripgrep fd
 ```
 
 **Ubuntu/Debian:**
 
 ```bash
-sudo apt install neovim ripgrep fd-find nodejs npm python3 python3-pip
+sudo apt install neovim ripgrep fd-find
 ```
 
-#### 方法B: mise（推奨）
+#### 2. Node.jsとPythonのインストール（mise推奨）
 
 [mise](https://mise.jdx.dev/)を使用すると、プロジェクトごとに異なるバージョンの言語ランタイムを管理できます。
 
