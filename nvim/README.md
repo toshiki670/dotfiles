@@ -22,25 +22,66 @@
 - **Neovim 0.8+** (0.9以上推奨)
 - **ripgrep** - Telescopeの高速検索
 - **fd** - Telescopeのファイル検索
-- **Node.js** - 一部LSPサーバー実行に必要
+- **Node.js** - LSPサーバー（ts_ls、yamlls、jsonls、bashlsなど）の実行に必要
+- **Python** - LSPサーバー（pyrightなど）の実行に必要
 
-### インストール (macOS)
+### インストール方法
 
-```bash
-brew install neovim ripgrep fd node
-```
+#### 1. 基本ツールのインストール
 
-### インストール (Arch Linux)
-
-```bash
-sudo pacman -S neovim ripgrep fd nodejs npm
-```
-
-### インストール (Ubuntu/Debian)
+**macOS:**
 
 ```bash
-sudo apt install neovim ripgrep fd-find nodejs npm
+brew install neovim ripgrep fd
 ```
+
+**Arch Linux:**
+
+```bash
+sudo pacman -S neovim ripgrep fd
+```
+
+**Ubuntu/Debian:**
+
+```bash
+sudo apt install neovim ripgrep fd-find
+```
+
+#### 2. Node.jsとPythonのインストール（mise推奨）
+
+[mise](https://mise.jdx.dev/)を使用すると、プロジェクトごとに異なるバージョンの言語ランタイムを管理できます。
+
+**miseのインストール:**
+
+```bash
+brew install mise
+```
+
+**Node.jsとPythonのインストール:**
+
+```bash
+# Node.js（LTS版）
+mise use -g node@lts
+
+# Python（最新版）
+mise use -g python@latest
+
+# バージョンを確認
+node --version
+python --version
+```
+
+**特定のバージョンを指定する場合:**
+
+```bash
+# Node.js 20.x
+mise use -g node@20
+
+# Python 3.12
+mise use -g python@3.12
+```
+
+**Note:** `-g`フラグはグローバルインストールを意味します。プロジェクトごとに異なるバージョンを使用したい場合は、プロジェクトディレクトリで`-g`なしで実行してください。
 
 ### オプション (推奨)
 
