@@ -1,7 +1,0 @@
-#!/bin/bash
-
-echo -n 'Writing ...'
-
-cat ~/dotfiles/git/.gitconfig >> ~/.gitconfig
-
-echo ' ok'
