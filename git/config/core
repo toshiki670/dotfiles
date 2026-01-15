@@ -1,0 +1,4 @@
+# Core options
+
+[core]
+  editor = code --wait

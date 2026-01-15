@@ -233,7 +233,3 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/git,vim,ruby,rails,linux,macos,windows
 
-# Created by my own rules
-mise.local.toml
-
-# End of my own rules

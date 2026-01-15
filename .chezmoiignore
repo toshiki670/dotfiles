@@ -1,0 +1,28 @@
+# Windows-specific files (for non-Windows platforms)
+{{ if ne .chezmoi.os "windows" }}
+win
+{{ end }}
+
+# Documentation files
+README.md
+CONTRIBUTING.md
+VERSIONING.md
+LICENSE
+
+# Installation scripts
+install
+**/install.sh
+**/install.ps1
+**/install_win.ps1
+
+# Plugin documentation
+**/PLUGINS.md
+**/note.md
+
+# Configuration directories (not ready to deploy yet)
+nvim
+tmux
+zsh
+bash
+bin
+git

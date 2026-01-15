@@ -1,0 +1,9 @@
+# For github account
+[user]
+{{- if env "DOTFILES_GIT_EMAIL" }}
+	email = {{ env "DOTFILES_GIT_EMAIL" }}
+	name = {{ env "DOTFILES_GIT_NAME" | default "Toshiki" }}
+{{- else }}
+	email = bushy.trivial.0o@icloud.com
+	name = toshiki670
+{{- end }}

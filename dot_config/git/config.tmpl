@@ -1,0 +1,24 @@
+### Dotfile's config ###
+
+### Git Aliases ###
+{{- includeTemplate "git/config/alias" | nindent 0 }}
+
+### Git Core Config ###
+{{- includeTemplate "git/config/core" | nindent 0 }}
+
+### Git Delta Config ###
+{{- includeTemplate "git/config/delta" | nindent 0 }}
+
+### Git Fast Forward Config ###
+{{- includeTemplate "git/config/fast_forward" | nindent 0 }}
+
+### Git Push Config ###
+{{- includeTemplate "git/config/push" | nindent 0 }}
+
+### Git User Config ###
+{{- includeTemplate "git/config/user.tmpl" | nindent 0 }}
+
+### Git Vimdiff Config ###
+{{- includeTemplate "git/config/vimdiff" | nindent 0 }}
+
+### End ###
