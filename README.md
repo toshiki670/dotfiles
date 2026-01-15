@@ -97,21 +97,55 @@ The following tools may already be installed in your environment:
 
 # Installation
 
-## 1. Clone Repository
+## Using chezmoi (Recommended)
+
+### 1. Install chezmoi
+
+```bash
+$ brew install chezmoi
+```
+
+### 2. Initialize with this repository
+
+```bash
+$ chezmoi init --ssh toshiki670
+```
+
+### 3. Preview changes (optional)
+
+```bash
+$ chezmoi diff
+```
+
+### 4. Apply the dotfiles
+
+```bash
+$ chezmoi apply
+```
+
+### 5. Restart Shell
+
+```bash
+$ exec $SHELL -l
+```
+
+## Old Installation
+
+### 1. Clone Repository
 
 ```bash
 $ cd ~
 $ git clone https://github.com/toshiki670/dotfiles.git
 ```
 
-## 2. Run Install Script
+### 2. Run Install Script
 
 ```bash
 $ cd ~/dotfiles
 $ ./install
 ```
 
-## 3. Restart Shell
+### 3. Restart Shell
 
 ```bash
 $ exec $SHELL -l
