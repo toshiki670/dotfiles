@@ -27,13 +27,8 @@ if type "zsh" > /dev/null 2>&1; then
   maker 'zshrc'
   echo -n '.'
 
-  # Sheldon config symlink
-  sheldon_config_dir=~/.config/sheldon
-  if [[ ! -d ${sheldon_config_dir} ]]; then
-    mkdir -p ${sheldon_config_dir}
-  fi
-  ln -sf ${dotfiles}zsh/sheldon/plugins.toml ${sheldon_config_dir}/plugins.toml
-  echo -n '.'
+  # Sheldon config is now managed by chezmoi (dot_config/sheldon/plugins.toml)
+  # No symlink needed
 
   echo ' ok!'
 else
