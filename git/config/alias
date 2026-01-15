@@ -1,6 +1,6 @@
 [alias]
   # Alias Management ===================================
-  alias = !"cat \"${DOTFILES}/git/alias.config\" | grep -v '^\\[' | sed 's/^  //'"
+  alias = !"cat \"${DOTFILES}/git/config/alias\" | grep -v '^\\[' | sed 's/^  //'"
 
   # Status & Information ===============================
   s = status
