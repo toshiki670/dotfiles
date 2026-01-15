@@ -2,38 +2,8 @@
 
 dotfiles=~/dotfiles/
 
-loader() {
-  echo "### Dotfiles script ###"
-  echo "if [[ -f $1 ]]; then"
-  echo "  . $1"
-  echo "fi"
-  echo "### End ###"
-}
-
-# Zsh Setup
-if type "zsh" > /dev/null 2>&1; then
-  echo -n 'Zsh installing .'
-
-  maker() {
-    if [[ -f ~/$1 ]]; then
-      echo >> ~/$1
-    fi
-    loader "${dotfiles}zsh/$1" >> ~/$1
-    echo -n '.'
-  }
-
-  maker 'zshenv'
-  maker 'zlogin'
-  maker 'zshrc'
-  echo -n '.'
-
-  # Sheldon config is now managed by chezmoi (dot_config/sheldon/plugins.toml)
-  # No symlink needed
-
-  echo ' ok!'
-else
-  echo "${0##*/}: Zsh isn't found." 1>&2
-fi
+# Zsh Setup is now managed by chezmoi
+# See dot_zshenv, dot_config/zsh/dot_zshrc.tmpl, dot_config/zsh/dot_zlogin
 
 # Nvim Setup (Modern Lua config)
 # Legacy VimScript config (vim/.vimrc + dein.vim) is deprecated.
