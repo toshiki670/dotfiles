@@ -1,4 +1,4 @@
 # Core options
 
 [core]
-  editor = code --wait
+  editor = nvim
