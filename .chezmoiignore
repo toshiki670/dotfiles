@@ -23,6 +23,5 @@ install
 nvim
 tmux
 zsh
-bash
 bin
 git
