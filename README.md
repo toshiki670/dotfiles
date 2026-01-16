@@ -129,28 +129,6 @@ $ chezmoi apply
 $ exec $SHELL -l
 ```
 
-## Old Installation
-
-### 1. Clone Repository
-
-```bash
-$ cd ~
-$ git clone https://github.com/toshiki670/dotfiles.git
-```
-
-### 2. Run Install Script
-
-```bash
-$ cd ~/dotfiles
-$ ./install
-```
-
-### 3. Restart Shell
-
-```bash
-$ exec $SHELL -l
-```
-
 # Configuration
 
 ## Environment Variables (Using Mise)
