@@ -1,0 +1,17 @@
+# mise configuration (machine-specific)
+# Uncomment and set values for your environment
+
+# [env]
+# yt-dlp browser selection
+# Options: "chrome:Default", "chrome:Profile 1", "firefox", "safari", "edge"
+# To check your Chrome profile name, visit chrome://version/ and look for "Profile Path"
+# YT_BROWSER = "chrome:Default"
+
+# Work environment git configuration
+# DOTFILES_GIT_EMAIL = "your-work-email@company.com"
+# DOTFILES_GIT_NAME = "Your Work Name"
+
+[tools]
+rust = "latest"
+node = "latest"
+python = "latest"

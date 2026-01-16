@@ -1,6 +1,0 @@
-# mise configuration (machine-specific)
-# Uncomment and set values for work environment
-
-# [env]
-# DOTFILES_GIT_EMAIL = "your-work-email@company.com"
-# DOTFILES_GIT_NAME = "Your Work Name"
