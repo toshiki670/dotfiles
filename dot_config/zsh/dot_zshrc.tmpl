@@ -4,8 +4,59 @@
 # DOTFILES変数の設定（chezmoiのsourceDirを使用）
 export DOTFILES="{{ .chezmoi.sourceDir }}"
 
-# Load all zsh configurations (multi-stage template expansion)
-{{ includeTemplate "zsh/zshrc_includes.tmpl" }}
+# Setting completions
+{{ includeTemplate "dot_config/zsh/configs/docker.zsh" }}
+
+# History config
+{{ includeTemplate "dot_config/zsh/configs/history.zsh" }}
+
+# Completion config
+{{ includeTemplate "dot_config/zsh/configs/completion.zsh" }}
+
+# Initialize and Load Sheldon
+{{ includeTemplate "dot_config/zsh/configs/sheldon.zsh" }}
+
+# eza command config
+{{ includeTemplate "dot_config/zsh/configs/eza.zsh" }}
+
+# cd config
+{{ includeTemplate "dot_config/zsh/configs/cd.zsh" }}
+
+# zoxide config
+{{ includeTemplate "dot_config/zsh/configs/zoxide.zsh" }}
+
+# ruby and rails config
+{{ includeTemplate "dot_config/zsh/configs/ruby.zsh" }}
+
+# python config
+{{ includeTemplate "dot_config/zsh/configs/python.zsh" }}
+
+# C language config
+{{ includeTemplate "dot_config/zsh/configs/c.zsh" }}
+
+# git config
+{{ includeTemplate "dot_config/zsh/configs/git.zsh" }}
+
+# dotfiles version management config
+{{ includeTemplate "dot_config/zsh/configs/dotfiles.zsh" }}
+
+# vim config
+{{ includeTemplate "dot_config/zsh/configs/vim.zsh" }}
+
+# pacman config
+{{ includeTemplate "dot_config/zsh/configs/pacman.zsh" }}
+
+# mise config
+{{ includeTemplate "dot_config/zsh/configs/mise.zsh" }}
+
+# yt-dlp config
+{{ includeTemplate "dot_config/zsh/configs/yt-dlp.zsh" }}
+
+# Homebrew config - Must be loaded AFTER all plugins (sheldon)
+{{ includeTemplate "dot_config/zsh/configs/brew.zsh" }}
+
+# Common config
+{{ includeTemplate "dot_config/zsh/configs/common.zsh" }}
 
 # ターミナル起動時に実行
 
