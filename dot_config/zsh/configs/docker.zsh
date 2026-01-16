@@ -1,6 +1,6 @@
 # Completions
-# Setting completions
-completions=${DOTFILES}/zsh/completions
+# Setting completions (deployed location, not source directory)
+completions=${HOME}/.config/zsh/completions
 
 # For docker
 comp_docker=${completions}/_docker
