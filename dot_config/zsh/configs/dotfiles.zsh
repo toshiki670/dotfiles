@@ -1,6 +1,9 @@
 # Dotfiles version management
 # Checkout the latest version tag in the dotfiles repository
 
+# Alias chezmoi as dotfiles for convenience
+alias dotfiles='chezmoi'
+
 dotfiles-latest() {
   # Check if DOTFILES environment variable is set
   if [[ -z "$DOTFILES" ]]; then
