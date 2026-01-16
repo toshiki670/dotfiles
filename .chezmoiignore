@@ -17,7 +17,6 @@ install
 
 # Zsh includeTemplate sources
 .config/zsh/configs/
-.config/zsh/completions/
 
 # Configuration directories (not ready to deploy yet)
 tmux
