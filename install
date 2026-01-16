@@ -5,15 +5,8 @@ dotfiles=~/dotfiles/
 # Zsh Setup is now managed by chezmoi
 # See dot_zshenv, dot_config/zsh/dot_zshrc.tmpl, dot_config/zsh/dot_zlogin
 
-# Nvim Setup (Modern Lua config)
-# Legacy VimScript config (vim/.vimrc + dein.vim) is deprecated.
-# See nvim/README.md for the new Lua-based configuration.
-if type "nvim" > /dev/null 2>&1; then
-  echo 'Setting up Neovim (Lua config)...'
-  bash ${dotfiles}nvim/install.sh
-else
-  echo "${0##*/}: Neovim isn't found." 1>&2
-fi
+# Nvim Setup is now managed by chezmoi
+# See dot_config/nvim/
 
 # Tmux Setup
 if type "tmux" > /dev/null 2>&1; then

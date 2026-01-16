@@ -89,39 +89,10 @@ mise use -g python@3.12
 brew install lazygit  # Git TUI（Neo-treeから起動可能）
 ```
 
-## セットアップ
-
-### 1. シンボリックリンクを作成
-
-```bash
-# ~/.config/nvim へリンク
-ln -s ~/dotfiles/nvim ~/.config/nvim
-
-# または、環境変数を使用（推奨）
-export NVIM_APPNAME=nvim
-```
-
-### 2. Neovimを起動
-
-初回起動時に、lazy.nvimが自動的にインストールされ、すべてのプラグインがインストールされます。
-
-```bash
-nvim
-```
-
-### 3. LSPサーバーのインストール
-
-`:Mason`コマンドでMason UIを開き、必要なLSPサーバーをインストールできます。
-または、設定に`ensure_installed`で指定されているサーバーは自動的にインストールされます。
-
-```vim
-:Mason
-```
-
 ## ディレクトリ構造
 
 ```
-nvim/
+~/.config/nvim/              # (dot_config/nvim/ から配置)
 ├── init.lua                 # エントリーポイント
 ├── lua/
 │   ├── core/
@@ -139,7 +110,6 @@ nvim/
 │       ├── neo-tree.lua     # ファイルエクスプローラー
 │       ├── git.lua          # Git統合
 │       └── utilities.lua    # 便利なプラグイン
-└── README.md                # このファイル
 ```
 
 ## 主要プラグイン

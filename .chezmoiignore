@@ -20,7 +20,6 @@ install
 **/note.md
 
 # Configuration directories (not ready to deploy yet)
-nvim
 tmux
 zsh
 bin
