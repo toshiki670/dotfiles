@@ -19,8 +19,14 @@ install
 **/PLUGINS.md
 **/note.md
 
+# Git includeTemplate sources
+.config/git/configs/
+.config/git/ignores/
+
+# Zsh includeTemplate sources
+.config/zsh/configs/
+.config/zsh/completions/
+
 # Configuration directories (not ready to deploy yet)
 tmux
-zsh
 bin
-git
