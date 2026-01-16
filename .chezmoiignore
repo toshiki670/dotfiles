@@ -1,8 +1,3 @@
-# Windows-specific files (for non-Windows platforms)
-{{ if ne .chezmoi.os "windows" }}
-win
-{{ end }}
-
 # Documentation files
 README.md
 CONTRIBUTING.md
@@ -11,9 +6,6 @@ LICENSE
 
 # Installation scripts
 install
-**/install.sh
-**/install.ps1
-**/install_win.ps1
 
 # Plugin documentation
 **/PLUGINS.md
