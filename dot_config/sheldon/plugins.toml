@@ -25,11 +25,3 @@ github = "mafredri/zsh-async"
 [plugins.pure]
 github = "sindresorhus/pure"
 use = ["pure.zsh"]
-
-# cd-gitroot: Gitリポジトリのルートディレクトリに移動するコマンド
-[plugins.cd-gitroot]
-github = "mollifier/cd-gitroot"
-
-# zsh-bd: 親ディレクトリに素早く戻る（bd <directory_name>で指定した親ディレクトリへ移動）
-[plugins.zsh-bd]
-github = "Tarrasch/zsh-bd"

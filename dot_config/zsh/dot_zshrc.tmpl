@@ -10,11 +10,11 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 # History config
 {{ includeTemplate "dot_config/zsh/configs/history.zsh" }}
 
-# Completion config
-{{ includeTemplate "dot_config/zsh/configs/completion.zsh" }}
-
-# Initialize and Load Sheldon
+# Initialize and Load Sheldon (must be before completion.zsh)
 {{ includeTemplate "dot_config/zsh/configs/sheldon.zsh" }}
+
+# Completion config (after sheldon to detect all completion plugins)
+{{ includeTemplate "dot_config/zsh/configs/completion.zsh" }}
 
 # eza command config
 {{ includeTemplate "dot_config/zsh/configs/eza.zsh" }}
@@ -61,6 +61,4 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 # ターミナル起動時に実行
 
 # ZSHの起動した関数の時間計測 .zshenv参照
-# if (which zprof > /dev/null 2>&1) ;then
-#   zprof
-# fi
+# zprof

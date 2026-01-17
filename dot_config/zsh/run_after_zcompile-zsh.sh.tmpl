@@ -1,0 +1,25 @@
+#!/bin/bash
+# Compile zsh configuration files for faster loading
+
+ZSHENV="{{ .chezmoi.homeDir }}/.zshenv"
+ZSHRC="{{ .chezmoi.homeDir }}/.config/zsh/.zshrc"
+
+echo "Compiling zsh configuration files..."
+
+# Compile .zshenv if it exists
+if [[ -f "$ZSHENV" ]]; then
+  echo "  Compiling $ZSHENV..."
+  if zsh -c "zcompile -R \"$ZSHENV\"" 2>/dev/null; then
+    echo "    ✓ Created $ZSHENV.zwc"
+  fi
+fi
+
+# Compile .zshrc if it exists
+if [[ -f "$ZSHRC" ]]; then
+  echo "  Compiling $ZSHRC..."
+  if zsh -c "zcompile -R \"$ZSHRC\"" 2>/dev/null; then
+    echo "    ✓ Created $ZSHRC.zwc"
+  fi
+fi
+
+echo "✓ zsh configuration files compiled successfully"
