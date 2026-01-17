@@ -51,8 +51,10 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 # mise config
 {{ includeTemplate "dot_config/zsh/configs/mise.zsh.tmpl" }}
 
-# yt-dlp config
+# yt-dlp config (only if YT_BROWSER is set)
+{{ if env "YT_BROWSER" -}}
 {{ includeTemplate "dot_config/zsh/configs/yt-dlp.zsh" }}
+{{ end -}}
 
 # Homebrew config - Must be loaded AFTER all plugins (sheldon)
 {{ includeTemplate "dot_config/zsh/configs/brew.zsh" }}
