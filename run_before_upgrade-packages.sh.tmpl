@@ -1,31 +1,29 @@
 #!/bin/bash
-# Compile zsh configuration files for faster loading
+# Upgrade Homebrew and mise packages before applying dotfiles changes
 
-ZSHENV="{{ .chezmoi.homeDir }}/.zshenv"
-ZSHRC="{{ .chezmoi.homeDir }}/.config/zsh/.zshrc"
+set -e
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "⚡ Compiling Zsh Configuration Files"
+echo "📦 Upgrading Packages"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Compile .zshenv if it exists
-if [[ -f "$ZSHENV" ]]; then
-  if zsh -c "zcompile -R \"$ZSHENV\"" 2>/dev/null; then
-    echo "✓ Compiled $ZSHENV"
-  fi
+# Upgrade Homebrew packages if brew is installed
+if command -v brew &>/dev/null; then
+  echo "=== Homebrew ==="
+  brew upgrade || echo "⚠️  Homebrew upgrade failed, continuing anyway..."
+  echo ""
 fi
 
-# Compile .zshrc if it exists
-if [[ -f "$ZSHRC" ]]; then
-  if zsh -c "zcompile -R \"$ZSHRC\"" 2>/dev/null; then
-    echo "✓ Compiled $ZSHRC"
-  fi
+# Upgrade mise tools if mise is installed
+if command -v mise &>/dev/null; then
+  echo "=== Mise ==="
+  mise upgrade || echo "⚠️  Mise upgrade failed, continuing anyway..."
+  echo ""
 fi
 
-echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✓ Compilation completed"
+echo "✓ Upgrade completed"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

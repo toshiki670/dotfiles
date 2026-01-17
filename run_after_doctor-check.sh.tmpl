@@ -1,0 +1,53 @@
+#!/bin/bash
+# Run diagnostics on Homebrew and mise after applying dotfiles changes
+# Only outputs when there are issues
+
+has_issues=0
+brew_output=""
+mise_output=""
+
+# Run Homebrew doctor if brew is installed
+if command -v brew &>/dev/null; then
+  brew_output=$(brew doctor 2>&1)
+  brew_status=$?
+  if [ $brew_status -ne 0 ]; then
+    has_issues=1
+  fi
+fi
+
+# Run mise doctor if mise is installed
+if command -v mise &>/dev/null; then
+  mise_output=$(mise doctor 2>&1)
+  mise_status=$?
+  if [ $mise_status -ne 0 ]; then
+    has_issues=1
+  fi
+fi
+
+# Only output if there are issues
+if [ $has_issues -eq 1 ]; then
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "⚠️  Package Diagnostics"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  
+  # Show Homebrew issues if any
+  if command -v brew &>/dev/null && [ -n "$brew_output" ]; then
+    echo "=== Homebrew ==="
+    echo "$brew_output"
+    echo ""
+  fi
+  
+  # Show mise issues if any
+  if command -v mise &>/dev/null && [ -n "$mise_output" ]; then
+    echo "=== Mise ==="
+    echo "$mise_output"
+    echo ""
+  fi
+  
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "⚠️  Issues found above"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+fi
