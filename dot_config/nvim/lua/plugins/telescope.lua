@@ -15,8 +15,8 @@ return {
     },
     keys = {
       -- File navigation (replacing denite file commands)
-      { "<Space>df", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
-      { "<Space>dg", "<cmd>Telescope live_grep<cr>", desc = "Live Grep" },
+      { "<Space>fd", "<cmd>Telescope find_files<cr>", desc = "Find Files (fd)" },
+      { "<Space>rg", "<cmd>Telescope live_grep<cr>", desc = "Live Grep (rg)" },
       { "<Space>db", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
       { "<Space>do", "<cmd>Telescope lsp_document_symbols<cr>", desc = "Document Symbols" },
       { "<Space>dh", "<cmd>Telescope help_tags<cr>", desc = "Help Tags" },
