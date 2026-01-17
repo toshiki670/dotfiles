@@ -11,7 +11,7 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 {{ includeTemplate "dot_config/zsh/configs/history.zsh" }}
 
 # Initialize and Load Sheldon (must be before completion.zsh)
-{{ includeTemplate "dot_config/zsh/configs/sheldon.zsh" }}
+{{ includeTemplate "dot_config/zsh/configs/sheldon.zsh.tmpl" }}
 
 # Completion config (after sheldon to detect all completion plugins)
 {{ includeTemplate "dot_config/zsh/configs/completion.zsh" }}
@@ -23,7 +23,7 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 {{ includeTemplate "dot_config/zsh/configs/cd.zsh" }}
 
 # zoxide config
-{{ includeTemplate "dot_config/zsh/configs/zoxide.zsh" }}
+{{ includeTemplate "dot_config/zsh/configs/zoxide.zsh.tmpl" }}
 
 # ruby and rails config
 {{ includeTemplate "dot_config/zsh/configs/ruby.zsh" }}
@@ -49,7 +49,7 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 {{ end -}}
 
 # mise config
-{{ includeTemplate "dot_config/zsh/configs/mise.zsh" }}
+{{ includeTemplate "dot_config/zsh/configs/mise.zsh.tmpl" }}
 
 # yt-dlp config
 {{ includeTemplate "dot_config/zsh/configs/yt-dlp.zsh" }}

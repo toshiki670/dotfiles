@@ -1,0 +1,6 @@
+# Initialize and Load Sheldon
+{{ if lookPath "sheldon" -}}
+{{ output "sheldon" "source" -}}
+{{ else -}}
+echo "${0##*/}: sheldon isn't found. Please install sheldon." 1>&2
+{{ end -}}
