@@ -43,8 +43,10 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 # vim config
 {{ includeTemplate "dot_config/zsh/configs/vim.zsh" }}
 
-# pacman config
+# pacman config (only if pacman is installed)
+{{ if lookPath "pacman" -}}
 {{ includeTemplate "dot_config/zsh/configs/pacman.zsh" }}
+{{ end -}}
 
 # mise config
 {{ includeTemplate "dot_config/zsh/configs/mise.zsh" }}
