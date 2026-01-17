@@ -13,6 +13,12 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 # Initialize and Load Sheldon (must be before completion.zsh)
 {{ includeTemplate "dot_config/zsh/configs/sheldon.zsh.tmpl" }}
 
+# fzf config (after sheldon to ensure fzf is loaded)
+{{ includeTemplate "dot_config/zsh/configs/fzf.zsh" }}
+
+# fzf-tab config (after fzf and before completion.zsh)
+{{ includeTemplate "dot_config/zsh/configs/fzf-tab.zsh" }}
+
 # Completion config (after sheldon to detect all completion plugins)
 {{ includeTemplate "dot_config/zsh/configs/completion.zsh" }}
 

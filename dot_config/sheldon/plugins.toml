@@ -13,9 +13,13 @@ github = "zsh-users/zsh-syntax-highlighting"
 [plugins.zsh-autosuggestions]
 github = "zsh-users/zsh-autosuggestions"
 
-# zaw: インタラクティブな選択ウィジェット（リストから項目を選択）
-[plugins.zaw]
-github = "zsh-users/zaw"
+# fzf: 高速なファジー検索ツール（履歴、ファイル、ディレクトリなどの検索）
+[plugins.fzf]
+github = "junegunn/fzf"
+
+# fzf-tab: Tab補完をfzfで強化（インタラクティブな補完UI）
+[plugins.fzf-tab]
+github = "Aloxaf/fzf-tab"
 
 # zsh-async: Zshで非同期処理を実行するライブラリ（pureの依存関係）
 [plugins.zsh-async]

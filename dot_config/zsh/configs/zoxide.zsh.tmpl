@@ -1,4 +1,25 @@
 # zoxide - Smarter cd command with frecency-based directory jumping
 {{ if lookPath "zoxide" -}}
 {{ output "zoxide" "init" "zsh" -}}
+
+# Custom widget for zoxide interactive mode
+# Using ^j^f to match other fzf keybindings and avoid Zellij conflicts
+__zoxide_zi_widget() {
+  local result
+  # Run zoxide query in interactive mode with fzf and preview
+  result="$(zoxide query --list --score | \
+    fzf --height=40% \
+        --reverse \
+        --no-sort \
+        --preview='eza -1 --color=always --icons {2}' \
+        --preview-window='right:50%:wrap' \
+        --bind='ctrl-/:toggle-preview' | \
+    awk '{print $2}')"
+  if [[ -n "$result" ]]; then
+    __zoxide_cd "$result"
+    zle reset-prompt
+  fi
+}
+zle -N __zoxide_zi_widget
+bindkey '^j^f' __zoxide_zi_widget
 {{ end -}}
