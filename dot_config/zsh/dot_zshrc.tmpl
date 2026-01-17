@@ -64,5 +64,8 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 
 # ターミナル起動時に実行
 
+# Daily package check
+{{ includeTemplate "dot_config/zsh/configs/daily-check.zsh" }}
+
 # ZSHの起動した関数の時間計測 .zshenv参照
 # zprof
