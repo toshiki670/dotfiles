@@ -10,11 +10,11 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 # History config
 {{ includeTemplate "dot_config/zsh/configs/history.zsh" }}
 
-# Completion config
-{{ includeTemplate "dot_config/zsh/configs/completion.zsh" }}
+# Initialize and Load Sheldon (must be before completion.zsh)
+{{ includeTemplate "dot_config/zsh/configs/sheldon.zsh.tmpl" }}
 
-# Initialize and Load Sheldon
-{{ includeTemplate "dot_config/zsh/configs/sheldon.zsh" }}
+# Completion config (after sheldon to detect all completion plugins)
+{{ includeTemplate "dot_config/zsh/configs/completion.zsh" }}
 
 # eza command config
 {{ includeTemplate "dot_config/zsh/configs/eza.zsh" }}
@@ -23,7 +23,7 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 {{ includeTemplate "dot_config/zsh/configs/cd.zsh" }}
 
 # zoxide config
-{{ includeTemplate "dot_config/zsh/configs/zoxide.zsh" }}
+{{ includeTemplate "dot_config/zsh/configs/zoxide.zsh.tmpl" }}
 
 # ruby and rails config
 {{ includeTemplate "dot_config/zsh/configs/ruby.zsh" }}
@@ -43,14 +43,18 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 # vim config
 {{ includeTemplate "dot_config/zsh/configs/vim.zsh" }}
 
-# pacman config
+# pacman config (only if pacman is installed)
+{{ if lookPath "pacman" -}}
 {{ includeTemplate "dot_config/zsh/configs/pacman.zsh" }}
+{{ end -}}
 
 # mise config
-{{ includeTemplate "dot_config/zsh/configs/mise.zsh" }}
+{{ includeTemplate "dot_config/zsh/configs/mise.zsh.tmpl" }}
 
-# yt-dlp config
+# yt-dlp config (only if YT_BROWSER is set)
+{{ if env "YT_BROWSER" -}}
 {{ includeTemplate "dot_config/zsh/configs/yt-dlp.zsh" }}
+{{ end -}}
 
 # Homebrew config - Must be loaded AFTER all plugins (sheldon)
 {{ includeTemplate "dot_config/zsh/configs/brew.zsh" }}
@@ -61,6 +65,4 @@ export DOTFILES="{{ .chezmoi.sourceDir }}"
 # ターミナル起動時に実行
 
 # ZSHの起動した関数の時間計測 .zshenv参照
-# if (which zprof > /dev/null 2>&1) ;then
-#   zprof
-# fi
+# zprof
