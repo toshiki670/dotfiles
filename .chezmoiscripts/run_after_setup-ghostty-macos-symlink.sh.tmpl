@@ -1,0 +1,41 @@
+#!/bin/bash
+{{ if eq .chezmoi.os "darwin" -}}
+# Setup Ghostty config symlink for macOS
+
+set -e
+
+GHOSTTY_MACOS_DIR="$HOME/Library/Application Support/com.mitchellh.ghostty"
+GHOSTTY_CONFIG_SOURCE="$HOME/.config/ghostty/config"
+GHOSTTY_CONFIG_TARGET="$GHOSTTY_MACOS_DIR/config"
+
+# Create directory if it doesn't exist
+mkdir -p "$GHOSTTY_MACOS_DIR"
+
+# Check if target is already a correct symlink
+if [ -L "$GHOSTTY_CONFIG_TARGET" ] && [ "$(readlink "$GHOSTTY_CONFIG_TARGET")" = "$GHOSTTY_CONFIG_SOURCE" ]; then
+    exit 0
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "👻 Setting up Ghostty Config Symlink"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Remove existing file/link if it exists and is not the correct symlink
+if [ -e "$GHOSTTY_CONFIG_TARGET" ] || [ -L "$GHOSTTY_CONFIG_TARGET" ]; then
+    rm -f "$GHOSTTY_CONFIG_TARGET"
+fi
+
+# Create symlink from macOS location to .config location
+ln -sf "$GHOSTTY_CONFIG_SOURCE" "$GHOSTTY_CONFIG_TARGET"
+
+echo "✓ Created symlink: ~/Library/Application Support/com.mitchellh.ghostty/config"
+echo "  → ~/.config/ghostty/config"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✓ Ghostty setup completed"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+{{ end -}}
