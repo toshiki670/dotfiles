@@ -36,6 +36,7 @@ return {
           -- "solargraph", -- Ruby (install manually via: gem install solargraph)
           "rust_analyzer", -- Rust
           "pyright",       -- Python
+          "gopls",         -- Go
           "jsonls",        -- JSON
           "yamlls",        -- YAML
           "bashls",        -- Bash
@@ -190,6 +191,19 @@ return {
       -- Python
       vim.lsp.config("pyright", default_config)
 
+      -- Go
+      vim.lsp.config("gopls", vim.tbl_extend("force", default_config, {
+        settings = {
+          gopls = {
+            analyses = {
+              unusedparams = true,
+            },
+            staticcheck = true,
+            gofumpt = true,
+          },
+        },
+      }))
+
       -- JSON
       vim.lsp.config("jsonls", default_config)
 
@@ -206,6 +220,7 @@ return {
       vim.lsp.enable("solargraph")
       vim.lsp.enable("rust_analyzer")
       vim.lsp.enable("pyright")
+      vim.lsp.enable("gopls")
       vim.lsp.enable("jsonls")
       vim.lsp.enable("yamlls")
       vim.lsp.enable("bashls")
