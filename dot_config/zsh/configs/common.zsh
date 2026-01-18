@@ -35,5 +35,8 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
   alias mv='mv --verbose'
 fi
 
+# Local bin
+export PATH="$HOME/.local/bin:$PATH"
+
 # Rust env
 export PATH="$HOME/.cargo/bin:$PATH"
