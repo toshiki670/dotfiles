@@ -52,6 +52,9 @@
   clean-blanch = !git branch --merged | egrep -v '(^[*+]|master|main)' | xargs git branch -d && git fetch --prune
 
   # GitHub PR Workflow =================================
+  # Open current branch's PR in browser
+  web = !"gh pr view --web"
+
   # Check if current branch's PR is merged (returns exit code 0 if merged, 1 otherwise)
   merged = !"[ \"$(gh pr view --json state --jq '.state')\" = \"MERGED\" ]"
 
