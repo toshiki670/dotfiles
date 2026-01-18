@@ -4,9 +4,6 @@ CONTRIBUTING.md
 VERSIONING.md
 LICENSE
 
-# Installation scripts
-install
-
 # Plugin documentation
 **/PLUGINS.md
 **/note.md
@@ -19,8 +16,8 @@ install
 .config/zsh/configs/
 
 # Configuration directories (not ready to deploy yet)
-tmux
 bin
 
 # Development tools
 mise.toml
+
