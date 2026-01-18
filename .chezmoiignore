@@ -21,3 +21,6 @@ install
 # Configuration directories (not ready to deploy yet)
 tmux
 bin
+
+# Development tools
+mise.toml
