@@ -1,0 +1,16 @@
+services:
+  dotfiles-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dotfiles-dev
+    volumes:
+      # Mount source dotfiles as read-only for reference (optional)
+      - .:/workspace/dotfiles-source:ro
+    working_dir: /home/testuser
+    stdin_open: true
+    tty: true
+    environment:
+      # Development mode indicator
+      - DOTFILES_DEV=1
+    command: /bin/zsh -l

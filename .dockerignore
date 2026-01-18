@@ -1,0 +1,25 @@
+# Git
+.git
+.github
+
+# Documentation
+*.md
+!README.md
+LICENSE
+
+# Development files
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# IDE
+.vscode
+.idea
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.swp
+*.swo
+*~

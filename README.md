@@ -161,3 +161,62 @@ $ exec $SHELL -l
 
 - GNOME autostart configurations available in `linux/gnome/autostart/`
 - systemd service files available in `linux/systemd/`
+
+# Development
+
+## Testing in Container
+
+You can test the dotfiles in a Docker container before applying them to your system.
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Quick Start
+
+```bash
+# Build and run container interactively
+$ ./dev-test.sh run
+
+# Or step by step:
+$ ./dev-test.sh build    # Build Docker image with dotfiles pre-installed
+$ ./dev-test.sh start    # Start container
+$ ./dev-test.sh shell    # Enter container shell
+$ ./dev-test.sh test     # Test dotfiles setup
+$ ./dev-test.sh stop     # Stop container
+$ ./dev-test.sh clean    # Clean up resources
+```
+
+### Testing Inside Container
+
+The container comes with dotfiles already applied. You can immediately test your configurations:
+
+```bash
+# Enter the container
+$ ./dev-test.sh run
+
+# Inside the container, dotfiles are already set up
+$ which zsh nvim mise sheldon eza bat fd rg
+$ echo $SHELL
+$ cat ~/.zshrc
+```
+
+### Rebuilding After Changes
+
+When you modify dotfiles, rebuild the container to test changes:
+
+```bash
+$ ./dev-test.sh clean    # Remove old container
+$ ./dev-test.sh build    # Rebuild with new dotfiles
+$ ./dev-test.sh run      # Test the changes
+```
+
+### Container Details
+
+- **Base Image:** Ubuntu 24.04
+- **User:** testuser (non-root with sudo)
+- **Shell:** zsh (with dotfiles pre-configured)
+- **Package Manager:** Homebrew (Linux)
+- **Dotfiles:** Pre-installed and configured during image build
+- **Source Reference:** Original dotfiles mounted at `/workspace/dotfiles-source` (read-only)

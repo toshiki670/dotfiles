@@ -7,6 +7,12 @@ LICENSE
 # Installation scripts
 install
 
+# Development files
+Dockerfile
+docker-compose.yml
+.dockerignore
+dev-test.sh
+
 # Plugin documentation
 **/PLUGINS.md
 **/note.md
