@@ -35,6 +35,8 @@ palette = 15=#ffffff
 font-size = 15
 font-thicken = true
 font-family = "BIZ UDGothic Bold"
+keybind = ctrl+page_down=next_tab
+keybind = ctrl+page_up=previous_tab
 mouse-shift-capture = always
 macos-titlebar-style = tabs
 macos-option-as-alt = true
