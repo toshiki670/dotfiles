@@ -1,9 +1,3 @@
-# Documentation files
-README.md
-CONTRIBUTING.md
-VERSIONING.md
-LICENSE
-
 # Plugin documentation
 **/PLUGINS.md
 **/note.md
@@ -14,10 +8,4 @@ LICENSE
 
 # Zsh includeTemplate sources
 .config/zsh/configs/
-
-# Configuration directories (not ready to deploy yet)
-bin
-
-# Development tools
-mise.toml
 
