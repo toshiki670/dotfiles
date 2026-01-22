@@ -4,6 +4,9 @@
 # DOTFILES変数の設定（chezmoiのsourceDirを使用）
 export DOTFILES="{{ .chezmoi.sourceDir }}"
 
+# BASH_ENV設定（bash -c で ~/.bashenv を読み込む）
+export BASH_ENV="$HOME/.bashenv"
+
 # Setting completions
 {{ includeTemplate "dot_config/zsh/configs/docker.zsh" }}
 
