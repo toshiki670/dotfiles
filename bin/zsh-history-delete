@@ -1,0 +1,159 @@
+#!/bin/bash
+
+# Constant
+readonly CMDNAME=${0##*/}
+readonly VERSION='1.0.0'
+readonly TRUE=1
+readonly FALSE=0
+
+
+function usage() {
+  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+
+  cat << __USAGE_TEXT__
+Usage:
+  $CMDNAME
+  $CMDNAME [-v] [-h]
+__USAGE_TEXT__
+}
+
+
+function description() {
+  cat << __DESCRIPTION_TEXT__
+Description:
+  Delete zsh history entries containing the specified string.
+  The search string is read interactively from standard input.
+
+Example:
+  $ ${CMDNAME}
+    * Prompts for search string interactively
+
+Options:
+  -h Show help
+  -v Show version
+__DESCRIPTION_TEXT__
+}
+
+
+function show_help() {
+  usage
+  echo
+  description
+}
+
+
+# Option analysis
+while getopts hv OPT
+do
+  case $OPT in
+    "h" ) show_help >&1
+          exit 0
+          ;;
+    "v" ) echo "$CMDNAME $VERSION"
+          exit 0
+          ;;
+    # Invalid options
+      * ) usage 1>&2
+          exit 1 ;;
+  esac
+done
+# Trim options from $*
+shift $(($OPTIND - 1))
+
+
+# Check if running in zsh or bash
+if [[ -z "$HISTFILE" ]]; then
+  HISTFILE="${HOME}/.zsh_history"
+fi
+
+if [[ ! -f "$HISTFILE" ]]; then
+  echo "$CMDNAME: History file not found: $HISTFILE" 1>&2
+  exit 1
+fi
+
+
+# Read search string interactively from standard input
+# This prevents the command from being saved in history
+read -p "Enter search string to delete from history: " search_string
+if [[ -z "$search_string" ]]; then
+  echo "$CMDNAME: Empty search string provided." 1>&2
+  exit 1
+fi
+
+
+# Create backup
+backup_file="${HISTFILE}.backup.$(date +%Y%m%d_%H%M%S)"
+cp "$HISTFILE" "$backup_file"
+if [[ $? -ne 0 ]]; then
+  echo "$CMDNAME: Failed to create backup." 1>&2
+  exit 1
+fi
+echo "Backup created: $backup_file"
+
+
+# Find matching lines
+matching_lines=$(grep "$search_string" "$HISTFILE" 2>/dev/null)
+match_count=$(echo "$matching_lines" | grep -c . || echo "0")
+
+if [[ "$match_count" -eq 0 ]]; then
+  echo "No matching entries found for: $search_string"
+  rm "$backup_file"
+  exit 0
+fi
+
+echo
+echo "Found $match_count matching entr$(if [[ $match_count -eq 1 ]]; then echo "y"; else echo "ies"; fi) containing: $search_string"
+echo
+echo "Matching entries:"
+echo "-----------------"
+
+# Display matching entries
+# zsh history format: : timestamp:duration;command
+# Extract and display the command part
+echo "$matching_lines" | while IFS= read -r line; do
+  # Extract command part after the last semicolon
+  # Use sed to extract everything after the semicolon
+  command_part=$(echo "$line" | sed -n 's/^:[^:]*:[^;]*;\(.*\)$/\1/p')
+  if [[ -n "$command_part" ]]; then
+    echo "  $command_part"
+  else
+    # Fallback: display the whole line if format doesn't match
+    echo "  $line"
+  fi
+done
+
+echo "-----------------"
+echo
+
+# Confirm deletion
+read -p "Delete these entries? (y/n): " confirm
+if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+  echo "$CMDNAME: Operation cancelled."
+  rm "$backup_file"
+  exit 0
+fi
+
+
+# Delete matching lines
+# zsh history format: : timestamp:duration;command
+# We need to delete entire lines that contain the search string
+temp_file=$(mktemp)
+grep -v "$search_string" "$HISTFILE" > "$temp_file"
+if [[ $? -ne 0 ]]; then
+  echo "$CMDNAME: Failed to filter history." 1>&2
+  rm "$temp_file" "$backup_file"
+  exit 1
+fi
+
+mv "$temp_file" "$HISTFILE"
+if [[ $? -ne 0 ]]; then
+  echo "$CMDNAME: Failed to update history file." 1>&2
+  rm "$temp_file" "$backup_file"
+  exit 1
+fi
+
+echo "Deleted $match_count entr$(if [[ $match_count -eq 1 ]]; then echo "y"; else echo "ies"; fi) from history."
+echo "Backup saved at: $backup_file"
+
+
+exit 0
