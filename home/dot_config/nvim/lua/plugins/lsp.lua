@@ -28,19 +28,25 @@ return {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "mason.nvim" },
     config = function()
+      -- Build ensure_installed list based on available tools
+      local ensure_installed = {
+        "lua_ls",        -- Lua
+        "ts_ls",         -- TypeScript/JavaScript
+        -- "solargraph", -- Ruby (install manually via: gem install solargraph)
+        "rust_analyzer", -- Rust
+        "pyright",       -- Python
+        "jsonls",        -- JSON
+        "yamlls",        -- YAML
+        "bashls",        -- Bash
+      }
+
+      -- Only add gopls if Go is installed
+      if vim.fn.executable("go") == 1 then
+        table.insert(ensure_installed, "gopls")
+      end
+
       require("mason-lspconfig").setup({
-        -- List of servers to ensure are installed
-        ensure_installed = {
-          "lua_ls",        -- Lua
-          "ts_ls",         -- TypeScript/JavaScript
-          -- "solargraph", -- Ruby (install manually via: gem install solargraph)
-          "rust_analyzer", -- Rust
-          "pyright",       -- Python
-          "gopls",         -- Go
-          "jsonls",        -- JSON
-          "yamlls",        -- YAML
-          "bashls",        -- Bash
-        },
+        ensure_installed = ensure_installed,
         automatic_installation = true,
       })
     end,
@@ -220,7 +226,12 @@ return {
       vim.lsp.enable("solargraph")
       vim.lsp.enable("rust_analyzer")
       vim.lsp.enable("pyright")
-      vim.lsp.enable("gopls")
+      
+      -- Only enable gopls if Go is installed
+      if vim.fn.executable("go") == 1 then
+        vim.lsp.enable("gopls")
+      end
+      
       vim.lsp.enable("jsonls")
       vim.lsp.enable("yamlls")
       vim.lsp.enable("bashls")
