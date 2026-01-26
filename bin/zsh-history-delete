@@ -91,13 +91,102 @@ fi
 echo "Backup created: $backup_file"
 
 
-# Find matching lines
-matching_lines=$(grep "$search_string" "$HISTFILE" 2>/dev/null)
-match_count=$(echo "$matching_lines" | grep -c . || echo "0")
+# Find matching entries (handling multiline commands)
+# First, combine multiline commands into single entries
+temp_combined=$(mktemp)
+LC_ALL=C awk -v search_string="$search_string" '
+  BEGIN {
+    entry_start = 0
+    entry_lines = ""
+    entry_count = 0
+    prev_line = 0
+  }
+  {
+    # Check if this line starts a new entry (format: : timestamp:duration;command)
+    # Use match() to handle lines that may have trailing backslashes
+    if (match($0, /^:[0-9]+:[0-9]+;/)) {
+      # Save previous entry if exists
+      if (entry_start > 0) {
+        entry_count++
+        entries[entry_count] = entry_lines
+        entry_starts[entry_count] = entry_start
+        if (prev_line > 0 && prev_line >= entry_start) {
+          entry_ends[entry_count] = prev_line
+        } else {
+          entry_ends[entry_count] = entry_start
+        }
+      }
+      # Start new entry
+      entry_start = NR
+      entry_lines = $0
+    } else {
+      # Continuation of previous entry
+      if (entry_start > 0) {
+        entry_lines = entry_lines "\n" $0
+      } else {
+        # Orphan line (should not happen in valid history file)
+        entry_count++
+        entries[entry_count] = $0
+        entry_starts[entry_count] = NR
+        entry_ends[entry_count] = NR
+        entry_start = NR
+        entry_lines = $0
+      }
+    }
+    prev_line = NR
+  }
+  END {
+    # Save last entry
+    if (entry_start > 0) {
+      entry_count++
+      entries[entry_count] = entry_lines
+      entry_starts[entry_count] = entry_start
+      entry_ends[entry_count] = NR
+    }
+    
+    # Find matching entries
+    # Use index() for literal string matching (more reliable than regex)
+    for (i = 1; i <= entry_count; i++) {
+      if (index(entries[i], search_string) > 0) {
+        matching[++match_count] = i
+      }
+    }
+    
+    # Output matching entries info (for display)
+    for (i = 1; i <= match_count; i++) {
+      idx = matching[i]
+      print "MATCH:" entry_starts[idx] ":" entry_ends[idx] ":" entries[idx]
+    }
+    
+    # Output all entries with match flags (for deletion)
+    for (i = 1; i <= entry_count; i++) {
+      is_match = 0
+      for (j = 1; j <= match_count; j++) {
+        if (matching[j] == i) {
+          is_match = 1
+          break
+        }
+      }
+      if (!is_match) {
+        print entries[i]
+      }
+    }
+  }
+' "$HISTFILE" > "$temp_combined"
+
+if [[ $? -ne 0 ]]; then
+  echo "$CMDNAME: Failed to process history file." 1>&2
+  rm "$temp_combined" "$backup_file"
+  exit 1
+fi
+
+# Extract matching entries
+matching_entries=$(grep "^MATCH:" "$temp_combined")
+match_count=$(echo "$matching_entries" | grep -c . || echo "0")
 
 if [[ "$match_count" -eq 0 ]]; then
   echo "No matching entries found for: $search_string"
-  rm "$backup_file"
+  rm "$temp_combined" "$backup_file"
   exit 0
 fi
 
@@ -108,17 +197,26 @@ echo "Matching entries:"
 echo "-----------------"
 
 # Display matching entries
-# zsh history format: : timestamp:duration;command
-# Extract and display the command part
-echo "$matching_lines" | while IFS= read -r line; do
-  # Extract command part after the last semicolon
-  # Use sed to extract everything after the semicolon
-  command_part=$(echo "$line" | sed -n 's/^:[^:]*:[^;]*;\(.*\)$/\1/p')
+echo "$matching_entries" | while IFS= read -r line; do
+  # Extract entry (format: MATCH:start:end:entry)
+  entry=$(echo "$line" | sed 's/^MATCH:[0-9]*:[0-9]*://')
+  # Extract command part after the first semicolon
+  command_part=$(echo "$entry" | sed -n 's/^:[^:]*:[^;]*;\(.*\)$/\1/p')
   if [[ -n "$command_part" ]]; then
-    echo "  $command_part"
+    # Count lines in command
+    line_count=$(echo "$command_part" | wc -l | tr -d ' ')
+    if [[ "$line_count" -gt 1 ]]; then
+      # Show first few lines for multiline commands
+      first_lines=$(echo "$command_part" | head -3)
+      echo "  ${first_lines}"
+      if [[ "$line_count" -gt 3 ]]; then
+        echo "  ... (${line_count} lines total)"
+      fi
+    else
+      echo "  $command_part"
+    fi
   else
-    # Fallback: display the whole line if format doesn't match
-    echo "  $line"
+    echo "  $entry"
   fi
 done
 
@@ -129,28 +227,29 @@ echo
 read -p "Delete these entries? (y/n): " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
   echo "$CMDNAME: Operation cancelled."
-  rm "$backup_file"
+  rm "$temp_combined" "$backup_file"
   exit 0
 fi
 
-
-# Delete matching lines
-# zsh history format: : timestamp:duration;command
-# We need to delete entire lines that contain the search string
+# Delete matching entries
+# Extract lines to keep (entries not matching search string)
 temp_file=$(mktemp)
-grep -v "$search_string" "$HISTFILE" > "$temp_file"
+grep -v "^MATCH:" "$temp_combined" > "$temp_file"
+
 if [[ $? -ne 0 ]]; then
   echo "$CMDNAME: Failed to filter history." 1>&2
-  rm "$temp_file" "$backup_file"
+  rm "$temp_file" "$temp_combined" "$backup_file"
   exit 1
 fi
 
 mv "$temp_file" "$HISTFILE"
 if [[ $? -ne 0 ]]; then
   echo "$CMDNAME: Failed to update history file." 1>&2
-  rm "$temp_file" "$backup_file"
+  rm "$temp_file" "$temp_combined" "$backup_file"
   exit 1
 fi
+
+rm "$temp_combined"
 
 echo "Deleted $match_count entr$(if [[ $match_count -eq 1 ]]; then echo "y"; else echo "ies"; fi) from history."
 echo "Backup saved at: $backup_file"
