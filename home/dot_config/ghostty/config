@@ -37,6 +37,10 @@ palette = 15=#ffffff
 font-size = 15
 font-thicken = true
 font-family = "JetBrains Mono Light"
+keybind = super+right=goto_split:right
+keybind = super+down=goto_split:down
+keybind = super+left=goto_split:left
+keybind = super+up=goto_split:up
 keybind = ctrl+page_down=next_tab
 keybind = ctrl+page_up=previous_tab
 mouse-shift-capture = always
