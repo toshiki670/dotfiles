@@ -2,6 +2,9 @@
 {{ if lookPath "zoxide" -}}
 {{ output "zoxide" "init" "zsh" -}}
 
+# Jump to parent directory
+alias bz='z ..'
+
 # Custom widget for zoxide interactive mode
 # Using ^j^f to match other fzf keybindings and avoid Zellij conflicts
 __zoxide_zi_widget() {
