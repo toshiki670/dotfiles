@@ -25,6 +25,9 @@ export BASH_ENV="$HOME/.bashenv"
 # Completion config (after sheldon to detect all completion plugins)
 {{ includeTemplate "dot_config/zsh/configs/completion.zsh" }}
 
+# Clipboard as completion candidate (macOS, after completion.zsh)
+{{ includeTemplate "dot_config/zsh/configs/clipboard-completion.zsh" }}
+
 # eza command config
 {{ includeTemplate "dot_config/zsh/configs/eza.zsh" }}
 
