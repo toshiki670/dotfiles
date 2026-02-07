@@ -4,18 +4,11 @@
 # Status is fetched in the background and cached (default: 15 seconds).
 (( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=15
 
-# Succeeds if origin host is one where gh is authenticated (inferred from remote URL).
+# Succeeds if origin URL contains "github" (fast check; no gh auth call).
 ci_status_gh_available() {
-  local remote host
+  local remote
   remote=$(git remote get-url origin 2>/dev/null) || return 1
-  if [[ "$remote" =~ ^https://([^/]+)/ ]]; then
-    host="${match[1]}"
-  elif [[ "$remote" =~ ^git@([^:]+): ]]; then
-    host="${match[1]}"
-  else
-    return 1
-  fi
-  gh auth status -h "$host" &>/dev/null
+  [[ "$remote" == *github* ]]
 }
 
 # Prints path to cache file: ~/.cache/ci-status/<path-under-HOME>/<branch>
@@ -37,8 +30,6 @@ ci_status_cache_file() {
 
 ci_status_fetch() {
   ci_status_gh_available || return 0
-  command -v gh >/dev/null 2>&1 || return 0
-  command -v jq >/dev/null 2>&1 || return 0
 
   local cache_file
   cache_file=$(ci_status_cache_file) || return 0
@@ -65,7 +56,6 @@ precmd_ci_status() {
     CI_STATUS_PROMPT=""
     return
   fi
-  command -v gh >/dev/null 2>&1 || { CI_STATUS_PROMPT=""; return; }
 
   local cache_file
   cache_file=$(ci_status_cache_file) || { CI_STATUS_PROMPT=""; return; }
@@ -100,4 +90,6 @@ precmd_ci_status() {
   fi
 }
 
-add-zsh-hook precmd precmd_ci_status
+if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+  add-zsh-hook precmd precmd_ci_status
+fi
