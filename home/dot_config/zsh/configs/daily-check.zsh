@@ -21,7 +21,7 @@ daily-check() {
     return
   fi
 
-  # Start background job; date check and brew/mise run inside it
+  # Start background job; date check and brew/mise run inside it. No message so no need for foreground date check.
   setopt local_options no_monitor
   "checking outdated"() {
     local today=$(strftime %F $EPOCHSECONDS)
@@ -31,21 +31,31 @@ daily-check() {
     fi
     [[ ! -d "$cache_dir" ]] && mkdir -p "$cache_dir"
     print -n "$today" >| "$timestamp_file"
-    {
-      echo "=== Homebrew Outdated Packages ==="
-      echo ""
-      (( $+commands[brew] )) && brew outdated 2>/dev/null
-      echo ""
-      echo "=== Mise Outdated Tools ==="
-      echo ""
-      (( $+commands[mise] )) && mise outdated 2>/dev/null
-    } > "$result_file" 2>&1
+
+    local brew_out="" mise_out=""
+    (( $+commands[brew] )) && brew_out=$(brew outdated 2>/dev/null)
+    (( $+commands[mise] )) && mise_out=$(mise outdated 2>/dev/null)
+    local has_brew=$([[ -n "${brew_out//[[:space:]]/}" ]] && echo 1)
+    local has_mise=$([[ -n "${mise_out//[[:space:]]/}" ]] && echo 1)
+    if [[ -n "$has_brew" || -n "$has_mise" ]]; then
+      {
+        [[ -n "$has_brew" ]] && {
+          echo "=== Homebrew Outdated Packages ==="
+          echo ""
+          print -r -- "$brew_out"
+          echo ""
+        }
+        [[ -n "$has_mise" ]] && {
+          echo "=== Mise Outdated Tools ==="
+          echo ""
+          print -r -- "$mise_out"
+          echo ""
+        }
+      } > "$result_file" 2>&1
+    fi
   }
   ( cache_dir="$cache_dir" timestamp_file="$timestamp_file" result_file="$result_file" "checking outdated" ) &
   disown
-  echo ""
-  echo "━━━ ⏳ Checking Outdated ━━━"
-  echo ""
 }
 
 # Run the daily check on shell startup
