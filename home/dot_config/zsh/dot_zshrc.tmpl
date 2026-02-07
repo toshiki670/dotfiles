@@ -49,6 +49,9 @@ export BASH_ENV="$HOME/.bashenv"
 # git config
 {{ includeTemplate "dot_config/zsh/configs/git.zsh" }}
 
+# CI status in Pure prompt (GitHub Actions via gh CLI)
+{{ includeTemplate "dot_config/zsh/configs/ci-status.zsh" }}
+
 # dotfiles version management config
 {{ includeTemplate "dot_config/zsh/configs/dotfiles.zsh" }}
 
