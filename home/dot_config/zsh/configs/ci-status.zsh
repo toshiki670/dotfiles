@@ -1,7 +1,12 @@
 # Show remote CI status (GitHub Actions) in Pure prompt.
 # Requires: gh CLI (https://cli.github.com/), jq, and GitHub repo.
 # Supports GitHub.com and GitHub Enterprise Server (on-premises); uses origin URL to detect host.
-# Status is fetched in the background and cached (default: 15 seconds).
+#
+# Spec (when zsh-async is available):
+# - Triggers: (1) terminal open, (2) Enter, (3) exec $SHELL -l.
+# - On trigger: run CI check in background; when the job completes, show the checkmark (no second Enter).
+# - When a trigger runs within CI_STATUS_CACHE_SECONDS (default 15s): skip fetch, show cached result when job completes.
+# - Result is written only in the callback (job complete → PROMPT update + zle .reset-prompt).
 (( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=15
 
 # Succeeds if origin URL contains "github" (fast check; no gh auth call).
@@ -50,6 +55,55 @@ ci_status_fetch() {
   echo "${result:-unknown}" > "$cache_file"
 }
 
+# Runs in zsh-async worker. If cache is older than CI_STATUS_CACHE_SECONDS, fetch; else use cache. Output "path\nstatus".
+# Use date +%s because worker is a separate process and may not have EPOCHSECONDS (zsh/datetime).
+ci_status_async_fetch() {
+  local cache_file
+  cache_file=$(ci_status_cache_file) || return 1
+  local mtime=0 now
+  now=$(date +%s 2>/dev/null) || now=0
+  if [[ -f "$cache_file" ]]; then
+    if [[ "$(uname -s)" == Darwin ]]; then
+      mtime=$(stat -f %m "$cache_file" 2>/dev/null)
+    else
+      mtime=$(stat -c %Y "$cache_file" 2>/dev/null)
+    fi
+  fi
+  # 15s rule: only fetch when cache is stale (older than CI_STATUS_CACHE_SECONDS)
+  if (( mtime + CI_STATUS_CACHE_SECONDS < now )); then
+    ci_status_fetch
+  fi
+  echo "$cache_file"
+  cat "$cache_file" 2>/dev/null || echo "unknown"
+}
+
+ci_status_async_callback() {
+  local job=$1 code=$2 output=$3 next_pending=$6
+  [[ $job != ci_status_async_fetch ]] && return
+  (( code )) && return
+
+  local -a lines
+  lines=("${(f)output}")
+  local job_cache_file=${lines[1]} result=${lines[2]}
+  local current_cache_file
+  current_cache_file=$(ci_status_cache_file 2>/dev/null) || return
+  [[ "$job_cache_file" != "$current_cache_file" ]] && return
+
+  case "$result" in
+    success) CI_STATUS_PROMPT='%F{green}✓%f' ;;
+    failure) CI_STATUS_PROMPT='%F{red}✗%f' ;;
+    pending) CI_STATUS_PROMPT='%F{yellow}◐%f' ;;
+    skipped) CI_STATUS_PROMPT='%F{242}−%f' ;;
+    *) CI_STATUS_PROMPT="" ;;
+  esac
+  if (( ! next_pending )); then
+    if [[ -n "$prompt_newline" && -n "$CI_STATUS_PROMPT" ]]; then
+      PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
+    fi
+    zle && zle .reset-prompt
+  fi
+}
+
 precmd_ci_status() {
   [[ -z "$prompt_newline" ]] && return
   if ! git rev-parse --git-dir >/dev/null 2>&1; then
@@ -60,33 +114,40 @@ precmd_ci_status() {
   local cache_file
   cache_file=$(ci_status_cache_file) || { CI_STATUS_PROMPT=""; return; }
 
-  # Refresh in background if cache missing or older than CI_STATUS_CACHE_SECONDS
-  local mtime=0
-  if [[ -f "$cache_file" ]]; then
-    if [[ "$(uname -s)" == Darwin ]]; then
-      mtime=$(stat -f %m "$cache_file" 2>/dev/null)
-    else
-      mtime=$(stat -c %Y "$cache_file" 2>/dev/null)
-    fi
-  fi
-  if (( mtime + CI_STATUS_CACHE_SECONDS < EPOCHSECONDS )); then
-    ( ci_status_fetch ) &!
-  fi
-
-  if [[ -f "$cache_file" ]]; then
-    case "$(cat "$cache_file")" in
-      success) CI_STATUS_PROMPT='%F{green}✓%f' ;;
-      failure) CI_STATUS_PROMPT='%F{red}✗%f' ;;
-      pending) CI_STATUS_PROMPT='%F{yellow}◐%f' ;;
-      skipped) CI_STATUS_PROMPT='%F{242}−%f' ;;
-      *) CI_STATUS_PROMPT="" ;;
-    esac
+  if (( $+functions[async_start_worker] )); then
+    (( ${+ci_status_async_inited} )) || {
+      typeset -g ci_status_async_inited=1
+      async_start_worker "ci_status" -u -n
+      async_register_callback "ci_status" ci_status_async_callback
+    }
+    async_worker_eval "ci_status" builtin cd -q $PWD
+    async_job "ci_status" ci_status_async_fetch
   else
-    CI_STATUS_PROMPT=""
-  fi
-
-  if [[ -n "$CI_STATUS_PROMPT" ]]; then
-    PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
+    local mtime=0
+    if [[ -f "$cache_file" ]]; then
+      if [[ "$(uname -s)" == Darwin ]]; then
+        mtime=$(stat -f %m "$cache_file" 2>/dev/null)
+      else
+        mtime=$(stat -c %Y "$cache_file" 2>/dev/null)
+      fi
+    fi
+    if (( mtime + CI_STATUS_CACHE_SECONDS < EPOCHSECONDS )); then
+      ( ci_status_fetch ) &!
+    fi
+    if [[ -f "$cache_file" ]]; then
+      case "$(cat "$cache_file")" in
+        success) CI_STATUS_PROMPT='%F{green}✓%f' ;;
+        failure) CI_STATUS_PROMPT='%F{red}✗%f' ;;
+        pending) CI_STATUS_PROMPT='%F{yellow}◐%f' ;;
+        skipped) CI_STATUS_PROMPT='%F{242}−%f' ;;
+        *) CI_STATUS_PROMPT="" ;;
+      esac
+    else
+      CI_STATUS_PROMPT=""
+    fi
+    if [[ -n "$CI_STATUS_PROMPT" ]]; then
+      PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
+    fi
   fi
 }
 
