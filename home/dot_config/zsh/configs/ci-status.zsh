@@ -9,6 +9,12 @@
 # - Result is written only in the callback (job complete → PROMPT update + zle .reset-prompt).
 (( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=15
 
+# Echo prompt string for status (success/failure/pending/skipped/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
+ci_status_prompt_from_result() {
+  local -A m=(success '%F{green}✓%f' failure '%F{red}✗%f' pending '%F{yellow}◐%f' skipped '%F{242}−%f')
+  echo "${m[$1]:-}"
+}
+
 # Succeeds if origin URL contains "github" (fast check; no gh auth call).
 ci_status_gh_available() {
   local remote
@@ -89,13 +95,7 @@ ci_status_async_callback() {
   current_cache_file=$(ci_status_cache_file 2>/dev/null) || return
   [[ "$job_cache_file" != "$current_cache_file" ]] && return
 
-  case "$result" in
-    success) CI_STATUS_PROMPT='%F{green}✓%f' ;;
-    failure) CI_STATUS_PROMPT='%F{red}✗%f' ;;
-    pending) CI_STATUS_PROMPT='%F{yellow}◐%f' ;;
-    skipped) CI_STATUS_PROMPT='%F{242}−%f' ;;
-    *) CI_STATUS_PROMPT="" ;;
-  esac
+  CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
   if (( ! next_pending )); then
     if [[ -n "$prompt_newline" && -n "$CI_STATUS_PROMPT" ]]; then
       PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
@@ -134,17 +134,7 @@ precmd_ci_status() {
     if (( mtime + CI_STATUS_CACHE_SECONDS < EPOCHSECONDS )); then
       ( ci_status_fetch ) &!
     fi
-    if [[ -f "$cache_file" ]]; then
-      case "$(cat "$cache_file")" in
-        success) CI_STATUS_PROMPT='%F{green}✓%f' ;;
-        failure) CI_STATUS_PROMPT='%F{red}✗%f' ;;
-        pending) CI_STATUS_PROMPT='%F{yellow}◐%f' ;;
-        skipped) CI_STATUS_PROMPT='%F{242}−%f' ;;
-        *) CI_STATUS_PROMPT="" ;;
-      esac
-    else
-      CI_STATUS_PROMPT=""
-    fi
+    CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$(cat "$cache_file" 2>/dev/null)")
     if [[ -n "$CI_STATUS_PROMPT" ]]; then
       PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
     fi
