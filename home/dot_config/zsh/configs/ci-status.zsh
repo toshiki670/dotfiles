@@ -61,9 +61,9 @@ ci_status_fetch() {
   ci_status_gh_available || return 0
 
   local cache_file
-  cache_file=$(ci_status_cache_file) || return 0
+  cache_file=$(ci_status_cache_file) || return 1
   local branch
-  branch=$(git branch --show-current 2>/dev/null) || return 0
+  branch=$(git branch --show-current 2>/dev/null) || return 1
   mkdir -p "${cache_file:h}"
 
   local result
