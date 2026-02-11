@@ -10,6 +10,7 @@
 (( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=15
 (( ${+CI_STATUS_CACHE_DIR} )) || typeset -g CI_STATUS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
 (( ${+CI_STATUS_GH_HOSTS_CACHE_FILE} )) || typeset -g CI_STATUS_GH_HOSTS_CACHE_FILE="${CI_STATUS_CACHE_DIR}/gh_hosts"
+(( ${+CI_STATUS_ERROR_LOG_FILE} )) || typeset -g CI_STATUS_ERROR_LOG_FILE="${CI_STATUS_CACHE_DIR}/error.log"
 
 # Echo prompt string for status (success/failure/in_progress/waiting/action_required/skipped/cancelled/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
 ci_status_prompt_from_result() {
@@ -17,11 +18,23 @@ ci_status_prompt_from_result() {
   echo "${m[$1]:-}"
 }
 
+# Write error log to file in background (non-blocking)
+ci_status_log_error() {
+  local line=$1 context=$2
+  (
+    mkdir -p "${CI_STATUS_ERROR_LOG_FILE:h}"
+    echo "[$(date +%Y-%m-%d\ %H:%M:%S)] F{$line} $context" >> "$CI_STATUS_ERROR_LOG_FILE" 2>/dev/null
+  ) &!
+}
+
 # Checks if the host is in the cached list of available GitHub hosts.
 ci_status_gh_available() {
   # Get remote URL
   local remote_url
-  remote_url=$(git ls-remote --get-url origin 2>/dev/null) || return 1
+  remote_url=$(git ls-remote --get-url origin 2>/dev/null) || {
+    ci_status_log_error $LINENO "ci_status_gh_available: failed to get remote URL"
+    return 1
+  }
   # Load cache file into array
   local -a hosts
   local cache_content
@@ -35,6 +48,7 @@ ci_status_gh_available() {
     return 0
   fi
   # If no host matched, return 1
+  ci_status_log_error $LINENO "ci_status_gh_available: no host matched"
   return 1
 }
 
@@ -52,7 +66,10 @@ ci_status_is_cache_stale() {
 ci_status_cache_file() {
   local path_joined filename
   path_joined="${(j:/:)${(f)$(git rev-parse --show-toplevel --abbrev-ref HEAD 2>/dev/null)}}"
-  [[ -z "$path_joined" ]] && return 1
+  [[ -z "$path_joined" ]] && {
+    ci_status_log_error $LINENO "ci_status_cache_file: failed to get path"
+    return 1
+  }
   filename="${path_joined//\//_}"
   echo "$CI_STATUS_CACHE_DIR/repos/$filename"
 }
@@ -61,9 +78,15 @@ ci_status_fetch() {
   ci_status_gh_available || return 0
 
   local cache_file
-  cache_file=$(ci_status_cache_file) || return 1
+  cache_file=$(ci_status_cache_file) || {
+    ci_status_log_error $LINENO "ci_status_fetch: ci_status_cache_file failed"
+    return 1
+  }
   local branch
-  branch=$(git branch --show-current 2>/dev/null) || return 1
+  branch=$(git branch --show-current 2>/dev/null) || {
+    ci_status_log_error $LINENO "ci_status_fetch: failed to get branch"
+    return 1
+  }
   mkdir -p "${cache_file:h}"
 
   local result
@@ -88,7 +111,10 @@ ci_status_fetch() {
 # Runs in zsh-async worker. If cache is older than CI_STATUS_CACHE_SECONDS, fetch; else use cache. Output "path\nstatus".
 ci_status_async_fetch() {
   local cache_file
-  cache_file=$(ci_status_cache_file) || return 1
+  cache_file=$(ci_status_cache_file) || {
+    ci_status_log_error $LINENO "ci_status_async_fetch: ci_status_cache_file failed"
+    return 1
+  }
   # Only fetch when cache is stale (older than CI_STATUS_CACHE_SECONDS)
   if ci_status_is_cache_stale "$cache_file"; then
     ci_status_fetch
