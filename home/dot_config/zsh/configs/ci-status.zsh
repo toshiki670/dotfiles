@@ -11,9 +11,9 @@
 (( ${+CI_STATUS_CACHE_DIR} )) || typeset -g CI_STATUS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
 (( ${+CI_STATUS_GH_HOSTS_CACHE_FILE} )) || typeset -g CI_STATUS_GH_HOSTS_CACHE_FILE="${CI_STATUS_CACHE_DIR}/gh_hosts"
 
-# Echo prompt string for status (success/failure/pending/skipped/cancelled/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
+# Echo prompt string for status (success/failure/in_progress/waiting/action_required/skipped/cancelled/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
 ci_status_prompt_from_result() {
-  local -A m=(success '%F{green}✓%f' failure '%F{red}✗%f' pending '%F{yellow}◐%f' skipped '%F{242}−%f' cancelled '%F{214}⊖%f' unknown '%F{242}?%f')
+  local -A m=(success '%F{green}✓%f' failure '%F{red}✗%f' in_progress '%F{yellow}⟳%f' waiting '%F{blue}○%f' action_required '%F{magenta}⏸%f' skipped '%F{242}−%f' cancelled '%F{214}⊖%f' unknown '%F{242}?%f')
   echo "${m[$1]:-}"
 }
 
@@ -69,11 +69,16 @@ ci_status_fetch() {
   local result
   result=$(gh run list -b "$branch" -L 1 --json conclusion,status -q '
     if .[0] == null then "unknown"
-    elif .[0].status != "completed" then "pending"
-    elif .[0].conclusion == "success" then "success"
-    elif .[0].conclusion == "failure" then "failure"
-    elif .[0].conclusion == "cancelled" then "cancelled"
-    elif .[0].conclusion == "skipped" then "skipped"
+    elif .[0].status == "in_progress" then "in_progress"
+    elif .[0].status == "queued" or .[0].status == "waiting" or .[0].status == "requested" then "waiting"
+    elif .[0].status == "action_required" or .[0].status == "pending" then "action_required"
+    elif .[0].status == "completed" then
+      if .[0].conclusion == "success" then "success"
+      elif .[0].conclusion == "failure" then "failure"
+      elif .[0].conclusion == "cancelled" then "cancelled"
+      elif .[0].conclusion == "skipped" then "skipped"
+      else "unknown"
+      end
     else "unknown"
     end
   ' 2>/dev/null)
