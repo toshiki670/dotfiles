@@ -13,7 +13,7 @@
 
 # Echo prompt string for status (success/failure/pending/skipped/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
 ci_status_prompt_from_result() {
-  local -A m=(success '%F{green}✓%f' failure '%F{red}✗%f' pending '%F{yellow}◐%f' skipped '%F{242}−%f')
+  local -A m=(success '%F{green}✓%f' failure '%F{red}✗%f' pending '%F{yellow}◐%f' skipped '%F{242}−%f' unknown '%F{242}?%f')
   echo "${m[$1]:-}"
 }
 
@@ -41,6 +41,8 @@ ci_status_gh_available() {
 # Check if cache file is stale (older than CI_STATUS_CACHE_SECONDS)
 ci_status_is_cache_stale() {
   local cache_file=$1
+  # If file doesn't exist, consider it stale
+  [[ ! -f "$cache_file" ]] && return 0
   setopt local_options null_glob
   local old_files=($cache_file(ms+$CI_STATUS_CACHE_SECONDS))
   (( ${#old_files} > 0 ))
@@ -137,7 +139,9 @@ ci_status_precmd_sync() {
   if ci_status_is_cache_stale "$cache_file"; then
     ( ci_status_fetch ) &!
   fi
-  CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$(cat "$cache_file" 2>/dev/null)")
+  local result
+  result=$(cat "$cache_file" 2>/dev/null)
+  CI_STATUS_PROMPT=$(ci_status_prompt_from_result "${result:-unknown}")
   if [[ -n "$CI_STATUS_PROMPT" ]]; then
     PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
   fi
