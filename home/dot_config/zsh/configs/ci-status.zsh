@@ -38,17 +38,12 @@ ci_status_gh_available() {
   return 1
 }
 
-# Output mtime of file (seconds since epoch), or 0 if unavailable. Portable (Darwin/Linux).
-ci_status_file_mtime() {
-  local m=0
-  if [[ -f "$1" ]]; then
-    if [[ "$(uname -s)" == Darwin ]]; then
-      m=$(stat -f %m "$1" 2>/dev/null)
-    else
-      m=$(stat -c %Y "$1" 2>/dev/null)
-    fi
-  fi
-  echo "${m:-0}"
+# Check if cache file is stale (older than CI_STATUS_CACHE_SECONDS)
+ci_status_is_cache_stale() {
+  local cache_file=$1
+  setopt local_options null_glob
+  local old_files=($cache_file(ms+$CI_STATUS_CACHE_SECONDS))
+  (( ${#old_files} > 0 ))
 }
 
 # Prints path to cache file: ~/.cache/ci-status/repos/<toplevel_path>_<branch> (single file, / replaced with _)
@@ -83,15 +78,11 @@ ci_status_fetch() {
 }
 
 # Runs in zsh-async worker. If cache is older than CI_STATUS_CACHE_SECONDS, fetch; else use cache. Output "path\nstatus".
-# Use date +%s because worker is a separate process and may not have EPOCHSECONDS (zsh/datetime).
 ci_status_async_fetch() {
   local cache_file
   cache_file=$(ci_status_cache_file) || return 1
-  local mtime now
-  mtime=$(ci_status_file_mtime "$cache_file")
-  now=$(date +%s 2>/dev/null) || now=0
-  # 15s rule: only fetch when cache is stale (older than CI_STATUS_CACHE_SECONDS)
-  if (( mtime + CI_STATUS_CACHE_SECONDS < now )); then
+  # Only fetch when cache is stale (older than CI_STATUS_CACHE_SECONDS)
+  if ci_status_is_cache_stale "$cache_file"; then
     ci_status_fetch
   fi
   echo "$cache_file"
@@ -143,9 +134,7 @@ precmd_ci_status() {
 ci_status_precmd_sync() {
   local cache_file
   cache_file=$(ci_status_cache_file) || { CI_STATUS_PROMPT=""; return; }
-  local mtime
-  mtime=$(ci_status_file_mtime "$cache_file")
-  if (( mtime + CI_STATUS_CACHE_SECONDS < EPOCHSECONDS )); then
+  if ci_status_is_cache_stale "$cache_file"; then
     ( ci_status_fetch ) &!
   fi
   CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$(cat "$cache_file" 2>/dev/null)")
