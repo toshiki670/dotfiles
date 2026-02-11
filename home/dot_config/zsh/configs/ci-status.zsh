@@ -74,20 +74,31 @@ ci_status_cache_file() {
   echo "$CI_STATUS_CACHE_DIR/repos/$filename"
 }
 
-ci_status_fetch() {
+# Get cache file path and status. If cache is stale, fetch and update; else return cached result.
+# Output: "cache_file_path\nstatus"
+ci_status_cache_or_fetch() {
   ci_status_gh_available || return 0
 
   local cache_file
   cache_file=$(ci_status_cache_file) || {
-    ci_status_log_error $LINENO "ci_status_fetch: ci_status_cache_file failed"
-    return 1
-  }
-  local branch
-  branch=$(git branch --show-current 2>/dev/null) || {
-    ci_status_log_error $LINENO "ci_status_fetch: failed to get branch"
+    ci_status_log_error $LINENO "ci_status_cache_or_fetch: ci_status_cache_file failed"
     return 1
   }
   mkdir -p "${cache_file:h}"
+
+  # If cache is fresh, return cached result
+  if ! ci_status_is_cache_stale "$cache_file"; then
+    echo "$cache_file"
+    cat "$cache_file" 2>/dev/null || echo "unknown"
+    return 0
+  fi
+
+  # Cache is stale, fetch and update
+  local branch
+  branch=$(git branch --show-current 2>/dev/null) || {
+    ci_status_log_error $LINENO "ci_status_cache_or_fetch: failed to get branch"
+    return 1
+  }
 
   local result
   result=$(gh run list -b "$branch" -L 1 --json conclusion,status -q '
@@ -106,21 +117,13 @@ ci_status_fetch() {
     end
   ' 2>/dev/null)
   echo "${result:-unknown}" > "$cache_file"
+  echo "$cache_file"
+  echo "${result:-unknown}"
 }
 
-# Runs in zsh-async worker. If cache is older than CI_STATUS_CACHE_SECONDS, fetch; else use cache. Output "path\nstatus".
+# Runs in zsh-async worker. Output "path\nstatus".
 ci_status_async_fetch() {
-  local cache_file
-  cache_file=$(ci_status_cache_file) || {
-    ci_status_log_error $LINENO "ci_status_async_fetch: ci_status_cache_file failed"
-    return 1
-  }
-  # Only fetch when cache is stale (older than CI_STATUS_CACHE_SECONDS)
-  if ci_status_is_cache_stale "$cache_file"; then
-    ci_status_fetch
-  fi
-  echo "$cache_file"
-  cat "$cache_file" 2>/dev/null || echo "unknown"
+  ci_status_cache_or_fetch
 }
 
 ci_status_async_callback() {
@@ -166,13 +169,11 @@ precmd_ci_status() {
 
 # Sync path: used only when zsh-async is not available.
 ci_status_precmd_sync() {
-  local cache_file
-  cache_file=$(ci_status_cache_file) || { CI_STATUS_PROMPT=""; return; }
-  if ci_status_is_cache_stale "$cache_file"; then
-    ( ci_status_fetch ) &!
-  fi
-  local result
-  result=$(cat "$cache_file" 2>/dev/null)
+  local output
+  output=$(ci_status_cache_or_fetch) || { CI_STATUS_PROMPT=""; return; }
+  local -a lines
+  lines=("${(f)output}")
+  local result=${lines[2]}
   CI_STATUS_PROMPT=$(ci_status_prompt_from_result "${result:-unknown}")
   if [[ -n "$CI_STATUS_PROMPT" ]]; then
     PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
