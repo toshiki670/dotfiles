@@ -8,6 +8,8 @@
 # - When a trigger runs within CI_STATUS_CACHE_SECONDS (default 15s): skip fetch, show cached result when job completes.
 # - Result is written only in the callback (job complete → PROMPT update + zle .reset-prompt).
 (( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=15
+(( ${+CI_STATUS_CACHE_DIR} )) || typeset -g CI_STATUS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
+(( ${+CI_STATUS_GH_HOSTS_CACHE_FILE} )) || typeset -g CI_STATUS_GH_HOSTS_CACHE_FILE="${CI_STATUS_CACHE_DIR}/gh_hosts"
 
 # Echo prompt string for status (success/failure/pending/skipped/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
 ci_status_prompt_from_result() {
@@ -15,11 +17,25 @@ ci_status_prompt_from_result() {
   echo "${m[$1]:-}"
 }
 
-# Succeeds if origin URL contains "github" (fast check; no gh auth call).
+# Checks if the host is in the cached list of available GitHub hosts.
 ci_status_gh_available() {
-  local remote
-  remote=$(git remote get-url origin 2>/dev/null) || return 1
-  [[ "$remote" == *github* ]]
+  # Get remote URL
+  local remote_url
+  remote_url=$(git ls-remote --get-url origin 2>/dev/null) || return 1
+  # Load cache file into array
+  local -a hosts
+  local cache_content
+  cache_content=$(cat "$CI_STATUS_GH_HOSTS_CACHE_FILE" 2>/dev/null)
+  hosts=(${(f)cache_content})
+  # Check if any cached host is contained in the remote URL
+  # Use zsh pattern matching: build pattern *host1*|*host2*|...
+  local pattern
+  pattern="*(${(j:|:)hosts})*"
+  if [[ "$remote_url" == ${~pattern} ]]; then
+    return 0
+  fi
+  # If no host matched, return 1
+  return 1
 }
 
 # Output mtime of file (seconds since epoch), or 0 if unavailable. Portable (Darwin/Linux).
@@ -37,12 +53,11 @@ ci_status_file_mtime() {
 
 # Prints path to cache file: ~/.cache/ci-status/repos/<toplevel_path>_<branch> (single file, / replaced with _)
 ci_status_cache_file() {
-  local cache_dir path_joined filename
-  cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
+  local path_joined filename
   path_joined="${(j:/:)${(f)$(git rev-parse --show-toplevel --abbrev-ref HEAD 2>/dev/null)}}"
   [[ -z "$path_joined" ]] && return 1
   filename="${path_joined//\//_}"
-  echo "$cache_dir/repos/$filename"
+  echo "$CI_STATUS_CACHE_DIR/repos/$filename"
 }
 
 ci_status_fetch() {
@@ -139,6 +154,17 @@ ci_status_precmd_sync() {
   fi
 }
 
+# Initialize GitHub hosts cache by running gh auth status in background
+ci_status_init_gh_hosts_cache() {
+  mkdir -p "$CI_STATUS_CACHE_DIR"
+
+  # Run gh auth status in background and save active hosts to cache file
+  (
+    gh auth status --json hosts --jq '[.hosts | to_entries[] | .key as $host | .value[] | select(.active == true) | $host] | unique[]' 2>/dev/null > "$CI_STATUS_GH_HOSTS_CACHE_FILE" || true
+  ) &!
+}
+
 if command -v gh >/dev/null 2>&1; then
+  ci_status_init_gh_hosts_cache
   add-zsh-hook precmd precmd_ci_status
 fi
