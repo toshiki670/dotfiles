@@ -118,9 +118,6 @@ precmd_ci_status() {
     return
   fi
 
-  local cache_file
-  cache_file=$(ci_status_cache_file) || { CI_STATUS_PROMPT=""; return; }
-
   if (( $+functions[async_start_worker] )); then
     (( ${+ci_status_async_inited} )) || {
       typeset -g ci_status_async_inited=1
@@ -130,15 +127,22 @@ precmd_ci_status() {
     async_worker_eval "ci_status" builtin cd -q $PWD
     async_job "ci_status" ci_status_async_fetch
   else
-    local mtime
-    mtime=$(ci_status_file_mtime "$cache_file")
-    if (( mtime + CI_STATUS_CACHE_SECONDS < EPOCHSECONDS )); then
-      ( ci_status_fetch ) &!
-    fi
-    CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$(cat "$cache_file" 2>/dev/null)")
-    if [[ -n "$CI_STATUS_PROMPT" ]]; then
-      PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
-    fi
+    ci_status_precmd_sync
+  fi
+}
+
+# Sync path: used only when zsh-async is not available.
+ci_status_precmd_sync() {
+  local cache_file
+  cache_file=$(ci_status_cache_file) || { CI_STATUS_PROMPT=""; return; }
+  local mtime
+  mtime=$(ci_status_file_mtime "$cache_file")
+  if (( mtime + CI_STATUS_CACHE_SECONDS < EPOCHSECONDS )); then
+    ( ci_status_fetch ) &!
+  fi
+  CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$(cat "$cache_file" 2>/dev/null)")
+  if [[ -n "$CI_STATUS_PROMPT" ]]; then
+    PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
   fi
 }
 
