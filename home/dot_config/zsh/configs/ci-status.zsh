@@ -10,18 +10,31 @@
 (( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=15
 (( ${+CI_STATUS_CACHE_DIR} )) || typeset -g CI_STATUS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
 (( ${+CI_STATUS_GH_HOSTS_CACHE_FILE} )) || typeset -g CI_STATUS_GH_HOSTS_CACHE_FILE="${CI_STATUS_CACHE_DIR}/gh_hosts"
+(( ${+CI_STATUS_ERROR_LOG_FILE} )) || typeset -g CI_STATUS_ERROR_LOG_FILE="${CI_STATUS_CACHE_DIR}/error.log"
 
-# Echo prompt string for status (success/failure/pending/skipped/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
+# Echo prompt string for status (success/failure/in_progress/waiting/action_required/skipped/cancelled/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
 ci_status_prompt_from_result() {
-  local -A m=(success '%F{green}✓%f' failure '%F{red}✗%f' pending '%F{yellow}◐%f' skipped '%F{242}−%f')
+  local -A m=(success '%F{green}✓%f' failure '%F{red}✗%f' in_progress '%F{yellow}⟳%f' waiting '%F{blue}○%f' action_required '%F{magenta}⏸%f' skipped '%F{242}−%f' cancelled '%F{214}⊖%f' unknown '%F{242}?%f')
   echo "${m[$1]:-}"
+}
+
+# Write error log to file in background (non-blocking)
+ci_status_log_error() {
+  local line=$1 context=$2
+  (
+    mkdir -p "${CI_STATUS_ERROR_LOG_FILE:h}"
+    echo "[$(date +%Y-%m-%d\ %H:%M:%S)] F{$line} $context" >> "$CI_STATUS_ERROR_LOG_FILE" 2>/dev/null
+  ) &!
 }
 
 # Checks if the host is in the cached list of available GitHub hosts.
 ci_status_gh_available() {
   # Get remote URL
   local remote_url
-  remote_url=$(git ls-remote --get-url origin 2>/dev/null) || return 1
+  remote_url=$(git ls-remote --get-url origin 2>/dev/null) || {
+    ci_status_log_error $LINENO "ci_status_gh_available: failed to get remote URL"
+    return 1
+  }
   # Load cache file into array
   local -a hosts
   local cache_content
@@ -35,12 +48,15 @@ ci_status_gh_available() {
     return 0
   fi
   # If no host matched, return 1
+  ci_status_log_error $LINENO "ci_status_gh_available: no host matched"
   return 1
 }
 
 # Check if cache file is stale (older than CI_STATUS_CACHE_SECONDS)
 ci_status_is_cache_stale() {
   local cache_file=$1
+  # If file doesn't exist, consider it stale
+  [[ ! -f "$cache_file" ]] && return 0
   setopt local_options null_glob
   local old_files=($cache_file(ms+$CI_STATUS_CACHE_SECONDS))
   (( ${#old_files} > 0 ))
@@ -50,43 +66,64 @@ ci_status_is_cache_stale() {
 ci_status_cache_file() {
   local path_joined filename
   path_joined="${(j:/:)${(f)$(git rev-parse --show-toplevel --abbrev-ref HEAD 2>/dev/null)}}"
-  [[ -z "$path_joined" ]] && return 1
+  [[ -z "$path_joined" ]] && {
+    ci_status_log_error $LINENO "ci_status_cache_file: failed to get path"
+    return 1
+  }
   filename="${path_joined//\//_}"
   echo "$CI_STATUS_CACHE_DIR/repos/$filename"
 }
 
-ci_status_fetch() {
+# Get cache file path and status. If cache is stale, fetch and update; else return cached result.
+# Output: "cache_file_path\nstatus"
+ci_status_cache_or_fetch() {
   ci_status_gh_available || return 0
 
   local cache_file
-  cache_file=$(ci_status_cache_file) || return 0
-  local branch
-  branch=$(git branch --show-current 2>/dev/null) || return 0
+  cache_file=$(ci_status_cache_file) || {
+    ci_status_log_error $LINENO "ci_status_cache_or_fetch: ci_status_cache_file failed"
+    return 1
+  }
   mkdir -p "${cache_file:h}"
+
+  # If cache is fresh, return cached result
+  if ! ci_status_is_cache_stale "$cache_file"; then
+    echo "$cache_file"
+    cat "$cache_file" 2>/dev/null || echo "unknown"
+    return 0
+  fi
+
+  # Cache is stale, fetch and update
+  local branch
+  branch=$(git branch --show-current 2>/dev/null) || {
+    ci_status_log_error $LINENO "ci_status_cache_or_fetch: failed to get branch"
+    return 1
+  }
 
   local result
   result=$(gh run list -b "$branch" -L 1 --json conclusion,status -q '
     if .[0] == null then "unknown"
-    elif .[0].status != "completed" then "pending"
-    elif .[0].conclusion == "success" then "success"
-    elif .[0].conclusion == "failure" or .[0].conclusion == "cancelled" then "failure"
-    elif .[0].conclusion == "skipped" then "skipped"
+    elif .[0].status == "in_progress" then "in_progress"
+    elif .[0].status == "queued" or .[0].status == "waiting" or .[0].status == "requested" then "waiting"
+    elif .[0].status == "action_required" or .[0].status == "pending" then "action_required"
+    elif .[0].status == "completed" then
+      if .[0].conclusion == "success" then "success"
+      elif .[0].conclusion == "failure" then "failure"
+      elif .[0].conclusion == "cancelled" then "cancelled"
+      elif .[0].conclusion == "skipped" then "skipped"
+      else "unknown"
+      end
     else "unknown"
     end
   ' 2>/dev/null)
   echo "${result:-unknown}" > "$cache_file"
+  echo "$cache_file"
+  echo "${result:-unknown}"
 }
 
-# Runs in zsh-async worker. If cache is older than CI_STATUS_CACHE_SECONDS, fetch; else use cache. Output "path\nstatus".
+# Runs in zsh-async worker. Output "path\nstatus".
 ci_status_async_fetch() {
-  local cache_file
-  cache_file=$(ci_status_cache_file) || return 1
-  # Only fetch when cache is stale (older than CI_STATUS_CACHE_SECONDS)
-  if ci_status_is_cache_stale "$cache_file"; then
-    ci_status_fetch
-  fi
-  echo "$cache_file"
-  cat "$cache_file" 2>/dev/null || echo "unknown"
+  ci_status_cache_or_fetch
 }
 
 ci_status_async_callback() {
@@ -132,12 +169,12 @@ precmd_ci_status() {
 
 # Sync path: used only when zsh-async is not available.
 ci_status_precmd_sync() {
-  local cache_file
-  cache_file=$(ci_status_cache_file) || { CI_STATUS_PROMPT=""; return; }
-  if ci_status_is_cache_stale "$cache_file"; then
-    ( ci_status_fetch ) &!
-  fi
-  CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$(cat "$cache_file" 2>/dev/null)")
+  local output
+  output=$(ci_status_cache_or_fetch) || { CI_STATUS_PROMPT=""; return; }
+  local -a lines
+  lines=("${(f)output}")
+  local result=${lines[2]}
+  CI_STATUS_PROMPT=$(ci_status_prompt_from_result "${result:-unknown}")
   if [[ -n "$CI_STATUS_PROMPT" ]]; then
     PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
   fi
