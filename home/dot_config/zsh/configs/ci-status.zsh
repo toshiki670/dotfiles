@@ -1,5 +1,5 @@
 # Show remote CI status (GitHub Actions) in Pure prompt.
-# Requires: gh CLI (https://cli.github.com/), jq, and GitHub repo.
+# Requires: gh CLI (https://cli.github.com/), and GitHub repo.
 # Supports GitHub.com and GitHub Enterprise Server (on-premises); uses origin URL to detect host.
 #
 # Spec (when zsh-async is available):
@@ -35,21 +35,14 @@ ci_status_file_mtime() {
   echo "${m:-0}"
 }
 
-# Prints path to cache file: ~/.cache/ci-status/<path-under-HOME>/<branch>
-# e.g. ~/.local/share/chezmoi + main -> ~/.cache/ci-status/.local/share/chezmoi/main
-# e.g. ~/Repositories/github.com/owner/repo + main -> ~/.cache/ci-status/Repositories/github.com/owner/repo/main
+# Prints path to cache file: ~/.cache/ci-status/repos/<toplevel_path>_<branch> (single file, / replaced with _)
 ci_status_cache_file() {
-  local abs_top suffix branch cache_dir
-  abs_top=$(cd "$(git rev-parse --show-toplevel 2>/dev/null)" && pwd) || return 1
-  branch=$(git branch --show-current 2>/dev/null) || return 1
-  if [[ "$abs_top" == "$HOME"/* ]]; then
-    suffix="${abs_top#$HOME/}"
-  else
-    suffix="${abs_top#/}"
-  fi
-  # branch may contain / (e.g. feature/foo) -> use as filename-safe part
+  local cache_dir path_joined filename
   cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
-  echo "$cache_dir/$suffix/${branch//\//_}"
+  path_joined="${(j:/:)${(f)$(git rev-parse --show-toplevel --abbrev-ref HEAD 2>/dev/null)}}"
+  [[ -z "$path_joined" ]] && return 1
+  filename="${path_joined//\//_}"
+  echo "$cache_dir/repos/$filename"
 }
 
 ci_status_fetch() {
