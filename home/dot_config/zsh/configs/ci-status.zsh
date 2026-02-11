@@ -49,7 +49,7 @@ ci_status_fetch() {
   mkdir -p "${cache_file:h}"
 
   local result
-  result=$(gh run list -b "$branch" -L 1 --json conclusion,status 2>/dev/null | jq -r '
+  result=$(gh run list -b "$branch" -L 1 --json conclusion,status -q '
     if .[0] == null then "unknown"
     elif .[0].status != "completed" then "pending"
     elif .[0].conclusion == "success" then "success"
@@ -57,7 +57,7 @@ ci_status_fetch() {
     elif .[0].conclusion == "skipped" then "skipped"
     else "unknown"
     end
-  ')
+  ' 2>/dev/null)
   echo "${result:-unknown}" > "$cache_file"
 }
 
@@ -141,6 +141,6 @@ precmd_ci_status() {
   fi
 }
 
-if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1; then
   add-zsh-hook precmd precmd_ci_status
 fi
