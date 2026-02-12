@@ -2,4 +2,6 @@
 # Created by my own rules
 mise.local.toml
 
+**/.claude/settings.local.json
+
 # End of my own rules
