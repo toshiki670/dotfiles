@@ -1,0 +1,64 @@
+name: QA Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - qa/pr-status-checks-display
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  test-success:
+    name: Test Success
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Run success test
+        run: |
+          echo "This is a successful test"
+          exit 0
+
+  test-pending:
+    name: Test Pending (Long Running)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Run pending test
+        run: |
+          echo "This is a pending test that takes some time"
+          sleep 30
+          echo "Test completed"
+
+  test-failure:
+    name: Test Failure
+    runs-on: ubuntu-latest
+    if: false  # This job will be skipped, simulating a cancelled check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Run failure test
+        run: |
+          echo "This test would fail"
+          exit 1
+
+  test-required-success:
+    name: Required Test Success
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Run required success test
+        run: |
+          echo "This is a required successful test"
+          exit 0
