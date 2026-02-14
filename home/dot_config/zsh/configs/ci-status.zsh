@@ -5,9 +5,9 @@
 # Spec (when zsh-async is available):
 # - Triggers: (1) terminal open, (2) Enter, (3) exec $SHELL -l.
 # - On trigger: run CI check in background; when the job completes, show the checkmark (no second Enter).
-# - When a trigger runs within CI_STATUS_CACHE_SECONDS (default 15s): skip fetch, show cached result when job completes.
+# - When a trigger runs within CI_STATUS_CACHE_SECONDS (default 10s): skip fetch, show cached result when job completes.
 # - Result is written only in the callback (job complete → PROMPT update + zle .reset-prompt).
-(( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=15
+(( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=10
 (( ${+CI_STATUS_CACHE_DIR} )) || typeset -g CI_STATUS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
 (( ${+CI_STATUS_GH_HOSTS_CACHE_FILE} )) || typeset -g CI_STATUS_GH_HOSTS_CACHE_FILE="${CI_STATUS_CACHE_DIR}/gh_hosts"
 (( ${+CI_STATUS_ERROR_LOG_FILE} )) || typeset -g CI_STATUS_ERROR_LOG_FILE="${CI_STATUS_CACHE_DIR}/error.log"
