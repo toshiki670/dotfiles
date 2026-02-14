@@ -151,7 +151,7 @@ ci_status_prompt_from_result() {
   if [[ -n "$checks_symbol" ]]; then
     result="${result} ${checks_symbol}"
     if [[ -n "$duration" ]]; then
-      result="${result} ${duration}"
+      result="${result} %F{214}${duration}%f"
     fi
   fi
   
