@@ -5,17 +5,157 @@
 # Spec (when zsh-async is available):
 # - Triggers: (1) terminal open, (2) Enter, (3) exec $SHELL -l.
 # - On trigger: run CI check in background; when the job completes, show the checkmark (no second Enter).
-# - When a trigger runs within CI_STATUS_CACHE_SECONDS (default 15s): skip fetch, show cached result when job completes.
+# - When a trigger runs within CI_STATUS_CACHE_SECONDS (default 10s): skip fetch, show cached result when job completes.
 # - Result is written only in the callback (job complete → PROMPT update + zle .reset-prompt).
-(( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=15
+(( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=10
 (( ${+CI_STATUS_CACHE_DIR} )) || typeset -g CI_STATUS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
 (( ${+CI_STATUS_GH_HOSTS_CACHE_FILE} )) || typeset -g CI_STATUS_GH_HOSTS_CACHE_FILE="${CI_STATUS_CACHE_DIR}/gh_hosts"
 (( ${+CI_STATUS_ERROR_LOG_FILE} )) || typeset -g CI_STATUS_ERROR_LOG_FILE="${CI_STATUS_CACHE_DIR}/error.log"
 
-# Echo prompt string for status (success/failure/in_progress/waiting/action_required/skipped/cancelled/unknown). Caller: CI_STATUS_PROMPT=$(ci_status_prompt_from_result "$result")
+# Format duration from checks data
+# Input: min_start (ISO 8601 string), max_end (ISO 8601 string), has_pending (0 or 1), current time (Unix timestamp)
+# Output: Formatted duration string like "1h 1m 1s" or "" (empty if no checks)
+ci_status_format_duration() {
+  local min_start=$1 max_end=$2 has_pending=$3 now=$4
+  
+  if [[ -z "$min_start" ]] || [[ "$min_start" == "null" ]]; then
+    echo ""
+    return
+  fi
+  
+  # Convert ISO 8601 (RFC3339) to Unix timestamp
+  # Format: "2024-01-01T12:00:00Z" or "2024-01-01T12:00:00.123Z"
+  local min_start_ts max_end_ts
+  if [[ "$(uname)" == "Darwin" ]]; then
+    # macOS: date -j -f format input +%s
+    # Remove fractional seconds and timezone offset, handle Z suffix
+    local min_start_normalized="${min_start%.*}"  # Remove fractional seconds
+    min_start_normalized="${min_start_normalized%+*}"  # Remove timezone offset like +09:00
+    if [[ "$min_start_normalized" == *"Z" ]]; then
+      min_start_normalized="${min_start_normalized%Z}"
+      min_start_ts=$(date -j -u -f "%Y-%m-%dT%H:%M:%S" "$min_start_normalized" +%s 2>/dev/null || echo "")
+    else
+      min_start_ts=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$min_start_normalized" +%s 2>/dev/null || echo "")
+    fi
+  else
+    # Linux: date -d input +%s (handles ISO 8601 directly)
+    min_start_ts=$(date -d "$min_start" +%s 2>/dev/null || echo "")
+  fi
+  
+  if [[ -z "$min_start_ts" ]]; then
+    echo ""
+    return
+  fi
+  
+  local duration_sec
+  if [[ "$has_pending" -gt 0 ]]; then
+    # In progress: use current time
+    duration_sec=$((now - min_start_ts))
+  else
+    # Completed: use max_end
+    if [[ -n "$max_end" ]] && [[ "$max_end" != "null" ]]; then
+      # Convert max_end to Unix timestamp
+      if [[ "$(uname)" == "Darwin" ]]; then
+        local max_end_normalized="${max_end%.*}"  # Remove fractional seconds
+        max_end_normalized="${max_end_normalized%+*}"  # Remove timezone offset
+        if [[ "$max_end_normalized" == *"Z" ]]; then
+          max_end_normalized="${max_end_normalized%Z}"
+          max_end_ts=$(date -j -u -f "%Y-%m-%dT%H:%M:%S" "$max_end_normalized" +%s 2>/dev/null || echo "")
+        else
+          max_end_ts=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$max_end_normalized" +%s 2>/dev/null || echo "")
+        fi
+      else
+        max_end_ts=$(date -d "$max_end" +%s 2>/dev/null || echo "")
+      fi
+      if [[ -n "$max_end_ts" ]]; then
+        duration_sec=$((max_end_ts - min_start_ts))
+      else
+        echo ""
+        return
+      fi
+    else
+      echo ""
+      return
+    fi
+  fi
+  
+  # Format: 1h 1m 1s
+  local h m s
+  h=$((duration_sec / 3600))
+  m=$(((duration_sec % 3600) / 60))
+  s=$((duration_sec % 60))
+  
+  local result=""
+  if [[ $h -ge 1 ]]; then
+    result="${h}h"
+  fi
+  if [[ $m -ge 1 ]]; then
+    [[ -n "$result" ]] && result="${result} "
+    result="${result}${m}m"
+  fi
+  if [[ $s -ge 0 ]]; then
+    [[ -n "$result" ]] && result="${result} "
+    result="${result}${s}s"
+  fi
+  
+  echo "$result"
+}
+
+# Echo prompt string for PR state and checks status
+# Input: "pr_state,checks_state,duration" format string
+# Output: Formatted prompt string with symbols and duration separated by spaces
 ci_status_prompt_from_result() {
-  local -A m=(success '%F{green}✓%f' failure '%F{red}✗%f' in_progress '%F{yellow}⟳%f' waiting '%F{blue}○%f' action_required '%F{magenta}⏸%f' skipped '%F{242}−%f' cancelled '%F{214}⊖%f' unknown '%F{242}?%f')
-  echo "${m[$1]:-}"
+  local input=$1
+  if [[ -z "$input" ]]; then
+    echo ""
+    return
+  fi
+  
+  local -a fields
+  fields=(${(s:,:)input})
+  local pr_state=${fields[1]} checks_state=${fields[2]} duration=${fields[3]}
+  
+  # PR state symbol mapping (Nerd Font icons)
+  local pr_symbol=""
+  case "$pr_state" in
+    ok) pr_symbol='%F{green}󰄬%f' ;;
+    waiting) pr_symbol='%F{blue}󰌧%f' ;;
+    ng) pr_symbol='%F{red}󰅖%f' ;;
+    *) pr_symbol="" ;;
+  esac
+  
+  # If no PR state, return empty
+  if [[ -z "$pr_symbol" ]]; then
+    echo ""
+    return
+  fi
+  
+  # If no checks state, return only PR state
+  if [[ -z "$checks_state" ]]; then
+    echo "$pr_symbol"
+    return
+  fi
+  
+  # Checks state symbol mapping (Nerd Font icons)
+  local checks_symbol=""
+  case "$checks_state" in
+    ok) checks_symbol='%F{green}󰄬%f' ;;
+    in_progress) checks_symbol='%F{yellow}󰑐%f' ;;
+    action_required) checks_symbol='%F{magenta}󰙖%f' ;;
+    ng) checks_symbol='%F{red}󰅖%f' ;;
+    *) checks_symbol="" ;;
+  esac
+  
+  # Build result: pr_symbol checks_symbol duration (space-separated)
+  local result="$pr_symbol"
+  if [[ -n "$checks_symbol" ]]; then
+    result="${result} ${checks_symbol}"
+    if [[ -n "$duration" ]]; then
+      result="${result} %F{yellow}${duration}%f"
+    fi
+  fi
+  
+  echo "$result"
 }
 
 # Write error log to file in background (non-blocking)
@@ -75,7 +215,7 @@ ci_status_cache_file() {
 }
 
 # Get cache file path and status. If cache is stale, fetch and update; else return cached result.
-# Output: "cache_file_path\nstatus"
+# Output: "cache_file_path\npr_state,checks_state,duration"
 ci_status_cache_or_fetch() {
   ci_status_gh_available || return 0
 
@@ -89,36 +229,84 @@ ci_status_cache_or_fetch() {
   # If cache is fresh, return cached result
   if ! ci_status_is_cache_stale "$cache_file"; then
     echo "$cache_file"
-    cat "$cache_file" 2>/dev/null || echo "unknown"
+    cat "$cache_file" 2>/dev/null || echo ""
     return 0
   fi
 
   # Cache is stale, fetch and update
-  local branch
-  branch=$(git branch --show-current 2>/dev/null) || {
-    ci_status_log_error $LINENO "ci_status_cache_or_fetch: failed to get branch"
-    return 1
-  }
-
-  local result
-  result=$(gh run list -b "$branch" -L 1 --json conclusion,status -q '
-    if .[0] == null then "unknown"
-    elif .[0].status == "in_progress" then "in_progress"
-    elif .[0].status == "queued" or .[0].status == "waiting" or .[0].status == "requested" then "waiting"
-    elif .[0].status == "action_required" or .[0].status == "pending" then "action_required"
-    elif .[0].status == "completed" then
-      if .[0].conclusion == "success" then "success"
-      elif .[0].conclusion == "failure" then "failure"
-      elif .[0].conclusion == "cancelled" then "cancelled"
-      elif .[0].conclusion == "skipped" then "skipped"
-      else "unknown"
-      end
-    else "unknown"
+  # Fetch PR view data and determine state directly with gh's built-in jq
+  local pr_state
+  pr_state=$(gh pr view --json mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
+    if . == null then
+      ""
+    elif .mergeable == "CONFLICTING" or .reviewDecision == "CHANGES_REQUESTED" then
+      "ng"
+    elif .reviewDecision == "REVIEW_REQUIRED" or .mergeStateStatus == "BEHIND" or .isDraft == true then
+      "waiting"
+    else
+      "ok"
     end
   ' 2>/dev/null)
-  echo "${result:-unknown}" > "$cache_file"
+  
+  if [[ -z "$pr_state" ]]; then
+    # PR doesn't exist, return empty string
+    echo "" > "$cache_file"
+    echo "$cache_file"
+    echo ""
+    return 0
+  fi
+
+  # Fetch checks data using gh's built-in jq - single call to get all needed data
+  # Get all checks (not just required ones) to ensure CI results are displayed
+  local checks_output
+  checks_output=$(gh pr checks --json state,bucket,startedAt,completedAt --jq '
+    (
+      if length == 0 then
+        ""
+      elif [.[] | select(.bucket == "fail" or .bucket == "cancel")] | length > 0 then
+        "ng"
+      elif [.[] | select(.state == "ACTION_REQUIRED")] | length > 0 then
+        "action_required"
+      elif [.[] | select(.bucket == "pending")] | length > 0 then
+        "in_progress"
+      else
+        "ok"
+      end
+    ) + "\n" + 
+    ([.[] | select(.startedAt != null and .startedAt != "") | .startedAt] | min // empty) + "\n" +
+    ([.[] | select(.completedAt != null and .completedAt != "") | .completedAt] | max // empty) + "\n" +
+    ([.[] | select(.bucket == "pending" or .state == "ACTION_REQUIRED")] | length | tostring)
+  ' 2>/dev/null)
+  
+  local checks_state duration result
+  if [[ -n "$checks_output" ]]; then
+    # Parse the output: checks_state\nmin_start\nmax_end\nhas_pending
+    local -a lines
+    lines=(${(f)checks_output})
+    checks_state=${lines[1]}
+    local min_start=${lines[2]} max_end=${lines[3]} has_pending=${lines[4]}
+    
+    if [[ -n "$checks_state" ]]; then
+      # Calculate duration
+      local now_ts
+      now_ts=$(date +%s 2>/dev/null || echo "")
+      if [[ -n "$now_ts" ]]; then
+        duration=$(ci_status_format_duration "$min_start" "$max_end" "$has_pending" "$now_ts")
+      else
+        duration=""
+      fi
+      result="${pr_state},${checks_state},${duration}"
+    else
+      result="${pr_state},,"
+    fi
+  else
+    # No checks exist, return PR state only
+    result="${pr_state},,"
+  fi
+
+  echo "$result" > "$cache_file"
   echo "$cache_file"
-  echo "${result:-unknown}"
+  echo "$result"
 }
 
 # Runs in zsh-async worker. Output "path\nstatus".
@@ -174,7 +362,7 @@ ci_status_precmd_sync() {
   local -a lines
   lines=("${(f)output}")
   local result=${lines[2]}
-  CI_STATUS_PROMPT=$(ci_status_prompt_from_result "${result:-unknown}")
+  CI_STATUS_PROMPT=$(ci_status_prompt_from_result "${result:-}")
   if [[ -n "$CI_STATUS_PROMPT" ]]; then
     PROMPT="${PROMPT//$prompt_newline/ $CI_STATUS_PROMPT$prompt_newline}"
   fi
