@@ -41,14 +41,13 @@ jobs:
   test-failure:
     name: Test Failure
     runs-on: ubuntu-latest
-    if: false  # This job will be skipped, simulating a cancelled check
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
       - name: Run failure test
         run: |
-          echo "This test would fail"
+          echo "This test fails intentionally to test failure display"
           exit 1
 
   test-required-success:
