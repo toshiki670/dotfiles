@@ -257,9 +257,9 @@ ci_status_cache_or_fetch() {
   fi
 
   # Fetch checks data using gh's built-in jq - single call to get all needed data
-  # Try --required first, then fall back to all checks if no required checks exist
+  # Get all checks (not just required ones) to ensure CI results are displayed
   local checks_output
-  checks_output=$(gh pr checks --required --json state,bucket,startedAt,completedAt --jq '
+  checks_output=$(gh pr checks --json state,bucket,startedAt,completedAt --jq '
     (
       if length == 0 then
         ""
@@ -277,31 +277,6 @@ ci_status_cache_or_fetch() {
     ([.[] | select(.completedAt != null and .completedAt != "") | .completedAt] | max // empty) + "\n" +
     ([.[] | select(.bucket == "pending" or .state == "ACTION_REQUIRED")] | length | tostring)
   ' 2>/dev/null)
-  
-  # If --required returns no checks (empty or only empty values), try without --required to get all checks
-  # Check if checks_state is empty (first line is empty)
-  local -a temp_lines
-  temp_lines=(${(f)checks_output})
-  if [[ -z "$checks_output" ]] || [[ -z "${temp_lines[1]}" ]]; then
-    checks_output=$(gh pr checks --json state,bucket,startedAt,completedAt --jq '
-      (
-        if length == 0 then
-          ""
-        elif [.[] | select(.bucket == "fail" or .bucket == "cancel")] | length > 0 then
-          "ng"
-        elif [.[] | select(.state == "ACTION_REQUIRED")] | length > 0 then
-          "action_required"
-        elif [.[] | select(.bucket == "pending")] | length > 0 then
-          "in_progress"
-        else
-          "ok"
-        end
-      ) + "\n" + 
-      ([.[] | select(.startedAt != null and .startedAt != "") | .startedAt] | min // empty) + "\n" +
-      ([.[] | select(.completedAt != null and .completedAt != "") | .completedAt] | max // empty) + "\n" +
-      ([.[] | select(.bucket == "pending" or .state == "ACTION_REQUIRED")] | length | tostring)
-    ' 2>/dev/null)
-  fi
   
   local checks_state duration result
   if [[ -n "$checks_output" ]]; then
