@@ -115,12 +115,12 @@ ci_status_prompt_from_result() {
   fields=(${(s:,:)input})
   local pr_state=${fields[1]} checks_state=${fields[2]} duration=${fields[3]}
   
-  # PR state symbol mapping
+  # PR state symbol mapping (Nerd Font icons)
   local pr_symbol=""
   case "$pr_state" in
-    ok) pr_symbol='%F{green}✓%f' ;;
-    waiting) pr_symbol='%F{blue}○%f' ;;
-    ng) pr_symbol='%F{red}✗%f' ;;
+    ok) pr_symbol='%F{green}󰄬%f' ;;
+    waiting) pr_symbol='%F{blue}󰌧%f' ;;
+    ng) pr_symbol='%F{red}󰅖%f' ;;
     *) pr_symbol="" ;;
   esac
   
@@ -136,13 +136,13 @@ ci_status_prompt_from_result() {
     return
   fi
   
-  # Checks state symbol mapping
+  # Checks state symbol mapping (Nerd Font icons)
   local checks_symbol=""
   case "$checks_state" in
-    ok) checks_symbol='%F{green}✓%f' ;;
-    in_progress) checks_symbol='%F{yellow}⟳%f' ;;
-    action_required) checks_symbol='%F{magenta}⏸%f' ;;
-    ng) checks_symbol='%F{red}✗%f' ;;
+    ok) checks_symbol='%F{green}󰄬%f' ;;
+    in_progress) checks_symbol='%F{yellow}󰑐%f' ;;
+    action_required) checks_symbol='%F{magenta}󰙖%f' ;;
+    ng) checks_symbol='%F{red}󰅖%f' ;;
     *) checks_symbol="" ;;
   esac
   
