@@ -292,6 +292,17 @@ vim -u NONE -c "source vim/config/setting.vim" -c "quit"
 exec $SHELL -l
 ```
 
+3. **ci-status の E2E テスト（該当する場合）**
+
+`ci-status.zsh` を変更した場合は、E2Eテストを実行してください：
+
+```bash
+# 全てのuse-caseを並列実行
+zsh ~/.local/share/chezmoi/tests/ci-status/run-all.zsh
+```
+
+テストは `tests/ci-status/` 配下に配置され、各use-caseは独立したzshスクリプトとして並列実行されます。詳細は各use-caseファイルを参照してください。
+
 ## コードスタイル
 
 ### Shell Script
