@@ -56,16 +56,30 @@ cleanup_test_env() {
 
 # Get repository root (parent of tests/ci-status)
 # Usage: repo_root=$(get_repo_root)
+# Note: This function must be called from a script file, not interactively
 get_repo_root() {
-  local script_dir="${0:a:h}"
+  # Use ${(%):-%x} to get the script file path even when called from a function
+  local script_file="${(%):-%x}"
+  local script_dir="${script_file:a:h}"
   echo "${script_dir:h:h}"
 }
 
 # Source ci-status.zsh with proper setup
 # Usage: source_ci_status
 source_ci_status() {
-  local repo_root=$(get_repo_root)
+  # Get script directory from the calling script
+  local calling_script="${(%):-%x}"
+  local script_dir="${calling_script:a:h}"
+  local repo_root="${script_dir:h:h}"
   local ci_status_file="$repo_root/home/dot_config/zsh/configs/ci-status.zsh"
+  
+  # Mock add-zsh-hook if not available (for test environment)
+  if ! (( $+functions[add-zsh-hook] )); then
+    add-zsh-hook() {
+      # No-op for testing
+      :
+    }
+  fi
   
   # Source zsh-async if available
   if [[ -f "$repo_root/home/dot_config/zsh/configs/zsh-async/async.zsh" ]]; then
