@@ -33,6 +33,10 @@ _ci_status_gh_pr_checks() {
   gh pr checks "$@" 2>/dev/null
 }
 
+_ci_status_gh_auth_status() {
+  gh auth status "$@" 2>/dev/null
+}
+
 # Initialize CI_STATUS_CTX with default values
 CI_STATUS_CTX=(
   # Settings and paths
@@ -49,6 +53,7 @@ CI_STATUS_CTX=(
   # gh commands (callable functions that take arguments)
   gh_pr_view "_ci_status_gh_pr_view"
   gh_pr_checks "_ci_status_gh_pr_checks"
+  gh_auth_status "_ci_status_gh_auth_status"
 )
 
 # Format duration from checks data
@@ -413,7 +418,7 @@ ci_status_init_gh_hosts_cache() {
 
   # Run gh auth status in background and save active hosts to cache file
   (
-    gh auth status --json hosts --jq '[.hosts | to_entries[] | .key as $host | .value[] | select(.active == true) | $host] | unique[]' 2>/dev/null > "${CI_STATUS_CTX[gh_hosts_file]}" || true
+    ${CI_STATUS_CTX[gh_auth_status]} --json hosts --jq '[.hosts | to_entries[] | .key as $host | .value[] | select(.active == true) | $host] | unique[]' > "${CI_STATUS_CTX[gh_hosts_file]}" || true
   ) &!
 }
 
