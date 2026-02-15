@@ -103,3 +103,11 @@ wait_for_async() {
     sleep 0.1
   fi
 }
+
+# Simulate gh command delay
+# Usage: simulate_gh_delay
+# Uses CI_STATUS_TEST_DELAY environment variable (default: 0.5 seconds)
+simulate_gh_delay() {
+  local delay=${CI_STATUS_TEST_DELAY:-0.5}
+  sleep "$delay"
+}

@@ -3,6 +3,9 @@
 
 set -e
 
+# Disable job control to prevent prompt from appearing before all tests complete
+set +m
+
 # Get script directory and repo root
 SCRIPT_DIR="${0:a:h}"
 REPO_ROOT="${SCRIPT_DIR:h:h}"
@@ -25,12 +28,13 @@ echo "Running tests in parallel..."
 # Run all use-cases in parallel
 declare -a PIDS=()
 declare -a NAMES=()
+declare -a RESULTS=()
 FAILED=0
 
 for use_case in "${USE_CASES[@]}"; do
   use_case_name="${use_case:t}"
   echo "Starting: $use_case_name"
-  zsh "$use_case" &
+  zsh "$use_case" >/dev/null 2>&1 &
   PIDS+=($!)
   NAMES+=("$use_case_name")
 done
@@ -45,9 +49,18 @@ for i in {1..${#PIDS}}; do
   if [[ $exit_code -ne 0 ]]; then
     FAILED=$((FAILED + 1))
     FAILED_NAMES+=("$name")
-    echo "✗ $name failed (exit code: $exit_code)" >&2
+    RESULTS+=("✗ $name failed (exit code: $exit_code)")
   else
-    echo "✓ $name passed"
+    RESULTS+=("✓ $name passed")
+  fi
+done
+
+# Display all results at once
+for result in "${RESULTS[@]}"; do
+  if [[ "$result" == ✗* ]]; then
+    echo "$result" >&2
+  else
+    echo "$result"
   fi
 done
 

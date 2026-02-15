@@ -325,10 +325,11 @@ ci_status_cache_or_fetch() {
   local checks_state duration result
   if [[ -n "$checks_output" ]]; then
     # Parse the output: checks_state\nmin_start\nmax_end\nhas_pending
+    # Note: zsh's (f) flag may skip empty lines, so we handle missing lines
     local -a lines
     lines=(${(f)checks_output})
     checks_state=${lines[1]}
-    local min_start=${lines[2]} max_end=${lines[3]} has_pending=${lines[4]}
+    local min_start=${lines[2]} max_end=${lines[3]:-""} has_pending=${lines[4]:-${lines[3]}}
     
     if [[ -n "$checks_state" ]]; then
       # Calculate duration

@@ -21,8 +21,14 @@ trap cleanup_test_env EXIT
 _test_mock_git_has_repo() { return 0 }
 _test_mock_git_remote_url() { echo "https://unknown-host.com/owner/repo" }
 _test_mock_git_toplevel_branch() { echo "/tmp/repo\nmain" }
-_test_mock_gh_pr_view() { echo "ok" }
-_test_mock_gh_pr_checks() { echo "ok\n\n\n0" }
+_test_mock_gh_pr_view() {
+  simulate_gh_delay
+  echo "ok"
+}
+_test_mock_gh_pr_checks() {
+  simulate_gh_delay
+  echo "ok\n\n\n0"
+}
 _test_mock_gh_auth_status() { echo "" }
 
 CI_STATUS_CTX[git_has_repo]="_test_mock_git_has_repo"
