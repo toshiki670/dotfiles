@@ -5,12 +5,51 @@
 # Spec (when zsh-async is available):
 # - Triggers: (1) terminal open, (2) Enter, (3) exec $SHELL -l.
 # - On trigger: run CI check in background; when the job completes, show the checkmark (no second Enter).
-# - When a trigger runs within CI_STATUS_CACHE_SECONDS (default 10s): skip fetch, show cached result when job completes.
+# - When a trigger runs within CI_STATUS_CTX[cache_seconds] (default 10s): skip fetch, show cached result when job completes.
 # - Result is written only in the callback (job complete → PROMPT update + zle .reset-prompt).
-(( ${+CI_STATUS_CACHE_SECONDS} )) || typeset -g CI_STATUS_CACHE_SECONDS=10
-(( ${+CI_STATUS_CACHE_DIR} )) || typeset -g CI_STATUS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
-(( ${+CI_STATUS_GH_HOSTS_CACHE_FILE} )) || typeset -g CI_STATUS_GH_HOSTS_CACHE_FILE="${CI_STATUS_CACHE_DIR}/gh_hosts"
-(( ${+CI_STATUS_ERROR_LOG_FILE} )) || typeset -g CI_STATUS_ERROR_LOG_FILE="${CI_STATUS_CACHE_DIR}/error.log"
+
+# Initialize CI_STATUS_CTX for dependency injection
+# This allows testing by replacing git/gh commands and paths
+typeset -gA CI_STATUS_CTX
+
+# Define wrapper functions for git/gh commands
+_ci_status_git_remote_url() {
+  git ls-remote --get-url origin "$@" 2>/dev/null
+}
+
+_ci_status_git_toplevel_branch() {
+  git rev-parse --show-toplevel --abbrev-ref HEAD "$@" 2>/dev/null
+}
+
+_ci_status_git_has_repo() {
+  git rev-parse --git-dir >/dev/null 2>&1
+}
+
+_ci_status_gh_pr_view() {
+  gh pr view "$@" 2>/dev/null
+}
+
+_ci_status_gh_pr_checks() {
+  gh pr checks "$@" 2>/dev/null
+}
+
+# Initialize CI_STATUS_CTX with default values
+CI_STATUS_CTX=(
+  # Settings and paths
+  cache_seconds 10
+  cache_dir "${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
+  gh_hosts_file "${XDG_CACHE_HOME:-$HOME/.cache}/ci-status/gh_hosts"
+  error_log_file "${XDG_CACHE_HOME:-$HOME/.cache}/ci-status/error.log"
+  
+  # Git commands (callable functions that take arguments)
+  git_remote_url "_ci_status_git_remote_url"
+  git_toplevel_branch "_ci_status_git_toplevel_branch"
+  git_has_repo "_ci_status_git_has_repo"
+  
+  # gh commands (callable functions that take arguments)
+  gh_pr_view "_ci_status_gh_pr_view"
+  gh_pr_checks "_ci_status_gh_pr_checks"
+)
 
 # Format duration from checks data
 # Input: min_start (ISO 8601 string), max_end (ISO 8601 string), has_pending (0 or 1), current time (Unix timestamp)
@@ -162,23 +201,23 @@ ci_status_prompt_from_result() {
 ci_status_log_error() {
   local line=$1 context=$2
   (
-    mkdir -p "${CI_STATUS_ERROR_LOG_FILE:h}"
-    echo "[$(date +%Y-%m-%d\ %H:%M:%S)] F{$line} $context" >> "$CI_STATUS_ERROR_LOG_FILE" 2>/dev/null
+    mkdir -p "${CI_STATUS_CTX[error_log_file]:h}"
+    echo "[$(date +%Y-%m-%d\ %H:%M:%S)] F{$line} $context" >> "${CI_STATUS_CTX[error_log_file]}" 2>/dev/null
   ) &!
 }
 
 # Checks if the host is in the cached list of available GitHub hosts.
 ci_status_gh_available() {
-  # Get remote URL
+  # Get remote URL using ctx
   local remote_url
-  remote_url=$(git ls-remote --get-url origin 2>/dev/null) || {
+  remote_url=$(${CI_STATUS_CTX[git_remote_url]}) || {
     ci_status_log_error $LINENO "ci_status_gh_available: failed to get remote URL"
     return 1
   }
   # Load cache file into array
   local -a hosts
   local cache_content
-  cache_content=$(cat "$CI_STATUS_GH_HOSTS_CACHE_FILE" 2>/dev/null)
+  cache_content=$(cat "${CI_STATUS_CTX[gh_hosts_file]}" 2>/dev/null)
   hosts=(${(f)cache_content})
   # Check if any cached host is contained in the remote URL
   # Use zsh pattern matching: build pattern *host1*|*host2*|...
@@ -192,26 +231,26 @@ ci_status_gh_available() {
   return 1
 }
 
-# Check if cache file is stale (older than CI_STATUS_CACHE_SECONDS)
+# Check if cache file is stale (older than CI_STATUS_CTX[cache_seconds])
 ci_status_is_cache_stale() {
   local cache_file=$1
   # If file doesn't exist, consider it stale
   [[ ! -f "$cache_file" ]] && return 0
   setopt local_options null_glob
-  local old_files=($cache_file(ms+$CI_STATUS_CACHE_SECONDS))
+  local old_files=($cache_file(ms+${CI_STATUS_CTX[cache_seconds]}))
   (( ${#old_files} > 0 ))
 }
 
 # Prints path to cache file: ~/.cache/ci-status/repos/<toplevel_path>_<branch> (single file, / replaced with _)
 ci_status_cache_file() {
   local path_joined filename
-  path_joined="${(j:/:)${(f)$(git rev-parse --show-toplevel --abbrev-ref HEAD 2>/dev/null)}}"
+  path_joined="${(j:/:)${(f)$(${CI_STATUS_CTX[git_toplevel_branch]})}}"
   [[ -z "$path_joined" ]] && {
     ci_status_log_error $LINENO "ci_status_cache_file: failed to get path"
     return 1
   }
   filename="${path_joined//\//_}"
-  echo "$CI_STATUS_CACHE_DIR/repos/$filename"
+  echo "${CI_STATUS_CTX[cache_dir]}/repos/$filename"
 }
 
 # Get cache file path and status. If cache is stale, fetch and update; else return cached result.
@@ -236,7 +275,7 @@ ci_status_cache_or_fetch() {
   # Cache is stale, fetch and update
   # Fetch PR view data and determine state directly with gh's built-in jq
   local pr_state
-  pr_state=$(gh pr view --json mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
+  pr_state=$(${CI_STATUS_CTX[gh_pr_view]} --json mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
     if . == null then
       ""
     elif .mergeable == "CONFLICTING" or .reviewDecision == "CHANGES_REQUESTED" then
@@ -246,7 +285,7 @@ ci_status_cache_or_fetch() {
     else
       "ok"
     end
-  ' 2>/dev/null)
+  ')
   
   if [[ -z "$pr_state" ]]; then
     # PR doesn't exist, return empty string
@@ -259,7 +298,7 @@ ci_status_cache_or_fetch() {
   # Fetch checks data using gh's built-in jq - single call to get all needed data
   # Get all checks (not just required ones) to ensure CI results are displayed
   local checks_output
-  checks_output=$(gh pr checks --json state,bucket,startedAt,completedAt --jq '
+  checks_output=$(${CI_STATUS_CTX[gh_pr_checks]} --json state,bucket,startedAt,completedAt --jq '
     (
       if length == 0 then
         ""
@@ -276,7 +315,7 @@ ci_status_cache_or_fetch() {
     ([.[] | select(.startedAt != null and .startedAt != "") | .startedAt] | min // empty) + "\n" +
     ([.[] | select(.completedAt != null and .completedAt != "") | .completedAt] | max // empty) + "\n" +
     ([.[] | select(.bucket == "pending" or .state == "ACTION_REQUIRED")] | length | tostring)
-  ' 2>/dev/null)
+  ')
   
   local checks_state duration result
   if [[ -n "$checks_output" ]]; then
@@ -337,7 +376,7 @@ ci_status_async_callback() {
 
 precmd_ci_status() {
   [[ -z "$prompt_newline" ]] && return
-  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  if ! ${CI_STATUS_CTX[git_has_repo]}; then
     CI_STATUS_PROMPT=""
     return
   fi
@@ -370,11 +409,11 @@ ci_status_precmd_sync() {
 
 # Initialize GitHub hosts cache by running gh auth status in background
 ci_status_init_gh_hosts_cache() {
-  mkdir -p "$CI_STATUS_CACHE_DIR"
+  mkdir -p "${CI_STATUS_CTX[cache_dir]}"
 
   # Run gh auth status in background and save active hosts to cache file
   (
-    gh auth status --json hosts --jq '[.hosts | to_entries[] | .key as $host | .value[] | select(.active == true) | $host] | unique[]' 2>/dev/null > "$CI_STATUS_GH_HOSTS_CACHE_FILE" || true
+    gh auth status --json hosts --jq '[.hosts | to_entries[] | .key as $host | .value[] | select(.active == true) | $host] | unique[]' 2>/dev/null > "${CI_STATUS_CTX[gh_hosts_file]}" || true
   ) &!
 }
 
