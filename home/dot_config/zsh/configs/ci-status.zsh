@@ -44,12 +44,12 @@ CI_STATUS_CTX=(
   cache_dir "${XDG_CACHE_HOME:-$HOME/.cache}/ci-status"
   gh_hosts_file "${XDG_CACHE_HOME:-$HOME/.cache}/ci-status/gh_hosts"
   error_log_file "${XDG_CACHE_HOME:-$HOME/.cache}/ci-status/error.log"
-  
+
   # Git commands (callable functions that take arguments)
   git_remote_url "_ci_status_git_remote_url"
   git_toplevel_branch "_ci_status_git_toplevel_branch"
   git_has_repo "_ci_status_git_has_repo"
-  
+
   # gh commands (callable functions that take arguments)
   gh_pr_view "_ci_status_gh_pr_view"
   gh_pr_checks "_ci_status_gh_pr_checks"
@@ -61,12 +61,12 @@ CI_STATUS_CTX=(
 # Output: Formatted duration string like "1h 1m 1s" or "" (empty if no checks)
 ci_status_format_duration() {
   local min_start=$1 max_end=$2 has_pending=$3 now=$4
-  
+
   if [[ -z "$min_start" ]] || [[ "$min_start" == "null" ]]; then
     echo ""
     return
   fi
-  
+
   # Convert ISO 8601 (RFC3339) to Unix timestamp
   # Format: "2024-01-01T12:00:00Z" or "2024-01-01T12:00:00.123Z"
   local min_start_ts max_end_ts
@@ -85,12 +85,12 @@ ci_status_format_duration() {
     # Linux: date -d input +%s (handles ISO 8601 directly)
     min_start_ts=$(date -d "$min_start" +%s 2>/dev/null || echo "")
   fi
-  
+
   if [[ -z "$min_start_ts" ]]; then
     echo ""
     return
   fi
-  
+
   local duration_sec
   if [[ "$has_pending" -gt 0 ]]; then
     # In progress: use current time
@@ -122,13 +122,13 @@ ci_status_format_duration() {
       return
     fi
   fi
-  
+
   # Format: 1h 1m 1s
   local h m s
   h=$((duration_sec / 3600))
   m=$(((duration_sec % 3600) / 60))
   s=$((duration_sec % 60))
-  
+
   local result=""
   if [[ $h -ge 1 ]]; then
     result="${h}h"
@@ -141,7 +141,7 @@ ci_status_format_duration() {
     [[ -n "$result" ]] && result="${result} "
     result="${result}${s}s"
   fi
-  
+
   echo "$result"
 }
 
@@ -154,35 +154,35 @@ ci_status_prompt_from_result() {
     echo ""
     return
   fi
-  
+
   local -a fields
   fields=(${(s:,:)input})
   local pr_state=${fields[1]} checks_state=${fields[2]} duration=${fields[3]}
-  
+
   # PR state symbol mapping (Nerd Font icons)
   local pr_symbol=""
   case "$pr_state" in
     ok) pr_symbol='%F{green}󰄬%f' ;;
     waiting) pr_symbol='%F{blue}󰌧%f' ;;
     ng) pr_symbol='%F{red}󰅖%f' ;;
-    closed) pr_symbol=$'%F{red}\uf4dc%f' ;;
-    draft) pr_symbol=$'%F{blue}\uf4dd%f' ;;
-    merged) pr_symbol=$'%F{green}\uf419%f' ;;
+    closed) pr_symbol=$'%F{red}%f' ;;
+    draft) pr_symbol=$'%F{blue}%f' ;;
+    merged) pr_symbol=$'%F{green}%f' ;;
     *) pr_symbol="" ;;
   esac
-  
+
   # If no PR state, return empty
   if [[ -z "$pr_symbol" ]]; then
     echo ""
     return
   fi
-  
+
   # If no checks state, return only PR state
   if [[ -z "$checks_state" ]]; then
     echo "$pr_symbol"
     return
   fi
-  
+
   # Checks state symbol mapping (Nerd Font icons)
   local checks_symbol=""
   case "$checks_state" in
@@ -192,7 +192,7 @@ ci_status_prompt_from_result() {
     ng) checks_symbol='%F{red}󰅖%f' ;;
     *) checks_symbol="" ;;
   esac
-  
+
   # Build result: pr_symbol checks_symbol duration (space-separated)
   local result="$pr_symbol"
   if [[ -n "$checks_symbol" ]]; then
@@ -201,7 +201,7 @@ ci_status_prompt_from_result() {
       result="${result} %F{yellow}${duration}%f"
     fi
   fi
-  
+
   echo "$result"
 }
 
@@ -292,7 +292,7 @@ ci_status_cache_or_fetch() {
     rm -f "$pr_view_tmp"
     return 1
   }
-  
+
   # Run gh_pr_view and gh_pr_checks in parallel
   (
     ${CI_STATUS_CTX[gh_pr_view]} --json state,mergedAt,closed,mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
@@ -314,7 +314,7 @@ ci_status_cache_or_fetch() {
     ' > "$pr_view_tmp" 2>/dev/null || echo "" > "$pr_view_tmp"
   ) &
   local pr_view_pid=$!
-  
+
   (
     ${CI_STATUS_CTX[gh_pr_checks]} --json state,bucket,startedAt,completedAt --jq '
       (
@@ -329,28 +329,28 @@ ci_status_cache_or_fetch() {
         else
           "ok"
         end
-      ) + "\n" + 
+      ) + "\n" +
       ([.[] | select(.startedAt != null and .startedAt != "") | .startedAt] | min // empty) + "\n" +
       ([.[] | select(.completedAt != null and .completedAt != "") | .completedAt] | max // empty) + "\n" +
       ([.[] | select(.bucket == "pending" or .state == "ACTION_REQUIRED")] | length | tostring)
     ' > "$checks_tmp" 2>/dev/null || echo "" > "$checks_tmp"
   ) &
   local checks_pid=$!
-  
+
   # Wait for both commands to complete
   wait $pr_view_pid
   local pr_view_exit=$?
   wait $checks_pid
   local checks_exit=$?
-  
+
   # Read results from temporary files
   local pr_state checks_output
   pr_state=$(cat "$pr_view_tmp" 2>/dev/null || echo "")
   checks_output=$(cat "$checks_tmp" 2>/dev/null || echo "")
-  
+
   # Clean up temporary files
   rm -f "$pr_view_tmp" "$checks_tmp"
-  
+
   if [[ -z "$pr_state" ]]; then
     # PR doesn't exist, return empty string (same as before parallelization)
     echo "" > "$cache_file"
@@ -358,7 +358,7 @@ ci_status_cache_or_fetch() {
     echo ""
     return 0
   fi
-  
+
   local checks_state duration result
   if [[ -n "$checks_output" ]]; then
     # Parse the output: checks_state\nmin_start\nmax_end\nhas_pending
@@ -367,7 +367,7 @@ ci_status_cache_or_fetch() {
     lines=(${(f)checks_output})
     checks_state=${lines[1]}
     local min_start=${lines[2]} max_end=${lines[3]:-""} has_pending=${lines[4]:-${lines[3]}}
-    
+
     if [[ -n "$checks_state" ]]; then
       # Calculate duration
       local now_ts
