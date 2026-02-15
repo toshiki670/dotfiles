@@ -292,8 +292,10 @@ ci_status_cache_or_fetch() {
   
   # Run gh_pr_view and gh_pr_checks in parallel
   (
-    ${CI_STATUS_CTX[gh_pr_view]} --json mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
+    ${CI_STATUS_CTX[gh_pr_view]} --json state,mergedAt,closed,mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
       if . == null then
+        ""
+      elif .state == "CLOSED" or .closed == true or .state == "MERGED" or (.mergedAt != null and .mergedAt != "") then
         ""
       elif .mergeable == "CONFLICTING" or .reviewDecision == "CHANGES_REQUESTED" then
         "ng"
