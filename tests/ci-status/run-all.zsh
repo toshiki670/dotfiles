@@ -28,13 +28,19 @@ echo "Running tests in parallel..."
 # Run all use-cases in parallel
 declare -a PIDS=()
 declare -a NAMES=()
-declare -a RESULTS=()
+declare -a OUTPUT_FILES=()
 FAILED=0
+
+# Create temporary directory for output files
+TMPDIR=$(mktemp -d)
+trap "rm -rf $TMPDIR" EXIT
 
 for use_case in "${USE_CASES[@]}"; do
   use_case_name="${use_case:t}"
   echo "Starting: $use_case_name"
-  zsh "$use_case" >/dev/null 2>&1 &
+  output_file="$TMPDIR/${use_case_name}.out"
+  OUTPUT_FILES+=("$output_file")
+  zsh "$use_case" >"$output_file" 2>&1 &
   PIDS+=($!)
   NAMES+=("$use_case_name")
 done
@@ -49,19 +55,12 @@ for i in {1..${#PIDS}}; do
   if [[ $exit_code -ne 0 ]]; then
     FAILED=$((FAILED + 1))
     FAILED_NAMES+=("$name")
-    RESULTS+=("✗ $name failed (exit code: $exit_code)")
-  else
-    RESULTS+=("✓ $name passed")
   fi
 done
 
-# Display all results at once
-for result in "${RESULTS[@]}"; do
-  if [[ "$result" == ✗* ]]; then
-    echo "$result" >&2
-  else
-    echo "$result"
-  fi
+# Display all results at once (sorted by use-case number)
+for output_file in "${OUTPUT_FILES[@]}"; do
+  cat "$output_file"
 done
 
 # Report results
