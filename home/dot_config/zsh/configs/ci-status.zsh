@@ -302,10 +302,10 @@ ci_status_cache_or_fetch() {
         "merged"
       elif .state == "CLOSED" or .closed == true then
         "closed"
-      elif .isDraft == true then
-        "draft"
       elif .mergeable == "CONFLICTING" or .reviewDecision == "CHANGES_REQUESTED" then
         "ng"
+      elif .isDraft == true then
+        "draft"
       elif .reviewDecision == "REVIEW_REQUIRED" or .mergeStateStatus == "BEHIND" then
         "waiting"
       else
