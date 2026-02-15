@@ -165,6 +165,9 @@ ci_status_prompt_from_result() {
     ok) pr_symbol='%F{green}󰄬%f' ;;
     waiting) pr_symbol='%F{blue}󰌧%f' ;;
     ng) pr_symbol='%F{red}󰅖%f' ;;
+    closed) pr_symbol='%F{red}󰜺%f' ;;
+    draft) pr_symbol='%F{blue}󰝦%f' ;;
+    merged) pr_symbol='%F{green}󰜺%f' ;;
     *) pr_symbol="" ;;
   esac
   
@@ -295,11 +298,15 @@ ci_status_cache_or_fetch() {
     ${CI_STATUS_CTX[gh_pr_view]} --json state,mergedAt,closed,mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
       if . == null then
         ""
-      elif .state == "CLOSED" or .closed == true or .state == "MERGED" or (.mergedAt != null and .mergedAt != "") then
-        ""
+      elif .state == "MERGED" or (.mergedAt != null and .mergedAt != "") then
+        "merged"
+      elif .state == "CLOSED" or .closed == true then
+        "closed"
+      elif .isDraft == true then
+        "draft"
       elif .mergeable == "CONFLICTING" or .reviewDecision == "CHANGES_REQUESTED" then
         "ng"
-      elif .reviewDecision == "REVIEW_REQUIRED" or .mergeStateStatus == "BEHIND" or .isDraft == true then
+      elif .reviewDecision == "REVIEW_REQUIRED" or .mergeStateStatus == "BEHIND" then
         "waiting"
       else
         "ok"
