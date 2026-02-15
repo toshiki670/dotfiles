@@ -36,7 +36,9 @@ CI_STATUS_CTX[gh_auth_status]="_test_mock_gh_auth_status"
 echo "github.com" > "${CI_STATUS_CTX[gh_hosts_file]}"
 
 # Create stale cache file (or leave it missing)
-CACHE_FILE="${CI_STATUS_CTX[cache_dir]}/repos/tmp_repo_main"
+# git_toplevel_branch returns "/tmp/repo\nmain", which becomes "/tmp/repo/main" after join
+# Then "/" is replaced with "_" to get "_tmp_repo_main"
+CACHE_FILE="${CI_STATUS_CTX[cache_dir]}/repos/_tmp_repo_main"
 mkdir -p "${CACHE_FILE:h}"
 echo "old,old," > "$CACHE_FILE"
 # Make it stale by setting mtime to past
@@ -55,6 +57,8 @@ wait_for_async
 assert_contains "$CI_STATUS_PROMPT" "%F{red}"
 
 # Assert: Cache should be updated
+# Wait a bit more for async job to complete and write cache
+sleep 0.2
 if [[ -f "$CACHE_FILE" ]]; then
   CACHE_CONTENT=$(cat "$CACHE_FILE")
   assert_contains "$CACHE_CONTENT" "ng"

@@ -36,7 +36,9 @@ CI_STATUS_CTX[gh_auth_status]="_test_mock_gh_auth_status"
 echo "github.com" > "${CI_STATUS_CTX[gh_hosts_file]}"
 
 # Create cache file with fresh content
-CACHE_FILE="${CI_STATUS_CTX[cache_dir]}/repos/tmp_repo_main"
+# git_toplevel_branch returns "/tmp/repo\nmain", which becomes "/tmp/repo/main" after join
+# Then "/" is replaced with "_" to get "_tmp_repo_main"
+CACHE_FILE="${CI_STATUS_CTX[cache_dir]}/repos/_tmp_repo_main"
 mkdir -p "${CACHE_FILE:h}"
 echo "ok,ok," > "$CACHE_FILE"
 # Touch to make it fresh (within cache_seconds)
