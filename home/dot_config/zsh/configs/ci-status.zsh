@@ -165,9 +165,9 @@ ci_status_prompt_from_result() {
     ok) pr_symbol='%F{green}󰄬%f' ;;
     waiting) pr_symbol='%F{blue}󰌧%f' ;;
     ng) pr_symbol='%F{red}󰅖%f' ;;
-    closed) pr_symbol='%F{red}󰜺%f' ;;
-    draft) pr_symbol='%F{blue}󰝦%f' ;;
-    merged) pr_symbol='%F{green}󰜺%f' ;;
+    closed) pr_symbol=$'%F{red}\uf4dc%f' ;;
+    draft) pr_symbol=$'%F{blue}\uf4dd%f' ;;
+    merged) pr_symbol=$'%F{green}\uf419%f' ;;
     *) pr_symbol="" ;;
   esac
   
