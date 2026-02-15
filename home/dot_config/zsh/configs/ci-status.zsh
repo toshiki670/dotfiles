@@ -12,6 +12,20 @@
 # This allows testing by replacing git/gh commands and paths
 typeset -gA CI_STATUS_CTX
 
+# Nerd Font icon mapping (class name -> Unicode character)
+# This is separate from CI_STATUS_CTX as it's not a dependency injection target
+typeset -gA CI_STATUS_ICON_MAP
+CI_STATUS_ICON_MAP=(
+  "nf-md-check" "󰄬"                    # ok
+  "nf-md-launch" "󰌧"                   # waiting
+  "nf-md-close" "󰅖"                    # ng
+  "nf-md-refresh" "󰑐"                  # in_progress
+  "nf-md-move_resize_variant" "󰙖"      # action_required
+  "nf-oct-git_pull_request_closed" ""  # closed
+  "nf-oct-git_pull_request_draft" ""   # draft
+  "nf-oct-git_merge" ""                # merged
+)
+
 # Define wrapper functions for git/gh commands
 _ci_status_git_remote_url() {
   git ls-remote --get-url origin "$@" 2>/dev/null
@@ -159,16 +173,30 @@ ci_status_prompt_from_result() {
   fields=(${(s:,:)input})
   local pr_state=${fields[1]} checks_state=${fields[2]} duration=${fields[3]}
 
-  # PR state symbol mapping (Nerd Font icons)
+  # PR state symbol mapping using Nerd Font class names
   local pr_symbol=""
   case "$pr_state" in
-    ok) pr_symbol='%F{green}󰄬%f' ;;
-    waiting) pr_symbol='%F{blue}󰌧%f' ;;
-    ng) pr_symbol='%F{red}󰅖%f' ;;
-    closed) pr_symbol=$'%F{red}%f' ;;
-    draft) pr_symbol=$'%F{blue}%f' ;;
-    merged) pr_symbol=$'%F{green}%f' ;;
-    *) pr_symbol="" ;;
+    ok) 
+      pr_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-md-check]:-}%f" 
+      ;;
+    waiting) 
+      pr_symbol="%F{blue}${CI_STATUS_ICON_MAP[nf-md-launch]:-}%f" 
+      ;;
+    ng) 
+      pr_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-md-close]:-}%f" 
+      ;;
+    closed) 
+      pr_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-oct-git_pull_request_closed]:-}%f" 
+      ;;
+    draft) 
+      pr_symbol="%F{blue}${CI_STATUS_ICON_MAP[nf-oct-git_pull_request_draft]:-}%f" 
+      ;;
+    merged) 
+      pr_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-oct-git_merge]:-}%f" 
+      ;;
+    *) 
+      pr_symbol="" 
+      ;;
   esac
 
   # If no PR state, return empty
@@ -183,14 +211,24 @@ ci_status_prompt_from_result() {
     return
   fi
 
-  # Checks state symbol mapping (Nerd Font icons)
+  # Checks state symbol mapping using Nerd Font class names
   local checks_symbol=""
   case "$checks_state" in
-    ok) checks_symbol='%F{green}󰄬%f' ;;
-    in_progress) checks_symbol='%F{yellow}󰑐%f' ;;
-    action_required) checks_symbol='%F{magenta}󰙖%f' ;;
-    ng) checks_symbol='%F{red}󰅖%f' ;;
-    *) checks_symbol="" ;;
+    ok) 
+      checks_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-md-check]:-}%f" 
+      ;;
+    in_progress) 
+      checks_symbol="%F{yellow}${CI_STATUS_ICON_MAP[nf-md-refresh]:-}%f" 
+      ;;
+    action_required) 
+      checks_symbol="%F{magenta}${CI_STATUS_ICON_MAP[nf-md-move_resize_variant]:-}%f" 
+      ;;
+    ng) 
+      checks_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-md-close]:-}%f" 
+      ;;
+    *) 
+      checks_symbol="" 
+      ;;
   esac
 
   # Build result: pr_symbol checks_symbol duration (space-separated)
