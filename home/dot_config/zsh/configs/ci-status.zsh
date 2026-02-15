@@ -278,49 +278,77 @@ ci_status_cache_or_fetch() {
   fi
 
   # Cache is stale, fetch and update
-  # Fetch PR view data and determine state directly with gh's built-in jq
-  local pr_state
-  pr_state=$(${CI_STATUS_CTX[gh_pr_view]} --json mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
-    if . == null then
-      ""
-    elif .mergeable == "CONFLICTING" or .reviewDecision == "CHANGES_REQUESTED" then
-      "ng"
-    elif .reviewDecision == "REVIEW_REQUIRED" or .mergeStateStatus == "BEHIND" or .isDraft == true then
-      "waiting"
-    else
-      "ok"
-    end
-  ')
+  # Fetch PR view and checks data in parallel for better performance
+  local pr_view_tmp checks_tmp
+  pr_view_tmp=$(mktemp) || {
+    ci_status_log_error $LINENO "ci_status_cache_or_fetch: failed to create temp file for pr_view"
+    return 1
+  }
+  checks_tmp=$(mktemp) || {
+    ci_status_log_error $LINENO "ci_status_cache_or_fetch: failed to create temp file for checks"
+    rm -f "$pr_view_tmp"
+    return 1
+  }
+  
+  # Run gh_pr_view and gh_pr_checks in parallel
+  (
+    ${CI_STATUS_CTX[gh_pr_view]} --json mergeable,mergeStateStatus,reviewDecision,isDraft --jq '
+      if . == null then
+        ""
+      elif .mergeable == "CONFLICTING" or .reviewDecision == "CHANGES_REQUESTED" then
+        "ng"
+      elif .reviewDecision == "REVIEW_REQUIRED" or .mergeStateStatus == "BEHIND" or .isDraft == true then
+        "waiting"
+      else
+        "ok"
+      end
+    ' > "$pr_view_tmp" 2>/dev/null || echo "" > "$pr_view_tmp"
+  ) &
+  local pr_view_pid=$!
+  
+  (
+    ${CI_STATUS_CTX[gh_pr_checks]} --json state,bucket,startedAt,completedAt --jq '
+      (
+        if length == 0 then
+          ""
+        elif [.[] | select(.bucket == "fail" or .bucket == "cancel")] | length > 0 then
+          "ng"
+        elif [.[] | select(.state == "ACTION_REQUIRED")] | length > 0 then
+          "action_required"
+        elif [.[] | select(.bucket == "pending")] | length > 0 then
+          "in_progress"
+        else
+          "ok"
+        end
+      ) + "\n" + 
+      ([.[] | select(.startedAt != null and .startedAt != "") | .startedAt] | min // empty) + "\n" +
+      ([.[] | select(.completedAt != null and .completedAt != "") | .completedAt] | max // empty) + "\n" +
+      ([.[] | select(.bucket == "pending" or .state == "ACTION_REQUIRED")] | length | tostring)
+    ' > "$checks_tmp" 2>/dev/null || echo "" > "$checks_tmp"
+  ) &
+  local checks_pid=$!
+  
+  # Wait for both commands to complete
+  wait $pr_view_pid
+  local pr_view_exit=$?
+  wait $checks_pid
+  local checks_exit=$?
+  
+  # Read results from temporary files
+  local pr_state checks_output
+  pr_state=$(cat "$pr_view_tmp" 2>/dev/null || echo "")
+  checks_output=$(cat "$checks_tmp" 2>/dev/null || echo "")
+  
+  # Clean up temporary files
+  rm -f "$pr_view_tmp" "$checks_tmp"
   
   if [[ -z "$pr_state" ]]; then
-    # PR doesn't exist, return empty string
+    # PR doesn't exist, return empty string (same as before parallelization)
     echo "" > "$cache_file"
     echo "$cache_file"
     echo ""
     return 0
   fi
-
-  # Fetch checks data using gh's built-in jq - single call to get all needed data
-  # Get all checks (not just required ones) to ensure CI results are displayed
-  local checks_output
-  checks_output=$(${CI_STATUS_CTX[gh_pr_checks]} --json state,bucket,startedAt,completedAt --jq '
-    (
-      if length == 0 then
-        ""
-      elif [.[] | select(.bucket == "fail" or .bucket == "cancel")] | length > 0 then
-        "ng"
-      elif [.[] | select(.state == "ACTION_REQUIRED")] | length > 0 then
-        "action_required"
-      elif [.[] | select(.bucket == "pending")] | length > 0 then
-        "in_progress"
-      else
-        "ok"
-      end
-    ) + "\n" + 
-    ([.[] | select(.startedAt != null and .startedAt != "") | .startedAt] | min // empty) + "\n" +
-    ([.[] | select(.completedAt != null and .completedAt != "") | .completedAt] | max // empty) + "\n" +
-    ([.[] | select(.bucket == "pending" or .state == "ACTION_REQUIRED")] | length | tostring)
-  ')
   
   local checks_state duration result
   if [[ -n "$checks_output" ]]; then
