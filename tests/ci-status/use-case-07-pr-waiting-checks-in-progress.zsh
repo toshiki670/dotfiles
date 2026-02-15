@@ -17,11 +17,11 @@ trap cleanup_test_env EXIT
 # Source ci-status.zsh
 source_ci_status
 
-# Setup mocks
-CI_STATUS_CTX[git_has_repo]='() { return 0 }'
-CI_STATUS_CTX[git_remote_url]='() { echo "https://github.com/owner/repo" }'
-CI_STATUS_CTX[git_toplevel_branch]='() { echo "/tmp/repo\nmain" }'
-CI_STATUS_CTX[gh_pr_view]='() { echo "waiting" }'
+# Setup mocks - define functions first, then set function names in CI_STATUS_CTX
+_test_mock_git_has_repo() { return 0 }
+_test_mock_git_remote_url() { echo "https://github.com/owner/repo" }
+_test_mock_git_toplevel_branch() { echo "/tmp/repo\nmain" }
+_test_mock_gh_pr_view() { echo "waiting" }
 # Use a recent timestamp for in_progress test (30 seconds ago)
 # Format: 2024-01-01T12:00:00Z
 NOW_SEC=$(date +%s)
@@ -31,8 +31,15 @@ if [[ "$(uname)" == "Darwin" ]]; then
 else
   START_TIME=$(date -u -d "@$START_SEC" +%Y-%m-%dT%H:%M:%SZ)
 fi
-CI_STATUS_CTX[gh_pr_checks]="() { echo \"in_progress\n${START_TIME}\n\n1\" }"
-CI_STATUS_CTX[gh_auth_status]='() { echo "" }'
+_test_mock_gh_pr_checks() { echo "in_progress\n${START_TIME}\n\n1" }
+_test_mock_gh_auth_status() { echo "" }
+
+CI_STATUS_CTX[git_has_repo]="_test_mock_git_has_repo"
+CI_STATUS_CTX[git_remote_url]="_test_mock_git_remote_url"
+CI_STATUS_CTX[git_toplevel_branch]="_test_mock_git_toplevel_branch"
+CI_STATUS_CTX[gh_pr_view]="_test_mock_gh_pr_view"
+CI_STATUS_CTX[gh_pr_checks]="_test_mock_gh_pr_checks"
+CI_STATUS_CTX[gh_auth_status]="_test_mock_gh_auth_status"
 
 # Setup gh_hosts_file
 echo "github.com" > "${CI_STATUS_CTX[gh_hosts_file]}"
