@@ -33,8 +33,13 @@ assert_equals() {
 # Setup test environment: create temp dir and reset CI_STATUS_CTX paths
 # Usage: setup_test_env
 # Sets: TEST_TMPDIR (exported)
+# Note: CI_STATUS_CTX must be initialized (via source_ci_status) before calling this
 setup_test_env() {
   export TEST_TMPDIR=$(mktemp -d)
+  # Ensure CI_STATUS_CTX is initialized as associative array
+  if (( ! ${+CI_STATUS_CTX} )); then
+    typeset -gA CI_STATUS_CTX
+  fi
   CI_STATUS_CTX[cache_dir]="$TEST_TMPDIR/cache"
   CI_STATUS_CTX[gh_hosts_file]="$TEST_TMPDIR/gh_hosts"
   CI_STATUS_CTX[error_log_file]="$TEST_TMPDIR/error.log"

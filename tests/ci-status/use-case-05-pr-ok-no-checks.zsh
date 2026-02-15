@@ -10,12 +10,12 @@ SCRIPT_DIR="${0:a:h}"
 REPO_ROOT="${SCRIPT_DIR:h:h}"
 source "$SCRIPT_DIR/helper.zsh"
 
-# Setup test environment
+# Source ci-status.zsh first (to initialize CI_STATUS_CTX)
+source_ci_status
+
+# Setup test environment (after CI_STATUS_CTX is initialized)
 setup_test_env
 trap cleanup_test_env EXIT
-
-# Source ci-status.zsh
-source_ci_status
 
 # Setup mocks - define functions first, then set function names in CI_STATUS_CTX
 _test_mock_git_has_repo() { return 0 }
