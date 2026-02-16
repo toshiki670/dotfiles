@@ -176,26 +176,26 @@ ci_status_prompt_from_result() {
   # PR state symbol mapping using Nerd Font class names
   local pr_symbol=""
   case "$pr_state" in
-    ok) 
-      pr_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-md-check]:-}%f" 
+    ok)
+      pr_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-md-check]:-}%f"
       ;;
-    waiting) 
-      pr_symbol="%F{blue}${CI_STATUS_ICON_MAP[nf-md-launch]:-}%f" 
+    waiting)
+      pr_symbol="%F{blue}${CI_STATUS_ICON_MAP[nf-md-launch]:-}%f"
       ;;
-    ng) 
-      pr_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-md-close]:-}%f" 
+    ng)
+      pr_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-md-close]:-}%f"
       ;;
-    closed) 
-      pr_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-oct-git_pull_request_closed]:-}%f" 
+    closed)
+      pr_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-oct-git_pull_request_closed]:-}%f"
       ;;
-    draft) 
-      pr_symbol="%F{blue}${CI_STATUS_ICON_MAP[nf-oct-git_pull_request_draft]:-}%f" 
+    draft)
+      pr_symbol="%F{blue}${CI_STATUS_ICON_MAP[nf-oct-git_pull_request_draft]:-}%f"
       ;;
-    merged) 
-      pr_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-oct-git_merge]:-}%f" 
+    merged)
+      pr_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-oct-git_merge]:-}%f"
       ;;
-    *) 
-      pr_symbol="" 
+    *)
+      pr_symbol=""
       ;;
   esac
 
@@ -214,20 +214,20 @@ ci_status_prompt_from_result() {
   # Checks state symbol mapping using Nerd Font class names
   local checks_symbol=""
   case "$checks_state" in
-    ok) 
-      checks_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-md-check]:-}%f" 
+    ok)
+      checks_symbol="%F{green}${CI_STATUS_ICON_MAP[nf-md-check]:-}%f"
       ;;
-    in_progress) 
-      checks_symbol="%F{yellow}${CI_STATUS_ICON_MAP[nf-md-refresh]:-}%f" 
+    in_progress)
+      checks_symbol="%F{yellow}${CI_STATUS_ICON_MAP[nf-md-refresh]:-}%f"
       ;;
-    action_required) 
-      checks_symbol="%F{magenta}${CI_STATUS_ICON_MAP[nf-md-move_resize_variant]:-}%f" 
+    action_required)
+      checks_symbol="%F{magenta}${CI_STATUS_ICON_MAP[nf-md-move_resize_variant]:-}%f"
       ;;
-    ng) 
-      checks_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-md-close]:-}%f" 
+    ng)
+      checks_symbol="%F{red}${CI_STATUS_ICON_MAP[nf-md-close]:-}%f"
       ;;
-    *) 
-      checks_symbol="" 
+    *)
+      checks_symbol=""
       ;;
   esac
 
@@ -368,8 +368,8 @@ ci_status_cache_or_fetch() {
           "ok"
         end
       ) + "\n" +
-      ([.[] | select(.startedAt != null and .startedAt != "") | .startedAt] | min // empty) + "\n" +
-      ([.[] | select(.completedAt != null and .completedAt != "") | .completedAt] | max // empty) + "\n" +
+      ([.[] | select(.startedAt != null and .startedAt != "" and .startedAt != "0001-01-01T00:00:00Z") | .startedAt] | min // empty) + "\n" +
+      ([.[] | select(.completedAt != null and .completedAt != "" and .completedAt != "0001-01-01T00:00:00Z") | .completedAt] | max // empty) + "\n" +
       ([.[] | select(.bucket == "pending" or .state == "ACTION_REQUIRED")] | length | tostring)
     ' > "$checks_tmp" 2>/dev/null || echo "" > "$checks_tmp"
   ) &
