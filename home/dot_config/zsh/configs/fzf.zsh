@@ -24,13 +24,11 @@ fi
 
 # fzf keybindings
 # All keybindings start with ^j to avoid conflicts with Zellij
-# ^j^h - Search command history (fzf-history-widget)
 # ^j^t - Search files (fzf-file-widget)
 # ^j^f - cd into directory (uses zoxide with fzf, see zoxide.zsh)
-# ^j^g^b - Git branch checkout (fzf-git-branch-widget)
+# ^j^b - Git branch checkout (fzf-git-branch-widget)
 
 # Custom keybindings with ^j prefix
-bindkey '^j^h' fzf-history-widget
 bindkey '^j^t' fzf-file-widget
 
 # Git branch checkout widget
@@ -53,5 +51,5 @@ fzf-git-branch-widget() {
   fi
 }
 zle -N fzf-git-branch-widget
-bindkey '^j^g' fzf-git-branch-widget
+bindkey '^j^b' fzf-git-branch-widget
 
