@@ -10,33 +10,11 @@ window-padding-y = 4
 window-padding-balance = true
 background-blur = 20
 theme = GitHub Dark Default
-background = #0d1117
-foreground = #e6edf3
-selection-background = #e6edf3
-selection-foreground = #0d1117
 cursor-color = #FFFFFF
-cursor-text = #6fc1ff
-cursor-style = bar
-cursor-style-blink = true
-palette = 0=#484f58
-palette = 1=#ff7b72
-palette = 2=#3fb950
-palette = 3=#d29922
-palette = 4=#58a6ff
-palette = 5=#bc8cff
-palette = 6=#39c5cf
-palette = 7=#b1bac4
-palette = 8=#6e7681
-palette = 9=#ffa198
-palette = 10=#56d364
-palette = 11=#e3b341
-palette = 12=#79c0ff
-palette = 13=#d2a8ff
-palette = 14=#56d4dd
-palette = 15=#ffffff
 font-size = 15
 font-thicken = true
 font-family = "JetBrains Mono Light"
+font-family = "Moralerspace Neon"
 keybind = super+right=goto_split:right
 keybind = super+down=goto_split:down
 keybind = super+left=goto_split:left
