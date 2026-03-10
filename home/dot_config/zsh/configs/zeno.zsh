@@ -1,6 +1,8 @@
 # zeno.zsh keybindings
 # https://github.com/yuki-yano/zeno.zsh
 # Requires: deno, fzf (loaded by sheldon after fzf)
+# Note: after changing this file or ~/.config/zeno/config.yml, restart the terminal
+#       (exec $SHELL -l alone may not fully reload all zeno state).
 #
 # Key bindings (when ZENO_LOADED is set):
 #   Space         - abbrev snippet expand
@@ -16,7 +18,8 @@
 #   Ctrl+X S      - zeno-preprompt-snippet
 
 # User config: ~/.config/zeno/ or $ZENO_HOME
-# export ZENO_HOME=~/.config/zeno
+# Explicit path so zeno reliably finds config.yml (abbrev snippet)
+export ZENO_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/zeno"
 
 if [[ -n $ZENO_LOADED ]]; then
   # Abbrev snippet
