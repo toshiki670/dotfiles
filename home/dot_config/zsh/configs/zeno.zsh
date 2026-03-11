@@ -27,7 +27,7 @@ if [[ -n $ZENO_LOADED ]]; then
   bindkey '^m'  zeno-auto-snippet-and-accept-line
 
   # Completion (fzf)
-  bindkey '^i'   zeno-completion
+  # bindkey '^i'   zeno-completion
 
   # ghq: change to ghq-managed repo
   bindkey '^j^g' zeno-ghq-cd
@@ -36,8 +36,8 @@ if [[ -n $ZENO_LOADED ]]; then
   bindkey '^j^h' zeno-history-selection
 
   # Insert snippet and Ctrl+X submap
-  bindkey '^xx' zeno-insert-snippet
-  bindkey '^x ' zeno-insert-space
+  bindkey '^x' zeno-insert-snippet
+  # bindkey '^x ' zeno-insert-space
   bindkey '^x^m' accept-line
   bindkey '^x^z' zeno-toggle-auto-snippet
 

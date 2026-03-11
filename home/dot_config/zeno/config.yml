@@ -3,23 +3,55 @@
 # Config dir: ~/.config/zeno/ (or $ZENO_HOME)
 
 snippets:
-  - name: git status
-    keyword: gs
-    snippet: git status --short --branch
+  # for claude code
+  - name: cluade code
+    keyword: c
+    snippet: claude
+
+  # for Bat
+  - name: bat
+    keyword: b
+    snippet: bat
+
+  # for Git
+  - name: git
+    keyword: g
+    snippet: git
 
   - name: git commit message
     keyword: gcm
     snippet: git commit -m '{{commit_message}}'
 
-  - name: "null"
-    keyword: "null"
-    snippet: ">/dev/null 2>&1"
-    context:
-      lbuffer: '.+\s'
+  # for nvim
+  - name: nvim
+    keyword: v
+    snippet: nvim
 
-  - name: branch
-    keyword: B
-    snippet: git symbolic-ref --short HEAD
+  - name: nvim read-only
+    keyword: vr
+    snippet: nvim -R
+
+  - name: nvim utf8
+    keyword: -cu
+    snippet: '-c ":e ++enc=utf8"'
     context:
-      lbuffer: '^git\s+checkout\s+'
-    evaluate: true
+      lbuffer: '^nvim\s+'
+
+  - name: nvim euc-jp
+    keyword: -ce
+    snippet: '-c ":e ++enc=euc-jp"'
+    context:
+      lbuffer: '^nvim\s+'
+
+  - name: nvim shift_jis
+    keyword: -cs
+    snippet: '-c ":e ++enc=shift_jis"'
+    context:
+      lbuffer: '^nvim\s+'
+
+  - name: nvim cheat
+    keyword: cheet
+    snippet: '${DOTFILES}/vim/cheatsheet/common.md'
+    context:
+      lbuffer: '^nvim\s+'
+
