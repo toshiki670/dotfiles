@@ -2,17 +2,13 @@
   # Alias Management ===================================
   alias = !"cat \"${DOTFILES}/dot_config/git/configs/alias\" | grep -v '^\\[' | sed 's/^  //'"
 
-  # Status & Information ===============================
-  s = status
-  b = branch
+  # (s, b, d, ds, l, a, ap, c, cm, ch, sw, new, pre, pull-re, reset-hard,
+  #  rebase-previous, clean-blanch, web → zeno snippets after "git " + Space)
 
-  # Diff ===============================================
-  d = diff
-  ds = diff --staged
+  # Diff (PR base, side-by-side) =======================
   diff-base = diff-base-helper
   d-base = diff-base
 
-  # Side-by-side variants
   d-s = -c delta.side-by-side=true diff
   ds-s = -c delta.side-by-side=true diff --staged
   diff-base-s = diff-base-helper -c delta.side-by-side=true
@@ -20,47 +16,11 @@
 
   diff-base-helper = !"f() { git fetch && git \"$@\" diff $(gh pr view --json baseRefOid --jq '.baseRefOid')...HEAD; }; f"
 
-  # Log ================================================
-  l = log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
-
-  # Add ================================================
-  a = add
-  ap = add -p
-
-  # Commit =============================================
-  c = commit
-  cm = commit -m
-
-  # Branch & Switch ====================================
-  ch = checkout
-  sw = switch
-  swi = switch
-  new = switch -c
-  pre = switch -
+  # Branch & Switch (shell helpers; not in zeno) =======
   main = !git switch main && git pull
   master = !git switch master && git pull
 
-  # Pull ===============================================
-  pull-re = pull --rebase
-  pull-rebase = pull --rebase
-
-  # Reset & Rebase =====================================
-  reset-hard = reset --hard HEAD
-  rebase-previous = rebase -i HEAD~
-
-  # Cleanup ============================================
-  clean-blanch = !git branch --merged | egrep -v '(^[*+]|master|main)' | xargs git branch -d && git fetch --prune
-
   # GitHub PR Workflow =================================
-  # Open current branch's PR in browser
-  web = !"gh pr view --web"
-
-  # Check if current branch's PR is merged (returns exit code 0 if merged, 1 otherwise)
   merged = !"[ \"$(gh pr view --json state --jq '.state')\" = \"MERGED\" ]"
-
-  # Get PR base branch (merge target) for current branch
   base = !"gh pr view --json baseRefName --jq '.baseRefName'"
-
-  # Switch to PR base branch and pull (only if PR is merged)
-  # Also deletes the merged branch and prunes remote-tracking branches
   done = !"git merged && current=$(git branch --show-current) && base=$(git base) && [ -n \"$base\" ] && git switch \"$base\" && git pull && git branch -d \"$current\" && git fetch --prune"
