@@ -3,34 +3,159 @@
 # Config dir: ~/.config/zeno/ (or $ZENO_HOME)
 
 snippets:
-  # for claude code
-  - name: cluade code
-    keyword: c
-    snippet: claude
-
-  # for Bat
-  - name: bat
-    keyword: b
-    snippet: bat
-
-  # for Git
+  # ========== git ==========
+  # git (invoke)
   - name: git
     keyword: g
     snippet: git
 
-  - name: git commit message
-    keyword: gcm
+  - name: git commit -m message
+    keyword: cm
     snippet: git commit -m '{{commit_message}}'
+    context:
+      lbuffer: '^git\s+'
 
-  # for nvim
+  # git status
+  - name: git status
+    keyword: s
+    snippet: status
+    context:
+      lbuffer: '^git\s+'
+
+  # git branch
+  - name: git branch
+    keyword: b
+    snippet: branch
+    context:
+      lbuffer: '^git\s+'
+
+  # git diff
+  - name: git diff
+    keyword: d
+    snippet: diff
+    context:
+      lbuffer: '^git\s+'
+
+  - name: git diff --staged
+    keyword: ds
+    snippet: diff --staged
+    context:
+      lbuffer: '^git\s+'
+
+  # git log
+  - name: git log pretty
+    keyword: l
+    snippet: "log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
+    context:
+      lbuffer: '^git\s+'
+
+  # git add
+  - name: git add
+    keyword: a
+    snippet: add
+    context:
+      lbuffer: '^git\s+'
+
+  - name: git add -p
+    keyword: ap
+    snippet: add -p
+    context:
+      lbuffer: '^git\s+'
+
+  # git commit
+  - name: git commit
+    keyword: c
+    snippet: commit
+    context:
+      lbuffer: '^git\s+'
+
+  - name: git commit -m
+    keyword: cm
+    snippet: commit -m
+    context:
+      lbuffer: '^git\s+'
+
+  # git checkout
+  - name: git checkout
+    keyword: ch
+    snippet: checkout
+    context:
+      lbuffer: '^git\s+'
+
+  # git switch
+  - name: git switch
+    keyword: sw
+    snippet: switch
+    context:
+      lbuffer: '^git\s+'
+
+  - name: git switch -c
+    keyword: new
+    snippet: switch -c
+    context:
+      lbuffer: '^git\s+'
+
+  - name: git switch -
+    keyword: pre
+    snippet: switch -
+    context:
+      lbuffer: '^git\s+'
+
+  # git pull
+  - name: git pull --rebase
+    keyword: pull-re
+    snippet: pull --rebase
+    context:
+      lbuffer: '^git\s+'
+
+  # git reset
+  - name: git reset --hard HEAD
+    keyword: reset-hard
+    snippet: reset --hard HEAD
+    context:
+      lbuffer: '^git\s+'
+
+  # git rebase
+  - name: git rebase -i HEAD~
+    keyword: rebase-previous
+    snippet: rebase -i HEAD~
+    context:
+      lbuffer: '^git\s+'
+
+  # git branch cleanup
+  - name: git clean merged branches
+    keyword: clean-blanch
+    snippet: "!git branch --merged | egrep -v '(^[*+]|master|main)' | xargs git branch -d && git fetch --prune"
+    context:
+      lbuffer: '^git\s+'
+
+  # gh pr
+  - name: gh pr view --web
+    keyword: web
+    snippet: '!gh pr view --web'
+    context:
+      lbuffer: '^git\s+'
+
+  # ========== bat ==========
+  - name: bat
+    keyword: b
+    snippet: bat
+
+  # ========== claude ==========
+  - name: claude
+    keyword: c
+    snippet: claude
+
+  # ========== nvim ==========
   - name: nvim
     keyword: v
     snippet: nvim
 
-  - name: nvim read-only
+  - name: nvim -R
     keyword: vr
     snippet: nvim -R
 
+  # nvim -c encoding (after "nvim ")
   - name: nvim utf8
     keyword: -cu
     snippet: '-c ":e ++enc=utf8"'
@@ -49,9 +174,9 @@ snippets:
     context:
       lbuffer: '^nvim\s+'
 
-  - name: nvim cheat
+  # nvim path (after "nvim ")
+  - name: nvim cheat sheet
     keyword: cheet
     snippet: '${DOTFILES}/vim/cheatsheet/common.md'
     context:
       lbuffer: '^nvim\s+'
-
