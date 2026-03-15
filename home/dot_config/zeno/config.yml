@@ -1,140 +1,114 @@
-# zeno.zsh user config
+# zeno.zsh user config (aligned with fish conf.d/05-abbr.fish)
 # https://github.com/yuki-yano/zeno.zsh
 # Config dir: ~/.config/zeno/ (or $ZENO_HOME)
 
 snippets:
+  # ========== shell / misc ==========
+  - name: reload
+    keyword: reload
+    snippet: exec zsh -l
+
+  # ========== docker ==========
+  - name: docker
+    keyword: d
+    snippet: docker
+
+  - name: docker compose
+    keyword: dc
+    snippet: docker compose
+
+  - name: docker compose exec
+    keyword: dce
+    snippet: docker compose exec
+
   # ========== git ==========
-  # git (invoke)
   - name: git
     keyword: g
     snippet: git
 
-  - name: git commit -m message
-    keyword: cm
-    snippet: git commit -m '{{commit_message}}'
-    context:
-      lbuffer: '^git\s+'
-
-  # git status
   - name: git status
-    keyword: s
-    snippet: status
-    context:
-      lbuffer: '^git\s+'
+    keyword: gs
+    snippet: git status
 
-  # git branch
   - name: git branch
-    keyword: b
-    snippet: branch
-    context:
-      lbuffer: '^git\s+'
+    keyword: gb
+    snippet: git branch
 
-  # git diff
   - name: git diff
-    keyword: d
-    snippet: diff
-    context:
-      lbuffer: '^git\s+'
+    keyword: gd
+    snippet: git diff
 
   - name: git diff --staged
-    keyword: ds
-    snippet: diff --staged
-    context:
-      lbuffer: '^git\s+'
+    keyword: gds
+    snippet: git diff --staged
 
-  # git log
   - name: git log pretty
-    keyword: l
-    snippet: "log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
-    context:
-      lbuffer: '^git\s+'
+    keyword: gl
+    snippet: "git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
 
-  # git add
   - name: git add
-    keyword: a
-    snippet: add
-    context:
-      lbuffer: '^git\s+'
+    keyword: ga
+    snippet: git add
 
   - name: git add -p
-    keyword: ap
-    snippet: add -p
-    context:
-      lbuffer: '^git\s+'
+    keyword: gap
+    snippet: git add -p
 
-  # git commit
   - name: git commit
-    keyword: c
-    snippet: commit
-    context:
-      lbuffer: '^git\s+'
+    keyword: gc
+    snippet: git commit
 
   - name: git commit -m
-    keyword: cm
-    snippet: commit -m
-    context:
-      lbuffer: '^git\s+'
+    keyword: gcm
+    snippet: git commit -m 
 
-  # git checkout
-  - name: git checkout
-    keyword: ch
-    snippet: checkout
-    context:
-      lbuffer: '^git\s+'
-
-  # git switch
   - name: git switch
-    keyword: sw
-    snippet: switch
-    context:
-      lbuffer: '^git\s+'
+    keyword: gsw
+    snippet: git switch
 
   - name: git switch -c
-    keyword: new
-    snippet: switch -c
-    context:
-      lbuffer: '^git\s+'
+    keyword: gnew
+    snippet: git switch -c
 
   - name: git switch -
-    keyword: pre
-    snippet: switch -
-    context:
-      lbuffer: '^git\s+'
+    keyword: gpre
+    snippet: git switch -
 
-  # git pull
+  - name: git pull
+    keyword: gpull
+    snippet: git pull
+
+  - name: git push
+    keyword: gpush
+    snippet: git push
+
   - name: git pull --rebase
-    keyword: pull-re
-    snippet: pull --rebase
-    context:
-      lbuffer: '^git\s+'
+    keyword: gpullre
+    snippet: git pull --rebase
 
-  # git reset
   - name: git reset --hard HEAD
-    keyword: reset-hard
-    snippet: reset --hard HEAD
-    context:
-      lbuffer: '^git\s+'
+    keyword: greset
+    snippet: git reset --hard HEAD
 
-  # git rebase
   - name: git rebase -i HEAD~
-    keyword: rebase-previous
-    snippet: rebase -i HEAD~
-    context:
-      lbuffer: '^git\s+'
+    keyword: grebase
+    snippet: git rebase -i HEAD~
 
-  # git branch cleanup
   - name: git clean merged branches
-    keyword: clean-blanch
-    snippet: "!git branch --merged | egrep -v '(^[*+]|master|main)' | xargs git branch -d && git fetch --prune"
-    context:
-      lbuffer: '^git\s+'
+    keyword: gclean
+    snippet: "git branch --merged | egrep -v '(^[*+]|master|main)' | xargs git branch -d; git fetch --prune"
 
-  # gh pr
+  - name: gh pr merge --merge
+    keyword: gh-merge
+    snippet: gh pr merge --delete-branch --merge
+
+  - name: gh pr merge --rebase
+    keyword: gh-rebase
+    snippet: gh pr merge --delete-branch --rebase
+
   - name: gh pr view --web
-    keyword: web
-    snippet: '!gh pr view --web'
-    context:
-      lbuffer: '^git\s+'
+    keyword: gh-web
+    snippet: gh pr view --web
 
   # ========== bat ==========
   - name: bat
@@ -155,28 +129,20 @@ snippets:
     keyword: vr
     snippet: nvim -R
 
-  # nvim -c encoding (after "nvim ")
+  # encoding (expand then type path, matching fish vcu/vce/vcs)
   - name: nvim utf8
-    keyword: -cu
-    snippet: '-c ":e ++enc=utf8"'
-    context:
-      lbuffer: '^nvim\s+'
+    keyword: vcu
+    snippet: 'nvim -c ":e ++enc=utf8" '
 
   - name: nvim euc-jp
-    keyword: -ce
-    snippet: '-c ":e ++enc=euc-jp"'
-    context:
-      lbuffer: '^nvim\s+'
+    keyword: vce
+    snippet: 'nvim -c ":e ++enc=euc-jp" '
 
   - name: nvim shift_jis
-    keyword: -cs
-    snippet: '-c ":e ++enc=shift_jis"'
-    context:
-      lbuffer: '^nvim\s+'
+    keyword: vcs
+    snippet: 'nvim -c ":e ++enc=shift_jis" '
 
-  # nvim path (after "nvim ")
-  - name: nvim cheat sheet
-    keyword: cheet
-    snippet: '${DOTFILES}/vim/cheatsheet/common.md'
-    context:
-      lbuffer: '^nvim\s+'
+  # ========== yt-dlp (fish: only when YT_BROWSER is set) ==========
+  - name: yt-dlp from browser
+    keyword: yt
+    snippet: 'yt-dlp --cookies-from-browser ${YT_BROWSER}'
