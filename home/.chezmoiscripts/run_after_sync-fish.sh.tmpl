@@ -1,9 +1,0 @@
-#!/bin/sh
-# Copy git-root/fish to ~/.config/fish on apply
-set -e
-
-SOURCE="{{ .chezmoi.workingTree }}/fish"
-DEST="{{ .chezmoi.homeDir }}/.config/fish"
-
-rm -rf "$DEST"
-cp -r "$SOURCE" "$DEST"
