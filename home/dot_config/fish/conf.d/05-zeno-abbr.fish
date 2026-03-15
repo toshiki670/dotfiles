@@ -1,5 +1,13 @@
-# Abbreviations matching zeno.zsh config.yml (git, bat, claude, nvim)
+# Abbreviations matching zeno config.yml + common aliases
 # Fish abbr expand on space; no context, so use prefix (g for git, v for nvim)
+
+# ========== shell / misc ==========
+abbr -a reload 'exec fish -l'
+
+# ========== docker ==========
+abbr -a d 'docker'
+abbr -a dc 'docker compose'
+abbr -a dce 'docker compose exec'
 
 # ========== git ==========
 abbr -a g 'git'
@@ -38,3 +46,8 @@ abbr -a vr 'nvim -R'
 abbr -a vcu 'nvim -c ":e ++enc=utf8" '
 abbr -a vce 'nvim -c ":e ++enc=euc-jp" '
 abbr -a vcs 'nvim -c ":e ++enc=shift_jis" '
+
+# ========== yt-dlp (only when YT_BROWSER is set) ==========
+if set -q YT_BROWSER
+  abbr -a yt 'yt-dlp --cookies-from-browser $YT_BROWSER'
+end
