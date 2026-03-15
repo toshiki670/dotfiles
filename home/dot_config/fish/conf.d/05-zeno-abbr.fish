@@ -30,8 +30,9 @@ abbr -a gpullre 'git pull --rebase'
 abbr -a greset 'git reset --hard HEAD'
 abbr -a grebase 'git rebase -i HEAD~'
 abbr -a gclean 'git branch --merged | egrep -v \'(^[*+]|master|main)\' | xargs git branch -d; git fetch --prune'
-abbr -a gpr 'gh pr'
-abbr -a gweb 'gh pr view --web'
+abbr -a gh-merge 'gh pr merge --delete-branch --merge'
+abbr -a gh-rebase 'gh pr merge --delete-branch --rebase'
+abbr -a gh-web 'gh pr view --web'
 
 # ========== bat ==========
 abbr -a b 'bat'
