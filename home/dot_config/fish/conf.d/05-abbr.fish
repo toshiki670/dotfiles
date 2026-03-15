@@ -1,4 +1,4 @@
-# Abbreviations matching zeno config.yml + common aliases
+# Abbreviations (shell, docker, git, bat, claude, nvim, yt-dlp)
 # Fish abbr expand on space; no context, so use prefix (g for git, v for nvim)
 
 # ========== shell / misc ==========
