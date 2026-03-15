@@ -1,7 +1,7 @@
 # CI status (GitHub PR/checks) in prompt. Simplified: no Zsh parity, no parent feedback.
-# While fetching in background, show only an "updating" icon (◐). Result stored in
-# universal var _ci_cache (entries "key|value|ts") keyed by directory + branch.
-# No cache files; no SIGUSR1/repaint.
+# While fetching in background, keep showing the previous cached result (no ◐).
+# First run (no cache yet): show nothing until the first result is ready.
+# Result stored in universal var _ci_cache (entries "key|value|ts") keyed by directory + branch.
 #
 # Fish does not truly background a function with & (only external commands run async).
 # Run the fetch in a separate fish process so the prompt returns immediately.
@@ -36,6 +36,44 @@ function _ci_status_get
 		return 0
 	end
 	return 1
+end
+
+# Output prompt segment from _ci_value (set by _ci_status_get). Return 0 if something shown.
+function _ci_status_render
+	set -q _ci_value || return 1
+	set -l line $_ci_value
+	set -l pr_state (string split "," "$line")[1]
+	set -l checks_state (string split "," "$line")[2]
+	set -l pr_sym ""
+	switch "$pr_state"
+		case ok
+			set pr_sym (set_color green)"✓"(set_color normal)
+		case merged
+			set pr_sym (set_color green)"✔"(set_color normal)
+		case waiting
+			set pr_sym (set_color blue)"◐"(set_color normal)
+		case ng closed
+			set pr_sym (set_color red)"✗"(set_color normal)
+		case draft
+			set pr_sym (set_color blue)"D"(set_color normal)
+		case ""
+			return 1
+		case "*"
+			set pr_sym ""
+	end
+	test -z "$pr_sym" && return 1
+	echo -n " $pr_sym"
+	switch "$checks_state"
+		case ok
+			echo -n (set_color green)" ✓"(set_color normal)
+		case in_progress
+			echo -n (set_color yellow)" ◐"(set_color normal)
+		case action_required
+			echo -n (set_color magenta)" ⚠"(set_color normal)
+		case ng
+			echo -n (set_color red)" ✗"(set_color normal)
+	end
+	return 0
 end
 
 # Replace or append entry for key in _ci_cache. Value may contain commas.
@@ -98,62 +136,38 @@ function ci_status_fetch
 	set -q _ci_loading && test "$_ci_loading" = "$key" && set -U _ci_loading ""
 end
 
-# Show updating icon when fetching; otherwise show cached result from _ci_cache.
+# Show cached result when available; while fetching, keep showing previous cache. First run: show nothing.
 function ci_status_prompt
 	set -l key (_ci_status_key)
 	test -z "$key" && return 0
 	_ci_status_gh_available || return 0
 
 	set -l now (date +%s)
+	set -l is_loading 0
+	set -q _ci_loading && test "$_ci_loading" = "$key" && set is_loading 1
 
-	# Currently fetching for this key -> show only updating icon
-	if set -q _ci_loading && test "$_ci_loading" = "$key"
-		echo -n " "(set_color blue)"◐"(set_color normal)
+	# Currently fetching: show previous cache if any; else show nothing
+	if test $is_loading -eq 1
+		_ci_status_get "$key" && _ci_status_render
 		return 0
 	end
 
-	# Have fresh cached value -> show it
-	if _ci_status_get "$key" && test (math "$now - $_ci_ts") -lt $CI_STATUS_CACHE_SECONDS
-		set -l line $_ci_value
-		set -l pr_state (string split "," "$line")[1]
-		set -l checks_state (string split "," "$line")[2]
-
-		set -l pr_sym ""
-		switch "$pr_state"
-			case ok
-				set pr_sym (set_color green)"✓"(set_color normal)
-			case merged
-				set pr_sym (set_color green)"✔"(set_color normal)
-			case waiting
-				set pr_sym (set_color blue)"◐"(set_color normal)
-			case ng closed
-				set pr_sym (set_color red)"✗"(set_color normal)
-			case draft
-				set pr_sym (set_color blue)"D"(set_color normal)
-			case ""
-				return 0
-			case "*"
-				set pr_sym ""
-		end
-		test -z "$pr_sym" && return 0
-		echo -n " $pr_sym"
-		switch "$checks_state"
-			case ok
-				echo -n (set_color green)" ✓"(set_color normal)
-			case in_progress
-				echo -n (set_color yellow)" ◐"(set_color normal)
-			case action_required
-				echo -n (set_color magenta)" ⚠"(set_color normal)
-			case ng
-				echo -n (set_color red)" ✗"(set_color normal)
+	# Have cached value
+	if _ci_status_get "$key"
+		_ci_status_render
+		# If stale, trigger background refresh (keep showing current cache)
+		if test (math "$now - $_ci_ts") -ge $CI_STATUS_CACHE_SECONDS
+			set -U _ci_loading "$key"
+			set -l config_dir "$HOME/.config/fish"
+			set -q fish_config_dir && set config_dir "$fish_config_dir"
+			fish -c "source $config_dir/conf.d/09-ci-status.fish; ci_status_fetch" &
 		end
 		return 0
 	end
 
-	# No cache or stale -> start fetch in a new fish process (true async; & only works for external commands)
+	# No cache (first run): start fetch, show nothing
 	set -U _ci_loading "$key"
 	set -l config_dir "$HOME/.config/fish"
 	set -q fish_config_dir && set config_dir "$fish_config_dir"
 	fish -c "source $config_dir/conf.d/09-ci-status.fish; ci_status_fetch" &
-	echo -n " "(set_color blue)"◐"(set_color normal)
 end
