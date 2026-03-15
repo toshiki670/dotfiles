@@ -1,136 +1,64 @@
+# Prompt: path (blue) + branch + * (dirty, sakura pink) + ⇡/⇣ (ahead/behind, Pure) + ci-status. Right = time.
+# Defensive: only parse ahead/behind when we have a status line; only test numeric ahead/behind.
+
 function fish_prompt
-        # This prompt shows:
-        # - green lines if the last return command is OK, red otherwise
-        # - your user name, in red if root or yellow otherwise
-        # - your hostname, in cyan if ssh or blue otherwise
-        # - the current path (with prompt_pwd)
-        # - date +%X
-        # - the current virtual environment, if any
-        # - the current git status, if any, with fish_git_prompt
-        # - the current battery state, if any, and if your power cable is unplugged, and if you have "acpi"
-        # - current background jobs, if any
-    
-        # It goes from:
-        # ┬─[nim@Hattori:~]─[11:39:00]
-        # ╰─>$ echo here
-    
-        # To:
-        # ┬─[nim@Hattori:~/w/dashboard]─[11:37:14]─[V:django20]─[G:master↑1|●1✚1…1]─[B:85%, 05:41:42 remaining]
-        # │ 2    15054    0%    arrêtée    sleep 100000
-        # │ 1    15048    0%    arrêtée    sleep 100000
-        # ╰─>$ echo there
-    
-        set -l retc red
-        test $status = 0; and set retc green
-    
-        set -q __fish_git_prompt_showupstream
-        or set -g __fish_git_prompt_showupstream auto
-    
-        function _nim_prompt_wrapper
-                set retc $argv[1]
-                set -l field_name $argv[2]
-                set -l field_value $argv[3]
-        
-                set_color normal
-                set_color $retc
-                echo -n '─'
-                set_color -o green
-                echo -n '['
-                set_color normal
-                test -n $field_name
-                and echo -n $field_name:
-                set_color $retc
-                echo -n $field_value
-                set_color -o green
-                echo -n ']'
-        end
-    
-        set_color $retc
-        echo -n '┬─'
-        set_color -o green
-        echo -n [
-    
-        if functions -q fish_is_root_user; and fish_is_root_user
-                set_color -o red
-        else
-                set_color -o yellow
-        end
-    
-        echo -n $USER
-        set_color -o white
-        echo -n @
-    
-        if test -z "$SSH_CLIENT"
-                set_color -o blue
-        else
-                set_color -o cyan
-        end
-    
-        echo -n (prompt_hostname)
-        set_color -o white
-        echo -n :(prompt_pwd)
-        set_color -o green
-        echo -n ']'
-    
-        # Date
-        _nim_prompt_wrapper $retc '' (date +%X)
-    
-        # Vi-mode
-    
-        if test "$fish_key_bindings" = fish_vi_key_bindings
-                or test "$fish_key_bindings" = fish_hybrid_key_bindings
-                set -l mode
-                switch $fish_bind_mode
-                        case default
-                                set mode (set_color --bold red)N
-                        case operator f F t T
-                                set mode (set_color --bold cyan)N
-                        case insert
-                                set mode (set_color --bold green)I
-                        case replace_one
-                                set mode (set_color --bold green)R
-                        case replace
-                                set mode (set_color --bold cyan)R
-                        case visual
-                                set mode (set_color --bold magenta)V
-                end
-                set mode $mode(set_color normal)
-                _nim_prompt_wrapper $retc '' $mode
-        end
-    
-        # Virtual Environment
-        set -q VIRTUAL_ENV_DISABLE_PROMPT
-        or set -g VIRTUAL_ENV_DISABLE_PROMPT true
-        set -q VIRTUAL_ENV
-        and _nim_prompt_wrapper $retc V (path basename "$VIRTUAL_ENV")
-    
-        # git
-        set -l prompt_git (fish_git_prompt '%s')
-        test -n "$prompt_git"
-        and _nim_prompt_wrapper $retc G $prompt_git
-    
-        # Battery status
-        type -q acpi
-        and acpi -a 2>/dev/null | string match -rq off
-        and _nim_prompt_wrapper $retc B (acpi -b | cut -d' ' -f 4-)
-    
-        # New line
-        echo
-    
-        # Background jobs
-        set_color normal
-    
-        for job in (jobs)
-                set_color $retc
-                echo -n '│ '
-                set_color brown
-                echo $job
-        end
-    
-        set_color normal
-        set_color $retc
-        echo -n '╰─>'
-        set_color -o red
-        echo -n '$ '
-        set_color normal
+	set -l path_str (prompt_pwd)
+	set -l branch_str ""
+	set -l dirty ""
+	set -l ahead 0
+	set -l behind 0
+
+	set -l git_out (git rev-parse --is-inside-work-tree --abbrev-ref HEAD 2>/dev/null)
+	if test (count $git_out) -ge 2 && test "$git_out[1]" = true
+		set branch_str "$git_out[2]"
+		if test -n "$branch_str"
+			set -l sb (git status -sb 2>/dev/null)
+			test (count $sb) -gt 1 && set dirty "*"
+			set -l line1 ""
+			test (count $sb) -ge 1 && set line1 "$sb[1]"
+			if test -n "$line1"
+				set -l a_raw (string replace -r '.*\[ahead ([0-9]+).*' '$1' "$line1")
+				set -l a (string trim "$a_raw[1]")
+				string match -rq '^[0-9]+$' "$a" && set ahead $a
+				set -l b_raw (string replace -r '.*\[behind ([0-9]+).*' '$1' "$line1")
+				set -l b (string trim "$b_raw[1]")
+				string match -rq '^[0-9]+$' "$b" && set behind $b
+			end
+		end
+	end
+
+	set_color blue
+	echo -n "$path_str"
+	set_color normal
+	if test -n "$branch_str"
+		set_color 888
+		echo -n " $branch_str"
+		set_color normal
+		if test -n "$dirty"
+			set_color FFB7C5
+			echo -n "*"
+			set_color normal
+		end
+		if string match -rq '^[0-9]+$' "$ahead" && test "$ahead" -gt 0
+			set_color 888
+			echo -n " ⇡$ahead"
+			set_color normal
+		end
+		if string match -rq '^[0-9]+$' "$behind" && test "$behind" -gt 0
+			set_color 888
+			echo -n " ⇣$behind"
+			set_color normal
+		end
+	end
+	if functions -q ci_status_prompt
+		ci_status_prompt
+	end
+	echo ""
+	test $status = 0 && set_color magenta || set_color red
+	echo -n "❯ "
+	set_color normal
+end
+
+function fish_right_prompt
+	date +%H:%M:%S
 end
