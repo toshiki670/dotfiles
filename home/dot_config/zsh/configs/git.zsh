@@ -1,5 +1,5 @@
 # For git
-alias g='git'
+# alias g='git' → zeno snippet: g + Space
 
 # Git flow
 # yay -S gitflow-avh

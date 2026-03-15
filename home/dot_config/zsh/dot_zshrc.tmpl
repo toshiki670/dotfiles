@@ -19,6 +19,9 @@ export BASH_ENV="$HOME/.bashenv"
 # fzf config (after sheldon to ensure fzf is loaded)
 {{ includeTemplate "dot_config/zsh/configs/fzf.zsh" }}
 
+# zeno.zsh config (after sheldon and fzf; requires deno)
+{{ includeTemplate "dot_config/zsh/configs/zeno.zsh" }}
+
 # fzf-tab config (after fzf and before completion.zsh)
 {{ includeTemplate "dot_config/zsh/configs/fzf-tab.zsh" }}
 

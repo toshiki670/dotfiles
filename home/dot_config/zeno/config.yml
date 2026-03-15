@@ -1,0 +1,148 @@
+# zeno.zsh user config (aligned with fish conf.d/05-abbr.fish)
+# https://github.com/yuki-yano/zeno.zsh
+# Config dir: ~/.config/zeno/ (or $ZENO_HOME)
+
+snippets:
+  # ========== shell / misc ==========
+  - name: reload
+    keyword: reload
+    snippet: exec zsh -l
+
+  # ========== docker ==========
+  - name: docker
+    keyword: d
+    snippet: docker
+
+  - name: docker compose
+    keyword: dc
+    snippet: docker compose
+
+  - name: docker compose exec
+    keyword: dce
+    snippet: docker compose exec
+
+  # ========== git ==========
+  - name: git
+    keyword: g
+    snippet: git
+
+  - name: git status
+    keyword: gs
+    snippet: git status
+
+  - name: git branch
+    keyword: gb
+    snippet: git branch
+
+  - name: git diff
+    keyword: gd
+    snippet: git diff
+
+  - name: git diff --staged
+    keyword: gds
+    snippet: git diff --staged
+
+  - name: git log pretty
+    keyword: gl
+    snippet: "git log --graph --all --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'"
+
+  - name: git add
+    keyword: ga
+    snippet: git add
+
+  - name: git add -p
+    keyword: gap
+    snippet: git add -p
+
+  - name: git commit
+    keyword: gc
+    snippet: git commit
+
+  - name: git commit -m
+    keyword: gcm
+    snippet: git commit -m 
+
+  - name: git switch
+    keyword: gsw
+    snippet: git switch
+
+  - name: git switch -c
+    keyword: gnew
+    snippet: git switch -c
+
+  - name: git switch -
+    keyword: gpre
+    snippet: git switch -
+
+  - name: git pull
+    keyword: gpull
+    snippet: git pull
+
+  - name: git push
+    keyword: gpush
+    snippet: git push
+
+  - name: git pull --rebase
+    keyword: gpullre
+    snippet: git pull --rebase
+
+  - name: git reset --hard HEAD
+    keyword: greset
+    snippet: git reset --hard HEAD
+
+  - name: git rebase -i HEAD~
+    keyword: grebase
+    snippet: git rebase -i HEAD~
+
+  - name: git clean merged branches
+    keyword: gclean
+    snippet: "git branch --merged | egrep -v '(^[*+]|master|main)' | xargs git branch -d; git fetch --prune"
+
+  - name: gh pr merge --merge
+    keyword: gh-merge
+    snippet: gh pr merge --delete-branch --merge
+
+  - name: gh pr merge --rebase
+    keyword: gh-rebase
+    snippet: gh pr merge --delete-branch --rebase
+
+  - name: gh pr view --web
+    keyword: gh-web
+    snippet: gh pr view --web
+
+  # ========== bat ==========
+  - name: bat
+    keyword: b
+    snippet: bat
+
+  # ========== claude ==========
+  - name: claude
+    keyword: c
+    snippet: claude
+
+  # ========== nvim ==========
+  - name: nvim
+    keyword: v
+    snippet: nvim
+
+  - name: nvim -R
+    keyword: vr
+    snippet: nvim -R
+
+  # encoding (expand then type path, matching fish vcu/vce/vcs)
+  - name: nvim utf8
+    keyword: vcu
+    snippet: 'nvim -c ":e ++enc=utf8" '
+
+  - name: nvim euc-jp
+    keyword: vce
+    snippet: 'nvim -c ":e ++enc=euc-jp" '
+
+  - name: nvim shift_jis
+    keyword: vcs
+    snippet: 'nvim -c ":e ++enc=shift_jis" '
+
+  # ========== yt-dlp (fish: only when YT_BROWSER is set) ==========
+  - name: yt-dlp from browser
+    keyword: yt
+    snippet: 'yt-dlp --cookies-from-browser ${YT_BROWSER}'

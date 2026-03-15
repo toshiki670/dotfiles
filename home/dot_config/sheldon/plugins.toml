@@ -5,9 +5,10 @@ shell = "zsh"
 github = "zsh-users/zsh-completions"
 apply = ["fpath"]
 
-# zsh-syntax-highlighting: コマンドラインのシンタックスハイライトを提供
-[plugins.zsh-syntax-highlighting]
-github = "zsh-users/zsh-syntax-highlighting"
+# fast-syntax-highlighting: コマンドラインのシンタックスハイライト（zeno.zsh と相性が良い）
+# zsh-syntax-highlighting は zeno.zsh 利用時に Tab で "bad set of key/value pairs" が出るため不使用
+[plugins.fast-syntax-highlighting]
+github = "zdharma-continuum/fast-syntax-highlighting"
 
 # zsh-autosuggestions: fish風の自動提案機能（履歴と補完から提案）
 [plugins.zsh-autosuggestions]
@@ -16,6 +17,11 @@ github = "zsh-users/zsh-autosuggestions"
 # fzf: 高速なファジー検索ツール（履歴、ファイル、ディレクトリなどの検索）
 [plugins.fzf]
 github = "junegunn/fzf"
+
+# zeno.zsh: fuzzy completion and utility (abbrev snippet, insert snippet, history, ghq-cd)
+# Requires: deno, fzf
+[plugins.zeno]
+github = "yuki-yano/zeno.zsh"
 
 # fzf-tab: Tab補完をfzfで強化（インタラクティブな補完UI）
 [plugins.fzf-tab]

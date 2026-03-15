@@ -21,7 +21,7 @@ To create a new release, see [How to Execute a Release](CONTRIBUTING.md#リリ�
 ## Required Tools
 
 ```bash
-$ brew install git gh zsh nvim mise sheldon eza bat fd ripgrep zoxide fzf git-delta
+$ brew install git gh zsh nvim mise sheldon eza bat fd ripgrep zoxide fzf git-delta deno
 ```
 
 ### Tool Descriptions
@@ -37,8 +37,9 @@ $ brew install git gh zsh nvim mise sheldon eza bat fd ripgrep zoxide fzf git-de
 - `fd` - Fast and user-friendly alternative to find
 - `ripgrep` - Fast search tool (rg command)
 - `zoxide` - Smarter cd command that learns your habits
-- `fzf` - Command-line fuzzy finder (required for zoxide's zi command)
+- `fzf` - Command-line fuzzy finder (required for zoxide's zi command and zeno.zsh)
 - `git-delta` - Syntax-highlighting pager for git, diff, and grep output
+- `deno` - JavaScript/TypeScript runtime (required for zeno.zsh)
 
 ## Optional Tools
 
