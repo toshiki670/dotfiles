@@ -16,23 +16,23 @@
 
 ## Phase 1: 環境変数・PATH・エイリアス（そのまま移行しやすい）
 
-| Zsh の元 | 内容 | Fish での対応 |
-|----------|------|----------------|
-| `dot_zshrc.tmpl` | `DOTFILES` | `set -gx DOTFILES (chezmoi source-path)` など |
-| `common.zsh` | `PATH`: DOTFILES/bin, ~/.local/bin, ~/.cargo/bin | `fish_user_paths` または `set -gx PATH ...` |
-| `common.zsh` | `reload` | `alias reload='exec fish -l'` |
-| `common.zsh` | `ipecho`, `ps-grep`, `df`, `cp`/`mv` (Linux) | `alias` / `function` で同様に定義 |
-| `common.zsh` | 拡張子別実行 (txt→vim, html→open 等) | Fish では `open` の関数や `bind` で代替検討（後回し可） |
-| `docker.zsh` | `dce='docker-compose exec'` | `alias dce='docker-compose exec'` |
-| `git.zsh` | `g='git'`, git-flow 系エイリアス | `abbr` または `alias` |
-| `vim.zsh` | `vim=nvim`, `v`, `vim-utf8` 等, `vimrc` | `alias` / `function` |
-| `ruby.zsh` | `be`, `kill-rails`, `check-rails` | `alias` / `function` |
-| `python.zsh` | 拡張子 py→python | 同上（必要なら後で） |
-| `dotfiles.zsh` | `dotfiles='chezmoi'`, `dotfiles-latest` | `alias` + 関数を Fish 構文で書き直し |
-| `eza.zsh` | `ls`/`la`/`lt` の eza ラップ | `function` で同様に（`lt` は引数パースを Fish で実装） |
-| `yt-dlp.zsh` | `yt`, `yt-chat`（YT_BROWSER 使用） | `alias`（環境変数はそのまま） |
-| `pbcopy.zsh` | `pbcopy-path`, `pbcopy-file` | `function` で書き直し（macOS のみ） |
-| `brew.zsh` | Homebrew PATH を先頭に | `config.fish` で `fish_user_paths` に `/opt/homebrew/bin` を先頭で追加 |
+| Zsh の元 | 内容 | Fish での対応 | 移行済み |
+|----------|------|----------------|----------|
+| `dot_zshrc.tmpl` | `DOTFILES` | `set -gx DOTFILES (chezmoi source-path)` など | ✅ 00-path |
+| `common.zsh` | `PATH`: DOTFILES/bin, ~/.local/bin, ~/.cargo/bin | `fish_user_paths` または `set -gx PATH ...` | ✅ 00-path.fish |
+| `common.zsh` | `reload` | `alias reload='exec fish -l'` | ✅ 05-abbr.fish |
+| `common.zsh` | `ipecho`, `ps-grep`, `df`, `cp`/`mv` (Linux) | `alias` / `function` で同様に定義 | 未 |
+| `common.zsh` | 拡張子別実行 (txt→vim, html→open 等) | Fish では `open` の関数や `bind` で代替検討（後回し可） | 未 |
+| `docker.zsh` | `dce='docker-compose exec'` | `alias dce='docker-compose exec'` | ✅ 05-abbr.fish（d, dc, dce） |
+| `git.zsh` | `g='git'`, git-flow 系エイリアス | `abbr` または `alias` | ✅ 05-abbr.fish（g, gs, gb, gh-merge 等） |
+| `vim.zsh` | `vim=nvim`, `v`, `vim-utf8` 等, `vimrc` | `alias` / `function` | ✅ 05-abbr.fish（v, vr, vcu/vce/vcs） |
+| `ruby.zsh` | `be`, `kill-rails`, `check-rails` | `alias` / `function` | 未 |
+| `python.zsh` | 拡張子 py→python | 同上（必要なら後で） | 未 |
+| `dotfiles.zsh` | `dotfiles='chezmoi'`, `dotfiles-latest` | `alias` + 関数を Fish 構文で書き直し | 未 |
+| `eza.zsh` | `ls`/`la`/`lt` の eza ラップ | `function` で同様に（`lt` は引数パースを Fish で実装） | ✅ 06-eza.fish |
+| `yt-dlp.zsh` | `yt`, `yt-chat`（YT_BROWSER 使用） | `alias`（環境変数はそのまま） | ✅ 05-abbr.fish |
+| `pbcopy.zsh` | `pbcopy-path`, `pbcopy-file` | `function` で書き直し（macOS のみ） | ✅ 07-pbcopy.fish |
+| `brew.zsh` | Homebrew PATH を先頭に | `config.fish` で `fish_user_paths` に `/opt/homebrew/bin` を先頭で追加 | 要確認（環境依存） |
 
 **進め方**: `config.fish` と `conf.d/` に「環境変数」「alias」「function」を少しずつ追加。chezmoi の `DOTFILES` はテンプレートで注入する想定。
 
@@ -40,13 +40,13 @@
 
 ## Phase 2: ツールの Fish 対応（init やプラグイン）
 
-| Zsh の元 | 内容 | Fish での対応 |
-|----------|------|----------------|
-| `zoxide.zsh.tmpl` | `zoxide init zsh`, `bz='z ..'`, ^j^f で zi | `zoxide init fish`。`abbr bz 'z ..'`。^j^f は `bind` で fzf + zoxide の関数を割り当て |
-| `fzf.zsh` | FZF_DEFAULT_OPTS/COMMAND, ^j^h, ^j^t, ^j^g (git branch) | 環境変数はそのまま。キーバインドは `fzf.fish` プラグインまたは自前 `bind` + 関数 |
-| `mise.zsh.tmpl` | `mise activate zsh` | `mise activate fish` を config.fish で実行 |
-| `history.zsh` | HISTSIZE, share_history, 履歴検索 | Fish は `history` コマンドと `$fish_history`。共有・件数は `fish_history` の設定で調整 |
-| `cd.zsh` | `setopt auto_pushd` | `cd` のラッパーで `dirs` 相当を実装するか、`prevd`/`nextd` は標準であるので必要に応じて |
+| Zsh の元 | 内容 | Fish での対応 | 移行済み |
+|----------|------|----------------|----------|
+| `zoxide.zsh.tmpl` | `zoxide init zsh`, `bz='z ..'`, ^j^f で zi | `zoxide init fish`。`abbr bz 'z ..'`。^j^f は `bind` で fzf + zoxide の関数を割り当て | ✅ 03-zoxide.fish |
+| `fzf.zsh` | FZF_DEFAULT_OPTS/COMMAND, ^j^h, ^j^t, ^j^g (git branch) | 環境変数はそのまま。キーバインドは `fzf.fish` プラグインまたは自前 `bind` + 関数 | ✅ 01-fzf-env.fish, 04-fzf-bindings.fish |
+| `mise.zsh.tmpl` | `mise activate zsh` | `mise activate fish` を config.fish で実行 | ✅ 02-mise.fish |
+| `history.zsh` | HISTSIZE, share_history, 履歴検索 | Fish は `history` コマンドと `$fish_history`。共有・件数は `fish_history` の設定で調整 | ✅ 01-fzf-env.fish（fish_history_size） |
+| `cd.zsh` | `setopt auto_pushd` | `cd` のラッパーで `dirs` 相当を実装するか、`prevd`/`nextd` は標準であるので必要に応じて | 未 |
 
 **進め方**:  
 - mise / zoxide は `config.fish` に 1 行ずつ追加。  
@@ -56,13 +56,13 @@
 
 ## Phase 3: 補完・キーバインド（Fish の仕組みに合わせる）
 
-| Zsh の元 | 内容 | Fish での対応 |
-|----------|------|----------------|
-| `docker.zsh` | docker / docker-compose の補完を curl で取得 | Fish は `completions/` に `.fish` を置くか、`docker completion fish` 等で取得 |
-| `completion.zsh` | compinit, zstyle, menu select | Fish 標準の補完 + 必要ならプラグイン。大文字小文字無視などは別途設定 |
-| `fzf-tab.zsh` | タブ補完を fzf で選択 | fzf.fish のタブ連携や、自前で `bind \t` と fzf を組み合わせる |
-| `clipboard-completion.zsh` | クリップボード 1 行を補完候補に | Fish ではカスタム補完または `complete -c` で候補を追加する関数を検討（後回し可） |
-| `fzf.zsh` | ^j^h history, ^j^t file, ^j^g branch | fzf.fish のキーを ^j 系に変更するか、自前 bind |
+| Zsh の元 | 内容 | Fish での対応 | 移行済み |
+|----------|------|----------------|----------|
+| `docker.zsh` | docker / docker-compose の補完を curl で取得 | Fish は `completions/` に `.fish` を置くか、`docker completion fish` 等で取得 | ✅ completions/docker.fish.tmpl |
+| `completion.zsh` | compinit, zstyle, menu select | Fish 標準の補完 + 必要ならプラグイン。大文字小文字無視などは別途設定 | 標準のまま |
+| `fzf-tab.zsh` | タブ補完を fzf で選択 | fzf.fish のタブ連携や、自前で `bind \t` と fzf を組み合わせる | 未 |
+| `clipboard-completion.zsh` | クリップボード 1 行を補完候補に | Fish ではカスタム補完または `complete -c` で候補を追加する関数を検討（後回し可） | 未 |
+| `fzf.zsh` | ^j^h history, ^j^t file, ^j^g branch | fzf.fish のキーを ^j 系に変更するか、自前 bind | ✅ 04-fzf-bindings.fish |
 
 **進め方**: まずは標準の補完だけで運用し、fzf 連携は fzf.fish 導入後にキーだけ合わせる。clipboard 補完は必要性が高ければ Phase 4 で。
 
@@ -70,11 +70,11 @@
 
 ## Phase 4: プロンプト・非同期・Zsh 固有
 
-| Zsh の元 | 内容 | Fish での対応 |
-|----------|------|----------------|
-| `ci-status.zsh` | Pure プロンプトに GitHub Actions の PR/checks を非同期表示 | Fish では `fish_prompt` 内で `gh pr view` / `gh pr checks` を呼ぶ場合、非同期は `fish --private` やバックグラウンドジョブで再実装が必要。既存の fish_prompt は Git まで表示しているので、CI 表示は「同じ見た目」を目指すなら関数を分離して実装 |
-| `daily-check.zsh` | 起動時に 1 日 1 回 brew/mise outdated を表示 | 同様のロジックを Fish で関数化（日付ファイルでキャッシュ、バックグラウンド実行） |
-| Sheldon / zeno | プラグイン・スニペット | Fish には Sheldon はない。fzf.fish で fzf 部分を賄い、zeno 相当の機能は必要なら別プラグインや自前関数で |
+| Zsh の元 | 内容 | Fish での対応 | 移行済み |
+|----------|------|----------------|----------|
+| `ci-status.zsh` | Pure プロンプトに GitHub Actions の PR/checks を非同期表示 | Fish では `fish_prompt` 内で `gh pr view` / `gh pr checks` を呼ぶ場合、非同期は `fish --private` やバックグラウンドジョブで再実装が必要。既存の fish_prompt は Git まで表示しているので、CI 表示は「同じ見た目」を目指すなら関数を分離して実装 | ✅ 09-ci-status.fish, fish_prompt |
+| `daily-check.zsh` | 起動時に 1 日 1 回 brew/mise outdated を表示 | 同様のロジックを Fish で関数化（日付ファイルでキャッシュ、バックグラウンド実行） | ✅ 08-daily-check.fish |
+| Sheldon / zeno | プラグイン・スニペット | Fish には Sheldon はない。fzf.fish で fzf 部分を賄い、zeno 相当の機能は必要なら別プラグインや自前関数で | ✅ 05-abbr.fish（zeno 相当の abbr） |
 
 **進め方**:  
 - daily-check は Zsh のロジックを Fish の `function` に移植すればよい。  
@@ -95,11 +95,11 @@ Zsh の ci-status に完全に合わせることはしていない。
 
 ## Phase 5: 条件付き・OS 別（そのまま移行）
 
-| Zsh の元 | 内容 | Fish での対応 |
-|----------|------|----------------|
-| `pacman.zsh` | `lookPath "pacman"` で swap-pacman-mirrorlist | `if command -q pacman; ... end` で関数定義 |
-| `yt-dlp.zsh` | `env "YT_BROWSER"` があるときだけ | `if set -q YT_BROWSER; ... end` |
-| `c.zsh` | rungcc, 拡張子 c/cpp→rungcc | Fish で `function` 化（md5sum は macOS では `md5` など要確認） |
+| Zsh の元 | 内容 | Fish での対応 | 移行済み |
+|----------|------|----------------|----------|
+| `pacman.zsh` | `lookPath "pacman"` で swap-pacman-mirrorlist | `if command -q pacman; ... end` で関数定義 | 未 |
+| `yt-dlp.zsh` | `env "YT_BROWSER"` があるときだけ | `if set -q YT_BROWSER; ... end` | ✅ 05-abbr.fish |
+| `c.zsh` | rungcc, 拡張子 c/cpp→rungcc | Fish で `function` 化（md5sum は macOS では `md5` など要確認） | 未 |
 
 ---
 
