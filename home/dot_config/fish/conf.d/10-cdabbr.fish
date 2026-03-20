@@ -24,6 +24,40 @@ function _cdabbr_expand_recursive
   end
 end
 
+function _cdabbr_select_with_fzf
+  set -l candidates $argv
+  string join \n $candidates \
+  | fzf --height=40% \
+        --reverse \
+        --select-1 \
+        --exit-0 \
+        --preview='eza -1 --color=always --icons {}' \
+        --preview-window='right:50%:wrap' \
+        --bind='ctrl-/:toggle-preview'
+  # Treat ESC/Ctrl-C as "no selection" instead of command error.
+  return 0
+end
+
+function _cdabbr_select_without_fzf
+  set -l candidates $argv
+
+  if test (count $candidates) -eq 1
+    echo "$candidates[1]"
+    return 0
+  end
+
+  echo "cdabbr: multiple matches (install fzf to choose):" >&2
+  for c in $candidates
+    echo "  $c" >&2
+  end
+  return 1
+end
+
+set -g __cdabbr_selector _cdabbr_select_with_fzf
+if not command -q fzf
+  set -g __cdabbr_selector _cdabbr_select_without_fzf
+end
+
 function cdabbr --description 'cd by expanding prompt_pwd-style abbreviated path'
   set -l abbr_path "$argv[1]"
   if test -z "$abbr_path"
@@ -59,27 +93,11 @@ function cdabbr --description 'cd by expanding prompt_pwd-style abbreviated path
     return 1
   end
 
-  if test (count $candidates) -eq 1
-    cd "$candidates[1]"
-    return
-  end
-
-  if not command -q fzf
-    echo "cdabbr: multiple matches (install fzf to choose):" >&2
-    for c in $candidates
-      echo "  $c" >&2
-    end
+  set -l result ($__cdabbr_selector $candidates)
+  if test $status -ne 0
     return 1
   end
 
-  set -l result (
-    string join \n $candidates \
-    | fzf --height=40% \
-          --reverse \
-          --preview='eza -1 --color=always --icons {}' \
-          --preview-window='right:50%:wrap' \
-          --bind='ctrl-/:toggle-preview'
-  )
   if test -n "$result"
     cd "$result"
   end
