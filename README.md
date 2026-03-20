@@ -7,6 +7,8 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
+This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the primary shell going forward (`~/.config/fish/conf.d/`). **Zsh** remains fully maintained (Sheldon, zeno, fzf, etc.). Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and scripts under `bin/`.
+
 # Release
 
 To create a new release, see [How to Execute a Release](CONTRIBUTING.md#リリースの実行方法) in the Contributing guide.
@@ -20,31 +22,43 @@ To create a new release, see [How to Execute a Release](CONTRIBUTING.md#リリ�
 
 ## Required Tools
 
+These cover the Fish-first workflow and shared tooling (Git, editor, mise, CLI utilities).
+
 ```bash
-$ brew install git gh zsh nvim mise sheldon eza bat fd ripgrep zoxide fzf git-delta deno
+$ brew install git gh fish nvim mise eza bat fd ripgrep zoxide fzf git-delta
 ```
 
 ### Tool Descriptions
 
 - `git` - Version control system
-- `gh` - GitHub CLI
-- `zsh` - Z shell (recommended shell)
+- `gh` - GitHub CLI (used by shell prompts and aliases)
+- `fish` - Fish shell (**primary shell** for this dotfiles set)
 - `nvim` - Neovim text editor
 - `mise` - Runtime version manager
-- `sheldon` - Zsh plugin manager
 - `eza` - Modern replacement for ls
 - `bat` - Modern replacement for cat with syntax highlighting
 - `fd` - Fast and user-friendly alternative to find
 - `ripgrep` - Fast search tool (rg command)
 - `zoxide` - Smarter cd command that learns your habits
-- `fzf` - Command-line fuzzy finder (required for zoxide's zi command and zeno.zsh)
+- `fzf` - Command-line fuzzy finder (used with zoxide and Fish/Zsh key bindings)
 - `git-delta` - Syntax-highlighting pager for git, diff, and grep output
+
+## Zsh-only dependencies
+
+Install these if you use the **Zsh** configuration (Sheldon, zeno snippet expansion, etc.).
+
+```bash
+$ brew install zsh sheldon deno
+```
+
+- `zsh` - Z shell
+- `sheldon` - Zsh plugin manager
 - `deno` - JavaScript/TypeScript runtime (required for zeno.zsh)
 
 ## Optional Tools
 
 ```bash
-$ brew install ffmpeg marp-cli gitui
+$ brew install ffmpeg marp-cli gitui ghostty zellij
 ```
 
 ### Optional Tool Descriptions
@@ -52,6 +66,8 @@ $ brew install ffmpeg marp-cli gitui
 - `ffmpeg` - Multimedia framework (required for video/audio processing)
 - `marp-cli` - Markdown to PDF/PowerPoint converter
 - `gitui` - Terminal UI for git commands
+- `ghostty` - Terminal emulator; config lives under `~/.config/ghostty/` (see [Configuration](#configuration))
+- `zellij` - Terminal multiplexer; config under `~/.config/zellij/`
 
 ## Rust Tools
 
@@ -127,10 +143,23 @@ $ chezmoi apply
 ### 5. Restart Shell
 
 ```bash
-$ exec $SHELL -l
+$ exec fish -l
+```
+
+If you use Zsh instead: `exec zsh -l` (or `exec $SHELL -l` after `chsh`).
+
+### 6. Set login shell (recommended for Fish)
+
+```bash
+$ chsh -s "$(which fish)"
 ```
 
 # Configuration
+
+## Shells (Fish and Zsh)
+
+- **Fish (preferred)** — Modular config under `~/.config/fish/conf.d/`. New work and day-to-day usage should favor Fish. For a feature-by-feature mapping from Zsh, see [docs/fish-migration-from-zsh.md](docs/fish-migration-from-zsh.md).
+- **Zsh** — Entry point is `~/.config/zsh/` (via `dot_zshrc.tmpl`), with Sheldon and modular includes under `configs/`. Install [Zsh-only dependencies](#zsh-only-dependencies) if you use this stack.
 
 ## Environment Variables (Using Mise)
 
@@ -151,12 +180,17 @@ Apply changes:
 $ exec $SHELL -l
 ```
 
+## Ghostty (macOS)
+
+On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config path to `~/.config/ghostty/config`. If you use Ghostty, install it separately (see [Optional Tools](#optional-tools)). Ghostty works well as the terminal for a Fish-centric setup.
+
 ## Platform-Specific Notes
 
 ### macOS
 
 - Homebrew configurations will be applied automatically
 - Custom binaries in `bin/` will be added to PATH
+- Ghostty config symlink is set up as described above
 
 ### Linux (Arch)
 
