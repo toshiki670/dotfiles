@@ -1,59 +1,69 @@
 # Abbreviations (shell, docker, git, bat, claude, nvim, yt-dlp)
 
 # ========== shell / misc ==========
-abbr -a reload 'exec fish -l'
+abbr --add reload 'exec fish -l'
+
+# ========== pbcopy (macOS only; one-liner + --set-cursor, see abbr -h) ==========
+# Default % marker is removed; cursor lands there after expand.
+if test (uname -s) = Darwin
+  abbr --add p-path --set-cursor 'path resolve % | pbcopy; echo (pbpaste)'
+  abbr --add p-file --set-cursor 'pbcopy < %'
+end
 
 # ========== docker ==========
-abbr -a d 'docker'
-abbr -a dc 'docker compose'
-abbr -a dce 'docker compose exec'
+abbr --add d 'docker'
+abbr --add dc 'docker compose'
+abbr --add dce 'docker compose exec'
 
 # ========== git ==========
-abbr -a g 'git'
+abbr --add g 'git'
 
-# --command git: git の直後のトークンのみ展開 (g s → git status)。-- 必須。
-abbr -a --command git -- s 'status'
-abbr -a --command git -- br 'branch'
-abbr -a --command git -- d 'diff'
-abbr -a --command git -- ds 'diff --staged'
-abbr -a --command git -- l 'log --graph --all --pretty=format:\'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset\''
-abbr -a --command git -- a 'add'
-abbr -a --command git -- ap 'add -p'
-abbr -a --command git -- ci 'commit'
-abbr -a --command git -- cm 'commit -m '
-abbr -a --command git -- sw 'switch'
-abbr -a --command git -- new 'switch -c'
-abbr -a --command git -- pre 'switch -'
-abbr -a --command git -- pull 'pull'
-abbr -a --command git -- push 'push'
-abbr -a --command git -- pullre 'pull --rebase'
-abbr -a --command git -- reset 'reset --hard HEAD'
-abbr -a --command git -- rebase 'rebase -i HEAD~'
-abbr -a --command git -- clean 'branch --merged | egrep -v \'(^[*+]|master|main)\' | xargs git branch -d; git fetch --prune'
+# 一軍: 単体で使う頻度が高いものは --command git を使わずに展開
+abbr --add gs 'git status'
+abbr --add gd 'git diff'
+abbr --add gds 'git diff --staged'
+abbr --add ga 'git add'
+abbr --add gap 'git add -p'
+abbr --add gc 'git commit'
+abbr --add gcm 'git commit -m '
+abbr --add gl 'git log --graph --all --pretty=format:\'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset\''
+abbr --add gsw 'git switch'
+abbr --add gnew 'git switch -c'
+abbr --add gpre 'git switch -'
+abbr --add gpl 'git pull'
+abbr --add gph 'git push'
+
+# 二軍: 誤爆しやすい/用途が限定的なものは git 配下に限定
+# --command git: git の直後のトークンのみ展開 (g rebase → git rebase ...)
+abbr --add --command git -- br 'branch'
+abbr --add --command git -- pullre 'pull --rebase'
+abbr --add --command git -- reset 'reset --hard HEAD'
+abbr --add --command git -- rebase 'rebase -i HEAD~'
+abbr --add --command git -- clean 'branch --merged | egrep -v \'(^[*+]|master|main)\' | xargs git branch -d; git fetch --prune'
 # rebase は git で使用済みのため prrebase に (gh prrebase → gh pr merge --delete-branch --rebase)
-abbr -a --command gh -- merge 'pr merge --delete-branch --merge'
-abbr -a --command gh -- rebase 'pr merge --delete-branch --rebase'
-abbr -a --command gh -- web 'pr view --web'
-abbr -a --command gh -- switch 'pr checkout'
-abbr -a --command gh -- b 'browse'
-abbr -a --command gh -- 'switch' 'pr checkout'
+abbr --add --command gh -- merge 'pr merge --delete-branch --merge'
+abbr --add --command gh -- rebase 'pr merge --delete-branch --rebase'
+abbr --add --command gh -- web 'pr view --web'
+abbr --add --command gh -- switch 'pr checkout'
+abbr --add --command gh -- b 'browse'
+abbr --add --command gh -- 'switch' 'pr checkout'
 
 # ========== bat ==========
-abbr -a b 'bat'
+abbr --add b 'bat'
 
 # ========== claude ==========
-abbr -a c 'claude'
+abbr --add c 'claude'
 
 # ========== nvim ==========
-abbr -a --position anywhere v 'nvim'
-abbr -a --position anywhere vr 'nvim -R'
+abbr --add --position anywhere v 'nvim'
+abbr --add --position anywhere vr 'nvim -R'
 # encoding: nvim の引数として cu / ce / cs を展開 (続けて path を入力)
 # -- 必須: オプション終了を示し NAME と EXPANSION を渡す (無いと "Requires at least two arguments")
-abbr -a --command nvim -- cu '-c ":e ++enc=utf8" '
-abbr -a --command nvim -- ce '-c ":e ++enc=euc-jp" '
-abbr -a --command nvim -- cs '-c ":e ++enc=shift_jis" '
+abbr --add --command nvim -- cu '-c ":e ++enc=utf8" '
+abbr --add --command nvim -- ce '-c ":e ++enc=euc-jp" '
+abbr --add --command nvim -- cs '-c ":e ++enc=shift_jis" '
 
 # ========== yt-dlp (only when YT_BROWSER is set) ==========
 if set -q YT_BROWSER
-  abbr -a yt 'yt-dlp --cookies-from-browser $YT_BROWSER'
+  abbr --add yt 'yt-dlp --cookies-from-browser $YT_BROWSER'
 end

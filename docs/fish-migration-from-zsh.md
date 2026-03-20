@@ -31,7 +31,7 @@
 | `dotfiles.zsh` | `dotfiles='chezmoi'`, `dotfiles-latest` | `alias` + 関数を Fish 構文で書き直し | 未 |
 | `eza.zsh` | `ls`/`la`/`lt` の eza ラップ | `function` で同様に（`lt` は引数パースを Fish で実装） | ✅ 06-eza.fish |
 | `yt-dlp.zsh` | `yt`, `yt-chat`（YT_BROWSER 使用） | `alias`（環境変数はそのまま） | ✅ 05-abbr.fish |
-| `pbcopy.zsh` | `pbcopy-path`, `pbcopy-file` | `function` で書き直し（macOS のみ） | ✅ 07-pbcopy.fish |
+| `pbcopy.zsh` | `pbcopy-path`, `pbcopy-file` | `abbr` で `path resolve` / `pbcopy <`（`--set-cursor`、macOS のみ） | ✅ 05-abbr.fish |
 | `brew.zsh` | Homebrew PATH を先頭に | `config.fish` で `fish_user_paths` に `/opt/homebrew/bin` を先頭で追加 | 要確認（環境依存） |
 
 **進め方**: `config.fish` と `conf.d/` に「環境変数」「alias」「function」を少しずつ追加。chezmoi の `DOTFILES` はテンプレートで注入する想定。
