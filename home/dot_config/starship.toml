@@ -1,0 +1,36 @@
+# Starship configuration managed by chezmoi.
+
+add_newline = false
+
+[directory]
+truncation_length = 0
+style = "cyan"
+format = "[$path]($style) "
+
+truncate_to_repo = true
+truncation_symbol = "…/"
+repo_root_style = "bold cyan"
+repo_root_format = "[$before_root_path]($style)[$repo_root]($repo_root_style)[$path]($style) "
+
+[git_commit]
+tag_disabled = false
+format = '[\($hash$tag\)]($style) '
+
+[git_metrics]
+disabled = false
+only_nonzero_diffs = true
+added_style = "green"
+deleted_style = "red"
+format = '([+$added]($added_style) )([-$deleted]($deleted_style) ) '
+
+[git_state]
+rebase = "rebase"
+merge = "merge"
+revert = "revert"
+cherry_pick = "cherry-pick"
+bisect = "bisect"
+am = "am"
+am_or_rebase = "am/rebase"
+style = "bold yellow"
+format = '\[[$state( $progress_current/$progress_total)]($style)\] '
+
