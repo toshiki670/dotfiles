@@ -16,13 +16,6 @@ repo_root_format = "[$before_root_path]($style)[$repo_root]($repo_root_style)[$p
 tag_disabled = false
 format = '[\($hash$tag\)]($style) '
 
-[git_metrics]
-disabled = false
-only_nonzero_diffs = true
-added_style = "green"
-deleted_style = "red"
-format = '([+$added]($added_style) )([-$deleted]($deleted_style) ) '
-
 [git_state]
 rebase = "rebase"
 merge = "merge"
@@ -33,4 +26,11 @@ am = "am"
 am_or_rebase = "am/rebase"
 style = "bold yellow"
 format = '\[[$state( $progress_current/$progress_total)]($style)\] '
+
+[git_metrics]
+disabled = false
+only_nonzero_diffs = true
+added_style = "green"
+deleted_style = "red"
+format = '([+$added]($added_style) )([-$deleted]($deleted_style) ) '
 
