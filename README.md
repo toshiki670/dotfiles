@@ -7,7 +7,7 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
-This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the primary shell going forward (`~/.config/fish/conf.d/`). **Zsh** remains fully maintained (Sheldon, zeno, fzf, etc.). Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and scripts under `bin/`.
+This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the primary shell going forward (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. **Zsh** remains fully maintained (Sheldon, zeno, fzf, etc.). Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and scripts under `bin/`.
 
 # Release
 
@@ -25,7 +25,7 @@ To create a new release, see [How to Execute a Release](CONTRIBUTING.md#リリ�
 These cover the Fish-first workflow and shared tooling (Git, editor, mise, CLI utilities).
 
 ```bash
-$ brew install git gh fish nvim mise eza bat fd ripgrep zoxide fzf git-delta
+$ brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-delta
 ```
 
 ### Tool Descriptions
@@ -39,6 +39,7 @@ $ brew install git gh fish nvim mise eza bat fd ripgrep zoxide fzf git-delta
 - `bat` - Modern replacement for cat with syntax highlighting
 - `fd` - Fast and user-friendly alternative to find
 - `ripgrep` - Fast search tool (rg command)
+- `starship` - Minimal, fast prompt ([starship.rs](https://starship.rs/)); Fish loads it from `config.fish`, config at `~/.config/starship.toml`
 - `zoxide` - Smarter cd command that learns your habits
 - `fzf` - Command-line fuzzy finder (used with zoxide and Fish/Zsh key bindings)
 - `git-delta` - Syntax-highlighting pager for git, diff, and grep output
@@ -158,7 +159,7 @@ $ chsh -s "$(which fish)"
 
 ## Shells (Fish and Zsh)
 
-- **Fish (preferred)** — Modular config under `~/.config/fish/conf.d/`. New work and day-to-day usage should favor Fish. For a feature-by-feature mapping from Zsh, see [docs/fish-migration-from-zsh.md](docs/fish-migration-from-zsh.md).
+- **Fish (preferred)** — Modular config under `~/.config/fish/conf.d/`. Interactive sessions run `starship init fish` from `config.fish`; prompt styling lives in `~/.config/starship.toml`. New work and day-to-day usage should favor Fish. For a feature-by-feature mapping from Zsh, see [docs/fish-migration-from-zsh.md](docs/fish-migration-from-zsh.md).
 - **Zsh** — Entry point is `~/.config/zsh/` (via `dot_zshrc.tmpl`), with Sheldon and modular includes under `configs/`. Install [Zsh-only dependencies](#zsh-only-dependencies) if you use this stack.
 
 ## Environment Variables (Using Mise)
