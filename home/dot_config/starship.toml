@@ -1,42 +1,73 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-format = """
-[](color_blue)\
-$directory\
-[](fg:color_bg3 bg:color_blue)\
-$git_branch\
-$git_state\
-$git_status\
-[](fg:color_bg1 bg:color_bg3)\
-[](color_bg1)\
-$line_break\
-$character"""
+[aws]
+symbol = " "
 
+[buf]
+symbol = " "
 
-palette = 'gruvbox_dark'
+[bun]
+symbol = " "
 
-[palettes.gruvbox_dark]
-color_fg0 = '#fbf1c7'
-color_bg1 = '#3c3836'
-color_bg3 = '#665c54'
-color_blue = '#458588'
-color_aqua = '#689d6a'
-color_green = '#98971a'
-color_orange = '#d65d0e'
-color_purple = '#b16286'
-color_red = '#cc241d'
-color_yellow = '#d79921'
+[c]
+symbol = " "
+
+[cpp]
+symbol = " "
+
+[cmake]
+symbol = " "
+
+[cmd_duration]
+format = ' [$duration]($style) '
+
+[conda]
+symbol = " "
+
+[crystal]
+symbol = " "
+
+[dart]
+symbol = " "
+
+[deno]
+symbol = " "
 
 [directory]
+read_only = " 󰌾"
 truncation_length = 0
-style = "fg:color_fg0 bg:color_blue"
-repo_root_style = "bold fg:color_fg0 bg:color_blue"
-format = "[ $path ]($style)"
-repo_root_format = "[$before_root_path]($style)[$repo_root]($repo_root_style)[$path ]($style)"
+truncate_to_repo = true
+style = 'bold cyan'
+repo_root_style = 'bold red'
+repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+
+[docker_context]
+symbol = " "
+
+[elixir]
+symbol = " "
+
+[elm]
+symbol = " "
+
+[fennel]
+symbol = " "
+
+[fortran]
+symbol = " "
+
+[fossil_branch]
+symbol = " "
+
+[gcloud]
+symbol = " "
+
 [git_branch]
-symbol = ""
-style = "fg:color_fg0 bg:color_bg3"
-format = '[ $symbol $branch ]($style)'
+symbol = " "
+format = '[$symbol$branch(:$remote_branch)]($style) '
+
+[git_commit]
+tag_symbol = '  '
 
 [git_state]
 rebase = "rebase"
@@ -46,22 +77,158 @@ cherry_pick = "cherry-pick"
 bisect = "bisect"
 am = "am"
 am_or_rebase = "am/rebase"
-style = "fg:color_fg0 bg:color_bg3"
-format = '[$state( $progress_current/$progress_total) ]($style)'
+
+[git_metrics]
+disabled = false
 
 [git_status]
-style = "fg:color_fg0 bg:color_bg3"
-format = '[($all_status$ahead_behind )]($style)'
+ahead = '[⇡${count}](green)'
+diverged = '⇡${ahead_count}⇣${behind_count}'
+behind = '⇣${count}'
+stashed = ''
+modified = '!${count}'
+format = '[$all_status$ahead_behind]($style) '
 
-[line_break]
-disabled = false
+[golang]
+symbol = " "
 
-[character]
-disabled = false
-success_symbol = '[](bold fg:color_green)'
-error_symbol = '[](bold fg:color_red)'
-vimcmd_symbol = '[](bold fg:color_green)'
-vimcmd_replace_one_symbol = '[](bold fg:color_purple)'
-vimcmd_replace_symbol = '[](bold fg:color_purple)'
-vimcmd_visual_symbol = '[](bold fg:color_yellow)'
+[gradle]
+symbol = " "
 
+[guix_shell]
+symbol = " "
+
+[haskell]
+symbol = " "
+
+[haxe]
+symbol = " "
+
+[hg_branch]
+symbol = " "
+
+[hostname]
+ssh_symbol = " "
+
+[java]
+symbol = " "
+
+[julia]
+symbol = " "
+
+[kotlin]
+symbol = " "
+
+[lua]
+symbol = " "
+
+[memory_usage]
+symbol = "󰍛 "
+
+[meson]
+symbol = "󰔷 "
+
+[nim]
+symbol = "󰆥 "
+
+[nix_shell]
+symbol = " "
+
+[nodejs]
+symbol = " "
+
+[ocaml]
+symbol = " "
+
+[os.symbols]
+Alpaquita = " "
+Alpine = " "
+AlmaLinux = " "
+Amazon = " "
+Android = " "
+AOSC = " "
+Arch = " "
+Artix = " "
+CachyOS = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Elementary = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "󰛓 "
+Gentoo = " "
+HardenedBSD = "󰞌 "
+Illumos = "󰈸 "
+Ios = "󰀷 "
+Kali = " "
+Linux = " "
+Mabox = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+Nobara = " "
+OpenBSD = "󰈺 "
+openSUSE = " "
+OracleLinux = "󰌷 "
+Pop = " "
+Raspbian = " "
+Redhat = " "
+RedHatEnterprise = " "
+RockyLinux = " "
+Redox = "󰀘 "
+Solus = "󰠳 "
+SUSE = " "
+Ubuntu = " "
+Unknown = " "
+Void = " "
+Windows = "󰍲 "
+Zorin = " "
+
+[package]
+symbol = "󰏗 "
+
+[perl]
+symbol = " "
+
+[php]
+symbol = " "
+
+[pijul_channel]
+symbol = " "
+
+[pixi]
+symbol = "󰏗 "
+
+[python]
+symbol = " "
+
+[rlang]
+symbol = "󰟔 "
+
+[ruby]
+symbol = " "
+
+[rust]
+symbol = "󱘗 "
+
+[scala]
+symbol = " "
+
+[status]
+symbol = " "
+
+[swift]
+symbol = " "
+
+[xmake]
+symbol = " "
+
+[zig]
+symbol = " "
