@@ -19,7 +19,7 @@ symbol = " "
 symbol = " "
 
 [cmd_duration]
-format = ' [$duration]($style) '
+format = '[ $duration]($style) '
 
 [conda]
 symbol = " "
@@ -38,11 +38,12 @@ read_only = " 󰌾"
 truncation_length = 0
 truncate_to_repo = true
 style = 'bold cyan'
-repo_root_style = 'bold red'
+repo_root_style = 'bold blue'
 repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
 
 [docker_context]
 symbol = " "
+format ='[$symbol$context ]($style)'
 
 [elixir]
 symbol = " "
@@ -64,7 +65,7 @@ symbol = " "
 
 [git_branch]
 symbol = " "
-format = '[$symbol$branch(:$remote_branch)]($style) '
+format = '[$symbol$branch(:$remote_branch) ]($style)'
 
 [git_commit]
 tag_symbol = '  '
@@ -87,10 +88,11 @@ diverged = '⇡${ahead_count}⇣${behind_count}'
 behind = '⇣${count}'
 stashed = ''
 modified = '!${count}'
-format = '[$all_status$ahead_behind]($style) '
+format = '([$all_status$ahead_behind ]($style))'
 
 [golang]
 symbol = " "
+format = '[$symbol($version )]($style)'
 
 [gradle]
 symbol = " "
@@ -123,7 +125,9 @@ symbol = " "
 symbol = " "
 
 [memory_usage]
+disabled = false
 symbol = "󰍛 "
+format = '[$symbol${ram}( | ${swap}) ]($style)'
 
 [meson]
 symbol = "󰔷 "
@@ -135,7 +139,8 @@ symbol = "󰆥 "
 symbol = " "
 
 [nodejs]
-symbol = " "
+symbol = "󰎙 "
+format = '[$symbol($version) ]($style)'
 
 [ocaml]
 symbol = " "
@@ -193,6 +198,7 @@ Zorin = " "
 
 [package]
 symbol = "󰏗 "
+format = '[$symbol$version ]($style)'
 
 [perl]
 symbol = " "
@@ -214,9 +220,11 @@ symbol = "󰟔 "
 
 [ruby]
 symbol = " "
+format = '[$symbol($version )]($style)'
 
 [rust]
 symbol = "󱘗 "
+format = '[$symbol($version )]($style)'
 
 [scala]
 symbol = " "
