@@ -41,6 +41,8 @@ abbr --add --command git -- reset 'reset --hard HEAD'
 abbr --add --command git -- rebase 'rebase -i HEAD~'
 abbr --add --command git -- clean 'branch --merged | egrep -v \'(^[*+]|master|main)\' | xargs git branch -d; git fetch --prune'
 # rebase は git で使用済みのため prrebase に (gh prrebase → gh pr merge --delete-branch --rebase)
+abbr --add --command gh -- show 'pr view'
+abbr --add --command gh -- diff 'pr diff'
 abbr --add --command gh -- merge 'pr merge --delete-branch --merge'
 abbr --add --command gh -- rebase 'pr merge --delete-branch --rebase'
 abbr --add --command gh -- web 'pr view --web'
@@ -57,6 +59,9 @@ abbr --add c 'claude'
 # ========== nvim ==========
 abbr --add --position anywhere v 'nvim'
 abbr --add --position anywhere vr 'nvim -R'
+abbr --add vf 'nvim (fzf)'
+abbr --add vrf 'nvim -R (fzf)'
+
 # encoding: nvim の引数として cu / ce / cs を展開 (続けて path を入力)
 # -- 必須: オプション終了を示し NAME と EXPANSION を渡す (無いと "Requires at least two arguments")
 abbr --add --command nvim -- cu '-c ":e ++enc=utf8" '
