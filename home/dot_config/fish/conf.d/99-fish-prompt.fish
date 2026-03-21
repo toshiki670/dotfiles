@@ -1,2 +1,2 @@
-# Prompt is defined in functions/fish_prompt.fish. This file intentionally does not
-# define fish_prompt so that the functions/ version is used (and can be updated by chezmoi).
+# Prompt is provided by Starship via `starship init fish | source` in config.fish.
+# Keep this file for prompt-related notes/hooks managed by chezmoi.
