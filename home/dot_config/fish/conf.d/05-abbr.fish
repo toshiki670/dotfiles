@@ -46,6 +46,8 @@ abbr --add --command gh -- diff 'pr diff'
 abbr --add --command gh -- merge 'pr merge --delete-branch --merge'
 abbr --add --command gh -- rebase 'pr merge --delete-branch --rebase'
 abbr --add --command gh -- web 'pr view --web'
+# Stacked PRs: open the parent PR (head = current PR base)
+abbr --add --command gh -- pweb 'pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
 abbr --add --command gh -- switch 'pr checkout'
 abbr --add --command gh -- b 'browse'
 abbr --add --command gh -- 'switch' 'pr checkout'
