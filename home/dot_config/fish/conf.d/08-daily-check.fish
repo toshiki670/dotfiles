@@ -20,38 +20,12 @@ function daily-check
 		return
 	end
 
-	set -g _daily_check_ts "$timestamp_file"
-	set -g _daily_check_cache "$cache_dir"
-	set -g _daily_check_result "$result_file"
-	function _daily_check_bg
-		set -l today (date +%Y-%m-%d)
-		if test -f "$_daily_check_ts"
-			set -l last_run (cat "$_daily_check_ts")
-			test "$last_run" = "$today" && return 0
-		end
-		mkdir -p "$_daily_check_cache"
-		echo -n "$today" > "$_daily_check_ts"
-
-		set -l brew_out ""
-		set -l mise_out ""
-		command -q brew && set brew_out (brew outdated 2>/dev/null)
-		command -q mise && set mise_out (mise outdated 2>/dev/null)
-
-		set -l has_out 0
-		test -n "$brew_out" && set has_out 1
-		test -n "$mise_out" && set has_out 1
-		test $has_out -eq 0 && return 0
-
-		set -l lines "=== Homebrew Outdated Packages ===" ""
-		if test -n "$brew_out"
-			set lines $lines $brew_out "" ""
-		end
-		if test -n "$mise_out"
-			set lines $lines "=== Mise Outdated Tools ===" "" $mise_out "" ""
-		end
-		string join "\n" $lines > "$_daily_check_result"
-	end
-	_daily_check_bg &
+	# Fish does not background user-defined functions with `&` (they run synchronously).
+	# Run the worker in a subprocess so brew/mise do not block the prompt.
+	env DAILY_CHECK_TS="$timestamp_file" \
+		DAILY_CHECK_CACHE="$cache_dir" \
+		DAILY_CHECK_RESULT="$result_file" \
+		fish -c '_daily_check_worker' &
 end
 
 status is-interactive && daily-check
