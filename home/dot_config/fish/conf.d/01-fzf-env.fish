@@ -2,9 +2,8 @@
 # https://github.com/junegunn/fzf
 
 set -gx FZF_DEFAULT_OPTS '
-  --height 40%
+  --height 50%
   --layout=reverse
-  --border
   --inline-info
   --color=fg:#d0d0d0,bg:#121212,hl:#5f87af
   --color=fg+:#d0d0d0,bg+:#262626,hl+:#5fd7ff
@@ -14,11 +13,7 @@ set -gx FZF_DEFAULT_OPTS '
 
 if command -q fd
   set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --exclude .git'
-  set -gx FZF_CTRL_T_COMMAND $FZF_DEFAULT_COMMAND
 else if command -q rg
   set -gx FZF_DEFAULT_COMMAND 'rg --files --hidden --follow --glob "!.git/*"'
-  set -gx FZF_CTRL_T_COMMAND $FZF_DEFAULT_COMMAND
 end
 
-# History: larger history (match zsh HISTSIZE/SAVEHIST spirit)
-set -g fish_history_size 1000000
