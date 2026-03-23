@@ -160,7 +160,7 @@ function ci_status_prompt
 			set -U _ci_loading "$key"
 			set -l config_dir "$HOME/.config/fish"
 			set -q fish_config_dir && set config_dir "$fish_config_dir"
-			fish -c "source $config_dir/conf.d/09-ci-status.fish; ci_status_fetch" &
+			fish -c "source $config_dir/conf.d/65-ci-status.fish; ci_status_fetch" &
 		end
 		return 0
 	end
@@ -169,5 +169,5 @@ function ci_status_prompt
 	set -U _ci_loading "$key"
 	set -l config_dir "$HOME/.config/fish"
 	set -q fish_config_dir && set config_dir "$fish_config_dir"
-	fish -c "source $config_dir/conf.d/09-ci-status.fish; ci_status_fetch" &
+	fish -c "source $config_dir/conf.d/65-ci-status.fish; ci_status_fetch" &
 end
