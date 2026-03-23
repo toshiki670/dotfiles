@@ -71,6 +71,17 @@ abbr --add --command nvim -- cu '-c ":e ++enc=utf8" '
 abbr --add --command nvim -- ce '-c ":e ++enc=euc-jp" '
 abbr --add --command nvim -- cs '-c ":e ++enc=shift_jis" '
 
+
+# ========== zoxied ==========
+if command -q zoxide
+  abbr --add zb 'z ..'
+  abbr --add zbb 'z ../..'
+  abbr --add zbbb 'z ../../..'
+  abbr --add zp 'z -'
+
+  abbr --add zgit 'z (git rev-parse --show-toplevel)'
+end
+
 # ========== yt-dlp (only when YT_BROWSER is set) ==========
 if set -q YT_BROWSER
   abbr --add yt 'yt-dlp --cookies-from-browser $YT_BROWSER'

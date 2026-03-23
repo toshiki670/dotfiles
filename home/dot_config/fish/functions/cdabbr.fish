@@ -1,8 +1,3 @@
-# cdabbr - cd by expanding prompt_pwd-style abbreviated path
-# Usage: cdabbr ~/R/g/t/dotfiles
-# - Recursively expands each segment (same initial → branch and collect all matches).
-# - 1 match → cd immediately; 2+ matches → fzf to choose, then cd.
-
 function _cdabbr_expand_recursive
   set -l base "$argv[1]"
   set -l segments $argv[2..-1]
@@ -53,11 +48,6 @@ function _cdabbr_select_without_fzf
   return 1
 end
 
-set -g __cdabbr_selector _cdabbr_select_with_fzf
-if not command -q fzf
-  set -g __cdabbr_selector _cdabbr_select_without_fzf
-end
-
 function cdabbr --description 'cd by expanding prompt_pwd-style abbreviated path'
   set -l abbr_path "$argv[1]"
   if test -z "$abbr_path"
@@ -93,7 +83,12 @@ function cdabbr --description 'cd by expanding prompt_pwd-style abbreviated path
     return 1
   end
 
-  set -l result ($__cdabbr_selector $candidates)
+  set -l selector _cdabbr_select_with_fzf
+  if not command -q fzf
+    set selector _cdabbr_select_without_fzf
+  end
+
+  set -l result ($selector $candidates)
   if test $status -ne 0
     return 1
   end
@@ -102,5 +97,3 @@ function cdabbr --description 'cd by expanding prompt_pwd-style abbreviated path
     cd "$result"
   end
 end
-
-abbr -a ca 'cdabbr '
