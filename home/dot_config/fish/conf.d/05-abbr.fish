@@ -40,6 +40,7 @@ abbr --add --command git -- pullre 'pull --rebase'
 abbr --add --command git -- reset 'reset --hard HEAD'
 abbr --add --command git -- rebase 'rebase -i HEAD~'
 abbr --add --command git -- clean 'branch --merged | egrep -v \'(^[*+]|master|main)\' | xargs git branch -d; git fetch --prune'
+abbr --add --command git -- tags "for-each-ref --sort=-taggerdate --format='%(taggerdate:short) %(tag) %(taggername) %(subject)' refs/tags"
 # rebase は git で使用済みのため prrebase に (gh prrebase → gh pr merge --delete-branch --rebase)
 abbr --add --command gh -- show 'pr view'
 abbr --add --command gh -- diff 'pr diff'
