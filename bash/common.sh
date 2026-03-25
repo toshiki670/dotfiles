@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 export HISTCONTROL=ignoredups
 
 # mise config
