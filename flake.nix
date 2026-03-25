@@ -10,22 +10,23 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        toolchain = [
+          pkgs.coreutils
+          pkgs.git
+          pkgs.diffutils
+          pkgs.bash
+          pkgs.shellcheck
+          pkgs.shfmt
+          pkgs.stylua
+          pkgs.taplo
+          pkgs.markdownlint-cli2
+          pkgs.fish
+          pkgs.zsh
+        ];
 
         lintLocal = pkgs.writeShellApplication {
           name = "lint";
-          runtimeInputs = [
-            pkgs.coreutils
-            pkgs.git
-            pkgs.diffutils
-            pkgs.bash
-            pkgs.shellcheck
-            pkgs.shfmt
-            pkgs.stylua
-            pkgs.taplo
-            pkgs.markdownlint-cli2
-            pkgs.fish
-            pkgs.zsh
-          ];
+          runtimeInputs = toolchain;
           text = ''
             exec bash ${./nix/lint.sh} fix
           '';
@@ -33,7 +34,7 @@
 
         lintCI = pkgs.writeShellApplication {
           name = "lint-ci";
-          runtimeInputs = lintLocal.runtimeInputs;
+          runtimeInputs = toolchain;
           text = ''
             exec bash ${./nix/lint.sh} check
           '';
@@ -48,7 +49,7 @@
         };
 
         checks.lint = pkgs.runCommand "lint-ci" {
-          nativeBuildInputs = lintCI.runtimeInputs;
+          nativeBuildInputs = toolchain;
           src = self;
         } ''
           set -euo pipefail
