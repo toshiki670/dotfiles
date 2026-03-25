@@ -32,8 +32,8 @@
           '';
         };
 
-        lintCI = pkgs.writeShellApplication {
-          name = "lint-ci";
+        checkCmd = pkgs.writeShellApplication {
+          name = "check";
           runtimeInputs = toolchain;
           text = ''
             exec bash ${./nix/lint.sh} check
@@ -41,20 +41,30 @@
         };
       in
       {
+        apps.lint = {
+          type = "app";
+          program = "${lintLocal}/bin/lint";
+        };
+
+        apps.check = {
+          type = "app";
+          program = "${checkCmd}/bin/check";
+        };
+
         devShells.default = pkgs.mkShell {
           packages = [
             lintLocal
-            lintCI
+            checkCmd
           ];
         };
 
-        checks.lint = pkgs.runCommand "lint-ci" {
+        checks.check = pkgs.runCommand "check" {
           nativeBuildInputs = toolchain;
           src = self;
         } ''
           set -euo pipefail
           cd "$src"
-          lint-ci
+          ${checkCmd}/bin/check
           touch $out
         '';
       });

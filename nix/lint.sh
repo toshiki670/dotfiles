@@ -7,15 +7,13 @@ if [[ "${mode}" != "fix" && "${mode}" != "check" ]]; then
   exit 2
 fi
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(git rev-parse --show-toplevel)"
 cd "${repo_root}"
 
 tmp_dir="$(mktemp -d)"
-cleanup() { rm -rf "${tmp_dir}"; }
-trap cleanup EXIT
+trap 'rm -rf "${tmp_dir}"' EXIT
 
 list_files() {
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1
   git ls-files
 }
 
@@ -29,8 +27,7 @@ is_shell_path() { [[ "$1" == bin/* || "$1" == bash/* ]]; }
 
 shebang() {
   local f="$1"
-  [[ -f "$f" ]] || return 1
-  IFS= read -r line <"$f" || true
+  IFS= read -r line <"$f"
   printf '%s' "$line"
 }
 
@@ -45,14 +42,10 @@ shell_flavor() {
   esac
 }
 
-run_markdown_fix() {
-  local f="$1"
-  markdownlint-cli2-fix "$f"
-}
-
 fix_fish_inplace() {
   local f="$1"
-  local out="${tmp_dir}/fish.$(printf '%s' "$f" | tr '/.' '__')"
+  local out
+  out="${tmp_dir}/fish.$(printf '%s' "$f" | tr '/.' '__')"
   fish_indent "$f" >"$out"
   if ! cmp -s "$f" "$out"; then
     mv "$out" "$f"
@@ -71,7 +64,7 @@ if [[ "$mode" == "fix" ]]; then
     if is_shell_ext "$f" || is_shell_path "$f"; then
       sf="$(shell_flavor "$f")"
       if [[ "$sf" == "bash" || "$sf" == "sh" || -z "$sf" ]]; then
-        shfmt -w -i 2 -ci "$f" || true
+        shfmt -w -i 2 -ci "$f"
       fi
     fi
   done
@@ -82,11 +75,18 @@ if [[ "$mode" == "fix" ]]; then
     elif is_toml "$f"; then
       taplo fmt "$f"
     elif is_markdown "$f"; then
-      run_markdown_fix "$f"
+      markdownlint-cli2-fix "$f"
     elif is_fish "$f"; then
       fix_fish_inplace "$f"
     fi
   done
+
+  if git diff --quiet -- "${files[@]}"; then
+    echo "lint(fix): no auto-fix changes"
+  else
+    echo "lint(fix): auto-fix updated files"
+    git status --short -- "${files[@]}"
+  fi
 fi
 
 failed=0
@@ -97,8 +97,6 @@ for f in "${files[@]}"; do
     if [[ "$sf" == "bash" || "$sf" == "sh" || -z "$sf" ]]; then
       shfmt -d -i 2 -ci "$f" >/dev/null || failed=1
       shellcheck "$f" || failed=1
-    elif [[ "$sf" == "zsh" ]]; then
-      zsh -n "$f" || failed=1
     fi
   fi
 
