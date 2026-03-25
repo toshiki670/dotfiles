@@ -1,0 +1,6 @@
+# markdownlint-cli2: https://github.com/DavidAnson/markdownlint-cli2
+# Align with common GitHub README patterns (badges/HTML, long lines).
+config:
+  MD013: false
+  MD033: false
+  MD041: false
