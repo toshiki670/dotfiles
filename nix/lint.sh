@@ -25,6 +25,43 @@ is_zsh() { [[ "$1" == *.zsh || "$1" == *.zsh.tmpl ]]; }
 is_shell_ext() { [[ "$1" == *.sh || "$1" == *.sh.tmpl ]]; }
 is_shell_path() { [[ "$1" == bin/* || "$1" == bash/* ]]; }
 
+# Chezmoi source root for this repo (.chezmoiroot names the "home" subtree).
+chezmoi_source_dir() { printf '%s/home' "${repo_root}"; }
+
+# home/*.sh.tmpl with Go template syntax — shellcheck/shfmt must not parse raw file.
+is_home_chezmoi_shell_template() {
+  local f="$1"
+  [[ "$f" == home/*.sh.tmpl ]] || return 1
+  grep -qE '\{\{' "$f" 2>/dev/null
+}
+
+# Render template to a temp file; exit non-zero if chezmoi fails.
+chezmoi_render_shell_template() {
+  local f="$1"
+  local out="$2"
+  chezmoi -S "$(chezmoi_source_dir)" execute-template -f "${repo_root}/${f}" >"$out" 2>"${tmp_dir}/chezmoi.err" ||
+    {
+      echo "lint: chezmoi execute-template failed: ${f}" >&2
+      cat "${tmp_dir}/chezmoi.err" >&2
+      return 1
+    }
+}
+
+shellcheck_shell_file() {
+  local f="$1"
+  local rendered
+  if is_home_chezmoi_shell_template "$f"; then
+    rendered="${tmp_dir}/shellcheck.$(printf '%s' "$f" | tr '/.' '__')"
+    chezmoi_render_shell_template "$f" "$rendered" || return 1
+    shellcheck -s bash "$rendered" || {
+      echo "lint: shellcheck failed on expanded template (source: ${f})" >&2
+      return 1
+    }
+  else
+    shellcheck "$f" || return 1
+  fi
+}
+
 shebang() {
   local f="$1"
   IFS= read -r line <"$f"
@@ -64,7 +101,9 @@ if [[ "$mode" == "fix" ]]; then
     if is_shell_ext "$f" || is_shell_path "$f"; then
       sf="$(shell_flavor "$f")"
       if [[ "$sf" == "bash" || "$sf" == "sh" || -z "$sf" ]]; then
-        shfmt -w -i 2 -ci "$f"
+        if ! is_home_chezmoi_shell_template "$f"; then
+          shfmt -w -i 2 -ci "$f"
+        fi
       fi
     fi
   done
@@ -95,8 +134,10 @@ for f in "${files[@]}"; do
   if is_shell_ext "$f" || is_shell_path "$f"; then
     sf="$(shell_flavor "$f")"
     if [[ "$sf" == "bash" || "$sf" == "sh" || -z "$sf" ]]; then
-      shfmt -d -i 2 -ci "$f" >/dev/null || failed=1
-      shellcheck "$f" || failed=1
+      if ! is_home_chezmoi_shell_template "$f"; then
+        shfmt -d -i 2 -ci "$f" >/dev/null || failed=1
+      fi
+      shellcheck_shell_file "$f" || failed=1
     fi
   fi
 

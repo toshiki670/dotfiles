@@ -15,6 +15,7 @@
           pkgs.git
           pkgs.diffutils
           pkgs.bash
+          pkgs.chezmoi
           pkgs.shellcheck
           pkgs.shfmt
           pkgs.stylua
