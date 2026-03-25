@@ -43,7 +43,7 @@ repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($re
 
 [docker_context]
 symbol = " "
-format ='[$symbol$context ]($style)'
+format = '[$symbol$context ]($style)'
 
 [elixir]
 symbol = " "

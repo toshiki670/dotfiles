@@ -6,7 +6,6 @@
 #  http://ascii-table.com/ansi-escape-sequences.php
 #  http://archive.linux.or.jp/JF/JFdocs/Bash-Prompt-HOWTO-5.html
 
-
 # Escape sequence
 #   \033[<code>m or \e[<code>m
 #
@@ -17,7 +16,6 @@
 #     1. \033[44;1;31m
 #     2. \033[44m\033[1;31m
 
-
 # Text attributes
 #  0  All attributes off
 #  1  Bold on
@@ -25,7 +23,6 @@
 #  5  Blink on
 #  7  Reverse video on
 #  8  Concealed on
-
 
 # Foreground colors
 #  0;30   Black          1;30   Dark Gray
@@ -36,7 +33,6 @@
 #  0;35   Purple         1;35   Light Purple
 #  0;33   Brown          1;33   Yellow
 #  0;37   Light Gray     1;37   White
-
 
 # Background colors
 #  40   Black
@@ -163,4 +159,3 @@ echo -e "\
 \033[1;36m  Light Cyan   \033[0m  \
 1;36\
 "
-

@@ -7,7 +7,7 @@
 ## 現状
 
 | 項目 | Zsh | Fish |
-|------|-----|------|
+| --- | --- | --- |
 | エントリ | `dot_zshrc.tmpl`（複数 config を include） | `config.fish`（ほぼ空） |
 | プロンプト | Pure + ci-status（非同期） | `fish_prompt.fish`（nim 風・既に充実） |
 | プラグイン | Sheldon（zeno, fzf, 補完など） | 未導入 |
@@ -17,7 +17,7 @@
 ## Phase 1: 環境変数・PATH・エイリアス（そのまま移行しやすい）
 
 | Zsh の元 | 内容 | Fish での対応 | 移行済み |
-|----------|------|----------------|----------|
+| --- | --- | --- | --- |
 | `dot_zshrc.tmpl` | `DOTFILES` | `set -gx DOTFILES (chezmoi source-path)` など | ✅ 00-path |
 | `common.zsh` | `PATH`: DOTFILES/bin, ~/.local/bin, ~/.cargo/bin | `fish_user_paths` または `set -gx PATH ...` | ✅ 00-path.fish |
 | `common.zsh` | `reload` | `alias reload='exec fish -l'` | ✅ 05-abbr.fish |
@@ -41,7 +41,7 @@
 ## Phase 2: ツールの Fish 対応（init やプラグイン）
 
 | Zsh の元 | 内容 | Fish での対応 | 移行済み |
-|----------|------|----------------|----------|
+| --- | --- | --- | --- |
 | `zoxide.zsh.tmpl` | `zoxide init zsh`, `bz='z ..'`, ^j^f で zi | `zoxide init fish`。`abbr bz 'z ..'`。^j^f は `bind` で fzf + zoxide の関数を割り当て | ✅ 03-zoxide.fish |
 | `fzf.zsh` | FZF_DEFAULT_OPTS/COMMAND, ^j^h, ^j^t, ^j^g (git branch) | 環境変数はそのまま。キーバインドは `fzf.fish` プラグインまたは自前 `bind` + 関数 | ✅ 01-fzf-env.fish, 04-fzf-bindings.fish |
 | `mise.zsh.tmpl` | `mise activate zsh` | `mise activate fish` を config.fish で実行 | ✅ 02-mise.fish |
@@ -49,6 +49,7 @@
 | `cd.zsh` | `setopt auto_pushd` | `cd` のラッパーで `dirs` 相当を実装するか、`prevd`/`nextd` は標準であるので必要に応じて | 未 |
 
 **進め方**:  
+
 - mise / zoxide は `config.fish` に 1 行ずつ追加。  
 - fzf は [fzf.fish](https://github.com/PatrickF1/fzf.fish) を導入し、Zsh の ^j^h / ^j^t / ^j^g に近いキーをカスタム設定するか、後から bind で合わせる。
 
@@ -57,7 +58,7 @@
 ## Phase 3: 補完・キーバインド（Fish の仕組みに合わせる）
 
 | Zsh の元 | 内容 | Fish での対応 | 移行済み |
-|----------|------|----------------|----------|
+| --- | --- | --- | --- |
 | `docker.zsh` | docker / docker-compose の補完を curl で取得 | Fish は `completions/` に `.fish` を置くか、`docker completion fish` 等で取得 | ✅ completions/docker.fish.tmpl |
 | `completion.zsh` | compinit, zstyle, menu select | Fish 標準の補完 + 必要ならプラグイン。大文字小文字無視などは別途設定 | 標準のまま |
 | `fzf-tab.zsh` | タブ補完を fzf で選択 | fzf.fish のタブ連携や、自前で `bind \t` と fzf を組み合わせる | 未 |
@@ -71,12 +72,13 @@
 ## Phase 4: プロンプト・非同期・Zsh 固有
 
 | Zsh の元 | 内容 | Fish での対応 | 移行済み |
-|----------|------|----------------|----------|
+| --- | --- | --- | --- |
 | `ci-status.zsh` | Pure プロンプトに GitHub Actions の PR/checks を非同期表示 | Fish では `fish_prompt` 内で `gh pr view` / `gh pr checks` を呼ぶ場合、非同期は `fish --private` やバックグラウンドジョブで再実装が必要。既存の fish_prompt は Git まで表示しているので、CI 表示は「同じ見た目」を目指すなら関数を分離して実装 | ✅ 09-ci-status.fish, fish_prompt |
 | `daily-check.zsh` | 起動時に 1 日 1 回 brew/mise outdated を表示 | 同様のロジックを Fish で関数化（日付ファイルでキャッシュ、バックグラウンド実行） | ✅ 08-daily-check.fish |
 | Sheldon / zeno | プラグイン・スニペット | Fish には Sheldon はない。fzf.fish で fzf 部分を賄い、zeno 相当の機能は必要なら別プラグインや自前関数で | ✅ 05-abbr.fish（zeno 相当の abbr） |
 
 **進め方**:  
+
 - daily-check は Zsh のロジックを Fish の `function` に移植すればよい。  
 - ci-status は「PR があるときだけプロンプトに表示」する仕様を Fish で再実装するか、一旦なしで進めて後から追加するか選ぶ。
 
@@ -96,7 +98,7 @@ Zsh の ci-status に完全に合わせることはしていない。
 ## Phase 5: 条件付き・OS 別（そのまま移行）
 
 | Zsh の元 | 内容 | Fish での対応 | 移行済み |
-|----------|------|----------------|----------|
+| --- | --- | --- | --- |
 | `pacman.zsh` | `lookPath "pacman"` で swap-pacman-mirrorlist | `if command -q pacman; ... end` で関数定義 | 未 |
 | `yt-dlp.zsh` | `env "YT_BROWSER"` があるときだけ | `if set -q YT_BROWSER; ... end` | ✅ 05-abbr.fish |
 | `c.zsh` | rungcc, 拡張子 c/cpp→rungcc | Fish で `function` 化（md5sum は macOS では `md5` など要確認） | 未 |

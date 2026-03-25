@@ -31,21 +31,21 @@ if [ $has_issues -eq 1 ]; then
   echo "⚠️  Package Diagnostics"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
-  
+
   # Show Homebrew issues if any
   if command -v brew &>/dev/null && [ -n "$brew_output" ]; then
     echo "=== Homebrew ==="
     echo "$brew_output"
     echo ""
   fi
-  
+
   # Show mise issues if any
   if command -v mise &>/dev/null && [ -n "$mise_output" ]; then
     echo "=== Mise ==="
     echo "$mise_output"
     echo ""
   fi
-  
+
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "⚠️  Issues found above"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

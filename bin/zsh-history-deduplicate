@@ -7,7 +7,7 @@ readonly VERSION='1.0.0'
 function usage() {
   cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
 
-  cat << __USAGE_TEXT__
+  cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME
   $CMDNAME [-v] [-h]
@@ -15,7 +15,7 @@ __USAGE_TEXT__
 }
 
 function description() {
-  cat << __DESCRIPTION_TEXT__
+  cat <<__DESCRIPTION_TEXT__
 Description:
   Remove duplicate entries from zsh history file.
   For duplicate commands, keeps only the most recent entry.
@@ -37,18 +37,21 @@ function show_help() {
 }
 
 # Option analysis
-while getopts hv OPT
-do
+while getopts hv OPT; do
   case $OPT in
-    "h" ) show_help >&1
-          exit 0
-          ;;
-    "v" ) echo "$CMDNAME $VERSION"
-          exit 0
-          ;;
-    # Invalid options
-      * ) usage 1>&2
-          exit 1 ;;
+    "h")
+      show_help >&1
+      exit 0
+      ;;
+    "v")
+      echo "$CMDNAME $VERSION"
+      exit 0
+      ;;
+      # Invalid options
+    *)
+      usage 1>&2
+      exit 1
+      ;;
   esac
 done
 # Trim options from $*
@@ -65,7 +68,7 @@ if [[ ! -f "$HISTFILE" ]]; then
 fi
 
 # Get original line count
-original_count=$(wc -l < "$HISTFILE" | tr -d ' ')
+original_count=$(wc -l <"$HISTFILE" | tr -d ' ')
 
 # Create backup
 backup_file="${HISTFILE}.backup.$(date +%Y%m%d_%H%M%S)"
@@ -171,7 +174,7 @@ LC_ALL=C awk '
       print keep_entries[i]
     }
   }
-' "$HISTFILE" > "$temp_file"
+' "$HISTFILE" >"$temp_file"
 
 if [[ $? -ne 0 ]]; then
   echo "$CMDNAME: Failed to deduplicate history." 1>&2
@@ -180,7 +183,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Get new line count
-new_count=$(wc -l < "$temp_file" | tr -d ' ')
+new_count=$(wc -l <"$temp_file" | tr -d ' ')
 removed_count=$((original_count - new_count))
 
 if [[ $removed_count -eq 0 ]]; then

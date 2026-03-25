@@ -12,8 +12,7 @@ set -gx FZF_DEFAULT_OPTS '
 '
 
 if command -q fd
-  set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --exclude .git'
+    set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --exclude .git'
 else if command -q rg
-  set -gx FZF_DEFAULT_COMMAND 'rg --files --hidden --follow --glob "!.git/*"'
+    set -gx FZF_DEFAULT_COMMAND 'rg --files --hidden --follow --glob "!.git/*"'
 end
-

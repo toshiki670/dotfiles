@@ -13,7 +13,7 @@ mkdir -p "$GHOSTTY_MACOS_DIR"
 
 # Check if target is already a correct symlink
 if [ -L "$GHOSTTY_CONFIG_TARGET" ] && [ "$(readlink "$GHOSTTY_CONFIG_TARGET")" = "$GHOSTTY_CONFIG_SOURCE" ]; then
-    exit 0
+  exit 0
 fi
 
 echo ""
@@ -24,7 +24,7 @@ echo ""
 
 # Remove existing file/link if it exists and is not the correct symlink
 if [ -e "$GHOSTTY_CONFIG_TARGET" ] || [ -L "$GHOSTTY_CONFIG_TARGET" ]; then
-    rm -f "$GHOSTTY_CONFIG_TARGET"
+  rm -f "$GHOSTTY_CONFIG_TARGET"
 fi
 
 # Create symlink from macOS location to .config location

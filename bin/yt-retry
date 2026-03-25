@@ -6,20 +6,18 @@ readonly VERSION='0.2.0'
 readonly TRUE=1
 readonly FALSE=0
 
-
 function usage() {
   cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
 
-  cat << __USAGE_TEXT__
+  cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME [path]
   $CMDNAME [-v] [-h]
 __USAGE_TEXT__
 }
 
-
 function description() {
-  cat << __DESCRIPTION_TEXT__
+  cat <<__DESCRIPTION_TEXT__
 Description:
   Download youtube retry.
 
@@ -32,34 +30,34 @@ Options:
 __DESCRIPTION_TEXT__
 }
 
-
 function show_help() {
   usage
   echo
   description
 }
 
-
 # Option analysis
-while getopts hv OPT
-do
+while getopts hv OPT; do
   case $OPT in
-    "h" ) show_help >&1
-          exit 0
-          ;;
-    "v" ) echo "$CMDNAME $VERSION"
-          exit 0
-          ;;
-    # Invalid options
-      * ) usage 1>&2
-          exit 1 ;;
+    "h")
+      show_help >&1
+      exit 0
+      ;;
+    "v")
+      echo "$CMDNAME $VERSION"
+      exit 0
+      ;;
+      # Invalid options
+    *)
+      usage 1>&2
+      exit 1
+      ;;
   esac
 done
 # Trim options from $*
 shift $(($OPTIND - 1))
 
-
-if ! type 'yt-dlp' > /dev/null 2>&1; then
+if ! type 'yt-dlp' >/dev/null 2>&1; then
   echo "$CMDNAME: Not found the yt-dlp command." 1>&2
   exit 1
 fi
@@ -72,7 +70,6 @@ fi
 MAX_RETRY=10000
 INTERVAL=10
 
-
 # コマンドが正常終了するまで繰り返すループ
 for attempt in $(seq 1 $MAX_RETRY); do
   cookies=~/Local/cookies.txt
@@ -81,7 +78,7 @@ for attempt in $(seq 1 $MAX_RETRY); do
   else
     yt-dlp --path="~/Downloads/" --format="mp4" "https://www.youtube.com/watch?v=$1"
   fi
-  
+
   # 直前に実行したコマンドの終了ステータスをチェック
   if [[ $? -eq 0 ]]; then
     echo "Command executed successfully."

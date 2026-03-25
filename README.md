@@ -25,10 +25,10 @@ To create a new release, see [How to Execute a Release](CONTRIBUTING.md#リリ�
 These cover the Fish-first workflow and shared tooling (Git, editor, mise, CLI utilities).
 
 ```bash
-$ brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-delta
+brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-delta
 ```
 
-### Tool Descriptions
+### Required Homebrew tool descriptions
 
 - `git` - Version control system
 - `gh` - GitHub CLI (used by shell prompts and aliases)
@@ -49,7 +49,7 @@ $ brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-
 Install these if you use the **Zsh** configuration (Sheldon, zeno snippet expansion, etc.).
 
 ```bash
-$ brew install zsh sheldon deno
+brew install zsh sheldon deno
 ```
 
 - `zsh` - Z shell
@@ -59,10 +59,10 @@ $ brew install zsh sheldon deno
 ## Optional Tools
 
 ```bash
-$ brew install ffmpeg marp-cli gitui ghostty zellij
+brew install ffmpeg marp-cli gitui ghostty zellij
 ```
 
-### Optional Tool Descriptions
+### Optional Homebrew tool descriptions
 
 - `ffmpeg` - Multimedia framework (required for video/audio processing)
 - `marp-cli` - Markdown to PDF/PowerPoint converter
@@ -75,10 +75,10 @@ $ brew install ffmpeg marp-cli gitui ghostty zellij
 ### Necessary
 
 ```bash
-$ cargo install cargo-audit cargo-cache cargo-edit cargo-llvm-cov cargo-make cargo-modules cargo-outdated cargo-tree cargo-update cargo-watch
+cargo install cargo-audit cargo-cache cargo-edit cargo-llvm-cov cargo-make cargo-modules cargo-outdated cargo-tree cargo-update cargo-watch
 ```
 
-#### Tool Descriptions
+#### Rust cargo tool descriptions
 
 - `cargo-audit` - Scan dependencies for known security vulnerabilities
 - `cargo-cache` - Manage Cargo cache directory, display size, and clean unnecessary files
@@ -94,10 +94,10 @@ $ cargo install cargo-audit cargo-cache cargo-edit cargo-llvm-cov cargo-make car
 ### Optional
 
 ```bash
-$ cargo install cargo-release tauri-cli create-tauri-app
+cargo install cargo-release tauri-cli create-tauri-app
 ```
 
-#### Optional Tool Descriptions
+#### Optional Rust cargo tool descriptions
 
 - `cargo-release` - Automate the release process for new versions
 - `tauri-cli` - Tauri application development CLI
@@ -120,31 +120,31 @@ The following tools may already be installed in your environment:
 ### 1. Install chezmoi
 
 ```bash
-$ brew install chezmoi
+brew install chezmoi
 ```
 
 ### 2. Initialize with this repository
 
 ```bash
-$ chezmoi init --ssh toshiki670
+chezmoi init --ssh toshiki670
 ```
 
 ### 3. Preview changes (optional)
 
 ```bash
-$ chezmoi diff
+chezmoi diff
 ```
 
 ### 4. Apply the dotfiles
 
 ```bash
-$ chezmoi apply
+chezmoi apply
 ```
 
 ### 5. Restart Shell
 
 ```bash
-$ exec fish -l
+exec fish -l
 ```
 
 If you use Zsh instead: `exec zsh -l` (or `exec $SHELL -l` after `chsh`).
@@ -152,7 +152,7 @@ If you use Zsh instead: `exec zsh -l` (or `exec $SHELL -l` after `chsh`).
 ### 6. Set login shell (recommended for Fish)
 
 ```bash
-$ chsh -s "$(which fish)"
+chsh -s "$(which fish)"
 ```
 
 # Configuration
@@ -178,7 +178,7 @@ YT_BROWSER = "chrome:Default"
 Apply changes:
 
 ```bash
-$ exec $SHELL -l
+exec $SHELL -l
 ```
 
 ## Ghostty (macOS)

@@ -5,18 +5,16 @@ readonly CMDNAME=${0##*/}
 readonly TRUE='true'
 readonly FALSE='false'
 
-
 # Check installed the required shell.
-if ! type "git" > /dev/null 2>&1; then
+if ! type "git" >/dev/null 2>&1; then
   echo "${CMDNAME}: Git command not found." 1>&2
   exit 8
 fi
 
-
 function usage() {
   cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
 
-  cat << __USAGE_TEXT__
+  cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME
   $CMDNAME [-p <path>]
@@ -24,9 +22,8 @@ Usage:
 __USAGE_TEXT__
 }
 
-
 function description() {
-  cat << __DESCRIPTION_TEXT__
+  cat <<__DESCRIPTION_TEXT__
 Description:
   Change owner current user.
 
@@ -47,32 +44,33 @@ function show_help() {
   description
 }
 
-
 # Option analysis
 has_path=$FALSE
-while getopts p:h OPT
-do
+while getopts p:h OPT; do
   case $OPT in
-    "p" ) has_path=$TRUE
-          custom_path=$OPTARG
+    "p")
+      has_path=$TRUE
+      custom_path=$OPTARG
 
-          # パスが正しく入力されていない場合
-          if [[ ! -e $custom_path ]]; then
-            echo "${CMDNAME}: Invalid path." >&1
-            exit 2
-          fi
-          ;;
-    "h" ) show_help >&1
-          exit 0
-          ;;
-    # Invalid options
-      * ) usage 1>&2
-          exit 16 ;;
+      # パスが正しく入力されていない場合
+      if [[ ! -e $custom_path ]]; then
+        echo "${CMDNAME}: Invalid path." >&1
+        exit 2
+      fi
+      ;;
+    "h")
+      show_help >&1
+      exit 0
+      ;;
+      # Invalid options
+    *)
+      usage 1>&2
+      exit 16
+      ;;
   esac
 done
 # Trim options from $*
 shift $(($OPTIND - 1))
-
 
 function chown_current_user() {
 
@@ -91,7 +89,6 @@ function chown_current_user() {
   sudo chown -R ${USER}:${USER} $dir
   return $?
 }
-
 
 chown_current_user
 exit $?

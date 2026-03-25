@@ -75,7 +75,7 @@ if [[ "$mode" == "fix" ]]; then
     elif is_toml "$f"; then
       taplo fmt "$f"
     elif is_markdown "$f"; then
-      markdownlint-cli2-fix "$f"
+      markdownlint-cli2 --fix ":$f"
     elif is_fish "$f"; then
       fix_fish_inplace "$f"
     fi
@@ -119,7 +119,7 @@ for f in "${files[@]}"; do
   fi
 
   if is_markdown "$f"; then
-    markdownlint-cli2 "$f" || failed=1
+    markdownlint-cli2 ":$f" || failed=1
   fi
 done
 

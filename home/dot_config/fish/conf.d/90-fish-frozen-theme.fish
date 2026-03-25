@@ -32,6 +32,6 @@ set --global fish_pager_color_description B3A06D
 set --global fish_pager_color_prefix normal --bold --underline=single
 set --global fish_pager_color_progress brwhite --bold --background=cyan
 set --global fish_pager_color_selected_background --background=FFCC66
-set --global fish_pager_color_selected_completion 
-set --global fish_pager_color_selected_description 
-set --global fish_pager_color_selected_prefix 
+set --global fish_pager_color_selected_completion
+set --global fish_pager_color_selected_description
+set --global fish_pager_color_selected_prefix

@@ -1,26 +1,23 @@
 #!/bin/bash
 
-
 # Constant
 readonly CMDNAME=${0##*/}
 readonly VERSION='1.0.0'
 readonly TRUE=1
 readonly FALSE=0
 
-
 function usage() {
   cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
 
-  cat << __USAGE_TEXT__
+  cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME [path]
   $CMDNAME [-v] [-h]
 __USAGE_TEXT__
 }
 
-
 function description() {
-  cat << __DESCRIPTION_TEXT__
+  cat <<__DESCRIPTION_TEXT__
 Description:
   Recursive shred.
 
@@ -35,13 +32,11 @@ Options:
 __DESCRIPTION_TEXT__
 }
 
-
 function show_help() {
   usage
   echo
   description
 }
-
 
 function check_path_exist() {
   is_correct_path=$TRUE
@@ -52,56 +47,56 @@ function check_path_exist() {
     fi
   done
   if [[ $is_correct_path == $FALSE ]]; then
-   return 1
+    return 1
   fi
 }
-
 
 function destroy_each_completely() {
   while read -r path; do
     find "$path" -type f -print0 | xargs -0 shred -uvz
-    q=$?; if [[ $q != 0 ]]; then return $q;fi
+    q=$?
+    if [[ $q != 0 ]]; then return $q; fi
 
     rm --verbose -rf "$path"
-    q=$?; if [[ $q != 0 ]]; then return $q;fi
+    q=$?
+    if [[ $q != 0 ]]; then return $q; fi
   done
 }
 
-
 # Option analysis
-while getopts hv OPT
-do
+while getopts hv OPT; do
   case $OPT in
-    "h" ) show_help >&1
-          exit 0
-          ;;
-    "v" ) echo "$CMDNAME $VERSION"
-          exit 0
-          ;;
-    # Invalid options
-      * ) usage 1>&2
-          exit 1 ;;
+    "h")
+      show_help >&1
+      exit 0
+      ;;
+    "v")
+      echo "$CMDNAME $VERSION"
+      exit 0
+      ;;
+      # Invalid options
+    *)
+      usage 1>&2
+      exit 1
+      ;;
   esac
 done
 # Trim options from $*
 shift $(($OPTIND - 1))
 
-
-if ! type 'shred' > /dev/null 2>&1; then
+if ! type 'shred' >/dev/null 2>&1; then
   echo "$CMDNAME: Not found the shred command." 1>&2
   exit 1
 fi
-
 
 # Uniq paths
 paths="$*"
 if [[ $* == '' ]]; then paths=$(ls -A1); fi
 
-
 # Check
 echo -e "$paths" | check_path_exist
-q=$?; if [[ $q != 0 ]]; then exit $q;fi
-
+q=$?
+if [[ $q != 0 ]]; then exit $q; fi
 
 read -p "Destroy it completely? [$(echo $paths | xargs echo)] (y/n): " first_check
 echo
@@ -117,9 +112,9 @@ else
     exit 1
   else
     echo -e "$paths" | destroy_each_completely
-    q=$?; if [[ $q != 0 ]]; then exit $q;fi
+    q=$?
+    if [[ $q != 0 ]]; then exit $q; fi
   fi
 fi
-
 
 exit 0
