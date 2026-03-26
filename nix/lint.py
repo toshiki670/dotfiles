@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import argparse
+import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+import pathspec
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> int:
@@ -15,11 +18,46 @@ def run_capture(cmd: list[str], cwd: Path | None = None) -> tuple[int, str, str]
     return p.returncode, p.stdout, p.stderr
 
 
-def git_files(repo_root: Path) -> list[str]:
-    code, out, _ = run_capture(["git", "ls-files"], cwd=repo_root)
-    if code != 0:
-        return []
-    return [f for f in out.splitlines() if (repo_root / f).is_file()]
+def find_repo_root(start: Path) -> Path:
+    cur = start.resolve()
+    while True:
+        if (cur / "flake.nix").is_file():
+            return cur
+        if cur.parent == cur:
+            return start.resolve()
+        cur = cur.parent
+
+
+def list_files(repo_root: Path) -> list[str]:
+    gitignore = repo_root / ".gitignore"
+    patterns: list[str] = []
+    if gitignore.is_file():
+        patterns = gitignore.read_text(encoding="utf-8", errors="ignore").splitlines()
+    spec = pathspec.PathSpec.from_lines("gitwildmatch", patterns)
+    files: list[str] = []
+
+    for root, dirs, filenames in os.walk(repo_root):
+        root_path = Path(root)
+        rel_root = root_path.relative_to(repo_root).as_posix()
+        if rel_root == ".":
+            rel_root = ""
+
+        kept_dirs: list[str] = []
+        for d in dirs:
+            if d == ".git":
+                continue
+            rel_dir = f"{rel_root}/{d}" if rel_root else d
+            if spec.match_file(rel_dir + "/"):
+                continue
+            kept_dirs.append(d)
+        dirs[:] = kept_dirs
+
+        for name in filenames:
+            rel_file = f"{rel_root}/{name}" if rel_root else name
+            if spec.match_file(rel_file):
+                continue
+            files.append(rel_file)
+    return files
 
 
 def has_chezmoi_markers(path: Path) -> bool:
@@ -113,12 +151,8 @@ def main() -> int:
     parser.add_argument("mode", choices=["fix", "check"])
     args = parser.parse_args()
 
-    code, out, _ = run_capture(["git", "rev-parse", "--show-toplevel"])
-    if code != 0:
-        return 1
-    repo_root = Path(out.strip())
-
-    files = git_files(repo_root)
+    repo_root = find_repo_root(Path.cwd())
+    files = list_files(repo_root)
     failed = 0
 
     with tempfile.TemporaryDirectory() as td:
@@ -146,11 +180,7 @@ def main() -> int:
                         if code == 0 and formatted != abs_f.read_text(encoding="utf-8", errors="ignore"):
                             abs_f.write_text(formatted, encoding="utf-8")
 
-            if run(["git", "diff", "--quiet", "--", *files], cwd=repo_root) == 0:
-                print("lint(fix): no auto-fix changes")
-            else:
-                print("lint(fix): auto-fix updated files")
-                run(["git", "status", "--short", "--", *files], cwd=repo_root)
+            print("lint(fix): completed")
 
         for f in files:
             abs_f = repo_root / f

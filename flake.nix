@@ -12,10 +12,10 @@
         pkgs = import nixpkgs { inherit system; };
         toolchain = [
           pkgs.coreutils
-          pkgs.git
           pkgs.diffutils
           pkgs.bash
           pkgs.python3
+          pkgs.python3Packages.pathspec
           pkgs.chezmoi
           pkgs.shellcheck
           pkgs.shfmt
