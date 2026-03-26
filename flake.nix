@@ -15,6 +15,7 @@
           pkgs.git
           pkgs.diffutils
           pkgs.bash
+          pkgs.python3
           pkgs.chezmoi
           pkgs.shellcheck
           pkgs.shfmt
@@ -29,7 +30,7 @@
           name = "lint";
           runtimeInputs = toolchain;
           text = ''
-            exec bash ${./nix/lint.sh} fix
+            exec python3 ${./nix/lint.py} fix
           '';
         };
 
@@ -37,7 +38,7 @@
           name = "check";
           runtimeInputs = toolchain;
           text = ''
-            exec bash ${./nix/lint.sh} check
+            exec python3 ${./nix/lint.py} check
           '';
         };
       in
