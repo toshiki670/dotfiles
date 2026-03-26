@@ -10,15 +10,16 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        pythonEnv = pkgs.python3.withPackages (ps: [ ps.pathspec ]);
         toolchain = [
           pkgs.coreutils
           pkgs.diffutils
           pkgs.bash
-          pkgs.python3
-          pkgs.python3Packages.pathspec
+          pythonEnv
           pkgs.chezmoi
           pkgs.shellcheck
           pkgs.shfmt
+          pkgs.ruff
           pkgs.stylua
           pkgs.taplo
           pkgs.markdownlint-cli2
@@ -30,7 +31,7 @@
           name = "lint";
           runtimeInputs = toolchain;
           text = ''
-            exec python3 ${./nix/lint.py} fix
+            exec ${pythonEnv}/bin/python ${./nix/lint.py} fix
           '';
         };
 
@@ -38,7 +39,7 @@
           name = "check";
           runtimeInputs = toolchain;
           text = ''
-            exec python3 ${./nix/lint.py} check
+            exec ${pythonEnv}/bin/python ${./nix/lint.py} check
           '';
         };
       in

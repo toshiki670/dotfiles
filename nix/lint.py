@@ -79,12 +79,20 @@ def is_toml(f: str) -> bool:
     return f.endswith(".toml")
 
 
+def is_python(f: str) -> bool:
+    return f.endswith(".py")
+
+
 def is_fish(f: str) -> bool:
     return f.endswith(".fish") or f.endswith(".fish.tmpl")
 
 
 def is_zsh(f: str) -> bool:
-    return f.endswith(".zsh") or f.endswith(".zsh.tmpl") or f == "home/dot_config/zsh/dot_zshrc.tmpl"
+    return (
+        f.endswith(".zsh")
+        or f.endswith(".zsh.tmpl")
+        or f == "home/dot_config/zsh/dot_zshrc.tmpl"
+    )
 
 
 def is_shell_ext(f: str) -> bool:
@@ -96,11 +104,19 @@ def is_shell_path(f: str) -> bool:
 
 
 def is_home_chezmoi_shell_template(f: str, repo_root: Path) -> bool:
-    return f.startswith("home/") and f.endswith(".sh.tmpl") and has_chezmoi_markers(repo_root / f)
+    return (
+        f.startswith("home/")
+        and f.endswith(".sh.tmpl")
+        and has_chezmoi_markers(repo_root / f)
+    )
 
 
 def is_home_chezmoi_fish_template(f: str, repo_root: Path) -> bool:
-    return f.startswith("home/") and f.endswith(".fish.tmpl") and has_chezmoi_markers(repo_root / f)
+    return (
+        f.startswith("home/")
+        and f.endswith(".fish.tmpl")
+        and has_chezmoi_markers(repo_root / f)
+    )
 
 
 def is_home_chezmoi_zsh_template(f: str, repo_root: Path) -> bool:
@@ -163,13 +179,17 @@ def main() -> int:
                 abs_f = repo_root / f
                 if is_shell_ext(f) or is_shell_path(f):
                     sf = shell_flavor(abs_f)
-                    if sf in ("bash", "sh", "") and not is_home_chezmoi_shell_template(f, repo_root):
+                    if sf in ("bash", "sh", "") and not is_home_chezmoi_shell_template(
+                        f, repo_root
+                    ):
                         run(["shfmt", "-w", "-i", "2", "-ci", str(abs_f)])
 
             for f in files:
                 abs_f = repo_root / f
                 if is_lua(f):
                     run(["stylua", str(abs_f)])
+                elif is_python(f):
+                    run(["ruff", "format", str(abs_f)])
                 elif is_toml(f):
                     run(["taplo", "fmt", str(abs_f)])
                 elif is_markdown(f):
@@ -177,7 +197,9 @@ def main() -> int:
                 elif is_fish(f):
                     if not is_home_chezmoi_fish_template(f, repo_root):
                         code, formatted, _ = run_capture(["fish_indent", str(abs_f)])
-                        if code == 0 and formatted != abs_f.read_text(encoding="utf-8", errors="ignore"):
+                        if code == 0 and formatted != abs_f.read_text(
+                            encoding="utf-8", errors="ignore"
+                        ):
                             abs_f.write_text(formatted, encoding="utf-8")
 
             print("lint(fix): completed")
@@ -189,9 +211,15 @@ def main() -> int:
                 sf = shell_flavor(abs_f)
                 if sf in ("bash", "sh", ""):
                     if is_home_chezmoi_shell_template(f, repo_root):
-                        rendered = tmp_dir / f"rendered_{f.replace('/', '_').replace('.', '_')}.sh"
+                        rendered = (
+                            tmp_dir
+                            / f"rendered_{f.replace('/', '_').replace('.', '_')}.sh"
+                        )
                         if render_template(repo_root, f, rendered):
-                            if run(["shfmt", "-d", "-i", "2", "-ci", str(rendered)]) != 0:
+                            if (
+                                run(["shfmt", "-d", "-i", "2", "-ci", str(rendered)])
+                                != 0
+                            ):
                                 failed = 1
                             if run(["shellcheck", str(rendered)]) != 0:
                                 print(
@@ -209,7 +237,10 @@ def main() -> int:
 
             if is_zsh(f):
                 if is_home_chezmoi_zsh_template(f, repo_root):
-                    rendered = tmp_dir / f"rendered_{f.replace('/', '_').replace('.', '_')}.zsh"
+                    rendered = (
+                        tmp_dir
+                        / f"rendered_{f.replace('/', '_').replace('.', '_')}.zsh"
+                    )
                     if render_template(repo_root, f, rendered):
                         if run(["zsh", "-n", str(rendered)]) != 0:
                             failed = 1
@@ -221,7 +252,10 @@ def main() -> int:
 
             if is_fish(f):
                 if is_home_chezmoi_fish_template(f, repo_root):
-                    rendered = tmp_dir / f"rendered_{f.replace('/', '_').replace('.', '_')}.fish"
+                    rendered = (
+                        tmp_dir
+                        / f"rendered_{f.replace('/', '_').replace('.', '_')}.fish"
+                    )
                     if render_template(repo_root, f, rendered):
                         if run(["fish_indent", "--check", str(rendered)]) != 0:
                             failed = 1
@@ -237,6 +271,10 @@ def main() -> int:
 
             if is_lua(f):
                 if run(["stylua", "--check", str(abs_f)]) != 0:
+                    failed = 1
+
+            if is_python(f):
+                if run(["ruff", "format", "--check", str(abs_f)]) != 0:
                     failed = 1
 
             if is_toml(f):
