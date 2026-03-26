@@ -119,9 +119,7 @@ if [[ -z "$BUMP_TYPE" ]]; then
 fi
 
 # Bump version
-NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
-
-if [[ $? -ne 0 ]]; then
+if ! NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE"); then
   exit 1
 fi
 

@@ -7,7 +7,7 @@ readonly TRUE=1
 readonly FALSE=0
 
 function usage() {
-  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+  cmdname_space=${CMDNAME//?/ }
 
   cat <<__USAGE_TEXT__
 Usage:
@@ -102,7 +102,7 @@ while getopts APRypgndhv OPT; do
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 function update_pacman() {
   if type '/usr/sbin/pacman' >/dev/null 2>&1; then
@@ -152,7 +152,7 @@ function update_dotfiles() {
 if [[ ! -e '/etc/arch-release' ]]; then
   echo "$CMDNAME: The current distribution isn't the Archlinux." 1>&2
 else
-  if [[ $is_all_update == $TRUE ]]; then
+  if [[ "$is_all_update" == "$TRUE" ]]; then
     update_pacman
     remove_cache
     update_yay
@@ -161,31 +161,31 @@ else
     update_neovim
     update_dotfiles
   else
-    if [[ $can_update_pacman == $TRUE ]]; then
+    if [[ "$can_update_pacman" == "$TRUE" ]]; then
       update_pacman
     fi
 
-    if [[ $can_remove_cache == $TRUE ]]; then
+    if [[ "$can_remove_cache" == "$TRUE" ]]; then
       remove_cache
     fi
 
-    if [[ $can_update_yay == $TRUE ]]; then
+    if [[ "$can_update_yay" == "$TRUE" ]]; then
       update_yay
     fi
 
-    if [[ $can_update_paru == $TRUE ]]; then
+    if [[ "$can_update_paru" == "$TRUE" ]]; then
       update_paru
     fi
 
-    if [[ $can_update_gem == $TRUE ]]; then
+    if [[ "$can_update_gem" == "$TRUE" ]]; then
       update_gem
     fi
 
-    if [[ $can_update_neovim == $TRUE ]]; then
+    if [[ "$can_update_neovim" == "$TRUE" ]]; then
       update_neovim
     fi
 
-    if [[ $can_update_dotfiles == $TRUE ]]; then
+    if [[ "$can_update_dotfiles" == "$TRUE" ]]; then
       update_dotfiles
     fi
   fi

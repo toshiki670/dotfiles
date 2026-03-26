@@ -5,8 +5,6 @@ readonly CMDNAME=${0##*/}
 readonly VERSION='1.0.0'
 
 function usage() {
-  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
-
   cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME
@@ -55,7 +53,7 @@ while getopts hv OPT; do
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 # Check if running in zsh or bash
 if [[ -z "$HISTFILE" ]]; then
@@ -72,8 +70,7 @@ original_count=$(wc -l <"$HISTFILE" | tr -d ' ')
 
 # Create backup
 backup_file="${HISTFILE}.backup.$(date +%Y%m%d_%H%M%S)"
-cp "$HISTFILE" "$backup_file"
-if [[ $? -ne 0 ]]; then
+if ! cp "$HISTFILE" "$backup_file"; then
   echo "$CMDNAME: Failed to create backup." 1>&2
   exit 1
 fi
@@ -91,7 +88,7 @@ temp_file=$(mktemp)
 # Strategy: First combine multiline commands, then deduplicate
 # zsh history format: : timestamp:duration;command
 # Multiline commands: lines ending with \ are continuations
-LC_ALL=C awk '
+if ! LC_ALL=C awk '
   BEGIN {
     entry_start = 0
     entry_lines = ""
@@ -174,11 +171,9 @@ LC_ALL=C awk '
       print keep_entries[i]
     }
   }
-' "$HISTFILE" >"$temp_file"
-
-if [[ $? -ne 0 ]]; then
+' "$HISTFILE" >"$temp_file"; then
   echo "$CMDNAME: Failed to deduplicate history." 1>&2
-  rm "$temp_file" "$backup_file"
+  rm -f "$temp_file" "$backup_file"
   exit 1
 fi
 
@@ -198,7 +193,7 @@ echo "After deduplication: $new_count"
 echo
 
 # Confirm
-read -p "Remove duplicates? (y/n): " confirm
+read -r -p "Remove duplicates? (y/n): " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
   echo "$CMDNAME: Operation cancelled."
   rm "$temp_file" "$backup_file"
@@ -206,10 +201,9 @@ if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
 fi
 
 # Replace history file
-mv "$temp_file" "$HISTFILE"
-if [[ $? -ne 0 ]]; then
+if ! mv "$temp_file" "$HISTFILE"; then
   echo "$CMDNAME: Failed to update history file." 1>&2
-  rm "$temp_file" "$backup_file"
+  rm -f "$temp_file" "$backup_file"
   exit 1
 fi
 

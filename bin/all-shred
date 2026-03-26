@@ -7,8 +7,6 @@ readonly TRUE=1
 readonly FALSE=0
 
 function usage() {
-  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
-
   cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME [path]
@@ -46,7 +44,7 @@ function check_path_exist() {
       is_correct_path=$FALSE
     fi
   done
-  if [[ $is_correct_path == $FALSE ]]; then
+  if [[ "$is_correct_path" == "$FALSE" ]]; then
     return 1
   fi
 }
@@ -82,7 +80,7 @@ while getopts hv OPT; do
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 if ! type 'shred' >/dev/null 2>&1; then
   echo "$CMDNAME: Not found the shred command." 1>&2
@@ -98,16 +96,16 @@ echo -e "$paths" | check_path_exist
 q=$?
 if [[ $q != 0 ]]; then exit $q; fi
 
-read -p "Destroy it completely? [$(echo $paths | xargs echo)] (y/n): " first_check
+read -r -p "Destroy it completely? [$(echo "$paths" | xargs echo)] (y/n): " first_check
 echo
-if [[ $first_check != 'y' ]]; then
+if [[ "$first_check" != 'y' ]]; then
   echo "$CMDNAME: Did nothing." 1>&2
   exit 1
 else
   echo 'This operation is irrevocable.'
-  read -p 'Are you sure? (Type uppercase yes): ' second_check
+  read -r -p 'Are you sure? (Type uppercase yes): ' second_check
   echo
-  if [[ $second_check != 'YES' ]]; then
+  if [[ "$second_check" != 'YES' ]]; then
     echo "$CMDNAME: Did nothing." 1>&2
     exit 1
   else

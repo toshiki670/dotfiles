@@ -3,12 +3,8 @@
 # Constant
 readonly CMDNAME=${0##*/}
 readonly VERSION='1.0.0'
-readonly TRUE=1
-readonly FALSE=0
 
 function usage() {
-  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
-
   cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME
@@ -57,7 +53,7 @@ while getopts hv OPT; do
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 # Check if running in zsh or bash
 if [[ -z "$HISTFILE" ]]; then
@@ -71,7 +67,7 @@ fi
 
 # Read search string interactively from standard input
 # This prevents the command from being saved in history
-read -p "Enter search string to delete from history: " search_string
+read -r -p "Enter search string to delete from history: " search_string
 if [[ -z "$search_string" ]]; then
   echo "$CMDNAME: Empty search string provided." 1>&2
   exit 1
@@ -79,8 +75,7 @@ fi
 
 # Create backup
 backup_file="${HISTFILE}.backup.$(date +%Y%m%d_%H%M%S)"
-cp "$HISTFILE" "$backup_file"
-if [[ $? -ne 0 ]]; then
+if ! cp "$HISTFILE" "$backup_file"; then
   echo "$CMDNAME: Failed to create backup." 1>&2
   exit 1
 fi
@@ -89,7 +84,7 @@ echo "Backup created: $backup_file"
 # Find matching entries (handling multiline commands)
 # First, combine multiline commands into single entries
 temp_combined=$(mktemp)
-LC_ALL=C awk -v search_string="$search_string" '
+if ! LC_ALL=C awk -v search_string="$search_string" '
   BEGIN {
     entry_start = 0
     entry_lines = ""
@@ -167,11 +162,9 @@ LC_ALL=C awk -v search_string="$search_string" '
       }
     }
   }
-' "$HISTFILE" >"$temp_combined"
-
-if [[ $? -ne 0 ]]; then
+' "$HISTFILE" >"$temp_combined"; then
   echo "$CMDNAME: Failed to process history file." 1>&2
-  rm "$temp_combined" "$backup_file"
+  rm -f "$temp_combined" "$backup_file"
   exit 1
 fi
 
@@ -194,7 +187,11 @@ echo "-----------------"
 # Display matching entries
 echo "$matching_entries" | while IFS= read -r line; do
   # Extract entry (format: MATCH:start:end:entry)
-  entry=$(echo "$line" | sed 's/^MATCH:[0-9]*:[0-9]*://')
+  if [[ "$line" =~ ^MATCH:[0-9]+:[0-9]+:(.*)$ ]]; then
+    entry=${BASH_REMATCH[1]}
+  else
+    entry=$line
+  fi
   # Extract command part after the first semicolon
   command_part=$(echo "$entry" | sed -n 's/^:[^:]*:[^;]*;\(.*\)$/\1/p')
   if [[ -n "$command_part" ]]; then
@@ -219,7 +216,7 @@ echo "-----------------"
 echo
 
 # Confirm deletion
-read -p "Delete these entries? (y/n): " confirm
+read -r -p "Delete these entries? (y/n): " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
   echo "$CMDNAME: Operation cancelled."
   rm "$temp_combined" "$backup_file"
@@ -229,18 +226,17 @@ fi
 # Delete matching entries
 # Extract lines to keep (entries not matching search string)
 temp_file=$(mktemp)
-grep -v "^MATCH:" "$temp_combined" >"$temp_file"
-
-if [[ $? -ne 0 ]]; then
+grep_exit=0
+grep -v "^MATCH:" "$temp_combined" >"$temp_file" || grep_exit=$?
+if [[ "$grep_exit" -ge 2 ]]; then
   echo "$CMDNAME: Failed to filter history." 1>&2
-  rm "$temp_file" "$temp_combined" "$backup_file"
+  rm -f "$temp_file" "$temp_combined" "$backup_file"
   exit 1
 fi
 
-mv "$temp_file" "$HISTFILE"
-if [[ $? -ne 0 ]]; then
+if ! mv "$temp_file" "$HISTFILE"; then
   echo "$CMDNAME: Failed to update history file." 1>&2
-  rm "$temp_file" "$temp_combined" "$backup_file"
+  rm -f "$temp_file" "$temp_combined" "$backup_file"
   exit 1
 fi
 

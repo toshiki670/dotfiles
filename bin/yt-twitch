@@ -6,12 +6,8 @@
 # Constant
 readonly CMDNAME=${0##*/}
 readonly VERSION='0.2.0'
-readonly TRUE=1
-readonly FALSE=0
 
 function usage() {
-  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
-
   cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME [path]
@@ -58,7 +54,7 @@ while getopts hv OPT; do
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 if ! type 'yt-dlp' >/dev/null 2>&1; then
   echo "$CMDNAME: Not found the yt-dlp command." 1>&2

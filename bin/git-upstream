@@ -23,7 +23,7 @@ if ! type "git" >/dev/null 2>&1; then
 fi
 
 function usage() {
-  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+  cmdname_space=${CMDNAME//?/ }
 
   cat <<__USAGE_TEXT__
 Usage:
@@ -74,10 +74,10 @@ while getopts i:h OPT; do
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 function has_upstream() {
-  [[ $(git remote | grep $REPOSITORY) == $REPOSITORY ]]
+  [[ "$(git remote | grep -- "$REPOSITORY")" == "$REPOSITORY" ]]
 }
 
 function merge() {
@@ -92,10 +92,10 @@ function merge() {
   fi
 
   # Fetch & Merge
-  if ! git fetch ${REPOSITORY}; then
+  if ! git fetch "$REPOSITORY"; then
     return $?
   fi
-  if ! git merge ${UPSTREAM_PATH}; then
+  if ! git merge "$UPSTREAM_PATH"; then
     return $?
   fi
   return 0
@@ -107,19 +107,19 @@ function initialize() {
     return 64
   fi
 
-  if ! git remote add ${REPOSITORY} ${remote_url}; then
+  if ! git remote add "$REPOSITORY" "$remote_url"; then
     return $?
   fi
-  if ! git fetch ${REPOSITORY}; then
+  if ! git fetch "$REPOSITORY"; then
     return $?
   fi
   return 0
 }
 
-if [[ $is_initialize == $TRUE ]]; then
+if [[ "$is_initialize" == "$TRUE" ]]; then
   initialize
   exit $?
-elif [[ $is_initialize == $FALSE ]]; then
+elif [[ "$is_initialize" == "$FALSE" ]]; then
   merge
   exit $?
 else

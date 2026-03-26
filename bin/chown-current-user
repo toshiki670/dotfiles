@@ -12,7 +12,7 @@ if ! type "git" >/dev/null 2>&1; then
 fi
 
 function usage() {
-  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+  cmdname_space=${CMDNAME//?/ }
 
   cat <<__USAGE_TEXT__
 Usage:
@@ -70,7 +70,7 @@ while getopts p:h OPT; do
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 function chown_current_user() {
 
@@ -82,11 +82,11 @@ function chown_current_user() {
 
   dir='.'
 
-  if [[ $has_path == $TRUE ]]; then
+  if [[ "$has_path" == "$TRUE" ]]; then
     dir=$custom_path
   fi
 
-  sudo chown -R ${USER}:${USER} $dir
+  sudo chown -R "${USER}:${USER}" "$dir"
   return $?
 }
 
