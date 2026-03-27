@@ -105,14 +105,17 @@ def fix_fish(ctx: LintContext, f: FileContext) -> int:
 
 def check_fish(ctx: LintContext, f: FileContext) -> int:
     target = f.abs_path
-    if is_home_chezmoi_fish_template(f.rel_path, ctx.repo_root):
+    is_chezmoi_template = is_home_chezmoi_fish_template(f.rel_path, ctx.repo_root)
+    if is_chezmoi_template:
         rendered = get_rendered(ctx, f, ".fish")
         if rendered is None:
             return 1
         target = rendered
 
     failed = 0
-    if not is_home_chezmoi_fish_completion_template(f.rel_path, ctx.repo_root):
+    if not is_chezmoi_template and not is_home_chezmoi_fish_completion_template(
+        f.rel_path, ctx.repo_root
+    ):
         if (
             run_rule_cmd(
                 ctx, f, "fish", "check", ["fish_indent", "--check", str(target)]

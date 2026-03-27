@@ -35,6 +35,13 @@
           name = "lint";
           runtimeInputs = toolchain;
           text = ''
+            tmp_home="$(mktemp -d)"
+            ruff_cache_dir="$(mktemp -d)"
+            export HOME="$tmp_home"
+            export XDG_DATA_HOME="$tmp_home/.local/share"
+            export XDG_CONFIG_HOME="$tmp_home/.config"
+            export RUFF_CACHE_DIR="$ruff_cache_dir"
+            mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
             export PYTHONPATH="$PWD/nix"
             exec ${pythonEnv}/bin/python -m lint.cli fix "$@"
           '';
@@ -44,6 +51,13 @@
           name = "check";
           runtimeInputs = toolchain;
           text = ''
+            tmp_home="$(mktemp -d)"
+            ruff_cache_dir="$(mktemp -d)"
+            export HOME="$tmp_home"
+            export XDG_DATA_HOME="$tmp_home/.local/share"
+            export XDG_CONFIG_HOME="$tmp_home/.config"
+            export RUFF_CACHE_DIR="$ruff_cache_dir"
+            mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
             export PYTHONPATH="$PWD/nix"
             exec ${pythonEnv}/bin/python -m lint.cli check "$@"
           '';
@@ -124,7 +138,7 @@
         } ''
           set -euo pipefail
           cd "$src"
-          ${checkCmd}/bin/check
+          ${checkCmd}/bin/check --summary
           touch $out
         '';
 
