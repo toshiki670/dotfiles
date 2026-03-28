@@ -135,6 +135,13 @@ threshold = 75
 [meson]
 symbol = "󰔷 "
 
+[mise]
+disabled         = false
+format           = '[$symbol$health]($style) '
+healthy_symbol   = ''
+symbol           = "󰭼 "
+unhealthy_symbol = 'bad'
+
 [nim]
 symbol = "󰆥 "
 
