@@ -1,0 +1,8 @@
+# Repo-only Taplo config (not deployed by chezmoi). Binds Starship config to the
+# vendored schema under schemas/ so lint works offline; see .github/workflows/lint.yml.
+
+[[rule]]
+include = ["home/dot_config/starship.toml"]
+
+[rule.schema]
+path = "schemas/starship-config-schema.json"

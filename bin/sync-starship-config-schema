@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Fetch Starship's JSON config schema and rewrite home/dot_config/starship-config-schema.json
+# Fetch Starship's JSON config schema and rewrite schemas/starship-config-schema.json
 # with jq -S so it matches what CI compares (see .github/workflows/lint.yml).
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-target="${root}/home/dot_config/starship-config-schema.json"
+target="${root}/schemas/starship-config-schema.json"
 url="https://starship.rs/config-schema.json"
 tmp="$(mktemp)"
 trap 'rm -f "${tmp}"' EXIT

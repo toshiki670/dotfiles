@@ -27,6 +27,8 @@ jobs:
               - "tests/lint/**"
               - "pyproject.toml"
               - "flake.nix"
+              - "taplo.toml"
+              - "schemas/starship-config-schema.json"
 
   flake-check:
     name: Nix flake check
@@ -54,7 +56,7 @@ jobs:
       - name: Compare vendored schema to starship.rs
         env:
           UPSTREAM_URL: https://starship.rs/config-schema.json
-          VENDORED_PATH: home/dot_config/starship-config-schema.json
+          VENDORED_PATH: schemas/starship-config-schema.json
         run: |
           set -euo pipefail
           curl -fsSL "$UPSTREAM_URL" | jq -S . > /tmp/starship-schema-upstream.json

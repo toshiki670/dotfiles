@@ -1,4 +1,4 @@
-"$schema" = "./starship-config-schema.json"
+"$schema" = "https://starship.rs/config-schema.json"
 
 [aws]
 symbol = " "
