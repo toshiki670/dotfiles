@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# Fetch Starship's JSON config schema and rewrite schemas/starship-config-schema.json
-# with jq -S so it matches what CI compares (see .github/workflows/lint.yml).
+# Print the SRI hash for flake.nix starshipConfigSchema (fetchurl) after upstream changes.
+# Usage: run from repo root with Nix available, then paste the output into flake.nix.
 set -euo pipefail
 
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-target="${root}/schemas/starship-config-schema.json"
 url="https://starship.rs/config-schema.json"
 tmp="$(mktemp)"
 trap 'rm -f "${tmp}"' EXIT
 
-curl -fsSL "${url}" | jq -S . >"${tmp}"
-mv "${tmp}" "${target}"
-trap - EXIT
-printf 'Updated %s from %s\n' "${target}" "${url}"
+curl -fsSL "${url}" >"${tmp}"
+if command -v nix >/dev/null 2>&1; then
+  nix --extra-experimental-features nix-command hash to-sri --type sha256 "${tmp}"
+else
+  echo "nix not found; install Nix, then re-run this script." >&2
+  echo "Or compute SRI yourself from the downloaded bytes at: ${tmp}" >&2
+  exit 1
+fi
