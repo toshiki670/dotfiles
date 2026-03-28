@@ -12,6 +12,6 @@
 # DOTFILES_GIT_NAME = "Your Work Name"
 
 [tools]
-rust = "latest"
-node = "latest"
+node   = "latest"
 python = "latest"
+rust   = "latest"

@@ -1,16 +1,16 @@
 [tool.ruff]
-line-length = 88
+line-length    = 88
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = [ "E", "F", "I" ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests/lint"]
+testpaths = [ "tests/lint" ]
 
 [tool.mypy]
-python_version = "3.11"
-strict = true
+files               = [ "nix/lint", "tests/lint" ]
+mypy_path           = [ "nix" ]
+python_version      = "3.11"
+strict              = true
 warn_unused_configs = true
-mypy_path = ["nix"]
-files = ["nix/lint", "tests/lint"]

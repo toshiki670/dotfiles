@@ -1,12 +1,12 @@
 # No $schema: Nix CI taplo cannot fetch HTTPS in the Linux sandbox; add the Starship JSON schema in your editor if needed.
 
 [aws]
-symbol = " "
 format = '[$symbol($profile )(\($region\) )(\[$duration\] )]($style)'
+symbol = " "
 
 [buf]
-symbol = " "
 format = '[$symbol($version )]($style)'
+symbol = " "
 
 [bun]
 symbol = " "
@@ -36,16 +36,16 @@ symbol = " "
 symbol = " "
 
 [directory]
-read_only = " 󰌾"
+read_only         = " 󰌾"
+repo_root_format  = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+repo_root_style   = 'bold blue'
+style             = 'bold cyan'
+truncate_to_repo  = true
 truncation_length = 0
-truncate_to_repo = true
-style = 'bold cyan'
-repo_root_style = 'bold blue'
-repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
 
 [docker_context]
-symbol = " "
 format = '[$symbol$context ]($style)'
+symbol = " "
 
 [elixir]
 symbol = " "
@@ -66,35 +66,35 @@ symbol = " "
 symbol = " "
 
 [git_branch]
-symbol = " "
 format = '[$symbol$branch(:$remote_branch) ]($style)'
+symbol = " "
 
 [git_commit]
 tag_symbol = '  '
 
 [git_state]
-rebase = "rebase"
-merge = "merge"
-revert = "revert"
-cherry_pick = "cherry-pick"
-bisect = "bisect"
-am = "am"
+am           = "am"
 am_or_rebase = "am/rebase"
+bisect       = "bisect"
+cherry_pick  = "cherry-pick"
+merge        = "merge"
+rebase       = "rebase"
+revert       = "revert"
 
 [git_metrics]
 disabled = false
 
 [git_status]
-ahead = '[⇡${count}](green)'
+ahead    = '[⇡${count}](green)'
+behind   = '⇣${count}'
 diverged = '⇡${ahead_count}⇣${behind_count}'
-behind = '⇣${count}'
-stashed = ''
+format   = '([$all_status$ahead_behind ]($style))'
 modified = '!${count}'
-format = '([$all_status$ahead_behind ]($style))'
+stashed  = ''
 
 [golang]
-symbol = " "
 format = '[$symbol($version )]($style)'
+symbol = " "
 
 [gradle]
 symbol = " "
@@ -127,10 +127,10 @@ symbol = " "
 symbol = " "
 
 [memory_usage]
-disabled = false
+disabled  = false
+format    = '[$symbol${ram_pct}( | ${swap_pct}) ]($style)'
+symbol    = "󰍛 "
 threshold = 75
-symbol = "󰍛 "
-format = '[$symbol${ram_pct}( | ${swap_pct}) ]($style)'
 
 [meson]
 symbol = "󰔷 "
@@ -142,66 +142,66 @@ symbol = "󰆥 "
 symbol = " "
 
 [nodejs]
-symbol = "󰎙 "
 format = '[$symbol($version) ]($style)'
+symbol = "󰎙 "
 
 [ocaml]
 symbol = " "
 
 [os.symbols]
-Alpaquita = " "
-Alpine = " "
-AlmaLinux = " "
-Amazon = " "
-Android = " "
-AOSC = " "
-Arch = " "
-Artix = " "
-CachyOS = " "
-CentOS = " "
-Debian = " "
-DragonFly = " "
-Elementary = " "
-Emscripten = " "
-EndeavourOS = " "
-Fedora = " "
-FreeBSD = " "
-Garuda = "󰛓 "
-Gentoo = " "
-HardenedBSD = "󰞌 "
-Illumos = "󰈸 "
-Ios = "󰀷 "
-Kali = " "
-Linux = " "
-Mabox = " "
-Macos = " "
-Manjaro = " "
-Mariner = " "
-MidnightBSD = " "
-Mint = " "
-NetBSD = " "
-NixOS = " "
-Nobara = " "
-OpenBSD = "󰈺 "
-openSUSE = " "
-OracleLinux = "󰌷 "
-Pop = " "
-Raspbian = " "
-Redhat = " "
+AOSC             = " "
+AlmaLinux        = " "
+Alpaquita        = " "
+Alpine           = " "
+Amazon           = " "
+Android          = " "
+Arch             = " "
+Artix            = " "
+CachyOS          = " "
+CentOS           = " "
+Debian           = " "
+DragonFly        = " "
+Elementary       = " "
+Emscripten       = " "
+EndeavourOS      = " "
+Fedora           = " "
+FreeBSD          = " "
+Garuda           = "󰛓 "
+Gentoo           = " "
+HardenedBSD      = "󰞌 "
+Illumos          = "󰈸 "
+Ios              = "󰀷 "
+Kali             = " "
+Linux            = " "
+Mabox            = " "
+Macos            = " "
+Manjaro          = " "
+Mariner          = " "
+MidnightBSD      = " "
+Mint             = " "
+NetBSD           = " "
+NixOS            = " "
+Nobara           = " "
+OpenBSD          = "󰈺 "
+OracleLinux      = "󰌷 "
+Pop              = " "
+Raspbian         = " "
 RedHatEnterprise = " "
-RockyLinux = " "
-Redox = "󰀘 "
-Solus = "󰠳 "
-SUSE = " "
-Ubuntu = " "
-Unknown = " "
-Void = " "
-Windows = "󰍲 "
-Zorin = " "
+Redhat           = " "
+Redox            = "󰀘 "
+RockyLinux       = " "
+SUSE             = " "
+Solus            = "󰠳 "
+Ubuntu           = " "
+Unknown          = " "
+Void             = " "
+Windows          = "󰍲 "
+Zorin            = " "
+openSUSE         = " "
 
 [package]
-symbol = "󰏗 "
 format = '[$symbol$version ]($style)'
+symbol = "󰏗 "
 
 [perl]
 symbol = " "
@@ -216,19 +216,19 @@ symbol = " "
 symbol = "󰏗 "
 
 [python]
-symbol = " "
 format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+symbol = " "
 
 [rlang]
 symbol = "󰟔 "
 
 [ruby]
-symbol = " "
 format = '[$symbol($version )]($style)'
+symbol = " "
 
 [rust]
-symbol = "󱘗 "
 format = '[$symbol($version )]($style)'
+symbol = "󱘗 "
 
 [scala]
 symbol = " "
