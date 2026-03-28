@@ -10,4 +10,6 @@ function __git_background_fetch_maybe --on-event fish_postexec
     else
         command fish -c _git_background_fetch_worker &
     end
+    # Do not keep the worker in fish's job table (avoids exit warning while fetch runs).
+    disown
 end
