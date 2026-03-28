@@ -2,7 +2,10 @@
 # repository. Throttled per repository (default 20s) via timestamps under
 # $XDG_CACHE_HOME/fish/git-fetch-last/. Override interval with GIT_FETCH_THROTTLE_SEC.
 
-function __git_background_fetch_maybe --on-event fish_postexec
+# Foreground (runs in the postexec handler, blocks only briefly): detect repo,
+# apply throttle, update stamp. Prints repo root to stdout when a fetch should run;
+# prints nothing otherwise.
+function __git_background_fetch_repo_if_ready
     status is-interactive || return
 
     set -l top (command git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)
@@ -26,7 +29,16 @@ function __git_background_fetch_maybe --on-event fish_postexec
     end
 
     echo $now >"$stamp_file"
+    echo $top
+end
 
-    # Avoid blocking on credential prompts in the background.
-    env GIT_TERMINAL_PROMPT=0 command git -C "$top" fetch --quiet >/dev/null 2>&1 &
+# Background: network and git work; does not block the next prompt.
+function __git_background_fetch_spawn -a repo_root
+    env GIT_TERMINAL_PROMPT=0 command git -C "$repo_root" fetch --quiet >/dev/null 2>&1 &
+end
+
+function __git_background_fetch_maybe --on-event fish_postexec
+    set -l top (__git_background_fetch_repo_if_ready)
+    test -z "$top" && return
+    __git_background_fetch_spawn "$top"
 end
