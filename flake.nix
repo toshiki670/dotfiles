@@ -15,13 +15,9 @@
         url = "https://starship.rs/config-schema.json";
         hash = "sha256-pEHfJUFK0WZrTxGLiXSbvnT9Lp8Rqd3QAGhMJARa5kU=";
       };
-      taploNixConfig = pkgs.writeText "taplo-nix.toml" ''
-        [[rule]]
-        include = ["home/dot_config/starship.toml"]
-
-        [rule.schema]
-        path = "${starshipConfigSchema}"
-      '';
+      taploNixConfig = pkgs.replaceVars ./taplo.toml {
+        starshipSchemaPath = "${starshipConfigSchema}";
+      };
       pythonEnv = pkgs.python3.withPackages (ps: [
           ps.pathspec
           ps.pytest

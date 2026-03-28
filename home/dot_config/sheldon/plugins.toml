@@ -2,8 +2,8 @@ shell = "zsh"
 
 # zsh-completions: 追加のコマンド補完定義を提供
 [plugins.zsh-completions]
+apply  = [ "fpath" ]
 github = "zsh-users/zsh-completions"
-apply = ["fpath"]
 
 # fast-syntax-highlighting: コマンドラインのシンタックスハイライト（zeno.zsh と相性が良い）
 # zsh-syntax-highlighting は zeno.zsh 利用時に Tab で "bad set of key/value pairs" が出るため不使用
@@ -34,4 +34,4 @@ github = "mafredri/zsh-async"
 # pure: ミニマルで高速なZshプロンプトテーマ（非同期Git統合、コマンド実行時間表示）
 [plugins.pure]
 github = "sindresorhus/pure"
-use = ["pure.zsh"]
+use    = [ "pure.zsh" ]

@@ -1,0 +1,15 @@
+# Global Taplo defaults for every *.toml in this repo (lint/format via TAPLO_CONFIG).
+# Starship config additionally uses the rule below for JSON Schema validation.
+
+[formatting]
+# Stricter, more uniform layout than Taplo defaults.
+align_entries        = true
+allowed_blank_lines  = 1
+array_trailing_comma = true
+column_width         = 88
+compact_arrays       = false
+reorder_keys         = true
+
+[[rule]]
+include     = [ "home/dot_config/starship.toml" ]
+schema.path = "@starshipSchemaPath@"
