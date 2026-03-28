@@ -1,0 +1,63 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  detect-lint-runner-changes:
+    name: Detect lint runner changes
+    runs-on: ubuntu-latest
+    outputs:
+      lint_runner: ${{ steps.filter.outputs.lint_runner }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            lint_runner:
+              - "nix/lint.py"
+              - "nix/lint/**"
+              - "tests/lint/**"
+              - "pyproject.toml"
+              - "flake.nix"
+
+  flake-check:
+    name: Nix flake check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Nix flake check
+        run: nix flake check -L
+
+  lint-runner-tests:
+    name: Lint runner tests
+    runs-on: ubuntu-latest
+    needs: detect-lint-runner-changes
+    if: needs.detect-lint-runner-changes.outputs.lint_runner == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Lint runner tests
+        run: nix run .#lint-tests

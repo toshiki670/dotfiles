@@ -91,7 +91,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 
 ## ディレクトリ構造
 
-```
+```text
 ~/.config/nvim/              # (dot_config/nvim/ から配置)
 ├── init.lua                 # エントリーポイント
 ├── lua/
@@ -117,7 +117,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 ### コアプラグイン
 
 | プラグイン | 説明 | 置き換え元 |
-|-----------|------|-----------|
+| --- | --- | --- |
 | [lazy.nvim](https://github.com/folke/lazy.nvim) | プラグインマネージャー | dein.vim |
 | [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | LSP設定 | LanguageClient-neovim |
 | [mason.nvim](https://github.com/williamboman/mason.nvim) | LSPサーバー管理 | - |
@@ -141,7 +141,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 ### ウィンドウ/分割管理 (`s` prefix)
 
 | キー | 動作 |
-|------|------|
+| --- | --- |
 | `sw` | ウィンドウ切り替え |
 | `sj/sk/sh/sl` | ウィンドウ移動 (下/上/左/右) |
 | `sr` | 水平分割 |
@@ -154,7 +154,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 ### Telescope (`<Space>d` prefix)
 
 | キー | 動作 |
-|------|------|
+| --- | --- |
 | `<Space>df` | ファイル検索 |
 | `<Space>dg` | テキスト検索 (grep) |
 | `<Space>db` | バッファ一覧 |
@@ -165,14 +165,14 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 ### Neo-tree
 
 | キー | 動作 |
-|------|------|
+| --- | --- |
 | `<Space>t` | Neo-treeトグル |
 | `<Space>e` | 現在のファイルを表示 |
 
 ### LSP
 
 | キー | 動作 |
-|------|------|
+| --- | --- |
 | `gd` | 定義へジャンプ |
 | `gr` | 参照を表示 |
 | `gi` | 実装へジャンプ |
@@ -184,7 +184,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 ### Git (`<Space>g` prefix)
 
 | キー | 動作 |
-|------|------|
+| --- | --- |
 | `<Space>ga` | git add (Gwrite) |
 | `<Space>gc` | git commit |
 | `<Space>gr` | git read |
@@ -197,7 +197,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 ### その他
 
 | キー | 動作 |
-|------|------|
+| --- | --- |
 | `<Esc><Esc>` | 検索ハイライト解除 |
 | `gcc` | 行コメントトグル |
 | `gc` (visual) | 選択範囲コメント |
@@ -205,7 +205,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 
 ## LSPサーバー
 
-**新しいAPI（Neovim 0.11+）を使用**
+### 新しいAPI（Neovim 0.11+）を使用
 
 従来の`require('lspconfig').server_name.setup()`から、新しい`vim.lsp.config()`と`vim.lsp.enable()`に移行済み。
 

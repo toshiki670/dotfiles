@@ -1,17 +1,15 @@
 #!/bin/bash
 
-
 # Constant
 readonly CMDNAME=${0##*/}
 readonly VERSION='1.1.0'
 readonly TRUE=1
 readonly FALSE=0
 
-
 function usage() {
-cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+  cmdname_space=${CMDNAME//?/ }
 
-  cat << __USAGE_TEXT__
+  cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME
   $CMDNAME [-A] [-P] [-R]
@@ -23,7 +21,7 @@ __USAGE_TEXT__
 }
 
 function description() {
-  cat << '__DESCRIPTION_TEXT__'
+  cat <<'__DESCRIPTION_TEXT__'
 Description:
   Archlinux full update tool.
 
@@ -47,7 +45,6 @@ function show_help() {
   description
 }
 
-
 is_all_update=$TRUE
 can_update_pacman=$FALSE
 can_remove_cache=$FALSE
@@ -58,88 +55,104 @@ can_update_neovim=$FALSE
 can_update_dotfiles=$FALSE
 
 # Option analysis
-while getopts APRypgndhv OPT
-do
+while getopts APRypgndhv OPT; do
   case $OPT in
-    "A" ) is_all_update=$TRUE ;;
-    "P" ) can_update_pacman=$TRUE; is_all_update=$FALSE ;;
-    "R" ) can_remove_cache=$TRUE; is_all_update=$FALSE ;;
-    "y" ) can_update_yay=$TRUE; is_all_update=$FALSE ;;
-    "p" ) can_update_paru=$TRUE; is_all_update=$FALSE ;;
-    "g" ) can_update_gem=$TRUE; is_all_update=$FALSE ;;
-    "n" ) can_update_neovim=$TRUE; is_all_update=$FALSE ;;
-    "d" ) can_update_dotfiles=$TRUE; is_all_update=$FALSE ;;
-    "h" ) show_help >&1
-          exit 0
-          ;;
-    "v" ) echo "$CMDNAME $VERSION"
-          exit 0
-          ;;
-    # Invalid options
-      * ) usage 1>&2
-          exit 1 ;;
+    "A") is_all_update=$TRUE ;;
+    "P")
+      can_update_pacman=$TRUE
+      is_all_update=$FALSE
+      ;;
+    "R")
+      can_remove_cache=$TRUE
+      is_all_update=$FALSE
+      ;;
+    "y")
+      can_update_yay=$TRUE
+      is_all_update=$FALSE
+      ;;
+    "p")
+      can_update_paru=$TRUE
+      is_all_update=$FALSE
+      ;;
+    "g")
+      can_update_gem=$TRUE
+      is_all_update=$FALSE
+      ;;
+    "n")
+      can_update_neovim=$TRUE
+      is_all_update=$FALSE
+      ;;
+    "d")
+      can_update_dotfiles=$TRUE
+      is_all_update=$FALSE
+      ;;
+    "h")
+      show_help >&1
+      exit 0
+      ;;
+    "v")
+      echo "$CMDNAME $VERSION"
+      exit 0
+      ;;
+      # Invalid options
+    *)
+      usage 1>&2
+      exit 1
+      ;;
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
-
+shift $((OPTIND - 1))
 
 function update_pacman() {
-  if type '/usr/sbin/pacman' > /dev/null 2>&1; then
+  if type '/usr/sbin/pacman' >/dev/null 2>&1; then
     sudo /usr/sbin/pacman -Syu
   fi
 }
 
-
 function remove_cache() {
-  if type '/usr/sbin/paccache' > /dev/null 2>&1; then
+  if type '/usr/sbin/paccache' >/dev/null 2>&1; then
     sudo /usr/sbin/paccache -r
     sudo /usr/sbin/paccache -ruk0
   fi
 }
 
-
 function update_yay() {
-  if type '/usr/sbin/yay' > /dev/null 2>&1; then
+  if type '/usr/sbin/yay' >/dev/null 2>&1; then
     /usr/sbin/yay
   fi
 }
 
-
 function update_paru() {
-  if type '/usr/sbin/paru' > /dev/null 2>&1; then
+  if type '/usr/sbin/paru' >/dev/null 2>&1; then
     /usr/sbin/paru -Syu
   fi
 }
 
-
 function update_gem() {
-  if type '/usr/sbin/gem' > /dev/null 2>&1; then
+  if type '/usr/sbin/gem' >/dev/null 2>&1; then
     /usr/sbin/gem update
   fi
 }
 
-
 function update_neovim() {
-  if type '/usr/sbin/nvim' > /dev/null 2>&1; then
+  if type '/usr/sbin/nvim' >/dev/null 2>&1; then
     /usr/sbin/nvim -c 'cal dein#update()' -c 'qa!'
     # TODO: 外部から`UpdateRemotePlugins`を実行できないため、コメントアウト
     # /usr/sbin/nvim -c 'UpdateRemotePlugins'
   fi
 }
 
-
 function update_dotfiles() {
-  if type 'dotfiles' > /dev/null 2>&1; then
+  if type 'dotfiles' >/dev/null 2>&1; then
     dotfiles -u
   fi
 }
 
-
 if [[ ! -e '/etc/arch-release' ]]; then
   echo "$CMDNAME: The current distribution isn't the Archlinux." 1>&2
 else
-  if [[ $is_all_update == $TRUE ]]; then
+  if [[ "$is_all_update" == "$TRUE" ]]; then
     update_pacman
     remove_cache
     update_yay
@@ -148,35 +161,34 @@ else
     update_neovim
     update_dotfiles
   else
-    if [[ $can_update_pacman == $TRUE ]]; then
+    if [[ "$can_update_pacman" == "$TRUE" ]]; then
       update_pacman
     fi
 
-    if [[ $can_remove_cache == $TRUE ]]; then
+    if [[ "$can_remove_cache" == "$TRUE" ]]; then
       remove_cache
     fi
 
-    if [[ $can_update_yay == $TRUE ]]; then
+    if [[ "$can_update_yay" == "$TRUE" ]]; then
       update_yay
     fi
 
-    if [[ $can_update_paru == $TRUE ]]; then
+    if [[ "$can_update_paru" == "$TRUE" ]]; then
       update_paru
     fi
 
-    if [[ $can_update_gem == $TRUE ]]; then
+    if [[ "$can_update_gem" == "$TRUE" ]]; then
       update_gem
     fi
 
-    if [[ $can_update_neovim == $TRUE ]]; then
+    if [[ "$can_update_neovim" == "$TRUE" ]]; then
       update_neovim
     fi
 
-    if [[ $can_update_dotfiles == $TRUE ]]; then
+    if [[ "$can_update_dotfiles" == "$TRUE" ]]; then
       update_dotfiles
     fi
   fi
 fi
-
 
 exit $?

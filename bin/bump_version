@@ -4,7 +4,7 @@
 readonly CMDNAME=${0##*/}
 
 function usage() {
-  cat << __USAGE_TEXT__
+  cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME <current_version> <major|minor|patch>
   $CMDNAME [-h]
@@ -13,7 +13,7 @@ __USAGE_TEXT__
 }
 
 function description() {
-  cat << __DESCRIPTION_TEXT__
+  cat <<__DESCRIPTION_TEXT__
 Description:
   Bump semantic version based on release type.
 
@@ -48,20 +48,20 @@ function show_help() {
 bump_version() {
   local version=$1
   local bump_type=$2
-  
+
   # Remove 'v' prefix if exists
   version=${version#v}
-  
+
   # Validate version format
   if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "${CMDNAME}: Invalid version format: $version" >&2
     echo "${CMDNAME}: Expected format: x.y.z or vx.y.z" >&2
     return 1
   fi
-  
+
   # Parse version components
-  IFS='.' read -r major minor patch <<< "$version"
-  
+  IFS='.' read -r major minor patch <<<"$version"
+
   case $bump_type in
     major)
       echo "v$((major + 1)).0.0"
@@ -86,7 +86,7 @@ BUMP_TYPE=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -h|--help)
+    -h | --help)
       show_help
       exit 0
       ;;
@@ -119,9 +119,7 @@ if [[ -z "$BUMP_TYPE" ]]; then
 fi
 
 # Bump version
-NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
-
-if [[ $? -ne 0 ]]; then
+if ! NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE"); then
   exit 1
 fi
 

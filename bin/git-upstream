@@ -10,25 +10,22 @@ readonly FALSE='false'
 readonly REPOSITORY="upstream"
 readonly UPSTREAM_PATH="${REPOSITORY}/master"
 
-
 # It's not necessary to running as root.
 if [[ ${EUID:-${UID}} -eq 0 ]]; then
   echo "${CMDNAME}: Running this script as root is no supported." 1>&2
   exit 4
 fi
 
-
 # Check installed the required shell.
-if ! type "git" > /dev/null 2>&1; then
+if ! type "git" >/dev/null 2>&1; then
   echo "${CMDNAME}: Git command not found." 1>&2
   exit 8
 fi
 
-
 function usage() {
-  cmdname_space=$(echo $CMDNAME | sed -e "s/./ /g")
+  cmdname_space=${CMDNAME//?/ }
 
-  cat << __USAGE_TEXT__
+  cat <<__USAGE_TEXT__
 Usage:
   $CMDNAME
   $CMDNAME [-i <remote_url>]
@@ -37,7 +34,7 @@ __USAGE_TEXT__
 }
 
 function description() {
-  cat << __DESCRIPTION_TEXT__
+  cat <<__DESCRIPTION_TEXT__
 Description:
   Upstream merger.
 
@@ -57,29 +54,31 @@ function show_help() {
   description
 }
 
-
 # Option analysis
 is_initialize=$FALSE
-while getopts i:h OPT
-do
+while getopts i:h OPT; do
   case $OPT in
-    "i" ) is_initialize=$TRUE ; remote_url=$OPTARG ;;
-    "h" ) show_help >&1
-          exit 0
-          ;;
-    # Invalid options
-      * ) usage 1>&2
-          exit 16 ;;
+    "i")
+      is_initialize=$TRUE
+      remote_url=$OPTARG
+      ;;
+    "h")
+      show_help >&1
+      exit 0
+      ;;
+      # Invalid options
+    *)
+      usage 1>&2
+      exit 16
+      ;;
   esac
 done
 # Trim options from $*
-shift $(($OPTIND - 1))
-
+shift $((OPTIND - 1))
 
 function has_upstream() {
-  [[ $(git remote | grep $REPOSITORY) == $REPOSITORY ]]
+  [[ "$(git remote | grep -- "$REPOSITORY")" == "$REPOSITORY" ]]
 }
-
 
 function merge() {
   # Check exist upstream REPOSITORY in git's remote list.
@@ -93,15 +92,14 @@ function merge() {
   fi
 
   # Fetch & Merge
-  if ! git fetch ${REPOSITORY}; then
+  if ! git fetch "$REPOSITORY"; then
     return $?
   fi
-  if ! git merge ${UPSTREAM_PATH}; then
+  if ! git merge "$UPSTREAM_PATH"; then
     return $?
   fi
   return 0
 }
-
 
 function initialize() {
   if has_upstream; then
@@ -109,20 +107,19 @@ function initialize() {
     return 64
   fi
 
-  if ! git remote add ${REPOSITORY} ${remote_url}; then
+  if ! git remote add "$REPOSITORY" "$remote_url"; then
     return $?
   fi
-  if ! git fetch ${REPOSITORY}; then
+  if ! git fetch "$REPOSITORY"; then
     return $?
   fi
   return 0
 }
 
-
-if [[ $is_initialize == $TRUE ]]; then
+if [[ "$is_initialize" == "$TRUE" ]]; then
   initialize
   exit $?
-elif [[ $is_initialize == $FALSE ]]; then
+elif [[ "$is_initialize" == "$FALSE" ]]; then
   merge
   exit $?
 else

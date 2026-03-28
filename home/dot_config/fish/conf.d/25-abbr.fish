@@ -6,17 +6,17 @@ abbr --add reload 'exec fish -l'
 # ========== pbcopy (macOS only; one-liner + --set-cursor, see abbr -h) ==========
 # Default % marker is removed; cursor lands there after expand.
 if test (uname -s) = Darwin
-  abbr --add p-path --set-cursor 'path resolve % | pbcopy; echo (pbpaste)'
-  abbr --add p-file --set-cursor 'pbcopy < %'
+    abbr --add p-path --set-cursor 'path resolve % | pbcopy; echo (pbpaste)'
+    abbr --add p-file --set-cursor 'pbcopy < %'
 end
 
 # ========== docker ==========
-abbr --add d 'docker'
+abbr --add d docker
 abbr --add dc 'docker compose'
 abbr --add dce 'docker compose exec'
 
 # ========== git ==========
-abbr --add g 'git'
+abbr --add g git
 
 # 一軍: 単体で使う頻度が高いものは --command git を使わずに展開
 abbr --add gs 'git status'
@@ -35,7 +35,7 @@ abbr --add gph 'git push'
 
 # 二軍: 誤爆しやすい/用途が限定的なものは git 配下に限定
 # --command git: git の直後のトークンのみ展開 (g rebase → git rebase ...)
-abbr --add --command git -- br 'branch'
+abbr --add --command git -- br branch
 abbr --add --command git -- pullre 'pull --rebase'
 abbr --add --command git -- reset 'reset --hard HEAD'
 abbr --add --command git -- rebase 'rebase -i HEAD~'
@@ -50,17 +50,17 @@ abbr --add --command gh -- web 'pr view --web'
 # Stacked PRs: open the parent PR (head = current PR base)
 abbr --add --command gh -- pweb 'pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
 abbr --add --command gh -- switch 'pr checkout'
-abbr --add --command gh -- b 'browse'
-abbr --add --command gh -- 'switch' 'pr checkout'
+abbr --add --command gh -- b browse
+abbr --add --command gh -- switch 'pr checkout'
 
 # ========== bat ==========
-abbr --add b 'bat'
+abbr --add b bat
 
 # ========== claude ==========
-abbr --add c 'claude'
+abbr --add c claude
 
 # ========== nvim ==========
-abbr --add --position anywhere v 'nvim'
+abbr --add --position anywhere v nvim
 abbr --add --position anywhere vr 'nvim -R'
 abbr --add vf 'nvim (fzf)'
 abbr --add vrf 'nvim -R (fzf)'
@@ -71,18 +71,17 @@ abbr --add --command nvim -- cu '-c ":e ++enc=utf8" '
 abbr --add --command nvim -- ce '-c ":e ++enc=euc-jp" '
 abbr --add --command nvim -- cs '-c ":e ++enc=shift_jis" '
 
-
 # ========== zoxied ==========
 if command -q zoxide
-  abbr --add zb 'z ..'
-  abbr --add zbb 'z ../..'
-  abbr --add zbbb 'z ../../..'
-  abbr --add zp 'z -'
+    abbr --add zb 'z ..'
+    abbr --add zbb 'z ../..'
+    abbr --add zbbb 'z ../../..'
+    abbr --add zp 'z -'
 
-  abbr --add zgit 'z (git rev-parse --show-toplevel)'
+    abbr --add zgit 'z (git rev-parse --show-toplevel)'
 end
 
 # ========== yt-dlp (only when YT_BROWSER is set) ==========
 if set -q YT_BROWSER
-  abbr --add yt 'yt-dlp --cookies-from-browser $YT_BROWSER'
+    abbr --add yt 'yt-dlp --cookies-from-browser $YT_BROWSER'
 end
