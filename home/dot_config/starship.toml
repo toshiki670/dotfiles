@@ -2,9 +2,11 @@
 
 [aws]
 symbol = " "
+format = '[$symbol($profile )(\($region\) )(\[$duration\] )]($style)'
 
 [buf]
 symbol = " "
+format = '[$symbol($version )]($style)'
 
 [bun]
 symbol = " "
@@ -126,8 +128,9 @@ symbol = " "
 
 [memory_usage]
 disabled = false
+threshold = 75
 symbol = "󰍛 "
-format = '[$symbol${ram}( | ${swap}) ]($style)'
+format = '[$symbol${ram_pct}( | ${swap_pct}) ]($style)'
 
 [meson]
 symbol = "󰔷 "
@@ -214,6 +217,7 @@ symbol = "󰏗 "
 
 [python]
 symbol = " "
+format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
 
 [rlang]
 symbol = "󰟔 "
