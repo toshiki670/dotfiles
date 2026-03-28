@@ -1,4 +1,4 @@
-"$schema" = "https://starship.rs/config-schema.json"
+# No $schema: Nix CI taplo cannot fetch HTTPS in the Linux sandbox; add the Starship JSON schema in your editor if needed.
 
 [aws]
 symbol = " "
