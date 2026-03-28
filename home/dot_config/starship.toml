@@ -137,7 +137,7 @@ symbol = "󰔷 "
 
 [mise]
 disabled         = false
-format           = '[$symbol$health]($style) '
+format           = '[$symbol($health )]($style)'
 healthy_symbol   = ''
 symbol           = "󰭼 "
 unhealthy_symbol = 'bad'
