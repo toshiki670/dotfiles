@@ -272,6 +272,29 @@ git describe --tags --abbrev=0
 
 変更をコミットする前に、以下を確認してください：
 
+### Nix lint/check（推奨）
+
+```bash
+# 自動修正 + チェック
+nix run .#lint
+
+# チェックのみ
+nix run .#check
+```
+
+`nix/lint`（および `tests/lint`）を変更したときのみ、以下で lint ランナー実装の品質確認を行ってください:
+
+```bash
+nix run .#lint-tests
+nix run .#lint-typecheck
+nix run .#lint-stylecheck
+```
+
+補足:
+
+- CI は `nix flake check -L` と `nix run .#lint-tests` を実行します。
+- 詳細ログが必要な場合は `nix run .#check -- --summary --json` を使ってください。
+
 1. **構文エラーがないこと**
 
 ```bash

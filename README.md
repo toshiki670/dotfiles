@@ -197,3 +197,38 @@ On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config 
 
 - GNOME autostart configurations available in `linux/gnome/autostart/`
 - systemd service files available in `linux/systemd/`
+
+# Lint and Check (Nix)
+
+Use the Nix apps from the repository root.
+
+```bash
+# Auto-fix and then run checks
+nix run .#lint
+
+# Check-only (no file rewrite)
+nix run .#check
+```
+
+Useful options:
+
+```bash
+# Show executed commands and failure summary
+nix run .#lint -- --verbose --summary
+nix run .#check -- --summary --json
+```
+
+Lint runner implementation QA:
+
+```bash
+# pytest for nix/lint implementation
+nix run .#lint-tests
+
+# mypy type checks for nix/lint implementation
+nix run .#lint-typecheck
+
+# ruff style checks for nix/lint implementation
+nix run .#lint-stylecheck
+```
+
+CI (`.github/workflows/lint.yml`) runs `nix flake check -L` and also runs `nix run .#lint-tests`.
