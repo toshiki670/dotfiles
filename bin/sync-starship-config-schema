@@ -9,7 +9,7 @@ url="https://starship.rs/config-schema.json"
 tmp="$(mktemp)"
 trap 'rm -f "${tmp}"' EXIT
 
-curl -fsSL "${url}" | jq -S . > "${tmp}"
+curl -fsSL "${url}" | jq -S . >"${tmp}"
 mv "${tmp}" "${target}"
 trap - EXIT
 printf 'Updated %s from %s\n' "${target}" "${url}"

@@ -206,12 +206,7 @@ def check_toml(ctx: LintContext, f: FileContext) -> int:
         != 0
     ):
         failed = 1
-    if (
-        run_rule_cmd(
-            ctx, f, "toml", "check", ["taplo", "lint", str(f.abs_path)]
-        )
-        != 0
-    ):
+    if run_rule_cmd(ctx, f, "toml", "check", ["taplo", "lint", str(f.abs_path)]) != 0:
         failed = 1
     return failed
 
