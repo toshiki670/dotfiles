@@ -61,8 +61,8 @@ abbr --add p-squash 'gh pr merge --delete-branch --squash'
 abbr --add p-web 'gh pr view --web'
 abbr --add p-pweb 'gh pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
 abbr --add p-switch 'gh pr checkout'
-abbr --add p-ci 'pr checks'
-abbr --add p-ci-watch 'pr checks --watch --fail-fast'
+abbr --add p-ci 'gh pr checks'
+abbr --add p-ci-watch 'gh pr checks --watch --fail-fast'
 
 # ========== bat ==========
 abbr --add b bat
