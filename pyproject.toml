@@ -1,6 +1,6 @@
 [tool.ruff]
 line-length    = 88
-target-version = "py311"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [ "E", "F", "I" ]
@@ -11,6 +11,6 @@ testpaths = [ "tests/lint" ]
 [tool.mypy]
 files               = [ "nix/lint", "tests/lint" ]
 mypy_path           = [ "nix" ]
-python_version      = "3.11"
+python_version      = "3.13"
 strict              = true
 warn_unused_configs = true
