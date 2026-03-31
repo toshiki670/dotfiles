@@ -20,6 +20,7 @@ fi
 if command -v mise &>/dev/null; then
   echo "=== Mise ==="
   mise upgrade || echo "⚠️  Mise upgrade failed, continuing anyway..."
+  mise reshim || echo "⚠️  Mise reshim failed, continuing anyway..."
   echo ""
 fi
 
