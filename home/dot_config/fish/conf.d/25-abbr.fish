@@ -42,16 +42,27 @@ abbr --add --command git -- rebase 'rebase -i HEAD~'
 abbr --add --command git -- clean 'branch --merged | egrep -v \'(^[*+]|master|main)\' | xargs git branch -d; git fetch --prune'
 abbr --add --command git -- tags "for-each-ref --sort=-taggerdate --format='%(taggerdate:short) %(tag) %(taggername) %(subject)' refs/tags"
 # rebase は git で使用済みのため prrebase に (gh prrebase → gh pr merge --delete-branch --rebase)
-abbr --add --command gh -- show 'pr view'
-abbr --add --command gh -- diff 'pr diff'
-abbr --add --command gh -- merge 'pr merge --delete-branch --merge'
-abbr --add --command gh -- rebase 'pr merge --delete-branch --rebase'
-abbr --add --command gh -- web 'pr view --web'
+# abbr --add --command gh -- show 'pr view'
+# abbr --add --command gh -- diff 'pr diff'
+# abbr --add --command gh -- merge 'pr merge --delete-branch --merge'
+# abbr --add --command gh -- rebase 'pr merge --delete-branch --rebase'
+# abbr --add --command gh -- web 'pr view --web'
 # Stacked PRs: open the parent PR (head = current PR base)
-abbr --add --command gh -- pweb 'pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
-abbr --add --command gh -- switch 'pr checkout'
+# abbr --add --command gh -- pweb 'pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
+# abbr --add --command gh -- switch 'pr checkout'
 abbr --add --command gh -- b browse
-abbr --add --command gh -- switch 'pr checkout'
+# Pull Request
+abbr --add p 'gh pr'
+abbr --add p-show 'gh pr view'
+abbr --add p-diff 'gh pr diff'
+abbr --add p-merge 'gh pr merge --delete-branch --merge'
+abbr --add p-rebase 'gh pr merge --delete-branch --rebase'
+abbr --add p-squash 'gh pr merge --delete-branch --squash'
+abbr --add p-web 'gh pr view --web'
+abbr --add p-pweb 'gh pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
+abbr --add p-switch 'gh pr checkout'
+abbr --add p-ci 'pr checks'
+abbr --add p-ci-watch 'pr checks --watch --fail-fast'
 
 # ========== bat ==========
 abbr --add b bat
