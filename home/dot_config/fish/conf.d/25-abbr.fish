@@ -51,18 +51,21 @@ abbr --add --command git -- tags "for-each-ref --sort=-taggerdate --format='%(ta
 # abbr --add --command gh -- pweb 'pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
 # abbr --add --command gh -- switch 'pr checkout'
 abbr --add --command gh -- b browse
+abbr --add --command gh -- i issue
 # Pull Request
-abbr --add p 'gh pr'
-abbr --add p-show 'gh pr view'
-abbr --add p-diff 'gh pr diff'
-abbr --add p-merge 'gh pr merge --delete-branch --merge'
-abbr --add p-rebase 'gh pr merge --delete-branch --rebase'
-abbr --add p-squash 'gh pr merge --delete-branch --squash'
-abbr --add p-web 'gh pr view --web'
-abbr --add p-pweb 'gh pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
-abbr --add p-switch 'gh pr checkout'
-abbr --add p-ci 'gh pr checks'
-abbr --add p-ci-watch 'gh pr checks --watch --fail-fast'
+abbr --add gp 'gh pr'
+abbr --add gpv 'gh pr view'
+abbr --add gpshow 'gh pr view'
+abbr --add gpd 'gh pr diff'
+abbr --add gpmerge 'gh pr merge --delete-branch --merge'
+abbr --add gprebase 'gh pr merge --delete-branch --rebase'
+abbr --add gpsquash 'gh pr merge --delete-branch --squash'
+abbr --add gpw 'gh pr view --web'
+abbr --add gppw 'gh pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
+abbr --add gpc 'gh pr checkout'
+abbr --add gpswitch 'gh pr checkout'
+abbr --add gpci 'gh pr checks'
+abbr --add gpciw 'gh pr checks --watch --fail-fast'
 
 # ========== bat ==========
 abbr --add b bat
