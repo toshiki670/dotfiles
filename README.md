@@ -9,15 +9,6 @@
 
 This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the primary shell going forward (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. **Zsh** remains fully maintained (Sheldon, zeno, fzf, etc.). Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and scripts under `bin/`.
 
-# Release
-
-To create a new release, see [How to Execute a Release](CONTRIBUTING.md#リリースの実行方法) in the Contributing guide.
-
-**Quick Access:**
-
-- 📖 [Release Guide](CONTRIBUTING.md#リリースの実行方法) - Detailed instructions on how to create a release
-- 🚀 [Run Release Workflow](https://github.com/toshiki670/dotfiles/actions/workflows/release.yml) - Direct link to GitHub Actions release workflow
-
 # Prerequisites
 
 ## Required Tools
@@ -70,48 +61,6 @@ brew install ffmpeg marp-cli gitui ghostty zellij
 - `ghostty` - Terminal emulator; config lives under `~/.config/ghostty/` (see [Configuration](#configuration))
 - `zellij` - Terminal multiplexer; config under `~/.config/zellij/`
 
-## Rust Tools
-
-### Necessary
-
-```bash
-cargo install cargo-audit cargo-cache cargo-edit cargo-llvm-cov cargo-make cargo-modules cargo-outdated cargo-tree cargo-update cargo-watch
-```
-
-#### Rust cargo tool descriptions
-
-- `cargo-audit` - Scan dependencies for known security vulnerabilities
-- `cargo-cache` - Manage Cargo cache directory, display size, and clean unnecessary files
-- `cargo-edit` - Add, remove, and update dependencies in Cargo.toml from command line
-- `cargo-llvm-cov` - Measure code coverage and generate reports
-- `cargo-make` - Task runner/build tool for automating complex build flows and tasks
-- `cargo-modules` - Visualize project module structure
-- `cargo-outdated` - List available dependency updates
-- `cargo-tree` - Display dependency tree structure
-- `cargo-update` - Batch update installed Cargo binary crates
-- `cargo-watch` - Monitor source code changes and automatically run commands (build, test, etc.) on change
-
-### Optional
-
-```bash
-cargo install cargo-release tauri-cli create-tauri-app
-```
-
-#### Optional Rust cargo tool descriptions
-
-- `cargo-release` - Automate the release process for new versions
-- `tauri-cli` - Tauri application development CLI
-- `create-tauri-app` - Scaffolding tool for Tauri applications
-
-### Additional Tools
-
-The following tools may already be installed in your environment:
-
-- `sccache` (v0.12.0) - Cache compilation results to reduce build times
-- `sea-orm-cli` (v1.1.19) - SeaORM CLI for migrations and entity generation
-- `taplo-cli` (v0.10.0) - TOML formatter and linter
-- `trunk` (v0.21.14) - Build tool for Rust + WebAssembly applications
-- `wasm-bindgen-cli` - Generate bindings between Rust and JavaScript for WebAssembly
 
 # Installation
 
@@ -159,8 +108,7 @@ chsh -s "$(which fish)"
 
 ## Shells (Fish and Zsh)
 
-- **Fish (preferred)** — Modular config under `~/.config/fish/conf.d/`. Interactive sessions run `starship init fish` from `config.fish`; prompt styling lives in `~/.config/starship.toml`. New work and day-to-day usage should favor Fish. For a feature-by-feature mapping from Zsh, see [docs/fish-migration-from-zsh.md](docs/fish-migration-from-zsh.md).
-- **Zsh** — Entry point is `~/.config/zsh/` (via `dot_zshrc.tmpl`), with Sheldon and modular includes under `configs/`. Install [Zsh-only dependencies](#zsh-only-dependencies) if you use this stack.
+- **Fish (preferred)** — Modular config under `~/.config/fish/conf.d/`. Interactive sessions run `starship init fish` from `config.fish`; prompt styling lives in `~/.config/starship.toml`. New work and day-to-day usage should favor Fish.- **Zsh** — Entry point is `~/.config/zsh/` (via `dot_zshrc.tmpl`), with Sheldon and modular includes under `configs/`. Install [Zsh-only dependencies](#zsh-only-dependencies) if you use this stack.
 
 ## Environment Variables (Using Mise)
 
@@ -193,42 +141,7 @@ On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config 
 - Custom binaries in `bin/` will be added to PATH
 - Ghostty config symlink is set up as described above
 
-### Linux (Arch)
 
-- GNOME autostart configurations available in `linux/gnome/autostart/`
-- systemd service files available in `linux/systemd/`
+# Development
 
-# Lint and Check (Nix)
-
-Use the Nix apps from the repository root.
-
-```bash
-# Auto-fix and then run checks
-nix run .#lint
-
-# Check-only (no file rewrite)
-nix run .#check
-```
-
-Useful options:
-
-```bash
-# Show executed commands and failure summary
-nix run .#lint -- --verbose --summary
-nix run .#check -- --summary --json
-```
-
-Lint runner implementation QA:
-
-```bash
-# pytest for nix/lint implementation
-nix run .#lint-tests
-
-# mypy type checks for nix/lint implementation
-nix run .#lint-typecheck
-
-# ruff style checks for nix/lint implementation
-nix run .#lint-stylecheck
-```
-
-CI (`.github/workflows/lint.yml`) runs `nix flake check -L` and also runs `nix run .#lint-tests`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for lint, test, and release instructions. To trigger a release directly: [Run Release Workflow](https://github.com/toshiki670/dotfiles/actions/workflows/release.yml).
