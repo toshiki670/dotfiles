@@ -11,6 +11,9 @@
 # DOTFILES_GIT_EMAIL = "your-work-email@company.com"
 # DOTFILES_GIT_NAME = "Your Work Name"
 
+[settings]
+install_before = "1d"
+
 [tools]
 node   = "latest"
 python = "latest"
