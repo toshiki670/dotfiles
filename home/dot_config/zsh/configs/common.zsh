@@ -15,11 +15,6 @@ alias reload='exec $SHELL -l'
 # グローバルIPアドレス確認
 alias ipecho='curl ipecho.net/plain; echo'
 
-# 拡張子に応じたコマンドを実行
-alias -s txt='vim'
-alias -s html='open'
-alias -s php='php -f'
-
 # Process grep
 function ps-grep {
   ps aux | grep $1 | grep -v grep
