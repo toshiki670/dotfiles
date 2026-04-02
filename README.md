@@ -61,7 +61,6 @@ brew install ffmpeg marp-cli gitui ghostty zellij
 - `ghostty` - Terminal emulator; config lives under `~/.config/ghostty/` (see [Configuration](#configuration))
 - `zellij` - Terminal multiplexer; config under `~/.config/zellij/`
 
-
 # Installation
 
 ## Using chezmoi (Recommended)
@@ -140,7 +139,6 @@ On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config 
 - Homebrew configurations will be applied automatically
 - Custom binaries in `bin/` will be added to PATH
 - Ghostty config symlink is set up as described above
-
 
 # Development
 
