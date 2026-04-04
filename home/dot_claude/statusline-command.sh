@@ -107,20 +107,17 @@ if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
 fi
 
 # Rate limits
-if [ -n "$five_hour" ] || [ -n "$seven_day" ]; then
-  printf "  │ "
-  if [ -n "$five_hour" ] && [ -n "$five_hour_resets" ]; then
-    five_int=$(printf '%.0f' "$five_hour")
-    bar=$(make_bar "$five_int")
-    color=$(pace_color "$five_int" "$five_hour_resets" 18000)
-    printf "  󰔛 %s/5h ${color}%s %d%%${COLOR_RESET}" "$(fmt_remaining "$five_hour_resets")" "$bar" "$five_int"
-  fi
-  if [ -n "$seven_day" ] && [ -n "$seven_day_resets" ]; then
-    week_int=$(printf '%.0f' "$seven_day")
-    bar=$(make_bar "$week_int")
-    color=$(pace_color "$week_int" "$seven_day_resets" 604800)
-    printf "  󰃰 %s/7d ${color}%s %d%%${COLOR_RESET}" "$(fmt_remaining "$seven_day_resets")" "$bar" "$week_int"
-  fi
+if [ -n "$five_hour" ] && [ -n "$five_hour_resets" ]; then
+  five_int=$(printf '%.0f' "$five_hour")
+  bar=$(make_bar "$five_int")
+  color=$(pace_color "$five_int" "$five_hour_resets" 18000)
+  printf "  │  󰔛 %s/5h ${color}%s %d%%${COLOR_RESET}" "$(fmt_remaining "$five_hour_resets")" "$bar" "$five_int"
+fi
+if [ -n "$seven_day" ] && [ -n "$seven_day_resets" ]; then
+  week_int=$(printf '%.0f' "$seven_day")
+  bar=$(make_bar "$week_int")
+  color=$(pace_color "$week_int" "$seven_day_resets" 604800)
+  printf "  │  󰃰 %s/7d ${color}%s %d%%${COLOR_RESET}" "$(fmt_remaining "$seven_day_resets")" "$bar" "$week_int"
 fi
 
 echo ""
