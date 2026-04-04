@@ -74,25 +74,25 @@ make_bar() {
   printf "%s" "$bar"
 }
 
-# Format seconds remaining into human-readable countdown
-# Usage: fmt_reset <resets_at_epoch>
-fmt_reset() {
+# Format seconds remaining into human-readable string
+# Usage: fmt_remaining <resets_at_epoch>
+fmt_remaining() {
   local resets_at="$1"
   local now
   now=$(date +%s)
   local diff=$((resets_at - now))
-  [ "$diff" -le 0 ] && printf "↺now" && return
+  [ "$diff" -le 0 ] && printf "now" && return
 
   local days=$((diff / 86400))
   local hours=$(( (diff % 86400) / 3600 ))
   local mins=$(( (diff % 3600) / 60 ))
 
   if [ "$days" -gt 0 ]; then
-    printf "↺%dd%dh" "$days" "$hours"
+    printf "%dd%dh" "$days" "$hours"
   elif [ "$hours" -gt 0 ]; then
-    printf "↺%dh%dm" "$hours" "$mins"
+    printf "%dh%dm" "$hours" "$mins"
   else
-    printf "↺%dm" "$mins"
+    printf "%dm" "$mins"
   fi
 }
 
@@ -113,15 +113,13 @@ if [ -n "$five_hour" ] || [ -n "$seven_day" ]; then
     five_int=$(printf '%.0f' "$five_hour")
     bar=$(make_bar "$five_int")
     color=$(pace_color "$five_int" "$five_hour_resets" 18000)
-    printf "  󰔛 5h ${color}%s %d%%${COLOR_RESET}" "$bar" "$five_int"
-    printf " %s" "$(fmt_reset "$five_hour_resets")"
+    printf "  󰔛 %s/5h ${color}%s %d%%${COLOR_RESET}" "$(fmt_remaining "$five_hour_resets")" "$bar" "$five_int"
   fi
   if [ -n "$seven_day" ] && [ -n "$seven_day_resets" ]; then
     week_int=$(printf '%.0f' "$seven_day")
     bar=$(make_bar "$week_int")
     color=$(pace_color "$week_int" "$seven_day_resets" 604800)
-    printf "  󰃰 7d ${color}%s %d%%${COLOR_RESET}" "$bar" "$week_int"
-    printf " %s" "$(fmt_reset "$seven_day_resets")"
+    printf "  󰃰 %s/7d ${color}%s %d%%${COLOR_RESET}" "$(fmt_remaining "$seven_day_resets")" "$bar" "$week_int"
   fi
 fi
 
