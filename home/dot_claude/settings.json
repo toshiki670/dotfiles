@@ -4,5 +4,18 @@
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
+  },
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$file\" ] && git -C \"$(dirname \"$file\")\" rev-parse --git-dir > /dev/null 2>&1; then echo '{\"decision\": \"allow\", \"reason\": \"File is in a git repository\"}'; fi"
+          }
+        ]
+      }
+    ]
   }
 }
