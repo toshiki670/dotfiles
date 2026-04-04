@@ -64,13 +64,14 @@ pace_color() {
 # Usage: make_bar <percentage>
 make_bar() {
   local pct="$1"
-  local filled=$(echo "$pct" | awk '{printf "%d", ($1 + 5) / 10}')
+  local filled
+  filled=$(echo "$pct" | awk '{printf "%d", ($1 + 5) / 10}')
   [ "$filled" -gt 10 ] && filled=10
   local empty=$((10 - filled))
   local bar=""
-  local i
-  for i in $(seq 1 "$filled"); do bar="${bar}█"; done
-  for i in $(seq 1 "$empty"); do bar="${bar}░"; done
+  local _i
+  for _i in $(seq 1 "$filled"); do bar="${bar}█"; done
+  for _i in $(seq 1 "$empty"); do bar="${bar}░"; done
   printf "%s" "$bar"
 }
 
