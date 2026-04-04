@@ -14,21 +14,50 @@ seven_day=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // emp
 seven_day_resets=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 
 # ANSI color codes
-COLOR_RESET="\033[0m"
-COLOR_YELLOW="\033[33m"
-COLOR_RED="\033[31m"
+COLOR_RESET=$'\033[0m'
+COLOR_GREEN=$'\033[32m'
+COLOR_YELLOW=$'\033[33m'
+COLOR_RED=$'\033[31m'
 
-# Return the ANSI color code based on percentage thresholds
-# Usage: pct_color <percentage>
-pct_color() {
-  local pct="$1"
-  if awk "BEGIN {exit !($pct >= 90)}"; then
-    printf "%s" "$COLOR_RED"
-  elif awk "BEGIN {exit !($pct >= 75)}"; then
-    printf "%s" "$COLOR_YELLOW"
-  else
-    printf "%s" "$COLOR_RESET"
-  fi
+# Return color based on pace: actual usage vs expected usage given elapsed time.
+#   pace < 0.7  → green  (well under pace, room to use more)
+#   pace < 1.0  → reset  (on pace, neutral)
+#   pace < 1.5  → yellow (over pace, consider slowing down)
+#   pace >= 1.5 → red    (significantly over pace, slow down)
+# Usage: pace_color <used_pct> <resets_at_epoch> <total_window_seconds>
+pace_color() {
+  local used_pct="$1"
+  local resets_at="$2"
+  local total_secs="$3"
+  local now
+  now=$(date +%s)
+
+  local result
+  result=$(awk -v used="$used_pct" -v resets="$resets_at" \
+               -v total="$total_secs" -v now="$now" 'BEGIN {
+    remaining = resets - now
+    if (remaining < 0) remaining = 0
+    elapsed = total - remaining
+    if (elapsed < 0) elapsed = 0
+    elapsed_pct = elapsed / total  # 0.0-1.0
+
+    # Not enough elapsed time to judge pace
+    if (elapsed_pct < 0.05) { print "reset"; exit }
+
+    pace = used / (elapsed_pct * 100)
+
+    if (pace >= 1.5)     print "red"
+    else if (pace >= 1.0) print "yellow"
+    else if (pace < 0.7)  print "green"
+    else                  print "reset"
+  }')
+
+  case "$result" in
+    red)    printf "%s" "$COLOR_RED" ;;
+    yellow) printf "%s" "$COLOR_YELLOW" ;;
+    green)  printf "%s" "$COLOR_GREEN" ;;
+    *)      printf "%s" "$COLOR_RESET" ;;
+  esac
 }
 
 # Build a 10-block progress bar from a percentage value (0-100)
@@ -70,34 +99,29 @@ fmt_reset() {
 # Model
 printf " %s" "$model"
 
-# Context usage
+# Context usage (pace-based if resets info available, otherwise no color)
 if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
   used_int=$(printf '%.0f' "$used_pct")
   bar=$(make_bar "$used_int")
-  color=$(pct_color "$used_int")
-  printf "  │  󰾅 ${color}%s %d%%${COLOR_RESET}" "$bar" "$used_int"
+  printf "  │  󰾅 %s %d%%" "$bar" "$used_int"
 fi
 
 # Rate limits
 if [ -n "$five_hour" ] || [ -n "$seven_day" ]; then
   printf "  │ "
-  if [ -n "$five_hour" ]; then
+  if [ -n "$five_hour" ] && [ -n "$five_hour_resets" ]; then
     five_int=$(printf '%.0f' "$five_hour")
     bar=$(make_bar "$five_int")
-    color=$(pct_color "$five_int")
+    color=$(pace_color "$five_int" "$five_hour_resets" 18000)
     printf "  󰔛 5h ${color}%s %d%%${COLOR_RESET}" "$bar" "$five_int"
-    if [ -n "$five_hour_resets" ]; then
-      printf " %s" "$(fmt_reset "$five_hour_resets")"
-    fi
+    printf " %s" "$(fmt_reset "$five_hour_resets")"
   fi
-  if [ -n "$seven_day" ]; then
+  if [ -n "$seven_day" ] && [ -n "$seven_day_resets" ]; then
     week_int=$(printf '%.0f' "$seven_day")
     bar=$(make_bar "$week_int")
-    color=$(pct_color "$week_int")
+    color=$(pace_color "$week_int" "$seven_day_resets" 604800)
     printf "  󰃰 7d ${color}%s %d%%${COLOR_RESET}" "$bar" "$week_int"
-    if [ -n "$seven_day_resets" ]; then
-      printf " %s" "$(fmt_reset "$seven_day_resets")"
-    fi
+    printf " %s" "$(fmt_reset "$seven_day_resets")"
   fi
 fi
 
