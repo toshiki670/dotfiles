@@ -34,7 +34,7 @@ pace_color() {
 
   local result
   result=$(awk -v used="$used_pct" -v resets="$resets_at" \
-               -v total="$total_secs" -v now="$now" 'BEGIN {
+    -v total="$total_secs" -v now="$now" 'BEGIN {
     remaining = resets - now
     if (remaining < 0) remaining = 0
     elapsed = total - remaining
@@ -53,10 +53,10 @@ pace_color() {
   }')
 
   case "$result" in
-    red)    printf "%s" "$COLOR_RED" ;;
+    red) printf "%s" "$COLOR_RED" ;;
     yellow) printf "%s" "$COLOR_YELLOW" ;;
-    green)  printf "%s" "$COLOR_GREEN" ;;
-    *)      printf "%s" "$COLOR_RESET" ;;
+    green) printf "%s" "$COLOR_GREEN" ;;
+    *) printf "%s" "$COLOR_RESET" ;;
   esac
 }
 
@@ -70,7 +70,7 @@ make_bar() {
   local bar=""
   local i
   for i in $(seq 1 "$filled"); do bar="${bar}█"; done
-  for i in $(seq 1 "$empty");  do bar="${bar}░"; done
+  for i in $(seq 1 "$empty"); do bar="${bar}░"; done
   printf "%s" "$bar"
 }
 
@@ -84,8 +84,8 @@ fmt_remaining() {
   [ "$diff" -le 0 ] && printf "now" && return
 
   local days=$((diff / 86400))
-  local hours=$(( (diff % 86400) / 3600 ))
-  local mins=$(( (diff % 3600) / 60 ))
+  local hours=$(((diff % 86400) / 3600))
+  local mins=$(((diff % 3600) / 60))
 
   if [ "$days" -gt 0 ]; then
     printf "%dd%dh" "$days" "$hours"
