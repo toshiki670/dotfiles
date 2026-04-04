@@ -1,0 +1,8 @@
+{
+  "voiceEnabled": true,
+  "language": "日本語",
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  }
+}
