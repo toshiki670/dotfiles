@@ -9,7 +9,9 @@ used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 remaining_pct=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
 
 five_hour=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
+five_hour_resets=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 seven_day=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
+seven_day_resets=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 
 # ANSI color codes
 COLOR_RESET="\033[0m"
@@ -43,6 +45,28 @@ make_bar() {
   printf "%s" "$bar"
 }
 
+# Format seconds remaining into human-readable countdown
+# Usage: fmt_reset <resets_at_epoch>
+fmt_reset() {
+  local resets_at="$1"
+  local now
+  now=$(date +%s)
+  local diff=$((resets_at - now))
+  [ "$diff" -le 0 ] && printf "↺now" && return
+
+  local days=$((diff / 86400))
+  local hours=$(( (diff % 86400) / 3600 ))
+  local mins=$(( (diff % 3600) / 60 ))
+
+  if [ "$days" -gt 0 ]; then
+    printf "↺%dd%dh" "$days" "$hours"
+  elif [ "$hours" -gt 0 ]; then
+    printf "↺%dh%dm" "$hours" "$mins"
+  else
+    printf "↺%dm" "$mins"
+  fi
+}
+
 # Model
 printf " %s" "$model"
 
@@ -62,12 +86,18 @@ if [ -n "$five_hour" ] || [ -n "$seven_day" ]; then
     bar=$(make_bar "$five_int")
     color=$(pct_color "$five_int")
     printf "  󰔛 5h ${color}%s %d%%${COLOR_RESET}" "$bar" "$five_int"
+    if [ -n "$five_hour_resets" ]; then
+      printf " %s" "$(fmt_reset "$five_hour_resets")"
+    fi
   fi
   if [ -n "$seven_day" ]; then
     week_int=$(printf '%.0f' "$seven_day")
     bar=$(make_bar "$week_int")
     color=$(pct_color "$week_int")
     printf "  󰃰 7d ${color}%s %d%%${COLOR_RESET}" "$bar" "$week_int"
+    if [ -n "$seven_day_resets" ]; then
+      printf " %s" "$(fmt_reset "$seven_day_resets")"
+    fi
   fi
 fi
 
