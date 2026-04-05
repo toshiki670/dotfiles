@@ -50,7 +50,7 @@ brew install zsh sheldon deno
 ## Optional Tools
 
 ```bash
-brew install ffmpeg marp-cli gitui ghostty zellij
+brew install ffmpeg marp-cli gitui ghostty zellij smartmontools
 ```
 
 ### Optional Homebrew tool descriptions
@@ -60,6 +60,7 @@ brew install ffmpeg marp-cli gitui ghostty zellij
 - `gitui` - Terminal UI for git commands
 - `ghostty` - Terminal emulator; config lives under `~/.config/ghostty/` (see [Configuration](#configuration))
 - `zellij` - Terminal multiplexer; config under `~/.config/zellij/`
+- `smartmontools` - S.M.A.R.T. disk health monitoring (`smartctl`)
 
 # Installation
 
