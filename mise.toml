@@ -1,3 +1,11 @@
+[tasks.lint]
+description = "Run linter with auto-fix"
+run         = "nix run .#lint"
+
+[tasks.check]
+description = "Run linter check only"
+run         = "nix run .#check"
+
 [tasks.release-patch]
 description = "Create a patch release (e.g., v1.0.0 -> v1.0.1)"
 run = """
