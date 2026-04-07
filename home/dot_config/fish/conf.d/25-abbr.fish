@@ -30,6 +30,8 @@ abbr --add gl 'git log --graph --all --pretty=format:\'%C(yellow)%h%C(cyan)%d%Cr
 abbr --add gsw 'git switch'
 abbr --add gnew 'git switch -c'
 abbr --add gpre 'git switch -'
+abbr --add gmain 'git switch main'
+abbr --add gmaster 'git switch master'
 abbr --add gpl 'git pull'
 abbr --add gph 'git push'
 
