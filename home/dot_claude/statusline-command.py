@@ -96,14 +96,18 @@ def main() -> None:
         bar = make_bar(five_int)
         color = pace_color(five_int, five_hour_resets, 18000)
         remaining = fmt_remaining(five_hour_resets)
-        out.append(f"  │  \U000f051b {remaining}/5h {color}{bar} {five_int}%{COLOR_RESET}")
+        out.append(
+            f"  │  \U000f051b {remaining}/5h {color}{bar} {five_int}%{COLOR_RESET}"
+        )
 
     if seven_day is not None and seven_day_resets is not None:
         week_int = round(seven_day)
         bar = make_bar(week_int)
         color = pace_color(week_int, seven_day_resets, 604800)
         remaining = fmt_remaining(seven_day_resets)
-        out.append(f"  │  \U000f00f0 {remaining}/7d {color}{bar} {week_int}%{COLOR_RESET}")
+        out.append(
+            f"  │  \U000f00f0 {remaining}/7d {color}{bar} {week_int}%{COLOR_RESET}"
+        )
 
     print("".join(out))
 
