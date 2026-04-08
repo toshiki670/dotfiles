@@ -1,20 +1,12 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 #
 # 256色のカラーパレットを表示する
-#  bash と zsh にて実行可能
 #
 
-target_shell=$1
+RESET = "\033[0m"
 
-if [ -z "$1" ]; then
-  target_shell=$(basename "$SHELL")
-fi
-
-if [ "$target_shell" = "bash" ]; then
-  bash <<<'for code in {0..255}; do echo -n "[38;05;${code}m $(printf %03d $code)"; [ $((${code} % 16)) -eq 15 ] && echo; done'
-elif [ "$target_shell" = "zsh" ]; then
-  zsh <<<'for code in {000..255}; do print -nP -- "%K{$code}%F{black} $code %k%f"; [ $((${code} % 16)) -eq 15 ] && echo; done'
-else
-  echo "error: Invalid argument ($target_shell)"
-  echo "Usage: $0 [bash|zsh]"
-fi
+for code in range(256):
+    print(f"\033[48;5;{code}m\033[38;5;0m {code:03d} \033[0m", end="")
+    if (code + 1) % 16 == 0:
+        print(RESET)
+print(RESET, end="")
