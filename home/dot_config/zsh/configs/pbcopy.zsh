@@ -15,4 +15,12 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     fi
     pbcopy < "$1"
   }
+
+  function pbcopy-obj {
+    if (( $# != 1 )); then
+      echo "usage: pbcopy-obj <file>" 1>&2
+      return 1
+    fi
+    osascript -e "set the clipboard to POSIX file \"$(readlink -f "$1")\""
+  }
 fi

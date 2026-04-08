@@ -8,6 +8,7 @@ abbr --add reload 'exec fish -l'
 if test (uname -s) = Darwin
     abbr --add p-path --set-cursor 'path resolve % | pbcopy; echo (pbpaste)'
     abbr --add p-file --set-cursor 'pbcopy < %'
+    abbr --add p-obj --set-cursor 'pbcopy-obj %'
 end
 
 # ========== docker ==========
