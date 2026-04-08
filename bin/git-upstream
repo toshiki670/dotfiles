@@ -1,128 +1,82 @@
-#!/bin/bash
-# # Reference
-# - [GitHubでFork/cloneしたリポジトリを本家リポジトリに追従する](https://qiita.com/xtetsuji/items/555a1ef19ed21ee42873)
+#!/usr/bin/env python3
+# Reference:
+# - https://qiita.com/xtetsuji/items/555a1ef19ed21ee42873
 
-# Constant
-readonly CMDNAME=${0##*/}
-readonly TRUE='true'
-readonly FALSE='false'
+import argparse
+import os
+import shutil
+import subprocess
+import sys
 
-readonly REPOSITORY="upstream"
-readonly UPSTREAM_PATH="${REPOSITORY}/master"
+CMDNAME = os.path.basename(sys.argv[0])
+REPOSITORY = "upstream"
+UPSTREAM_PATH = f"{REPOSITORY}/master"
 
-# It's not necessary to running as root.
-if [[ ${EUID:-${UID}} -eq 0 ]]; then
-  echo "${CMDNAME}: Running this script as root is no supported." 1>&2
-  exit 4
-fi
 
-# Check installed the required shell.
-if ! type "git" >/dev/null 2>&1; then
-  echo "${CMDNAME}: Git command not found." 1>&2
-  exit 8
-fi
+def run(args):
+    result = subprocess.run(args)
+    return result.returncode
 
-function usage() {
-  cmdname_space=${CMDNAME//?/ }
 
-  cat <<__USAGE_TEXT__
-Usage:
-  $CMDNAME
-  $CMDNAME [-i <remote_url>]
-  $cmdname_space [-h]
-__USAGE_TEXT__
-}
+def has_upstream():
+    result = subprocess.run(
+        ["git", "remote"],
+        capture_output=True,
+        text=True,
+    )
+    return REPOSITORY in result.stdout.splitlines()
 
-function description() {
-  cat <<__DESCRIPTION_TEXT__
-Description:
-  Upstream merger.
 
-Example:
-  $ ${CMDNAME}
-  $ ${CMDNAME} -i https://github.com/toshiki670/dotfiles.git
+def merge():
+    if not has_upstream():
+        print(f"{CMDNAME}: Git hasn't `{REPOSITORY}' REPOSITORY.")
+        print(f"{CMDNAME}: Please command below:")
+        print(f"{CMDNAME}: $ {CMDNAME} -i <remote_url>")
+        return 32
 
-Options:
-  -i Initialize
-  -h Show help
-__DESCRIPTION_TEXT__
-}
+    rc = run(["git", "fetch", REPOSITORY])
+    if rc != 0:
+        return rc
 
-function show_help() {
-  usage
-  echo
-  description
-}
+    return run(["git", "merge", UPSTREAM_PATH])
 
-# Option analysis
-is_initialize=$FALSE
-while getopts i:h OPT; do
-  case $OPT in
-    "i")
-      is_initialize=$TRUE
-      remote_url=$OPTARG
-      ;;
-    "h")
-      show_help >&1
-      exit 0
-      ;;
-      # Invalid options
-    *)
-      usage 1>&2
-      exit 16
-      ;;
-  esac
-done
-# Trim options from $*
-shift $((OPTIND - 1))
 
-function has_upstream() {
-  [[ "$(git remote | grep -- "$REPOSITORY")" == "$REPOSITORY" ]]
-}
+def initialize(remote_url):
+    if has_upstream():
+        print(f"{CMDNAME}: Already initialized.", file=sys.stderr)
+        return 64
 
-function merge() {
-  # Check exist upstream REPOSITORY in git's remote list.
-  if ! has_upstream; then
-    {
-      echo "${CMDNAME}: Git hasn't \`${REPOSITORY}' REPOSITORY."
-      echo "${CMDNAME}: Please command below:"
-      echo "${CMDNAME}: $ ${CMDNAME} -i <remote_url>"
-    } >&1
-    return 32
-  fi
+    rc = run(["git", "remote", "add", REPOSITORY, remote_url])
+    if rc != 0:
+        return rc
 
-  # Fetch & Merge
-  if ! git fetch "$REPOSITORY"; then
-    return $?
-  fi
-  if ! git merge "$UPSTREAM_PATH"; then
-    return $?
-  fi
-  return 0
-}
+    return run(["git", "fetch", REPOSITORY])
 
-function initialize() {
-  if has_upstream; then
-    echo "${CMDNAME}: Already nitialized." 1>&2
-    return 64
-  fi
 
-  if ! git remote add "$REPOSITORY" "$remote_url"; then
-    return $?
-  fi
-  if ! git fetch "$REPOSITORY"; then
-    return $?
-  fi
-  return 0
-}
+def main():
+    if os.geteuid() == 0:
+        print(f"{CMDNAME}: Running this script as root is not supported.", file=sys.stderr)
+        sys.exit(4)
 
-if [[ "$is_initialize" == "$TRUE" ]]; then
-  initialize
-  exit $?
-elif [[ "$is_initialize" == "$FALSE" ]]; then
-  merge
-  exit $?
-else
-  echo "${0##*/}: Unknown error." 1>&2
-  exit 128
-fi
+    if shutil.which("git") is None:
+        print(f"{CMDNAME}: Git command not found.", file=sys.stderr)
+        sys.exit(8)
+
+    parser = argparse.ArgumentParser(
+        prog=CMDNAME,
+        description="Upstream merger.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f"Example:\n  $ {CMDNAME}\n  $ {CMDNAME} -i https://github.com/toshiki670/dotfiles.git",
+    )
+    parser.add_argument("-i", metavar="remote_url", help="Initialize")
+
+    args = parser.parse_args()
+
+    if args.i is not None:
+        sys.exit(initialize(args.i))
+    else:
+        sys.exit(merge())
+
+
+if __name__ == "__main__":
+    main()
