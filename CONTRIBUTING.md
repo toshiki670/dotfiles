@@ -20,6 +20,11 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 [Conventional Commits](https://www.conventionalcommits.org/ja/) 形式を推奨（任意）。
 
+### このリポジトリ固有の判断基準
+
+- `.claude/` 配下のスキルや `home/.chezmoiscripts/` 等、dotfiles 内部でのみ使われるツール・スクリプトの追加・変更は `chore:` を使う（`feat:` ではない）。
+  - `feat:` はホームディレクトリに展開され、ユーザー環境に影響する設定・機能の追加に使う。
+
 ## ブランチ戦略
 
 **GitHub Flow** を採用。ブランチ命名: `<type>/[<id>-]<short-description>`
@@ -29,9 +34,17 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## リリースプロセス
 
-このプロジェクトは **手動リリース** を採用しています。
-
 ### リリースの実行方法
+
+Claude Code の `/release` スキルを使用する（推奨）：
+
+```
+/release
+```
+
+未リリースの PR を自動分析し、バージョンバンプの種別（`minor` / `patch`）を提案した上で確認後にワークフローをトリガーする。
+
+#### 手動で実行する場合
 
 ```bash
 # パッチリリース (0.28.0 → 0.28.1)
@@ -41,9 +54,7 @@ mise run release-patch
 mise run release-minor
 ```
 
-または [GitHub Actions UI](https://github.com/toshiki670/dotfiles/actions/workflows/release.yml) から `patch` / `minor` を選択して実行。
-
-詳細は [`VERSIONING.md`](VERSIONING.md) を参照してください。
+バージョンバンプの種別（`minor` / `patch`）の判断基準は [`VERSIONING.md`](VERSIONING.md) を参照。
 
 ### ローカルでのバージョン確認
 
@@ -69,10 +80,10 @@ git describe --tags --abbrev=0
 
 ```bash
 # 自動修正 + チェック
-nix run .#lint
+mise run lint
 
 # チェックのみ
-nix run .#check
+mise run check
 ```
 
 `nix/lint`（および `tests/lint`）を変更したときのみ、以下で lint ランナー実装の品質確認を行ってください:
@@ -86,7 +97,7 @@ nix run .#lint-stylecheck
 補足:
 
 - CI は `nix flake check -L` と `nix run .#lint-tests` を実行します。
-- 詳細ログが必要な場合は `nix run .#check -- --summary --json` を使ってください。
+- 詳細ログが必要な場合は `mise run check -- --summary --json` を使ってください。
 
 ### ci-status の E2E テスト（該当する場合）
 
@@ -101,7 +112,7 @@ zsh tests/ci-status/run-all.zsh
 
 ## コードスタイル
 
-`nix run .#lint` で適用される linter / formatter に従う。
+`mise run lint` で適用される linter / formatter に従う。
 
 ## ヘルプ・質問
 
