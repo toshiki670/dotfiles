@@ -55,7 +55,9 @@ def initialize(remote_url):
 
 def main():
     if os.geteuid() == 0:
-        print(f"{CMDNAME}: Running this script as root is not supported.", file=sys.stderr)
+        print(
+            f"{CMDNAME}: Running this script as root is not supported.", file=sys.stderr
+        )
         sys.exit(4)
 
     if shutil.which("git") is None:
