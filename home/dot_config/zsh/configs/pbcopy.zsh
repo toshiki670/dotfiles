@@ -15,4 +15,5 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     fi
     pbcopy < "$1"
   }
+
 fi

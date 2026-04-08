@@ -3,11 +3,12 @@
 # ========== shell / misc ==========
 abbr --add reload 'exec fish -l'
 
-# ========== pbcopy (macOS only; one-liner + --set-cursor, see abbr -h) ==========
+# ========== clipboard (macOS only; one-liner + --set-cursor, see abbr -h) ==========
 # Default % marker is removed; cursor lands there after expand.
 if test (uname -s) = Darwin
-    abbr --add p-path --set-cursor 'path resolve % | pbcopy; echo (pbpaste)'
-    abbr --add p-file --set-cursor 'pbcopy < %'
+    abbr --add c-path --set-cursor 'path resolve % | pbcopy; echo (pbpaste)'
+    abbr --add c-file --set-cursor 'pbcopy < %'
+    abbr --add c-obj --set-cursor 'copy-obj %'
 end
 
 # ========== docker ==========
