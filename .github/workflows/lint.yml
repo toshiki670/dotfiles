@@ -41,6 +41,12 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
       - name: Nix flake check
         run: nix flake check -L
 
@@ -58,6 +64,12 @@ jobs:
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
+
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
 
       - name: Lint runner tests
         run: nix run .#lint-tests
