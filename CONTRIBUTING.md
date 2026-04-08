@@ -38,7 +38,7 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 Claude Code の `/release` スキルを使用する（推奨）：
 
-```
+```text
 /release
 ```
 
