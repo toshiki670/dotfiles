@@ -75,6 +75,14 @@ def is_home_chezmoi_zsh_template(f: str, repo_root: Path) -> bool:
     )
 
 
+def has_python_shebang(path: Path) -> bool:
+    try:
+        first = path.read_text(encoding="utf-8", errors="ignore").splitlines()[0]
+    except Exception:
+        return False
+    return first.startswith("#!") and "python" in first
+
+
 def shell_flavor(path: Path) -> str:
     try:
         first = path.read_text(encoding="utf-8", errors="ignore").splitlines()[0]

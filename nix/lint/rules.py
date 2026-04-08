@@ -1,4 +1,5 @@
 from .classify import (
+    has_python_shebang,
     is_fish,
     is_home_chezmoi_fish_completion_template,
     is_home_chezmoi_fish_template,
@@ -20,6 +21,8 @@ from .utils import format_cmd, run_capture, run_rule_cmd
 
 def match_shell(_: LintContext, f: FileContext) -> bool:
     if not (is_shell_ext(f.rel_path) or is_shell_path(f.rel_path)):
+        return False
+    if has_python_shebang(f.abs_path):
         return False
     return shell_flavor(f.abs_path) in ("bash", "sh", "")
 
@@ -171,7 +174,7 @@ def check_lua(ctx: LintContext, f: FileContext) -> int:
 
 
 def match_python(_: LintContext, f: FileContext) -> bool:
-    return is_python(f.rel_path)
+    return is_python(f.rel_path) or has_python_shebang(f.abs_path)
 
 
 def fix_python(ctx: LintContext, f: FileContext) -> int:
