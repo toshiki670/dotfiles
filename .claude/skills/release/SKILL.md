@@ -28,6 +28,7 @@ If multiple PRs are present, the highest bump wins (minor > patch).
 ### Step 3: Confirm with User
 
 Present the analysis to the user:
+
 - List of unreleased PRs with titles
 - Determined bump type (minor or patch) with reasoning
 - Ask for confirmation before triggering the workflow
@@ -37,16 +38,19 @@ Present the analysis to the user:
 After user confirmation, run the appropriate command:
 
 **For MINOR:**
+
 ```bash
 gh workflow run release.yml -f release_type=minor
 ```
 
 **For PATCH:**
+
 ```bash
 gh workflow run release.yml -f release_type=patch
 ```
 
 Then verify the workflow was triggered:
+
 ```bash
 gh run list --workflow=release.yml --limit=3
 ```
