@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# ANSI Color code (16colors)
+# ANSI Color code (16colors + 256colors)
 #
 #  http://ascii-table.com/ansi-escape-sequences.php
 #  http://archive.linux.or.jp/JF/JFdocs/Bash-Prompt-HOWTO-5.html
@@ -46,6 +46,7 @@
 
 RESET = "\033[0m"
 
+# 16 colors
 colors = [
     ("1;37", "White       "),
     ("37", "Light Gray  "),
@@ -65,6 +66,7 @@ colors = [
     ("1;36", "Light Cyan  "),
 ]
 
+print("=== 16 Colors ===")
 print(" On White(47)     On Black(40)     On Default     Color Code")
 
 for code, name in colors:
@@ -72,3 +74,13 @@ for code, name in colors:
     on_black = f"\033[40m\033[{code}m  {name}{RESET}"
     on_default = f"\033[{code}m  {name}{RESET}"
     print(f"{on_white}  {on_black}  {on_default}  {code}")
+
+# 256 colors
+print()
+print("=== 256 Colors ===")
+
+for code in range(256):
+    print(f"\033[48;5;{code}m\033[38;5;0m {code:03d} \033[0m", end="")
+    if (code + 1) % 16 == 0:
+        print(RESET)
+print(RESET, end="")
