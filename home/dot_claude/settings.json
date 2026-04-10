@@ -1,6 +1,7 @@
 {
   "voiceEnabled": true,
   "language": "日本語",
+  "preferredEditor": "nvim",
   "statusLine": {
     "type": "command",
     "command": "python3 ~/.claude/statusline-command.py"
