@@ -99,17 +99,6 @@ nix run .#lint-stylecheck
 - CI は `nix flake check -L` と `nix run .#lint-tests` を実行します。
 - 詳細ログが必要な場合は `mise run check -- --summary --json` を使ってください。
 
-### ci-status の E2E テスト（該当する場合）
-
-`ci-status.zsh` を変更した場合は、E2Eテストを実行してください：
-
-```bash
-# 全てのuse-caseを並列実行
-zsh tests/ci-status/run-all.zsh
-```
-
-テストは `tests/ci-status/` 配下に配置され、各use-caseは独立したzshスクリプトとして並列実行されます。詳細は各use-caseファイルを参照してください。
-
 ## コードスタイル
 
 `mise run lint` で適用される linter / formatter に従う。

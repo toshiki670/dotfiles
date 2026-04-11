@@ -14,7 +14,7 @@ We use 2-digit prefixes where each 20-number range maps to one responsibility.
 ## Naming rule
 
 - Format: `NN-feature-name.fish`
-- Keep names descriptive (`95-starship-prompt.fish`, `65-ci-status.fish`)
+- Keep names descriptive (`95-starship-prompt.fish`, `65-feature-name.fish`)
 
 ## Ordering rule
 
