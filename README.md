@@ -50,7 +50,7 @@ brew install zsh sheldon deno
 ## Optional Tools
 
 ```bash
-brew install ffmpeg marp-cli gitui ghostty zellij smartmontools
+brew install ffmpeg marp-cli gitui ghostty zellij smartmontools rtk
 ```
 
 ### Optional Homebrew tool descriptions
@@ -61,6 +61,13 @@ brew install ffmpeg marp-cli gitui ghostty zellij smartmontools
 - `ghostty` - Terminal emulator; config lives under `~/.config/ghostty/` (see [Configuration](#configuration))
 - `zellij` - Terminal multiplexer; config under `~/.config/zellij/`
 - `smartmontools` - S.M.A.R.T. disk health monitoring (`smartctl`)
+- `rtk` - CLI proxy that reduces LLM token usage by 60–90% ([rtk-ai/rtk](https://github.com/rtk-ai/rtk)); after install, run `rtk init -g` to configure Claude Code hooks
+
+After installing `rtk`, initialize the Claude Code hook:
+
+```bash
+rtk init -g
+```
 
 # Installation
 
