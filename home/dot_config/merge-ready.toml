@@ -1,0 +1,41 @@
+version = 1
+
+[merge_ready]
+symbol = "󰄬"
+label = "merge-ready"
+
+[conflict]
+symbol = ""
+label = "conflict"
+
+[update_branch]
+symbol = "󰚰"
+label = "update-branch"
+
+[sync_unknown]
+symbol = ""
+label = "sync-unknown"
+
+[ci_fail]
+symbol = ""
+label = "ci-fail"
+
+[ci_action]
+symbol = "󰀦"
+label = "ci-action"
+
+[review]
+symbol = "󰀦"
+label = "review"
+
+[error.auth_required]
+symbol = ""
+label = "gh auth login"
+
+[error.rate_limited]
+symbol = ""
+label = "rate-limited"
+
+[error.api_error]
+symbol = ""
+label = "api-error"
