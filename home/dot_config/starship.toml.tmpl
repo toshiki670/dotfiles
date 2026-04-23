@@ -251,3 +251,14 @@ symbol = " "
 
 [zig]
 symbol = " "
+
+{{ if lookPath "merge-ready" }}
+[custom.merge_ready]
+command = "merge-ready prompt"
+when = true
+require_repo = true
+shell = ["/bin/zsh"]
+format = "[($output )]($style)"
+style = "bold yellow"
+{{ end -}}
+
