@@ -25,5 +25,5 @@ function _git_background_fetch_worker
 
     echo $now >"$stamp_file"
 
-    env GIT_TERMINAL_PROMPT=0 command git -C "$top" fetch --quiet >/dev/null 2>&1
+    env GIT_TERMINAL_PROMPT=0 command git -C "$top" fetch --quiet --no-write-fetch-head >/dev/null 2>&1
 end
