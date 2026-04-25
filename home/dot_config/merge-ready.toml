@@ -1,5 +1,3 @@
-version = 1
-
 [merge_ready]
 label  = "merge-ready"
 symbol = "󰄬"
@@ -39,3 +37,4 @@ symbol = ""
 [error.api_error]
 label  = "api-error"
 symbol = ""
+
