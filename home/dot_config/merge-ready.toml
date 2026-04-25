@@ -37,4 +37,3 @@ symbol = ""
 [error.api_error]
 label  = "api-error"
 symbol = ""
-
