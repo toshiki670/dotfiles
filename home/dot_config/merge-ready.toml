@@ -1,5 +1,3 @@
-version = 1
-
 [merge_ready]
 label  = "merge-ready"
 symbol = "󰄬"
