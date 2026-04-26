@@ -26,17 +26,6 @@ def _save_resets_at(resets_at: int) -> None:
     _CACHE_FILE.write_text(json.dumps({"resets_at": resets_at}))
 
 
-def seven_day_pace_color(used_pct: float, resets_at: int) -> str:
-    prev = _load_prev_resets_at()
-    if prev is not None and resets_at != prev:
-        window_secs = resets_at - prev
-        color = pace_color(used_pct, resets_at, window_secs)
-    else:
-        color = COLOR_RESET
-    _save_resets_at(resets_at)
-    return color
-
-
 def pace_color(used_pct: float, resets_at: int, total_secs: int) -> str:
     """Return ANSI color based on pace: actual usage vs expected usage given elapsed time.
 
@@ -129,7 +118,12 @@ def main() -> None:
     if seven_day is not None and seven_day_resets is not None:
         week_int = round(seven_day)
         bar = make_bar(week_int)
-        color = seven_day_pace_color(week_int, seven_day_resets)
+        prev_resets_at = _load_prev_resets_at()
+        _save_resets_at(seven_day_resets)
+        if prev_resets_at is not None and seven_day_resets != prev_resets_at:
+            color = pace_color(week_int, seven_day_resets, seven_day_resets - prev_resets_at)
+        else:
+            color = COLOR_RESET
         remaining = fmt_remaining(seven_day_resets)
         out.append(
             f"  │  \U000f00f0 {remaining}/7d {color}{bar} {week_int}%{COLOR_RESET}"
