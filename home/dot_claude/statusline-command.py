@@ -4,11 +4,26 @@
 import json
 import sys
 import time
+from pathlib import Path
+
+_CACHE_FILE = Path("~/.cache/claude/seven_day_resets_at.json").expanduser()
 
 COLOR_RESET = "\033[0m"
 COLOR_GREEN = "\033[32m"
 COLOR_YELLOW = "\033[33m"
 COLOR_RED = "\033[31m"
+
+
+def _load_prev_resets_at() -> int | None:
+    try:
+        return json.loads(_CACHE_FILE.read_text()).get("resets_at")
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        return None
+
+
+def _save_resets_at(resets_at: int) -> None:
+    _CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _CACHE_FILE.write_text(json.dumps({"resets_at": resets_at}))
 
 
 def pace_color(used_pct: float, resets_at: int, total_secs: int) -> str:
@@ -103,7 +118,14 @@ def main() -> None:
     if seven_day is not None and seven_day_resets is not None:
         week_int = round(seven_day)
         bar = make_bar(week_int)
-        color = pace_color(week_int, seven_day_resets, 604800)
+        prev_resets_at = _load_prev_resets_at()
+        _save_resets_at(seven_day_resets)
+        if prev_resets_at is not None and seven_day_resets != prev_resets_at:
+            color = pace_color(
+                week_int, seven_day_resets, seven_day_resets - prev_resets_at
+            )
+        else:
+            color = COLOR_RESET
         remaining = fmt_remaining(seven_day_resets)
         out.append(
             f"  │  \U000f00f0 {remaining}/7d {color}{bar} {week_int}%{COLOR_RESET}"
