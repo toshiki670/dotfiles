@@ -121,7 +121,9 @@ def main() -> None:
         prev_resets_at = _load_prev_resets_at()
         _save_resets_at(seven_day_resets)
         if prev_resets_at is not None and seven_day_resets != prev_resets_at:
-            color = pace_color(week_int, seven_day_resets, seven_day_resets - prev_resets_at)
+            color = pace_color(
+                week_int, seven_day_resets, seven_day_resets - prev_resets_at
+            )
         else:
             color = COLOR_RESET
         remaining = fmt_remaining(seven_day_resets)
