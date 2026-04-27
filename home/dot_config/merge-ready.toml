@@ -1,39 +1,27 @@
 [merge_ready]
-label  = "merge-ready"
 symbol = "󰄬"
 
 [conflict]
-label  = "conflict"
 symbol = ""
 
 [update_branch]
-label  = "update-branch"
 symbol = "󰚰"
 
 [sync_unknown]
-label  = "sync-unknown"
 symbol = ""
 
 [ci_fail]
-label  = "ci-fail"
 symbol = ""
 
 [ci_action]
-label  = "ci-action"
 symbol = "󰀦"
 
-[review]
-label  = "review"
+[changes_requested]
 symbol = "󰀦"
 
-[error.auth_required]
-label  = "gh auth login"
-symbol = ""
+[no_pull_request]
+symbol = "󰎔"
 
-[error.rate_limited]
-label  = "rate-limited"
+[error]
 symbol = ""
 
-[error.api_error]
-label  = "api-error"
-symbol = ""
