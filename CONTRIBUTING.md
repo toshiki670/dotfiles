@@ -34,42 +34,29 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## リリースプロセス
 
-### リリースの実行方法
+このリポジトリは [release-please](https://github.com/googleapis/release-please) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。
 
-Claude Code の `/release` スキルを使用する（推奨）：
+### バージョン決定ルール
 
-```text
-/release
-```
+| コミットタイプ | バンプ | 例 |
+| --- | --- | --- |
+| `feat!:` / `BREAKING CHANGE:` フッター | **major** | `v0.54.2` → `v1.0.0` |
+| `feat:` | **minor** | `v0.54.2` → `v0.55.0` |
+| `fix:` | **patch** | `v0.54.2` → `v0.54.3` |
+| `chore:` / `docs:` / その他 | なし | バージョン変更なし |
 
-未リリースの PR を自動分析し、バージョンバンプの種別（`minor` / `patch`）を提案した上で確認後にワークフローをトリガーする。
+### リリースフロー
 
-#### 手動で実行する場合
+1. `feat:` / `fix:` / `feat!:` などのコミットが `main` に push されると、release-please が Release PR を自動作成・更新する
+2. Release PR には `CHANGELOG.md` と `.release-please-manifest.json` の更新が含まれる
+3. Release PR をマージすると GitHub Release とタグが自動作成される
 
-```bash
-# パッチリリース (0.28.0 → 0.28.1)
-mise run release-patch
+手動操作は不要。Release PR のマージがリリースのトリガー。
 
-# マイナーリリース (0.28.0 → 0.29.0)
-mise run release-minor
-```
-
-バージョンバンプの種別（`minor` / `patch`）の判断基準は [`VERSIONING.md`](VERSIONING.md) を参照。
-
-### ローカルでのバージョン確認
+### 現在のバージョン確認
 
 ```bash
-# 現在のバージョンを確認
-gh release view --json tagName -q '.tagName'
-# または
 git describe --tags --abbrev=0
-
-# バージョンバンプスクリプトのヘルプを表示
-./bin/bump_version -h
-
-# 次のバージョンを確認
-./bin/bump_version v0.28.0 patch   # Output: v0.28.1
-./bin/bump_version v0.28.0 minor   # Output: v0.29.0
 ```
 
 ## テスト
