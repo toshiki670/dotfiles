@@ -5,3 +5,21 @@ run         = "nix run .#lint"
 [tasks.check]
 description = "Run linter check only"
 run         = "nix run .#check"
+
+[tasks.release-prepare]
+description = "Trigger the Release Please workflow (creates a Release PR)"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf 'Release PR を作成します。よろしいですか？ [y/N]: '
+read -r answer
+case "$answer" in
+  y|Y) ;;
+  *) echo "キャンセルしました。"; exit 0 ;;
+esac
+
+gh workflow run release-please.yml --repo toshiki670/dotfiles
+echo "Workflow をトリガーしました。"
+echo "進捗: https://github.com/toshiki670/dotfiles/actions/workflows/release-please.yml"
+"""
