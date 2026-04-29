@@ -5,29 +5,3 @@ run         = "nix run .#lint"
 [tasks.check]
 description = "Run linter check only"
 run         = "nix run .#check"
-
-[tasks.release-patch]
-description = "Create a patch release (e.g., v1.0.0 -> v1.0.1)"
-run = """
-echo "Create a patch release?"
-read -p "Continue? (y/n): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  gh workflow run release.yml -f release_type=patch
-else
-  echo "Cancelled."
-fi
-"""
-
-[tasks.release-minor]
-description = "Create a minor release (e.g., v1.0.0 -> v1.1.0)"
-run = """
-echo "Create a minor release?"
-read -p "Continue? (y/n): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  gh workflow run release.yml -f release_type=minor
-else
-  echo "Cancelled."
-fi
-"""
