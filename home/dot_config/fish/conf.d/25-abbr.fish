@@ -67,7 +67,7 @@ abbr --add gpc 'gh pr checkout'
 abbr --add gpswitch 'gh pr checkout'
 abbr --add gpci 'gh pr checks'
 abbr --add gpciw 'gh pr checks --watch --fail-fast'
-abbr --add gpup 'gh pr update-branch && reload'
+abbr --add gpup 'gh pr update-branch && git pull'
 
 # ========== bat ==========
 abbr --add b bat
