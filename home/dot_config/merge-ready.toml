@@ -1,26 +1,56 @@
 [merge_ready]
 symbol = "󰄬"
-
-[conflict]
-symbol = ""
-
-[update_branch]
-symbol = "󰚰"
-
-[sync_unknown]
-symbol = ""
-
-[ci_fail]
-symbol = ""
-
-[ci_action]
-symbol = "󰀦"
-
-[changes_requested]
-symbol = "󰀦"
+format = "[$symbol $label](bold green)"
 
 [no_pull_request]
 symbol = "󰎔"
+label = "Create PR"
+format = "[$symbol $label](cyan)"
+
+[conflict]
+symbol = ""
+format = "[$symbol $label](bold red)"
+
+[update_branch]
+symbol = "󰚰"
+format = "[$symbol $label](yellow)"
+
+[sync_unknown]
+symbol = ""
+format = "[$symbol $label](yellow)"
+
+[ci_fail]
+symbol = ""
+format = "[$symbol $label](bold red)"
+
+[ci_action]
+symbol = "󰀦"
+format = "[$symbol $label](yellow)"
+
+[ci_pending]
+symbol = ""
+format = "[$symbol $label](cyan)"
+
+[changes_requested]
+symbol = "󰀦"
+format = "[$symbol $label](yellow)"
+
+[review_required]
+symbol = ""
+format = "[$symbol $label](cyan)"
+
+[draft]
+symbol = ""
+format = "[$symbol $label](dimmed)"
+
+[status_calculating]
+symbol = ""
+format = "[$symbol $label](dimmed)"
+
+[blocked_unknown]
+symbol = ""
+format = "[$symbol $label](yellow)"
 
 [error]
 symbol = ""
+format = "[$symbol $message](bold red)"
