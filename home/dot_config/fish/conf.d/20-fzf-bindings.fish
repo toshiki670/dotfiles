@@ -4,6 +4,8 @@
 bind -M default ctrl-j,ctrl-h _fzf_history
 bind -M default ctrl-j,ctrl-t _fzf_file
 bind -M default ctrl-j,ctrl-g _fzf_ghq_repo
+bind -M default ctrl-j,ctrl-w _fzf_worktree
 bind -M insert ctrl-j,ctrl-h _fzf_history
 bind -M insert ctrl-j,ctrl-t _fzf_file
 bind -M insert ctrl-j,ctrl-g _fzf_ghq_repo
+bind -M insert ctrl-j,ctrl-w _fzf_worktree
