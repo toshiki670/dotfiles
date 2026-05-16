@@ -16,6 +16,6 @@ fi
 
 # browser-use
 for _browser_use_dir in "$HOME/.browser-use/bin" "$HOME/.browser-use-env/bin"; do
-  [[ -d "$_browser_use_dir" ]] && export PATH="$_browser_use_dir:$PATH"
+  [[ -d "$_browser_use_dir" ]] && export PATH="$PATH:$_browser_use_dir"
 done
 unset _browser_use_dir
