@@ -31,7 +31,7 @@ if command -v mise &>/dev/null; then
 fi
 
 if command -v cargo &>/dev/null && command -v cargo-install-update &>/dev/null; then
-  run "Cargo" cargo install-update --all
+  run "Cargo" cargo install-update --locked --all
 fi
 
 header "Done"
