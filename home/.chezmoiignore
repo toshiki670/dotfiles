@@ -6,8 +6,5 @@
 .config/git/configs/
 .config/git/ignores/
 
-# Zsh includeTemplate sources
-.config/zsh/configs/
-
 # Fish runtime state (universal vars); updated by fish at runtime, do not manage
 .config/fish/fish_variables

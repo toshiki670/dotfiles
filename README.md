@@ -7,7 +7,7 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
-This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the primary shell going forward (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. **Zsh** remains fully maintained (Sheldon, zeno, fzf, etc.). Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and scripts under `bin/`.
+This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and scripts under `bin/`.
 
 # Prerequisites
 
@@ -32,20 +32,8 @@ brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-de
 - `ripgrep` - Fast search tool (rg command)
 - `starship` - Minimal, fast prompt ([starship.rs](https://starship.rs/)); Fish loads it from `config.fish`, config at `~/.config/starship.toml`
 - `zoxide` - Smarter cd command that learns your habits
-- `fzf` - Command-line fuzzy finder (used with zoxide and Fish/Zsh key bindings)
+- `fzf` - Command-line fuzzy finder (used with zoxide and Fish key bindings)
 - `git-delta` - Syntax-highlighting pager for git, diff, and grep output
-
-## Zsh-only dependencies
-
-Install these if you use the **Zsh** configuration (Sheldon, zeno snippet expansion, etc.).
-
-```bash
-brew install zsh sheldon deno
-```
-
-- `zsh` - Z shell
-- `sheldon` - Zsh plugin manager
-- `deno` - JavaScript/TypeScript runtime (required for zeno.zsh)
 
 ## Optional Tools
 
@@ -103,8 +91,6 @@ chezmoi apply
 exec fish -l
 ```
 
-If you use Zsh instead: `exec zsh -l` (or `exec $SHELL -l` after `chsh`).
-
 ### 6. Set login shell (recommended for Fish)
 
 ```bash
@@ -113,9 +99,9 @@ chsh -s "$(which fish)"
 
 # Configuration
 
-## Shells (Fish and Zsh)
+## Shell (Fish)
 
-- **Fish (preferred)** — Modular config under `~/.config/fish/conf.d/`. Interactive sessions run `starship init fish` from `config.fish`; prompt styling lives in `~/.config/starship.toml`. New work and day-to-day usage should favor Fish.- **Zsh** — Entry point is `~/.config/zsh/` (via `dot_zshrc.tmpl`), with Sheldon and modular includes under `configs/`. Install [Zsh-only dependencies](#zsh-only-dependencies) if you use this stack.
+Modular config under `~/.config/fish/conf.d/`. Interactive sessions run `starship init fish` from `config.fish`; prompt styling lives in `~/.config/starship.toml`.
 
 ## Environment Variables (Using Mise)
 

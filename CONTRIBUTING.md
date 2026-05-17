@@ -6,7 +6,7 @@
 
 ```bash
 # Homebrew経由でインストール
-brew install git gh zsh mise
+brew install git gh mise
 ```
 
 ```bash
