@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.58.2](https://github.com/toshiki670/dotfiles/compare/v0.58.1...v0.58.2) (2026-05-17)
+
+
+### Code Refactoring
+
+* ホスト側削除完了後の .chezmoiremove.tmpl を撤去 ([#270](https://github.com/toshiki670/dotfiles/issues/270), [#325](https://github.com/toshiki670/dotfiles/issues/325)) ([#328](https://github.com/toshiki670/dotfiles/issues/328)) ([f7d39f0](https://github.com/toshiki670/dotfiles/commit/f7d39f06a9b338a52868f29ee1c929747a9f9ee3))
+
 ## [0.58.1](https://github.com/toshiki670/dotfiles/compare/v0.58.0...v0.58.1) (2026-05-17)
 
 
