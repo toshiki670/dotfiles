@@ -1,0 +1,10 @@
+{{- /*
+  `chezmoi apply` 時にホスト側から削除するターゲット一覧（$HOME からの相対パス）。
+  全マシンに行き渡ったらこのファイル自体・該当エントリを削除する。
+*/ -}}
+{{/* issue #270 (Zsh 撤去) */}}
+.zshenv
+.config/zsh
+{{/* issue #325 (sheldon / zeno 撤去) */}}
+.config/sheldon
+.config/zeno
