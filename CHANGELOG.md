@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.60.0](https://github.com/toshiki670/dotfiles/compare/v0.59.0...v0.60.0) (2026-05-17)
+
+
+### Features
+
+* bin に cleanup-env コマンドを追加 ([#334](https://github.com/toshiki670/dotfiles/issues/334)) ([6fb8f35](https://github.com/toshiki670/dotfiles/commit/6fb8f35a98d268e12a21750705c0cfe7695e6af0))
+
 ## [0.59.0](https://github.com/toshiki670/dotfiles/compare/v0.58.2...v0.59.0) (2026-05-17)
 
 
