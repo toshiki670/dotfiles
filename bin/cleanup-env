@@ -1,0 +1,95 @@
+#!/bin/bash
+# Cleanup caches and unused versions from installed package managers
+#
+# Usage:
+#   cleanup-env            # interactive, actually deletes
+#   cleanup-env -n|--dry-run  # show what would be removed
+
+set -e
+
+DRY_RUN=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -n|--dry-run) DRY_RUN=true; shift ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: cleanup-env [OPTIONS]
+
+Prompt-then-cleanup for installed package managers.
+
+Options:
+  -n, --dry-run    Show what would be removed without removing
+  -h, --help       Show this help message
+EOF
+      exit 0
+      ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
+  esac
+done
+
+header() {
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  $1"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+}
+
+run() {
+  local label="$1"
+  shift
+  echo "=== $label ==="
+  "$@" || echo "⚠️  $label failed, continuing..."
+  echo ""
+}
+
+confirm() {
+  local reply
+  read -r -p "$1 [y/N] " reply
+  [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+header "Cleaning Up Environment"
+if $DRY_RUN; then
+  echo "(dry-run: nothing will actually be removed)"
+  echo ""
+fi
+
+if command -v brew &>/dev/null; then
+  if confirm "Run brew cleanup?"; then
+    if $DRY_RUN; then
+      run "Homebrew cleanup (dry-run)" brew cleanup --dry-run
+    else
+      run "Homebrew cleanup" brew cleanup
+    fi
+  fi
+  if confirm "Run brew autoremove?"; then
+    if $DRY_RUN; then
+      run "Homebrew autoremove (dry-run)" brew autoremove --dry-run
+    else
+      run "Homebrew autoremove" brew autoremove
+    fi
+  fi
+fi
+
+if command -v mise &>/dev/null; then
+  if confirm "Run mise prune?"; then
+    if $DRY_RUN; then
+      run "mise prune (dry-run)" mise prune --dry-run
+    else
+      run "mise prune" mise prune
+    fi
+  fi
+fi
+
+if command -v cargo &>/dev/null && command -v cargo-cache &>/dev/null; then
+  if confirm "Run cargo cache --autoclean?"; then
+    if $DRY_RUN; then
+      run "Cargo cache (dry-run)" cargo cache --dry-run --autoclean
+    else
+      run "Cargo cache" cargo cache --autoclean
+    fi
+  fi
+fi
+
+header "Done"
