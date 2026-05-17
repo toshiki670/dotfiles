@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.59.0](https://github.com/toshiki670/dotfiles/compare/v0.58.2...v0.59.0) (2026-05-17)
+
+
+### Features
+
+* starship の gcloud に account/domain/region 表示の format を追加 ([#332](https://github.com/toshiki670/dotfiles/issues/332)) ([781c3d4](https://github.com/toshiki670/dotfiles/commit/781c3d4b65d3c54fb0edc9f8bce0609e94af73f9))
+
 ## [0.58.2](https://github.com/toshiki670/dotfiles/compare/v0.58.1...v0.58.2) (2026-05-17)
 
 
