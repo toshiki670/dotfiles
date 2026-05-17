@@ -2,9 +2,6 @@
   # Alias Management ===================================
   alias = !"cat \"${DOTFILES}/dot_config/git/configs/alias\" | grep -v '^\\[' | sed 's/^  //'"
 
-  # (s, b, d, ds, l, a, ap, c, cm, ch, sw, new, pre, pull-re, reset-hard,
-  #  rebase-previous, clean-blanch, web → zeno snippets after "git " + Space)
-
   # Diff (PR base, side-by-side) =======================
   diff-base = diff-base-helper
   d-base = diff-base
@@ -16,7 +13,7 @@
 
   diff-base-helper = !"f() { git fetch && git \"$@\" diff $(gh pr view --json baseRefOid --jq '.baseRefOid')...HEAD; }; f"
 
-  # Branch & Switch (shell helpers; not in zeno) =======
+  # Branch & Switch ===================================
   main = !git switch main && git pull
   master = !git switch master && git pull
 
