@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.58.1](https://github.com/toshiki670/dotfiles/compare/v0.58.0...v0.58.1) (2026-05-17)
+
+
+### Code Refactoring
+
+* Zsh 専用設定 (sheldon/zeno) を chezmoi 管理から外す (1/2) ([#326](https://github.com/toshiki670/dotfiles/issues/326)) ([bbd9fca](https://github.com/toshiki670/dotfiles/commit/bbd9fca1ad8503eb0097e374c506e423a82e914f))
+* Zsh 設定を chezmoi 管理から外しホスト側削除を予告 (1/2) ([#323](https://github.com/toshiki670/dotfiles/issues/323)) ([06a8620](https://github.com/toshiki670/dotfiles/commit/06a862058be991128557b5c23154ebf18de44ca3))
+
 ## [0.58.0](https://github.com/toshiki670/dotfiles/compare/v0.57.0...v0.58.0) (2026-05-17)
 
 
