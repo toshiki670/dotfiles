@@ -10,8 +10,11 @@ set -e
 DRY_RUN=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -n|--dry-run) DRY_RUN=true; shift ;;
-    -h|--help)
+    -n | --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    -h | --help)
       cat <<'EOF'
 Usage: cleanup-env [OPTIONS]
 
@@ -23,7 +26,10 @@ Options:
 EOF
       exit 0
       ;;
-    *) echo "Unknown option: $1" >&2; exit 1 ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
   esac
 done
 
