@@ -1,5 +1,5 @@
 [merge_ready]
-format = "[$symbol $label( #$pr_id)](bold green)"
+format = "[$symbol $label( $pr_ids)](bold green)"
 symbol = "󰄬"
 
 [no_pull_request]
@@ -8,47 +8,47 @@ label  = "Create PR"
 symbol = "󰎔"
 
 [conflict]
-format = "[$symbol $label( #$pr_id)](bold red)"
+format = "[$symbol $label( $pr_ids)](bold red)"
 symbol = ""
 
 [update_branch]
-format = "[$symbol $label( #$pr_id)](yellow)"
+format = "[$symbol $label( $pr_ids)](yellow)"
 symbol = "󰚰"
 
 [sync_unknown]
-format = "[$symbol $label( #$pr_id)](yellow)"
+format = "[$symbol $label( $pr_ids)](yellow)"
 symbol = ""
 
 [ci_fail]
-format = "[$symbol $label( #$pr_id)](bold red)"
+format = "[$symbol $label( $pr_ids)](bold red)"
 symbol = ""
 
 [ci_action]
-format = "[$symbol $label( #$pr_id)](yellow)"
+format = "[$symbol $label( $pr_ids)](yellow)"
 symbol = "󰀦"
 
 [ci_pending]
-format = "[$symbol $label( #$pr_id)](cyan)"
+format = "[$symbol $label( $pr_ids)](cyan)"
 symbol = ""
 
 [changes_requested]
-format = "[$symbol $label( #$pr_id)](yellow)"
+format = "[$symbol $label( $pr_ids)](yellow)"
 symbol = "󰀦"
 
 [review_required]
-format = "[$symbol $label( #$pr_id)](cyan)"
+format = "[$symbol $label( $pr_ids)](cyan)"
 symbol = ""
 
 [draft]
-format = "[$symbol $label( #$pr_id)](dimmed)"
+format = "[$symbol $label( $pr_ids)](dimmed)"
 symbol = ""
 
 [status_calculating]
-format = "[$symbol $label( #$pr_id)](dimmed)"
+format = "[$symbol $label( $pr_ids)](dimmed)"
 symbol = ""
 
 [blocked_unknown]
-format = "[$symbol $label( #$pr_id)](yellow)"
+format = "[$symbol $label( $pr_ids)](yellow)"
 symbol = ""
 
 [error]
