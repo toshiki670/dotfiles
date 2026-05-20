@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.61.0](https://github.com/toshiki670/dotfiles/compare/v0.60.0...v0.61.0) (2026-05-20)
+
+
+### Features
+
+* ~/.claude/settings.json を modify_ script 化してローカル編集値を保持 ([#336](https://github.com/toshiki670/dotfiles/issues/336)) ([#337](https://github.com/toshiki670/dotfiles/issues/337)) ([1f5043f](https://github.com/toshiki670/dotfiles/commit/1f5043f81dbc8fdb65d34f65d81fa4ea582c3a59))
+
 ## [0.60.0](https://github.com/toshiki670/dotfiles/compare/v0.59.0...v0.60.0) (2026-05-17)
 
 
