@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.62.0](https://github.com/toshiki670/dotfiles/compare/v0.61.0...v0.62.0) (2026-05-20)
+
+
+### Features
+
+* merge-ready の format を複数 PR 対応の $pr_ids に変更 ([#339](https://github.com/toshiki670/dotfiles/issues/339)) ([557529b](https://github.com/toshiki670/dotfiles/commit/557529b2201c53da3708b1cc0326f91720d0ec48))
+
 ## [0.61.0](https://github.com/toshiki670/dotfiles/compare/v0.60.0...v0.61.0) (2026-05-20)
 
 
