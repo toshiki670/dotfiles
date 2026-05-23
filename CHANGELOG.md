@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.62.1](https://github.com/toshiki670/dotfiles/compare/v0.62.0...v0.62.1) (2026-05-23)
+
+
+### Bug Fixes
+
+* mise の二重 activate を解消し fish 起動を高速化 ([#342](https://github.com/toshiki670/dotfiles/issues/342)) ([d96a43d](https://github.com/toshiki670/dotfiles/commit/d96a43d917ad7a1c2c227b1a81785ea96ab7598e))
+
 ## [0.62.0](https://github.com/toshiki670/dotfiles/compare/v0.61.0...v0.62.0) (2026-05-20)
 
 
