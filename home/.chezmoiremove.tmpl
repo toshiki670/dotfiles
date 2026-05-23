@@ -1,0 +1,6 @@
+{{- /*
+  `chezmoi apply` 時にホスト側から削除するターゲット一覧（$HOME からの相対パス）。
+  全マシンに行き渡ったらこのファイル自体・該当エントリを削除する。
+*/ -}}
+{{/* issue #341 (mise 二重 activate 解消: 手動 activate を削除し mise vendor 自動 activate に一本化) */}}
+.config/fish/conf.d/10-mise.fish
