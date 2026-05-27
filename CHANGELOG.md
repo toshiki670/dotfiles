@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.62.2](https://github.com/toshiki670/dotfiles/compare/v0.62.1...v0.62.2) (2026-05-26)
+
+
+### Bug Fixes
+
+* mise モジュールを無効化して Starship プロンプト呼び出しを削減 ([#344](https://github.com/toshiki670/dotfiles/issues/344)) ([85af381](https://github.com/toshiki670/dotfiles/commit/85af381c31b4f1ce176fafe8244a147eec04acc2))
+
 ## [0.62.1](https://github.com/toshiki670/dotfiles/compare/v0.62.0...v0.62.1) (2026-05-23)
 
 
