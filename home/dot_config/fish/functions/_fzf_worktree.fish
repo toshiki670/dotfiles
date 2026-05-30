@@ -6,15 +6,24 @@ function _fzf_worktree
     end
 
     set -l tab (printf '\t')
-    set -l toplevel (git rev-parse --show-toplevel 2>/dev/null)
 
+    # メイン worktree はパスだけ控え、削除候補リストには含めない
+    set -l main_path
     set -l lines
     for w in (__fzf_worktree_list .)
         set -l p (string split -- $tab $w)
-        set -l label $p[3]
-        test "$p[1]" = 1; and set label "* $label"
-        # 表示 / パス / ismain
-        set -a lines (printf '%s\t%s\t%s' "$label" "$p[2]" "$p[1]")
+        if test "$p[1]" = 1
+            set main_path $p[2]
+            continue
+        end
+        # リンク worktree のみ: 表示 / パス
+        set -a lines (printf '%s\t%s' "$p[3]" "$p[2]")
+    end
+
+    if test (count $lines) -eq 0
+        echo "削除できる worktree がありません"
+        commandline -f repaint
+        return
     end
 
     set -l selection (
@@ -32,28 +41,19 @@ function _fzf_worktree
 
     set -l parts (string split -- $tab $selection)
     set -l wpath $parts[2]
-    set -l ismain $parts[3]
-
-    # メイン / 現在地の worktree は削除不可（force でも不可）。事前にはじく
-    if test "$ismain" = 1
-        echo "メイン worktree は削除できません: $wpath"
-        commandline -f repaint
-        return 1
-    end
-    if test -n "$toplevel"
-        set -l cur (path resolve "$toplevel")
-        set -l sel (path resolve "$wpath")
-        if test "$cur" = "$sel"
-            echo "現在地の worktree は削除できません（別のディレクトリへ移動してから実行してください）: $wpath"
-            commandline -f repaint
-            return 1
-        end
-    end
 
     read -l -P "WT を削除しますか? [y/N] " confirm
     if not string match -qri '^y' -- "$confirm"
         commandline -f repaint
         return
+    end
+
+    # 現在地が削除対象 worktree の内側なら、削除前にメインへ移動する
+    # （現在地の worktree を消すと cwd が無効なディレクトリを指すため）
+    set -l cur (path resolve -- $PWD)
+    set -l target (path resolve -- $wpath)
+    if test "$cur" = "$target"; or string match -q -- "$target/*" "$cur"
+        test -n "$main_path"; and cd $main_path
     end
 
     if git worktree remove "$wpath"
