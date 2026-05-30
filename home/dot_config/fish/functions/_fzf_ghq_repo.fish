@@ -13,6 +13,6 @@ function _fzf_ghq_repo
         set rel (string trim "$rel")
         set -l root (ghq root)
         cd "$root/$rel"
-        commandline -f repaint
     end
+    commandline -f repaint
 end
