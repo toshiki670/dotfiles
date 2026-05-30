@@ -1,7 +1,6 @@
 function _fzf_ghq_repo
     if not command -v ghq >/dev/null 2>&1
         echo "ghq: command not found"
-        commandline -f repaint
         return 1
     end
 

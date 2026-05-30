@@ -1,7 +1,6 @@
 function _fzf_worktree
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
         echo "not in a git repository"
-        commandline -f repaint
         return 1
     end
 
@@ -22,7 +21,6 @@ function _fzf_worktree
 
     if test (count $lines) -eq 0
         echo "削除できる worktree がありません"
-        commandline -f repaint
         return
     end
 
