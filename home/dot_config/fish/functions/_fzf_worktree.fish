@@ -31,6 +31,6 @@ function _fzf_worktree
     if test -n "$selection"
         set -l parts (string split -m 1 -- $tab $selection)
         cd $parts[2]
-        commandline -f repaint
     end
+    commandline -f repaint
 end
