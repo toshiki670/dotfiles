@@ -1,4 +1,8 @@
 # Dotfiles
+## Claude Code
+.claude/worktrees/
+.claude/settings.local.json
+
 ## Zsh
 zsh/bundle/*
 !.keep
