@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.62.3](https://github.com/toshiki670/dotfiles/compare/v0.62.2...v0.62.3) (2026-05-30)
+
+
+### Bug Fixes
+
+* fzf キャンセル時にプロンプトが消える問題を修正 ([#346](https://github.com/toshiki670/dotfiles/issues/346)) ([f19a12a](https://github.com/toshiki670/dotfiles/commit/f19a12a33adb39c1439dff09b7b97a8f40156a79))
+
 ## [0.62.2](https://github.com/toshiki670/dotfiles/compare/v0.62.1...v0.62.2) (2026-05-26)
 
 
