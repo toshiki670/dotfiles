@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.63.0](https://github.com/toshiki670/dotfiles/compare/v0.62.3...v0.63.0) (2026-05-31)
+
+
+### Features
+
+* ghq/worktree ピッカーを統合し WT 削除ショートカットを追加 ([#349](https://github.com/toshiki670/dotfiles/issues/349)) ([5378ac9](https://github.com/toshiki670/dotfiles/commit/5378ac9e1db1980b3e2801167de66a247558308f))
+
+
+### Bug Fixes
+
+* nvim checkhealth の警告・エラーを解消しプラグインを更新 ([#351](https://github.com/toshiki670/dotfiles/issues/351)) ([f68cd71](https://github.com/toshiki670/dotfiles/commit/f68cd711d7109308e9dff6df4d63d0120b9d942f))
+
 ## [0.62.3](https://github.com/toshiki670/dotfiles/compare/v0.62.2...v0.62.3) (2026-05-30)
 
 
