@@ -20,7 +20,7 @@ function _fzf_worktree
     end
 
     if test (count $lines) -eq 0
-        echo "削除できる worktree がありません"
+        echo "No worktrees to delete"
         return
     end
 
