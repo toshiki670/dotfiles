@@ -16,6 +16,15 @@ if vim.fn.has("unix") == 1 or vim.fn.has("mac") == 1 then
 	opt.shell = "bash"
 end
 
+-- Disable unused language providers (remote-plugin hosts).
+-- These are NOT needed for editing Python/Ruby/Node/Perl code (LSP/Treesitter cover that);
+-- they only matter for legacy remote plugins. Re-enable by removing the relevant line
+-- and installing the host package if a plugin ever requires it.
+g.loaded_node_provider = 0
+g.loaded_perl_provider = 0
+g.loaded_python3_provider = 0
+g.loaded_ruby_provider = 0
+
 -- UI Settings
 opt.showmode = false -- Don't show mode (handled by statusline)
 opt.laststatus = 2 -- Always show status line

@@ -38,6 +38,10 @@ require("lazy").setup("plugins", {
 		enabled = true, -- Automatically check for config file changes
 		notify = false, -- Don't notify when config changes
 	},
+	rocks = {
+		-- No plugins require luarocks; disable support entirely to avoid checkhealth errors/warnings
+		enabled = false,
+	},
 	performance = {
 		rtp = {
 			-- Disable some rtp plugins we don't need
