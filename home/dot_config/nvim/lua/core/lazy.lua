@@ -27,7 +27,7 @@ require("lazy").setup("plugins", {
 	},
 	install = {
 		missing = true, -- Auto-install missing plugins on startup
-		colorscheme = { "monokai-pro" }, -- Try to load colorscheme on install
+		colorscheme = { "ayu-dark" }, -- Try to load colorscheme on install
 	},
 	checker = {
 		enabled = true, -- Check for plugin updates

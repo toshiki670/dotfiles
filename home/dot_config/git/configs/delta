@@ -12,6 +12,17 @@
   line-numbers = true
   side-by-side = false
 
+# Theme variants chosen at runtime via the DELTA_FEATURES env var, which fish
+# keeps in sync with the terminal's light/dark appearance (see fish
+# conf.d/50-delta.fish). light = One Half Light, dark = Ayu.
+[delta "theme-light"]
+  light = true
+  syntax-theme = OneHalfLight
+
+[delta "theme-dark"]
+  dark = true
+  syntax-theme = ayu-dark
+
 [merge]
   conflictstyle = diff3
 
