@@ -79,7 +79,7 @@ function _gcm_call_claude
     set -l conversation $argv[2]
 
     set -l tmpfile (mktemp)
-    printf '%s\n' "$conversation" > $tmpfile
+    printf '%s\n' "$conversation" >$tmpfile
     set -l out (claude -p --system-prompt "$system_prompt" < $tmpfile 2>/dev/null)
     rm -f $tmpfile
 
