@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.64.0](https://github.com/toshiki670/dotfiles/compare/v0.63.0...v0.64.0) (2026-06-02)
+
+
+### Features
+
+* Fish でディレクトリ移動後に自動で ls (eza) する ([#355](https://github.com/toshiki670/dotfiles/issues/355)) ([59918b5](https://github.com/toshiki670/dotfiles/commit/59918b59706dbad84299568e814bcd96f1113119))
+* fzf のカラーをシステム外観追従（light/dark）に対応 ([#356](https://github.com/toshiki670/dotfiles/issues/356)) ([f573a97](https://github.com/toshiki670/dotfiles/commit/f573a976894a60a83c79f54a7b6891ec4740d6ab))
+* カラーテーマをシステム外観追従（light:One Half Light / dark:Ayu）に統一 ([#353](https://github.com/toshiki670/dotfiles/issues/353)) ([e70c7dc](https://github.com/toshiki670/dotfiles/commit/e70c7dc872c3405347d2eec451755354544f38ba))
+
+
+### Code Refactoring
+
+* fzf fish 関数を実態に合わせてリネーム ([#357](https://github.com/toshiki670/dotfiles/issues/357)) ([1828842](https://github.com/toshiki670/dotfiles/commit/1828842af321c33b48902faac403710927772d58))
+
 ## [0.63.0](https://github.com/toshiki670/dotfiles/compare/v0.62.3...v0.63.0) (2026-05-31)
 
 
