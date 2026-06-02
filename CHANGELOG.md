@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.65.0](https://github.com/toshiki670/dotfiles/compare/v0.64.0...v0.65.0) (2026-06-02)
+
+
+### Features
+
+* **fish:** add AI-powered gcm for Conventional Commits ([#358](https://github.com/toshiki670/dotfiles/issues/358)) ([59ab0eb](https://github.com/toshiki670/dotfiles/commit/59ab0ebbb4b61093d2f5a352ef9a623e2b57d86b))
+
+
+### Code Refactoring
+
+* **fish:** gh abbreviation をグローバル略語に変更 ([#360](https://github.com/toshiki670/dotfiles/issues/360)) ([f89131f](https://github.com/toshiki670/dotfiles/commit/f89131fdc759b5ade1c2ec04a0b56163a081b178))
+
 ## [0.64.0](https://github.com/toshiki670/dotfiles/compare/v0.63.0...v0.64.0) (2026-06-02)
 
 
