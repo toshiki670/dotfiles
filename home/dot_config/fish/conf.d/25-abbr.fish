@@ -52,8 +52,8 @@ abbr --add --command git -- tags "for-each-ref --sort=-taggerdate --format='%(ta
 # Stacked PRs: open the parent PR (head = current PR base)
 # abbr --add --command gh -- pweb 'pr view "$(gh pr view --json baseRefName --jq \'.baseRefName\')" --web'
 # abbr --add --command gh -- switch 'pr checkout'
-abbr --add --command gh -- b browse
-abbr --add --command gh -- i issue
+abbr --add gb 'gh browse'
+abbr --add gi 'gh issue'
 # Pull Request
 abbr --add gp 'gh pr'
 abbr --add gpv 'gh pr view'
