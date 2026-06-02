@@ -17,6 +17,7 @@
 | **Fish**（構文色） | `dot_config/fish/conf.d/90-fish-theme.fish` + `dot_config/fish/themes/OneHalfLight-Ayu.theme` | `[light]` セクション | `[dark]` セクション | `fish_terminal_color_theme`（OSC 11）→ `fish_config theme choose` が変数変化に追従 | `fish_config theme list` |
 | **Neovim** | `dot_config/nvim/lua/plugins/colorscheme.lua` | `onehalflight`（`sonph/onehalf`） | `ayu-dark`（`Shatur/neovim-ayu`） | `&background`（**起動時**に OSC 11 検出）→ `OptionSet` で colorscheme 切替 | `:colorscheme <Tab>` |
 | **eza** | `dot_config/fish/conf.d/40-eza.fish`（`EZA_COLORS`） | グレー明度（濃いめ） | グレー明度（薄いめ） | 色付き要素は Ghostty パレット追従（ANSI）。グレーのメタデータのみ `fish_terminal_color_theme` で明度切替 | `man eza_colors` |
+| **fzf** | `dot_config/fish/conf.d/05-fzf-env.fish`（`FZF_DEFAULT_OPTS` の `--color`） | ANSI 追従 | ANSI 追従 | `--color` を ANSI 番号（`-1`=端末デフォルト / `0`〜`15`）で指定。Ghostty パレット追従でシェル配線不要 | `man fzf` の COLOR セクション |
 | **git-delta** | `dot_config/git/configs/delta`（`[delta "theme-light/dark"]`）+ `dot_config/fish/conf.d/50-delta.fish`（`DELTA_FEATURES`） | `OneHalfLight` | `ayu-dark` | `DELTA_FEATURES` を `fish_terminal_color_theme` に追従。git 実行ごとに反映 | `delta --list-syntax-themes` |
 | **bat** | `dot_config/bat/config`（`--theme-light/dark`） | `OneHalfLight` | `ayu-dark` | bat ネイティブ `--theme="auto"`（bat 自身が OSC 11 検出）。シェル配線不要 | `bat --list-themes` |
 
@@ -29,6 +30,7 @@
 
 - **Ghostty が起点**：OS 外観 → 端末の背景色 + ANSI 16 色パレットを切替。
 - **Fish / eza / delta** は `fish_terminal_color_theme`（fish が最初の対話プロンプト以降、OSC 11 で背景を検出して `light`/`dark`/`unknown` を設定する read-only 変数）を共有して追従する。
+- **fzf** は `--color` を ANSI 番号（`-1`/`0`〜`15`）で指定するだけで Ghostty のパレット切替に追従する。シェル変数にもネイティブ検出にも依存しない（eza の色付き要素と同じ ANSI 追従）。
 - **nvim** は標準機能で **起動時のみ** `&background` を検出（起動中の OS 切替は次回起動で反映）。
 - **bat** は `--theme=auto` で自前検出するため、シェル変数に依存しない。
 
@@ -44,9 +46,11 @@ light / dark を別のテーマセットに変える手順。**上から順に**
    プラグイン（`Shatur/neovim-ayu` / `sonph/onehalf`）と、`apply()` 内の `onehalflight` / `ayu-dark` を新 colorscheme 名に変更。プラグインを変えたら `nvim --headless "+Lazy! sync" +qa` と `lazy-lock.json` の更新を忘れずに。
 4. **eza**（任意）`dot_config/fish/conf.d/40-eza.fish`
    グレー系メタデータの明度だけ。色付き要素は Ghostty 追従なので通常は触らなくてよい。
-5. **git-delta** `dot_config/git/configs/delta`
+5. **fzf**（任意）`dot_config/fish/conf.d/05-fzf-env.fish`
+   `--color` は ANSI 番号で Ghostty 追従するため通常は触らなくてよい。アクセント色の色相を変えたい場合のみ `--color` の ANSI 番号（`-1`/`0`〜`15`）を調整（`man fzf` の COLOR セクション）。
+6. **git-delta** `dot_config/git/configs/delta`
    `[delta "theme-light"]` / `[delta "theme-dark"]` の `syntax-theme` を変更（名前は `delta --list-syntax-themes`）。
-6. **bat** `dot_config/bat/config`
+7. **bat** `dot_config/bat/config`
    `--theme-light` / `--theme-dark` を変更（名前は `bat --list-themes`）。
 
 > **標準に無いテーマ**（今回の Ayu のような）を使う場合:
