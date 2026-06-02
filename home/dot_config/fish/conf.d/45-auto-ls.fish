@@ -1,26 +1,45 @@
-# Auto-ls: list the directory after an interactive command that changed it
-# (cd / z / pushd / abbr-expanded cd, ...).
+# Auto-ls: after a directory change (cd / z / pushd / fzf pickers ...), re-run
+# `ls` so the listing appears *below the destination prompt* — the same look the
+# ghq/worktree pickers produce.
 #
-# We capture $PWD at fish_preexec (just before the command runs) and compare it
-# at fish_postexec (just after). Listing only when the command *itself* moved us
-# has two effects:
-#  - cd / z / pushd at the prompt, and the ghq jump (which runs its cd through
-#    `commandline -f execute`), all list, because the command changed $PWD;
-#  - a cd performed *inside* a key binding (e.g. the worktree-delete safety cd)
-#    does not desync any "last pwd" state, so the next unrelated command no
-#    longer triggers a stray listing. A simpler `--on-variable PWD` /
-#    last-pwd-snapshot hook gets this wrong: the in-binding cd updates $PWD
-#    without firing postexec, leaving the snapshot stale so the *following*
-#    command spuriously lists.
+# The mechanism is to queue ` ls` as the next command:
+#     commandline --replace -- ' ls'; commandline -f repaint; commandline -f execute
+# `repaint` before `execute` is required; without it the queued ls corrupts the
+# input buffer. The leading space keeps it out of history.
 #
-# Pickers that DO want a listing after an in-binding cd (worktree delete, when
-# it evacuates to main) run ` ls` themselves via `commandline -f execute`.
+# WHERE we queue it matters, so there are two handlers split by an in-command
+# flag:
+#
+#  - Command typed at the prompt (cd / z / pushd, incl. compound forms like
+#    `cd dir && make`): queue it from fish_postexec, i.e. AFTER the whole command
+#    line finished. Replacing the buffer mid-run would drop the rest of the line
+#    (`&& make` would never run).
+#
+#  - cd inside a key binding (ghq/worktree pickers): never reaches postexec, but
+#    the binding runs in editing context where execute is valid right away, so
+#    __auto_ls_on_pwd handles it from the PWD variable handler.
+#
+# The flag routes each change to exactly one handler: during a command the PWD
+# handler defers (postexec will fire); outside a command postexec never fires so
+# the PWD handler takes over. Comparing $PWD avoids listing when the command did
+# not actually move (e.g. a plain `echo`).
 function __auto_ls_preexec --on-event fish_preexec
+    set -g __auto_ls_in_cmd 1
     set -g __auto_ls_pwd_before $PWD
 end
 function __auto_ls_postexec --on-event fish_postexec
+    set -e __auto_ls_in_cmd
     status is-interactive || return
     set -q __auto_ls_pwd_before; or return
     test "$PWD" = "$__auto_ls_pwd_before"; and return
-    ls
+    commandline --replace -- ' ls'
+    commandline -f repaint
+    commandline -f execute
+end
+function __auto_ls_on_pwd --on-variable PWD
+    status is-interactive || return
+    set -q __auto_ls_in_cmd; and return
+    commandline --replace -- ' ls'
+    commandline -f repaint
+    commandline -f execute
 end
