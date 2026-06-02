@@ -48,21 +48,34 @@ function _fzf_worktree
 
     # 現在地が削除対象 worktree の内側なら、削除前にメインへ移動する
     # （現在地の worktree を消すと cwd が無効なディレクトリを指すため）
+    set -l moved 0
     set -l cur (path resolve -- $PWD)
     set -l target (path resolve -- $wpath)
     if test "$cur" = "$target"; or string match -q -- "$target/*" "$cur"
-        test -n "$main_path"; and cd $main_path
+        if test -n "$main_path"
+            cd $main_path
+            set moved 1
+        end
     end
 
     if git worktree remove "$wpath"
         echo "削除しました: $wpath"
-        commandline -f repaint
-        return
+    else
+        read -l -P "強制削除しますか? [y/N] " force
+        if string match -qri '^y' -- "$force"
+            git worktree remove --force "$wpath"; and echo "強制削除しました: $wpath"
+        end
     end
 
-    read -l -P "強制削除しますか? [y/N] " force
-    if string match -qri '^y' -- "$force"
-        git worktree remove --force "$wpath"; and echo "強制削除しました: $wpath"
+    # メインへ退避した場合は移動先を一覧表示する。auto-ls (45-auto-ls) は
+    # binding 内の cd では発火しない（次コマンドでの誤発火を防ぐ設計のため）。
+    # bare な ls はプロンプト再描画で潰れるので execute 経由で実コマンドとして
+    # 出す。先頭スペースで履歴には残さない。
+    if test "$moved" = 1
+        commandline --replace -- ' ls'
+        commandline -f repaint
+        commandline -f execute
+    else
+        commandline -f repaint
     end
-    commandline -f repaint
 end

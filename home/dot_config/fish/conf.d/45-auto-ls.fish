@@ -1,18 +1,26 @@
-# Auto-ls: list the directory after an interactive command changes it
+# Auto-ls: list the directory after an interactive command that changed it
 # (cd / z / pushd / abbr-expanded cd, ...).
 #
-# We hook `fish_postexec` (fires after an interactive command line runs) rather
-# than `--on-variable PWD` (fires on *any* cd, synchronously). A cd performed
-# inside a key binding fires --on-variable PWD mid-binding, so the listing is
-# printed just before fish repaints the prompt and gets clobbered. With
-# fish_postexec, in-binding cd's stay quiet by default; pickers that *should*
-# list (ghq jump in _fzf_ghq_repo) run their cd via `commandline -f execute`,
-# so they pass through postexec too, while ones that must stay silent (the
-# worktree-delete safety cd in _fzf_worktree) simply don't.
-set -g __auto_ls_last_pwd $PWD
-function __auto_ls_on_pwd --on-event fish_postexec
+# We capture $PWD at fish_preexec (just before the command runs) and compare it
+# at fish_postexec (just after). Listing only when the command *itself* moved us
+# has two effects:
+#  - cd / z / pushd at the prompt, and the ghq jump (which runs its cd through
+#    `commandline -f execute`), all list, because the command changed $PWD;
+#  - a cd performed *inside* a key binding (e.g. the worktree-delete safety cd)
+#    does not desync any "last pwd" state, so the next unrelated command no
+#    longer triggers a stray listing. A simpler `--on-variable PWD` /
+#    last-pwd-snapshot hook gets this wrong: the in-binding cd updates $PWD
+#    without firing postexec, leaving the snapshot stale so the *following*
+#    command spuriously lists.
+#
+# Pickers that DO want a listing after an in-binding cd (worktree delete, when
+# it evacuates to main) run ` ls` themselves via `commandline -f execute`.
+function __auto_ls_preexec --on-event fish_preexec
+    set -g __auto_ls_pwd_before $PWD
+end
+function __auto_ls_postexec --on-event fish_postexec
     status is-interactive || return
-    test "$PWD" = "$__auto_ls_last_pwd"; and return
-    set -g __auto_ls_last_pwd $PWD
+    set -q __auto_ls_pwd_before; or return
+    test "$PWD" = "$__auto_ls_pwd_before"; and return
     ls
 end
