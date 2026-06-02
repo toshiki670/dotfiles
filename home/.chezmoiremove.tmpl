@@ -4,3 +4,6 @@
 */ -}}
 {{/* issue #341 (mise 二重 activate 解消: 手動 activate を削除し mise vendor 自動 activate に一本化) */}}
 .config/fish/conf.d/10-mise.fish
+{{/* fzf fish 関数のリネーム (_fzf_worktree → _fzf_worktree_remove / _fzf_ghq_repo → _fzf_ghq_cd) に伴う旧ファイル削除 */}}
+.config/fish/functions/_fzf_worktree.fish
+.config/fish/functions/_fzf_ghq_repo.fish
