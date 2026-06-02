@@ -40,7 +40,16 @@ function _fzf_ghq_repo
 
     if test -n "$selection"
         set -l parts (string split -- $tab $selection)
-        cd "$parts[3]"
+        # Jump through the command line so the move goes via fish_postexec and
+        # auto-ls (45-auto-ls) lists the destination. Leading space keeps the
+        # cd out of history; string escape keeps paths with spaces safe.
+        commandline --replace -- ' cd '(string escape -- "$parts[3]")
+        # Repaint before execute: right after fzf's full-screen UI exits the
+        # command line is half-drawn, so executing immediately overlaps the
+        # prompt with the cd (shows up as "cdcd"). Repaint settles it first.
+        commandline -f repaint
+        commandline -f execute
+    else
+        commandline -f repaint
     end
-    commandline -f repaint
 end
