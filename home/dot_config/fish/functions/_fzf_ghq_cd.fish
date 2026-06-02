@@ -1,4 +1,4 @@
-function _fzf_ghq_repo
+function _fzf_ghq_cd
     if not command -v ghq >/dev/null 2>&1
         echo "ghq: command not found"
         return 1
