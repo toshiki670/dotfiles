@@ -21,7 +21,11 @@ Analyze the staged diff and split into the minimum number of semantically indepe
 - Single concern → one entry
 - Multiple independent concerns (e.g. feat + fix, or unrelated files) → multiple entries
 
-Output ONLY a JSON array — no markdown fences, no extra text:
+CRITICAL — output format:
+- Respond with raw JSON ONLY. The first character MUST be '[' and the last MUST be ']'.
+- Do NOT wrap the output in markdown code fences (no ```json, no ```).
+- Do NOT add any prose, comment, or explanation before or after the JSON.
+
 [{\"message\": \"<type>[scope]: <description>\", \"files\": [\"path/to/file\"]}, ...]
 
 Rules:
