@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.67.0](https://github.com/toshiki670/dotfiles/compare/v0.66.1...v0.67.0) (2026-06-03)
+
+
+### Features
+
+* **fish:** nvim プラグインを同期する v-sync 関数を追加 ([#372](https://github.com/toshiki670/dotfiles/issues/372)) ([2aae33f](https://github.com/toshiki670/dotfiles/commit/2aae33fd906a64307e7d864a6d05e7ba81bc0b5f))
+
 ## [0.66.1](https://github.com/toshiki670/dotfiles/compare/v0.66.0...v0.66.1) (2026-06-03)
 
 
