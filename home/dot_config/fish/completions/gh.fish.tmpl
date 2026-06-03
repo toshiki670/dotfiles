@@ -1,4 +1,7 @@
-# Context condition helpers
+{{ if lookPath "gh" -}}
+{{ output "gh" "completion" "--shell" "fish" }}
+
+# Custom completions: ID selection for targeted commands
 
 function __gh_completing_issue_id
     set -l cmd (commandline -po)
@@ -35,8 +38,6 @@ function __gh_completing_gist_id
         and contains -- "$cmd[3]" view edit
 end
 
-# Candidate generators
-
 function __gh_issue_candidates
     gh issue list --limit 100 --json number,title,state \
         --jq '.[] | "\(.number)\t[\(.state)] \(.title)"' 2>/dev/null
@@ -62,10 +63,9 @@ function __gh_gist_candidates
         | awk -F'\t' '{print $1 "\t" $2}'
 end
 
-# Completion rules: -f suppresses file completions when condition is met
-
 complete -c gh -n __gh_completing_issue_id -f -a '(__gh_issue_candidates)'
 complete -c gh -n __gh_completing_pr_id -f -a '(__gh_pr_candidates)'
 complete -c gh -n __gh_completing_run_id -f -a '(__gh_run_candidates)'
 complete -c gh -n __gh_completing_release_id -f -a '(__gh_release_candidates)'
 complete -c gh -n __gh_completing_gist_id -f -a '(__gh_gist_candidates)'
+{{- end }}
