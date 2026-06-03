@@ -20,6 +20,8 @@ keybind = super+left=goto_split:left
 keybind = super+up=goto_split:up
 keybind = ctrl+page_down=next_tab
 keybind = ctrl+page_up=previous_tab
+# シェル統合の cursor 機能はプロンプト上でカーソルを bar に変えるため無効化（常に block にする）
+shell-integration-features = no-cursor
 mouse-shift-capture = always
 macos-titlebar-style = tabs
 macos-option-as-alt = true
