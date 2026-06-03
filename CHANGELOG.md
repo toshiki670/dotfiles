@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.66.1](https://github.com/toshiki670/dotfiles/compare/v0.66.0...v0.66.1) (2026-06-03)
+
+
+### Bug Fixes
+
+* **fish:** gcm のプロンプトでコードフェンス出力を抑止する ([#366](https://github.com/toshiki670/dotfiles/issues/366)) ([6b66039](https://github.com/toshiki670/dotfiles/commit/6b66039ebd2c3310e1d6958e6db7574823ee6013))
+
 ## [0.66.0](https://github.com/toshiki670/dotfiles/compare/v0.65.0...v0.66.0) (2026-06-03)
 
 
