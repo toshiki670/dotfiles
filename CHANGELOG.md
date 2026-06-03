@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.66.0](https://github.com/toshiki670/dotfiles/compare/v0.65.0...v0.66.0) (2026-06-03)
+
+
+### Features
+
+* **fish:** gh targeted commands に Fish ネイティブ補完を追加 (alternative) ([#363](https://github.com/toshiki670/dotfiles/issues/363)) ([062a415](https://github.com/toshiki670/dotfiles/commit/062a415e564282427fcbd8dad0affa4c60817a67))
+* **ghostty:** カーソルを常に block 表示にする ([#365](https://github.com/toshiki670/dotfiles/issues/365)) ([8b556b4](https://github.com/toshiki670/dotfiles/commit/8b556b475daf9d1ed343ecdb05465b1157822e53))
+
 ## [0.65.0](https://github.com/toshiki670/dotfiles/compare/v0.64.0...v0.65.0) (2026-06-02)
 
 
