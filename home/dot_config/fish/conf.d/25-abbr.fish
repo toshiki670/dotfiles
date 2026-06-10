@@ -70,6 +70,7 @@ abbr --add gpup 'gh pr update-branch && git pull'
 
 # ========== bat ==========
 abbr --add b bat
+abbr --add bf 'bat (fzf)'
 
 # ========== claude ==========
 abbr --add c claude
