@@ -21,10 +21,7 @@ Analyze the staged diff and split into the minimum number of semantically indepe
 - Single concern → one entry
 - Multiple independent concerns (e.g. feat + fix, or unrelated files) → multiple entries
 
-CRITICAL — output format:
-- Respond with raw JSON ONLY. The first character MUST be '[' and the last MUST be ']'.
-- Do NOT wrap the output in markdown code fences (no ```json, no ```).
-- Do NOT add any prose, comment, or explanation before or after the JSON.
+Output a JSON array of commit objects:
 
 [{\"message\": \"<type>[scope]: <description>\", \"files\": [\"path/to/file\"]}, ...]
 
@@ -86,7 +83,7 @@ function _gcm_call_claude
 
     set -l tmpfile (mktemp)
     printf '%s\n' "$conversation" >$tmpfile
-    set -l out (claude -p --model "$model" --system-prompt "$system_prompt" < $tmpfile 2>/dev/null)
+    set -l out (claude -p --model "$model" --system-prompt "$system_prompt" < $tmpfile 2>/dev/null | string collect)
     rm -f $tmpfile
 
     if test -z "$out"
@@ -94,13 +91,20 @@ function _gcm_call_claude
         return 1
     end
 
-    if not printf '%s' "$out" | jq '.' >/dev/null 2>&1
+    # The model may wrap the JSON in markdown code fences, and may return a single
+    # object instead of an array. Strip any ``` / ```json markers, then normalize a
+    # lone object into an array. Anything that is not an object/array is rejected.
+    set -l cleaned (printf '%s' "$out" \
+        | string replace -ra '```[a-zA-Z0-9]*' '' \
+        | jq -c 'if type == "object" then [.] elif type == "array" then . else empty end' 2>/dev/null)
+
+    if test -z "$cleaned"
         echo "不正なJSON出力を受け取りました:" >&2
         printf '%s\n' "$out" >&2
         return 1
     end
 
-    printf '%s' "$out"
+    printf '%s' "$cleaned"
 end
 
 function _gcm_display
