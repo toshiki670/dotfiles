@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.68.0](https://github.com/toshiki670/dotfiles/compare/v0.67.0...v0.68.0) (2026-06-10)
+
+
+### Features
+
+* **fish:** bat + fzf のファイル選択ショートカット bf を追加 ([#377](https://github.com/toshiki670/dotfiles/issues/377)) ([3443a13](https://github.com/toshiki670/dotfiles/commit/3443a13c81fc3917cdd80becf304e3ccbf39b2f0))
+
+
+### Bug Fixes
+
+* **claude:** use rtk hook claude instead of legacy rtk-rewrite.sh ([#374](https://github.com/toshiki670/dotfiles/issues/374)) ([6760f92](https://github.com/toshiki670/dotfiles/commit/6760f927475b4b40d999cac737ef23f188351b9d))
+* **fish:** gcm でフェンス付き/単一オブジェクトの JSON 応答を許容 ([#376](https://github.com/toshiki670/dotfiles/issues/376)) ([5bb5b18](https://github.com/toshiki670/dotfiles/commit/5bb5b182db650d778349832ae023001d8bfddb78))
+
 ## [0.67.0](https://github.com/toshiki670/dotfiles/compare/v0.66.1...v0.67.0) (2026-06-03)
 
 
