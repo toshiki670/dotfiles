@@ -1,4 +1,4 @@
-# eza - ls/la/lt (match eza.zsh)
+# eza - ls/la/lt
 if command -q eza
     function ls --wraps eza --description 'eza -l'
         eza --icons=always -l -gh --time-style long-iso --git $argv

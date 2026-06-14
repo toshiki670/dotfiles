@@ -15,7 +15,6 @@ LINT_TOOLCHAIN_BINARIES = (
     "shellcheck",
     "fish_indent",
     "fish",
-    "zsh",
     "stylua",
     "ruff",
     "taplo",

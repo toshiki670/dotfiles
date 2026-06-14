@@ -36,7 +36,6 @@
           pkgs.taplo
           pkgs.markdownlint-cli2
           pkgs.fish
-          pkgs.zsh
         ];
 
         lintLocal = pkgs.writeShellApplication {

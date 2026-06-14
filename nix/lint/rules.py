@@ -4,14 +4,12 @@ from .classify import (
     is_home_chezmoi_fish_completion_template,
     is_home_chezmoi_fish_template,
     is_home_chezmoi_shell_template,
-    is_home_chezmoi_zsh_template,
     is_lua,
     is_markdown,
     is_python,
     is_shell_ext,
     is_shell_path,
     is_toml,
-    is_zsh,
     shell_flavor,
 )
 from .models import FailureRecord, FileContext, LintContext, Rule
@@ -134,28 +132,6 @@ def check_fish(ctx: LintContext, f: FileContext) -> int:
     return failed
 
 
-def match_zsh(_: LintContext, f: FileContext) -> bool:
-    return is_zsh(f.rel_path)
-
-
-def fix_zsh(_: LintContext, __: FileContext) -> int:
-    return 0
-
-
-def check_zsh(ctx: LintContext, f: FileContext) -> int:
-    target = f.abs_path
-    if is_home_chezmoi_zsh_template(f.rel_path, ctx.repo_root):
-        rendered = get_rendered(ctx, f, ".zsh")
-        if rendered is None:
-            return 1
-        target = rendered
-    return (
-        0
-        if run_rule_cmd(ctx, f, "zsh", "check", ["zsh", "-n", str(target)]) == 0
-        else 1
-    )
-
-
 def match_lua(_: LintContext, f: FileContext) -> bool:
     return is_lua(f.rel_path)
 
@@ -248,7 +224,6 @@ def check_markdown(ctx: LintContext, f: FileContext) -> int:
 RULES: list[Rule] = [
     Rule(name="shell", match=match_shell, fix=fix_shell, check=check_shell),
     Rule(name="fish", match=match_fish, fix=fix_fish, check=check_fish),
-    Rule(name="zsh", match=match_zsh, fix=fix_zsh, check=check_zsh),
     Rule(name="lua", match=match_lua, fix=fix_lua, check=check_lua),
     Rule(name="python", match=match_python, fix=fix_python, check=check_python),
     Rule(name="toml", match=match_toml, fix=fix_toml, check=check_toml),

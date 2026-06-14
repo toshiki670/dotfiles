@@ -13,7 +13,6 @@ def _write_minimal_repo(root: Path) -> dict[str, Path]:
     paths: dict[str, Path] = {
         "shell": root / "bin" / "messy.sh",
         "fish": root / "messy.fish",
-        "zsh": root / "messy.zsh",
         "lua": root / "messy.lua",
         "python": root / "messy.py",
         "toml": root / "messy.toml",
@@ -31,13 +30,6 @@ def _write_minimal_repo(root: Path) -> dict[str, Path]:
 
     paths["fish"].write_text(
         "if true\necho hi\nend\n",
-        encoding="utf-8",
-    )
-
-    paths["zsh"].write_text(
-        "#!/usr/bin/env zsh\n"
-        "# Only syntax check applies; keep content stable but valid.\n"
-        "true\n",
         encoding="utf-8",
     )
 
@@ -98,6 +90,3 @@ def test_fix_formats_each_type_in_isolated_repo(
     assert before["markdown"] != paths["markdown"].read_bytes()
     text = paths["markdown"].read_text(encoding="utf-8")
     assert text.endswith("\n")
-
-    # zsh: no formatter; content unchanged while syntax check passes.
-    assert paths["zsh"].read_bytes() == before["zsh"]
