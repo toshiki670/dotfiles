@@ -1,4 +1,4 @@
-# fzf configuration (Phase 2: match zsh config)
+# fzf configuration
 # https://github.com/junegunn/fzf
 
 # --color uses ANSI palette indices (-1 = terminal default, 0-15 = ANSI) so the

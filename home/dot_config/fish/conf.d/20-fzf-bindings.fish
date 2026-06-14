@@ -1,4 +1,4 @@
-# fzf keybindings (Phase 2: match zsh ^j^h, ^j^t, ^j^g)
+# fzf keybindings
 # All keybindings: Ctrl+J then second key (avoids Zellij conflicts)
 
 bind -M default ctrl-j,ctrl-h _fzf_history
