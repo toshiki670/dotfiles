@@ -34,7 +34,7 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## リリースプロセス
 
-このリポジトリは [release-please](https://github.com/googleapis/release-please) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。
+このリポジトリは [python-semantic-release](https://python-semantic-release.readthedocs.io/) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。バージョンの source of truth は `pyproject.toml` の `[project] version` フィールドです。
 
 ### バージョン決定ルール
 
@@ -42,21 +42,25 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 | --- | --- | --- |
 | `feat!:` / `BREAKING CHANGE:` フッター | **major** | `v0.54.2` → `v1.0.0` |
 | `feat:` | **minor** | `v0.54.2` → `v0.55.0` |
-| `fix:` | **patch** | `v0.54.2` → `v0.54.3` |
+| `fix:` / `perf:` | **patch** | `v0.54.2` → `v0.54.3` |
 | `chore:` / `docs:` / その他 | なし | バージョン変更なし |
 
 ### リリースフロー
 
-1. `feat:` / `fix:` / `feat!:` などのコミットが `main` に push されると、release-please が Release PR を自動作成・更新する
-2. Release PR には `CHANGELOG.md` と `.release-please-manifest.json` の更新が含まれる
-3. Release PR をマージすると GitHub Release とタグが自動作成される
+1. `feat:` / `fix:` / `feat!:` などのコミットが `main` に push されると、semantic-release が自動でバージョンを決定する
+2. `pyproject.toml` のバージョンと `CHANGELOG.md` を更新するコミットを直接 `main` に push する
+3. Git タグと GitHub Release が自動作成される
 
-手動操作は不要。Release PR のマージがリリースのトリガー。
+手動操作は不要。`main` へのプッシュが自動リリースのトリガー。
 
 ### 現在のバージョン確認
 
 ```bash
+# Git タグから確認
 git describe --tags --abbrev=0
+
+# pyproject.toml から確認
+grep '^version' pyproject.toml
 ```
 
 ## テスト

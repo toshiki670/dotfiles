@@ -1,3 +1,20 @@
+[project]
+name    = "dotfiles"
+version = "0.68.0"
+
+[tool.semantic_release]
+build_command = ""
+major_on_zero = false
+version_toml  = [ "pyproject.toml:project.version" ]
+
+[[tool.semantic_release.branches]]
+match      = "main"
+prerelease = false
+
+[tool.semantic_release.commit_parser_options]
+minor_tags = [ "feat" ]
+patch_tags = [ "fix", "perf" ]
+
 [tool.ruff]
 line-length    = 88
 target-version = "py313"
