@@ -34,36 +34,29 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## リリースプロセス
 
-このリポジトリは [Knope](https://knope.tech/) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。バージョンの source of truth は `pyproject.toml` の `[project] version` フィールドです（`v1.0.0` 以降は標準 SemVer）。
+このリポジトリは [release-please](https://github.com/googleapis/release-please) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。
 
 ### バージョン決定ルール
 
 | コミットタイプ | バンプ | 例 |
 | --- | --- | --- |
-| `feat!:` / `BREAKING CHANGE:` フッター | **major** | `v1.0.0` → `v2.0.0` |
-| `feat:` | **minor** | `v1.0.0` → `v1.1.0` |
-| `fix:` | **patch** | `v1.0.0` → `v1.0.1` |
+| `feat!:` / `BREAKING CHANGE:` フッター | **major** | `v0.54.2` → `v1.0.0` |
+| `feat:` | **minor** | `v0.54.2` → `v0.55.0` |
+| `fix:` | **patch** | `v0.54.2` → `v0.54.3` |
 | `chore:` / `docs:` / その他 | なし | バージョン変更なし |
 
 ### リリースフロー
 
-1. `feat:` / `fix:` / `feat!:` などのコミットが `main` に push されると、Knope が `release` ブランチへ向けた Release PR を自動作成・更新する
-2. Release PR には `pyproject.toml`（バージョン）と `CHANGELOG.md` の更新が含まれる
-3. Release PR をマージすると GitHub Release とタグ（`v{version}`）が自動作成される
+1. `feat:` / `fix:` / `feat!:` などのコミットが `main` に push されると、release-please が Release PR を自動作成・更新する
+2. Release PR には `CHANGELOG.md` と `.release-please-manifest.json` の更新が含まれる
+3. Release PR をマージすると GitHub Release とタグが自動作成される
 
 手動操作は不要。Release PR のマージがリリースのトリガー。
-
-> [!NOTE]
-> Release PR は **Squash and merge** でマージしてください。マージコミットの件名に `chore: prepare release` が含まれることで、`prepare_release` ワークフローの再帰起動が抑止されます。
 
 ### 現在のバージョン確認
 
 ```bash
-# Git タグから確認
 git describe --tags --abbrev=0
-
-# pyproject.toml から確認
-grep '^version' pyproject.toml
 ```
 
 ## テスト

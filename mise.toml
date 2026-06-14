@@ -6,8 +6,8 @@ run         = "nix run .#lint"
 description = "Run linter check only"
 run         = "nix run .#check"
 
-[tasks.prepare-release]
-description = "Trigger the Knope prepare-release workflow (creates/updates the Release PR)"
+[tasks.release-prepare]
+description = "Trigger the Release Please workflow (creates a Release PR)"
 run = """
 #!/usr/bin/env bash
 set -euo pipefail
@@ -19,7 +19,7 @@ case "$answer" in
   *) echo "キャンセルしました。"; exit 0 ;;
 esac
 
-gh workflow run prepare_release.yml --repo toshiki670/dotfiles
+gh workflow run release-please.yml --repo toshiki670/dotfiles
 echo "Workflow をトリガーしました。"
-echo "進捗: https://github.com/toshiki670/dotfiles/actions/workflows/prepare_release.yml"
+echo "進捗: https://github.com/toshiki670/dotfiles/actions/workflows/release-please.yml"
 """
