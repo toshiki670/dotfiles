@@ -73,3 +73,24 @@ jobs:
 
       - name: Lint runner tests
         run: nix run .#lint-tests
+
+  cargo-lint:
+    name: cargo lint (dotfiles-lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup mise (rust + pinned linters)
+        uses: jdx/mise-action@v2
+
+      - name: Install fish (not supplied by mise)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fish
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run dotfiles-lint check
+        run: mise exec -- cargo run --quiet --bin dotfiles-lint -- check --summary
