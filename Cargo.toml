@@ -1,0 +1,18 @@
+[package]
+description = "toshiki670/dotfiles の CLI コマンド群"
+edition     = "2021"
+license     = "MIT"
+name        = "dotfiles"
+publish     = false
+repository  = "https://github.com/toshiki670/dotfiles"
+version     = "0.68.0"
+
+# 各コマンドは src/bin/<name>/main.rs に置き、Cargo の自動検出に任せる
+# （[[bin]] の明示は不要）。共有ロジックは src/lib.rs。
+
+[dependencies]
+clap = { version = "4", features = [ "derive" ] }
+libc = "0.2"
+
+[profile.release]
+strip = true
