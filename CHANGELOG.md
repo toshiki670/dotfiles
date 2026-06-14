@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.68.1](https://github.com/toshiki670/dotfiles/compare/v0.68.0...v0.68.1) (2026-06-14)
+
+
+### Bug Fixes
+
+* **release:** PSR v9 の branches 設定を辞書形式に修正 ([#382](https://github.com/toshiki670/dotfiles/issues/382)) ([5e931bf](https://github.com/toshiki670/dotfiles/commit/5e931bfd6f531e6e468e9adba845290a94100b44))
+
+
+### Reverts
+
+* Knope 移行を取り消す ([#385](https://github.com/toshiki670/dotfiles/issues/385)) ([#387](https://github.com/toshiki670/dotfiles/issues/387)) ([07b0d5d](https://github.com/toshiki670/dotfiles/commit/07b0d5de4934313619a53fe4fa8f72ae5869f93f))
+* python-semantic-release 移行を取り消す ([#381](https://github.com/toshiki670/dotfiles/issues/381), [#382](https://github.com/toshiki670/dotfiles/issues/382)) ([#383](https://github.com/toshiki670/dotfiles/issues/383)) ([3a0753b](https://github.com/toshiki670/dotfiles/commit/3a0753bd8e63553a18444d6d3721fd7c8c19c314))
+
 ## [0.68.0](https://github.com/toshiki670/dotfiles/compare/v0.67.0...v0.68.0) (2026-06-10)
 
 
