@@ -28,7 +28,7 @@ If applicable, add screenshots to help explain your problem.
 
 - OS: [e.g. macOS]
 - shell [e.g. fish, bash]
-- Version [e.g. 0.X.X]
+- Version [e.g. X.X.X]
 
 **Additional context**
 Add any other context about the problem here.
