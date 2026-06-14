@@ -33,3 +33,30 @@ jobs:
 
       - name: Test
         run: cargo test --locked
+
+  apply-test:
+    name: chezmoi apply (fresh machine bootstrap)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install mise (supplies rust)
+        uses: jdx/mise-action@v2
+
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: chezmoi init + apply (runs the cargo-install hook)
+        run: |
+          chezmoi init --source="$GITHUB_WORKSPACE"
+          chezmoi apply --verbose --force
+
+      - name: Verify Rust commands were installed to ~/.cargo/bin
+        run: |
+          test -x "$HOME/.cargo/bin/color"
+          test -x "$HOME/.cargo/bin/git-upstream"
+          "$HOME/.cargo/bin/color" | head -1
+          "$HOME/.cargo/bin/git-upstream" --help
