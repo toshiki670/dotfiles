@@ -1,3 +1,8 @@
+[tools]
+# クレートのビルド・配布（cargo install）に使う Rust ツールチェーン。
+# fresh machine は mise で rust を取得してから chezmoi が cargo install する。
+rust = "latest"
+
 [tasks.lint]
 description = "Run linter with auto-fix"
 run         = "nix run .#lint"
