@@ -1,6 +1,6 @@
 [package]
 description = "toshiki670/dotfiles の CLI コマンド群"
-edition     = "2021"
+edition     = "2024"
 license     = "MIT"
 name        = "dotfiles"
 publish     = false
