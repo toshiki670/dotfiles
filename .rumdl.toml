@@ -1,0 +1,10 @@
+# rumdl: https://github.com/rvben/rumdl (markdownlint 互換の Rust 製 linter)
+# 旧 .markdownlint-cli2.yaml からの移行:
+#   MD013(行長) / MD033(インライン HTML) / MD041(先頭 H1) は README の
+#   バッジ/HTML・長行を許容するため無効。
+#   MD025(複数 H1) は README が `# Prerequisites` 等のセクション見出しに
+#   トップレベル見出しを意図的に使うため無効。
+# CHANGELOG.md は自動生成のため除外。
+[global]
+disable = [ "MD013", "MD025", "MD033", "MD041" ]
+exclude = [ "CHANGELOG.md" ]

@@ -3,6 +3,8 @@
 //! 各コマンドは `src/bin/<name>/main.rs` に置き、純粋に検証可能なロジックは
 //! ここへ切り出してユニットテスト対象にする。
 
+pub mod lint;
+
 /// `git remote` の出力（1 行 1 リモート名）に指定したリモートが含まれるか判定する。
 pub fn remote_exists(remotes_output: &str, name: &str) -> bool {
     remotes_output.lines().any(|line| line.trim() == name)
