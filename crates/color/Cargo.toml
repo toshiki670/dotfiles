@@ -1,4 +1,4 @@
-# ANSI カラー表を出力する配布コマンド（衛星）。独立版・独自タグ `color-v<ver>`。
+# ANSI カラー表を出力する配布コマンド。独立版・独自タグ `color-v<ver>`。
 [package]
 description = "ANSI カラーコード（16 色 + 256 色）の確認表を出力する"
 edition     = { workspace = true }

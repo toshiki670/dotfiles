@@ -57,11 +57,11 @@ jobs:
           # root dotfiles（core）
           test -x "$HOME/.cargo/bin/dotfiles"
           "$HOME/.cargo/bin/dotfiles" --version
-          # 衛星コマンド（存在のみ確認。外部ツール依存のものは実行しない）
+          # 各コマンド（存在のみ確認。外部ツール依存のものは実行しない）
           for bin in color copy-obj v-sync gh-clone gcm git-upstream; do
             test -x "$HOME/.cargo/bin/$bin"
           done
-          # 背景 worker
+          # バックグラウンド worker
           test -x "$HOME/.cargo/bin/daily-check-worker"
           test -x "$HOME/.cargo/bin/git-background-fetch-worker"
           # スモーク（外部ツール非依存のもののみ）

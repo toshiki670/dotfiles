@@ -1,5 +1,5 @@
 //! `dotfiles-workers`（daily-check-worker / git-background-fetch-worker）の
-//! 最小 E2E。worker は引数を取らず env 駆動の背景プロセスのため、必要な外部
+//! 最小 E2E。worker は引数を取らず env 駆動のバックグラウンドプロセスのため、必要な外部
 //! コマンド（date / brew / mise / git）が不在でも無害に成功終了することを確認する。
 
 use assert_cmd::Command;

@@ -136,7 +136,7 @@ On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config 
 
 # Rust commands
 
-The CLI commands form a **Cargo workspace** at the repository root. The root package is `dotfiles` itself (core), and each satellite command is an independent crate under `crates/*`. On `chezmoi apply`, a hook (`run_onchange_after_cargo-install`) installs the *distributable* crates into `~/.cargo/bin` via `cargo install` (the support library and the lint tool are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
+The CLI commands form a **Cargo workspace** at the repository root. The root package is `dotfiles` itself (core), and each individual command is an independent crate under `crates/*`. On `chezmoi apply`, a hook (`run_onchange_after_cargo-install`) installs the *distributable* crates into `~/.cargo/bin` via `cargo install` (the support library and the lint tool are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
 
 | Command | Crate | Description |
 | --- | --- | --- |
@@ -153,7 +153,7 @@ Every command binary supports `--help` / `--version`, except the env-driven back
 
 Not installed (development only):
 
-- `crates/dotfiles-support` — shared library (`command_exists`, …) used by the satellites/workers.
+- `crates/dotfiles-support` — shared library (`command_exists`, …) used by the command crates and the workers.
 - `tools/dotfiles-lint` — lint/format orchestrator, run via `mise run lint` / `mise run check`.
 
 Each distributable crate (and the support lib) is versioned independently via release-plz: per-package tags `<crate>-v<version>`, while the root `dotfiles` keeps `v<version>`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.

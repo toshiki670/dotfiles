@@ -1,5 +1,5 @@
 # root package = `dotfiles` コマンド（= dotfiles 本体 / core）。
-# いまは chezmoi と各衛星コマンドに委譲しているが、将来それらを取り込む器。
+# いまは chezmoi と各コマンドに委譲しているが、将来それらを取り込む器。
 # version は SoT（タグ `v{version}`）。当面は clap で `dotfiles --version` が取れれば十分。
 [package]
 description = "toshiki670/dotfiles 本体（core）コマンド"
@@ -26,7 +26,7 @@ name = "e2e"
 path = "tests/e2e/mod.rs"
 
 # --- Cargo workspace（root package + members） -----------------------------
-# 各衛星コマンドは crates/<name>/、配布物は版を振り release-plz で個別タグ。
+# 各コマンドは crates/<name>/、配布物は版を振り release-plz で個別タグ。
 # 開発専用ツール（lint）は tools/ 配下に置き、版を振らず install もしない。
 [workspace]
 members  = [ "crates/*", "tools/dotfiles-lint" ]

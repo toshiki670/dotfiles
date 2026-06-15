@@ -1,5 +1,5 @@
 # release-plz: https://release-plz.dev/
-# Cargo workspace モード。配布物（root dotfiles + 衛星 + workers）と support lib は
+# Cargo workspace モード。配布物（root dotfiles + 各コマンド + workers）と support lib は
 # 独立版を振り、per-package で git タグ + GitHub Release + CHANGELOG を生成する。
 # crates.io へは publish しない（`publish = false`）。
 [workspace]

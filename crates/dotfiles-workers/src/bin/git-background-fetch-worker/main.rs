@@ -1,7 +1,7 @@
-//! スロットル付き `git fetch` を背景実行する worker。
+//! スロットル付き `git fetch` をバックグラウンドで実行する worker。
 //! 旧 `_git_background_fetch_worker.fish` の移植。
 //!
-//! conf.d/70-git-background-fetch.fish の fish_postexec フックから背景起動される。
+//! conf.d/70-git-background-fetch.fish の fish_postexec フックからバックグラウンドで起動される。
 //! 任意で GIT_FETCH_THROTTLE_SEC を環境変数で受け取る（既定 20 秒）。
 
 use std::process::{Command, ExitCode, Stdio};

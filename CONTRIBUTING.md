@@ -35,7 +35,7 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 このリポジトリは [release-plz](https://release-plz.dev/) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。version の source of truth は各 `Cargo.toml`、CHANGELOG は git-cliff（`cliff.toml`）で生成します。crates.io へは publish せず、git タグ + GitHub Release のみを作成します。
 
-**Cargo workspace の per-package バージョニング**: 配布物（root `dotfiles` + 衛星 + workers）と共有 lib（`dotfiles-support`）はそれぞれ独立に版を振ります。タグは root `dotfiles` が `v{version}`（従来どおり）、その他の member が `<crate>-v{version}`。CHANGELOG は各クレート直下に per-package で生成されます。開発専用ツール `tools/dotfiles-lint` は `release = false` で release-plz の対象外（版を振りません）。下表のバンプ規則はパッケージごとに、そのパッケージに触れたコミットの type で判定されます。
+**Cargo workspace の per-package バージョニング**: 配布物（root `dotfiles` + 各コマンド + workers）と共有 lib（`dotfiles-support`）はそれぞれ独立に版を振ります。タグは root `dotfiles` が `v{version}`（従来どおり）、その他の member が `<crate>-v{version}`。CHANGELOG は各クレート直下に per-package で生成されます。開発専用ツール `tools/dotfiles-lint` は `release = false` で release-plz の対象外（版を振りません）。下表のバンプ規則はパッケージごとに、そのパッケージに触れたコミットの type で判定されます。
 
 ### バージョン決定ルール
 
@@ -59,7 +59,7 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 ```bash
 # root dotfiles（core）
 git describe --tags --abbrev=0 --match 'v[0-9]*'
-# 衛星コマンド（例: color）
+# 各コマンド（例: color）
 git describe --tags --abbrev=0 --match 'color-v*'
 ```
 
