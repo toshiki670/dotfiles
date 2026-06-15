@@ -17,5 +17,9 @@ assert_cmd = { workspace = true }
 predicates = { workspace = true }
 rstest     = { workspace = true }
 
+[[test]]
+name = "e2e"
+path = "tests/e2e/mod.rs"
+
 [lints]
 workspace = true

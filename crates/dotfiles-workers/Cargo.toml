@@ -16,5 +16,9 @@ dotfiles-support = { path = "../dotfiles-support" }
 assert_cmd = { workspace = true }
 predicates = { workspace = true }
 
+[[test]]
+name = "e2e"
+path = "tests/e2e/mod.rs"
+
 [lints]
 workspace = true

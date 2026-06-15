@@ -9,3 +9,13 @@ pub fn command_exists(cmd: &str) -> bool {
     std::env::var_os("PATH")
         .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(cmd).is_file()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn absent_command_is_not_found() {
+        assert!(!command_exists("definitely-not-a-real-command-9b2f7e"));
+    }
+}
