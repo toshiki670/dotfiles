@@ -11,6 +11,12 @@ pub fn remote_exists(remotes_output: &str, name: &str) -> bool {
     remotes_output.lines().any(|line| line.trim() == name)
 }
 
+/// `command -q` 相当: PATH 上に指定コマンドの実行ファイルがあるか判定する。
+pub fn command_exists(cmd: &str) -> bool {
+    std::env::var_os("PATH")
+        .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(cmd).is_file()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

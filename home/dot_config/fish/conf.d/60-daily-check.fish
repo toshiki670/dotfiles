@@ -20,12 +20,12 @@ function daily-check
         return
     end
 
-    # Fish does not background user-defined functions with `&` (they run synchronously).
-    # Run the worker in a subprocess so brew/mise do not block the prompt.
+    # Run the worker binary (Rust: src/bin/daily-check-worker) in the background
+    # so brew/mise outdated do not block the prompt.
     env DAILY_CHECK_TS="$timestamp_file" \
         DAILY_CHECK_CACHE="$cache_dir" \
         DAILY_CHECK_RESULT="$result_file" \
-        fish -c _daily_check_worker &
+        daily-check-worker &
 end
 
 status is-interactive && daily-check
