@@ -7,7 +7,7 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
-This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and scripts under `bin/`.
+This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`color`, `git-upstream`, `gcm`, `copy-obj`, `v-sync`, …) built from the repository-root crate and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
 
 # Prerequisites
 
@@ -131,9 +131,24 @@ On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config 
 ### macOS
 
 - Homebrew configurations will be applied automatically
-- Custom binaries in `bin/` will be added to PATH
+- Scripts under `bin/` (`$DOTFILES/bin`) and Rust commands (`~/.cargo/bin`) are added to PATH
 - Ghostty config symlink is set up as described above
+
+# Rust commands
+
+Several CLI commands are written in Rust and live in the repository-root crate (`Cargo.toml`, `src/bin/<name>/`). On `chezmoi apply`, a hook (`run_onchange_after_cargo-install`) runs `cargo install --path . --locked` to build them into `~/.cargo/bin`. The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
+
+| Command | Description |
+| --- | --- |
+| `color` | Print an ANSI color table (16 + 256 colors) |
+| `git-upstream` | Merge `upstream/master` / initialize the upstream remote |
+| `gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
+| `copy-obj` | Copy a file as a Finder-pasteable file object (macOS) |
+| `v-sync` | Sync Neovim plugins and re-add `lazy-lock.json` into chezmoi |
+| `dotfiles-lint` | Lint/format orchestrator (run via `mise run lint` / `mise run check`) |
+
+`gcm` / `gh-clone` keep a thin Fish shim for the parts that must change the parent shell (`cd`), with the logic in the Rust binary.
 
 # Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for lint, test, and release instructions. To trigger a release directly: [Run Release Workflow](https://github.com/toshiki670/dotfiles/actions/workflows/release.yml).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for lint, test, and release instructions. To trigger a release directly: [Run Release Prepare Workflow](https://github.com/toshiki670/dotfiles/actions/workflows/release-prepare.yml).
