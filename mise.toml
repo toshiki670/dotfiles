@@ -22,6 +22,10 @@ run         = "cargo run --quiet --bin dotfiles-lint -- fix"
 description = "Run linter check only"
 run         = "cargo run --quiet --bin dotfiles-lint -- check"
 
+[tasks.update-starship-schema]
+description = "Refresh the vendored starship config JSON schema (taplo validation)"
+run         = "curl -fsSL https://starship.rs/config-schema.json -o schemas/starship-config-schema.json"
+
 [tasks.release-prepare]
 description = "Trigger the Release Please workflow (creates a Release PR)"
 run = """

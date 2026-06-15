@@ -6,13 +6,12 @@
 
 ```bash
 # Homebrew経由でインストール
-brew install git gh mise
+brew install git gh mise fish
 ```
 
-```bash
-# Nix（lint/check に必要）
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-```
+lint/format ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff / chezmoi）と
+Rust ツールチェーンは、リポジトリの `mise.toml` から `mise install` で供給されます
+（`fish` のみ brew）。
 
 dotfiles の利用に必要なツールは [`README.md`](README.md) を参照してください。
 
@@ -63,7 +62,7 @@ git describe --tags --abbrev=0
 
 変更をコミットする前に、以下を確認してください：
 
-### Nix lint/check（推奨）
+### lint/check
 
 ```bash
 # 自動修正 + チェック
@@ -73,18 +72,19 @@ mise run lint
 mise run check
 ```
 
-`nix/lint`（および `tests/lint`）を変更したときのみ、以下で lint ランナー実装の品質確認を行ってください:
+lint は Rust 製オーケストレータ `dotfiles-lint`（`src/bin/dotfiles-lint`）が、mise 供給の
+各ツールを呼んで実行します。オーケストレータ自体を変更したときは、以下でロジックの
+ユニットテストを確認してください:
 
 ```bash
-nix run .#lint-tests
-nix run .#lint-typecheck
-nix run .#lint-stylecheck
+cargo test
 ```
 
 補足:
 
-- CI は `nix flake check -L` と `nix run .#lint-tests` を実行します。
-- 詳細ログが必要な場合は `mise run check -- --summary --json` を使ってください。
+- CI は `cargo run --bin dotfiles-lint -- check`（lint）と `cargo test`（オーケストレータの
+  テスト）を実行します。
+- 詳細ログが必要な場合は `cargo run --bin dotfiles-lint -- check --summary --json` を使ってください。
 
 ## コードスタイル
 
