@@ -1,12 +1,12 @@
 # nvim プラグインを同期し lazy-lock.json を chezmoi ソースへ re-add する配布コマンド。
 [package]
-name        = "v-sync"
 description = "Neovim プラグインを同期し lazy-lock.json を chezmoi ソースへ re-add する"
-version     = "0.1.0"
-publish     = false
 edition     = { workspace = true }
 license     = { workspace = true }
+name        = "v-sync"
+publish     = false
 repository  = { workspace = true }
+version     = "0.1.0"
 
 [dependencies]
 clap             = { workspace = true }

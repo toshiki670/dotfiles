@@ -1,12 +1,12 @@
 # ステージ済み diff から Conventional Commits を AI 生成して commit する配布コマンド。
 [package]
-name        = "gcm"
 description = "AI-powered git commit with Conventional Commits（claude -p）"
-version     = "0.1.0"
-publish     = false
 edition     = { workspace = true }
 license     = { workspace = true }
+name        = "gcm"
+publish     = false
 repository  = { workspace = true }
+version     = "0.1.0"
 
 [dependencies]
 clap       = { workspace = true }

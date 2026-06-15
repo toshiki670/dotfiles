@@ -2,13 +2,13 @@
 # いまは chezmoi と各衛星コマンドに委譲しているが、将来それらを取り込む器。
 # version は SoT（タグ `v{version}`）。当面は clap で `dotfiles --version` が取れれば十分。
 [package]
-name        = "dotfiles"
 description = "toshiki670/dotfiles 本体（core）コマンド"
-version     = "0.68.0"
-publish     = false
 edition     = { workspace = true }
 license     = { workspace = true }
+name        = "dotfiles"
+publish     = false
 repository  = { workspace = true }
+version     = "0.68.0"
 
 [dependencies]
 clap = { workspace = true }

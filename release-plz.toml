@@ -15,8 +15,8 @@ publish          = false
 # root package = `dotfiles` 本体（core）。タグは従来どおり `v{version}` を維持する
 # （0.68.0 からの連続。`git_tag_name` を root だけ上書き）。
 [[package]]
-name         = "dotfiles"
 git_tag_name = "v{{ version }}"
+name         = "dotfiles"
 
 # dotfiles-lint は repo 内部の開発専用ツール（xtask 定石）。版を振らず、リリース
 # もしない。`release = false` で release-plz の処理対象から完全に除外する。
