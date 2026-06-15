@@ -16,11 +16,11 @@ taplo      = "0.10.0"
 
 [tasks.lint]
 description = "Run linter with auto-fix"
-run         = "cargo run --quiet --bin dotfiles-lint -- fix"
+run         = "cargo run --quiet -p dotfiles-lint -- fix"
 
 [tasks.check]
 description = "Run linter check only"
-run         = "cargo run --quiet --bin dotfiles-lint -- check"
+run         = "cargo run --quiet -p dotfiles-lint -- check"
 
 [tasks.release-prepare]
 description = "Trigger the Release Prepare workflow (release-plz creates a Release PR)"
