@@ -1,0 +1,20 @@
+# 背景 worker 2 種（daily-check-worker / git-background-fetch-worker）の配布クレート。
+# fish conf.d のフックから背景起動される。clap 化はしない（引数を取らず env 駆動）。
+[package]
+name        = "dotfiles-workers"
+description = "dotfiles の背景 worker（daily-check / git-background-fetch）"
+version     = "0.1.0"
+publish     = false
+edition     = { workspace = true }
+license     = { workspace = true }
+repository  = { workspace = true }
+
+[dependencies]
+dotfiles-support = { path = "../dotfiles-support" }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+
+[lints]
+workspace = true

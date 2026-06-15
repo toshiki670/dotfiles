@@ -9,7 +9,7 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process::{Command, ExitCode, Stdio};
 
-use dotfiles::command_exists;
+use dotfiles_support::command_exists;
 
 fn main() -> ExitCode {
     if !command_exists("gh") {

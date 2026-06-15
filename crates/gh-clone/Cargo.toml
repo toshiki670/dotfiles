@@ -1,0 +1,21 @@
+# gh repo clone + ghq migrate を行い移設先パスを stdout へ出す配布コマンド（fish shim 併用）。
+[package]
+name        = "gh-clone"
+description = "gh repo clone してから ghq migrate し、移設先パスを stdout に出力する"
+version     = "0.1.0"
+publish     = false
+edition     = { workspace = true }
+license     = { workspace = true }
+repository  = { workspace = true }
+
+[dependencies]
+clap             = { workspace = true }
+dotfiles-support = { path = "../dotfiles-support" }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+rstest     = { workspace = true }
+
+[lints]
+workspace = true

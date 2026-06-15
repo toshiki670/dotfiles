@@ -1,22 +1,55 @@
+# root package = `dotfiles` コマンド（= dotfiles 本体 / core）。
+# いまは chezmoi と各衛星コマンドに委譲しているが、将来それらを取り込む器。
+# version は SoT（タグ `v{version}`）。当面は clap で `dotfiles --version` が取れれば十分。
 [package]
-description = "toshiki670/dotfiles の CLI コマンド群"
-edition     = "2024"
-license     = "MIT"
 name        = "dotfiles"
-publish     = false
-repository  = "https://github.com/toshiki670/dotfiles"
+description = "toshiki670/dotfiles 本体（core）コマンド"
 version     = "0.68.0"
-
-# 各コマンドは src/bin/<name>/main.rs に置き、Cargo の自動検出に任せる
-# （[[bin]] の明示は不要）。共有ロジックは src/lib.rs。
+publish     = false
+edition     = { workspace = true }
+license     = { workspace = true }
+repository  = { workspace = true }
 
 [dependencies]
+clap = { workspace = true }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+rstest     = { workspace = true }
+
+# --- Cargo workspace（root package + members） -----------------------------
+# 各衛星コマンドは crates/<name>/、配布物は版を振り release-plz で個別タグ。
+# 開発専用ツール（lint）は tools/ 配下に置き、版を振らず install もしない。
+[workspace]
+members  = [ "crates/*", "tools/dotfiles-lint" ]
+resolver = "3"
+
+# 全 member 共通のパッケージメタ（各 Cargo.toml から `xxx.workspace = true` で参照）。
+[workspace.package]
+edition    = "2024"
+license    = "MIT"
+repository = "https://github.com/toshiki670/dotfiles"
+
+# 全 member 共通の依存（各 Cargo.toml から `xxx.workspace = true` で参照）。
+[workspace.dependencies]
 clap       = { version = "4", features = [ "derive" ] }
 ignore     = "0.4"
 libc       = "0.2"
 serde      = { version = "1", features = [ "derive" ] }
 serde_json = "1"
 tempfile   = "3"
+# E2E（dev-dependencies）
+assert_cmd = "2"
+predicates = "3"
+rstest     = "0.23"
+
+# 全 member 共通の lint（各 Cargo.toml の `[lints] workspace = true` で参照）。
+# 初期は最小（CI の `clippy -D warnings` を壊さない範囲）。
+[workspace.lints]
 
 [profile.release]
 strip = true

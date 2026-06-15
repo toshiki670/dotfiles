@@ -6,7 +6,7 @@
 
 use std::process::{Command, ExitCode};
 
-use dotfiles::command_exists;
+use dotfiles_support::command_exists;
 
 fn main() -> ExitCode {
     let ts = env_or_empty("DAILY_CHECK_TS");

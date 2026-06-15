@@ -1,0 +1,20 @@
+# ANSI カラー表を出力する配布コマンド（衛星）。独立版・独自タグ `color-v<ver>`。
+[package]
+name        = "color"
+description = "ANSI カラーコード（16 色 + 256 色）の確認表を出力する"
+version     = "0.1.0"
+publish     = false
+edition     = { workspace = true }
+license     = { workspace = true }
+repository  = { workspace = true }
+
+[dependencies]
+clap = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+rstest     = { workspace = true }
+
+[lints]
+workspace = true

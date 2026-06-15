@@ -1,0 +1,18 @@
+# lint/format オーケストレータ。repo 内部の開発専用ツール（xtask 定石）。
+# 版を振らず（release-plz は release=false）、install もしない。publish もしない。
+[package]
+name        = "dotfiles-lint"
+description = "dotfiles の lint/format オーケストレータ（repo 内部の開発専用ツール）"
+version     = "0.0.0"
+publish     = false
+edition     = { workspace = true }
+license     = { workspace = true }
+repository  = { workspace = true }
+
+[dependencies]
+clap     = { workspace = true }
+ignore   = { workspace = true }
+tempfile = { workspace = true }
+
+[lints]
+workspace = true
