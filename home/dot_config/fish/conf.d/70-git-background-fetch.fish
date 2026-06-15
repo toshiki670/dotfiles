@@ -1,5 +1,5 @@
 # After each interactive command, may spawn a subprocess that runs throttled
-# `git fetch` (see the git-background-fetch-worker binary, src/bin). Foreground only
+# `git fetch` (see the git-background-fetch-worker binary, crates/dotfiles-workers). Foreground only
 # registers the event and starts that subprocess — no repo or network work here.
 
 function __git_background_fetch_maybe --on-event fish_postexec

@@ -20,7 +20,7 @@ function daily-check
         return
     end
 
-    # Run the worker binary (Rust: src/bin/daily-check-worker) in the background
+    # Run the worker binary (Rust: crates/dotfiles-workers, daily-check-worker) in the background
     # so brew/mise outdated do not block the prompt.
     env DAILY_CHECK_TS="$timestamp_file" \
         DAILY_CHECK_CACHE="$cache_dir" \

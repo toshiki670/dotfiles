@@ -26,4 +26,4 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run dotfiles-lint check
-        run: mise exec -- cargo run --quiet --bin dotfiles-lint -- check --summary
+        run: mise exec -- cargo run --quiet -p dotfiles-lint -- check --summary

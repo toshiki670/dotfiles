@@ -1,0 +1,14 @@
+# dotfiles の各コマンドが共有する純粋ユーティリティ（lib）。
+# 配布物ではないが独立版を振り、release-plz でタグ `dotfiles-support-v<ver>` を打つ。
+# install はしない（lib）。publish はしない。
+[package]
+description = "dotfiles の各コマンドが共有するユーティリティ（command_exists 等）"
+edition     = { workspace = true }
+license     = { workspace = true }
+name        = "dotfiles-support"
+publish     = false
+repository  = { workspace = true }
+version     = "0.1.0"
+
+[lints]
+workspace = true

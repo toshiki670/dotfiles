@@ -136,18 +136,27 @@ On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config 
 
 # Rust commands
 
-Several CLI commands are written in Rust and live in the repository-root crate (`Cargo.toml`, `src/bin/<name>/`). On `chezmoi apply`, a hook (`run_onchange_after_cargo-install`) runs `cargo install --path . --locked` to build them into `~/.cargo/bin`. The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
+The CLI commands form a **Cargo workspace** at the repository root. The root package is `dotfiles` itself (core), and each individual command is an independent crate under `crates/*`. On `chezmoi apply`, a hook (`run_onchange_after_cargo-install`) installs the *distributable* crates into `~/.cargo/bin` via `cargo install` (the support library and the lint tool are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
 
-| Command | Description |
-| --- | --- |
-| `color` | Print an ANSI color table (16 + 256 colors) |
-| `git-upstream` | Merge `upstream/master` / initialize the upstream remote |
-| `gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
-| `copy-obj` | Copy a file as a Finder-pasteable file object (macOS) |
-| `v-sync` | Sync Neovim plugins and re-add `lazy-lock.json` into chezmoi |
-| `dotfiles-lint` | Lint/format orchestrator (run via `mise run lint` / `mise run check`) |
+| Command | Crate | Description |
+| --- | --- | --- |
+| `dotfiles` | (root) | dotfiles core; currently a version / `--help` entry point (`dotfiles --version`) |
+| `color` | `crates/color` | Print an ANSI color table (16 + 256 colors) |
+| `git-upstream` | `crates/git-upstream` | Merge `upstream/master` / initialize the upstream remote |
+| `gcm` | `crates/gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
+| `copy-obj` | `crates/copy-obj` | Copy a file as a Finder-pasteable file object (macOS) |
+| `v-sync` | `crates/v-sync` | Sync Neovim plugins and re-add `lazy-lock.json` into chezmoi |
+| `gh-clone` | `crates/gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
+| `daily-check-worker`, `git-background-fetch-worker` | `crates/dotfiles-workers` | Background workers started from Fish `conf.d` hooks |
 
-`gcm` / `gh-clone` keep a thin Fish shim for the parts that must change the parent shell (`cd`), with the logic in the Rust binary.
+Every command binary supports `--help` / `--version`, except the env-driven background workers. `gh-clone` keeps a thin Fish shim (`gh-clone.fish`) for the part that must change the parent shell (`cd`), with the logic in the Rust binary.
+
+Not installed (development only):
+
+- `crates/dotfiles-support` — shared library (`command_exists`, …) used by the command crates and the workers.
+- `tools/dotfiles-lint` — lint/format orchestrator, run via `mise run lint` / `mise run check`.
+
+Each distributable crate (and the support lib) is versioned independently via release-plz: per-package tags `<crate>-v<version>`, while the root `dotfiles` keeps `v<version>`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 
 # Development
 

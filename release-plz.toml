@@ -1,11 +1,25 @@
 # release-plz: https://release-plz.dev/
-# dotfiles は配布物ではないため crates.io へは publish せず、git タグ + GitHub
-# Release + CHANGELOG のみを生成する（merge-ready の構成から publish を無効化）。
+# Cargo workspace モード。配布物（root dotfiles + 各コマンド + workers）と support lib は
+# 独立版を振り、per-package で git タグ + GitHub Release + CHANGELOG を生成する。
+# crates.io へは publish しない（`publish = false`）。
 [workspace]
 changelog_config   = "cliff.toml"
 changelog_update   = true
 git_release_draft  = false
 git_release_enable = true
-git_tag_name       = "v{{ version }}"
-pr_branch_prefix   = "release-"
-publish            = false
+# member の既定タグ。複数パッケージ workspace の既定値を明示しておく。
+git_tag_name     = "{{ package }}-v{{ version }}"
+pr_branch_prefix = "release-"
+publish          = false
+
+# root package = `dotfiles` 本体（core）。タグは従来どおり `v{version}` を維持する
+# （0.68.0 からの連続。`git_tag_name` を root だけ上書き）。
+[[package]]
+git_tag_name = "v{{ version }}"
+name         = "dotfiles"
+
+# dotfiles-lint は repo 内部の開発専用ツール（xtask 定石）。版を振らず、リリース
+# もしない。`release = false` で release-plz の処理対象から完全に除外する。
+[[package]]
+name    = "dotfiles-lint"
+release = false
