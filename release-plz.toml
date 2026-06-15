@@ -1,16 +1,23 @@
 # release-plz: https://release-plz.dev/
 # Cargo workspace モード。配布物（root dotfiles + 各コマンド + workers）と support lib は
 # 独立版を振り、per-package で git タグ + GitHub Release + CHANGELOG を生成する。
-# crates.io へは publish しない（`publish = false`）。
+# crates.io へは publish しない。
+#
+# `git_only = true`: 最新リリース版の判定を「git タグ」から行う（crates.io を参照しない）。
+# これが本リポジトリの設計（per-package タグ = 版の SoT）。
+# 注意: 単に `publish = false` だけだと cargo publish は止まるが、release-plz は
+# 「最新リリースの判定」に依然 crates.io を参照する。本クレート群は crates.io に
+# 存在しないため版の基準を確立できず、Release PR が空になる（{"prs":[]}）。
+# `git_only = true` は publish もスキップするので `publish = false` を内包する。
 [workspace]
 changelog_config   = "cliff.toml"
 changelog_update   = true
+git_only           = true
 git_release_draft  = false
 git_release_enable = true
 # member の既定タグ。複数パッケージ workspace の既定値を明示しておく。
 git_tag_name     = "{{ package }}-v{{ version }}"
 pr_branch_prefix = "release-"
-publish          = false
 
 # root package = `dotfiles` 本体（core）。タグは従来どおり `v{version}` を維持する
 # （0.68.0 からの連続。`git_tag_name` を root だけ上書き）。
