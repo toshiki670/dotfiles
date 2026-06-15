@@ -26,13 +26,13 @@ jobs:
         run: cargo fmt --all --check
 
       - name: Clippy
-        run: cargo clippy --all-targets --locked -- -D warnings
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
       - name: Build
-        run: cargo build --locked
+        run: cargo build --workspace --locked
 
       - name: Test
-        run: cargo test --locked
+        run: cargo test --workspace --locked
 
   apply-test:
     name: chezmoi apply (fresh machine bootstrap)
@@ -52,9 +52,29 @@ jobs:
       - name: chezmoi apply (runs the cargo-install hook)
         run: chezmoi apply --source="$GITHUB_WORKSPACE" --verbose --force
 
-      - name: Verify Rust commands were installed to ~/.cargo/bin
+      - name: Verify distributable Rust commands were installed to ~/.cargo/bin
         run: |
-          test -x "$HOME/.cargo/bin/color"
-          test -x "$HOME/.cargo/bin/git-upstream"
+          # root dotfiles（core）
+          test -x "$HOME/.cargo/bin/dotfiles"
+          "$HOME/.cargo/bin/dotfiles" --version
+          # 衛星コマンド（存在のみ確認。外部ツール依存のものは実行しない）
+          for bin in color copy-obj v-sync gh-clone gcm git-upstream; do
+            test -x "$HOME/.cargo/bin/$bin"
+          done
+          # 背景 worker
+          test -x "$HOME/.cargo/bin/daily-check-worker"
+          test -x "$HOME/.cargo/bin/git-background-fetch-worker"
+          # スモーク（外部ツール非依存のもののみ）
           "$HOME/.cargo/bin/color" | head -1
           "$HOME/.cargo/bin/git-upstream" --help
+
+      - name: Verify dev-only tools were NOT installed
+        run: |
+          # dotfiles-lint は repo 内部の開発専用ツール（非 install）。
+          # dotfiles-support は lib（bin を持たない）。いずれも ~/.cargo/bin に入らない。
+          for bin in dotfiles-lint dotfiles-support; do
+            if [ -e "$HOME/.cargo/bin/$bin" ]; then
+              echo "error: $bin must not be installed to ~/.cargo/bin" >&2
+              exit 1
+            fi
+          done
