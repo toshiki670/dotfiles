@@ -1,0 +1,80 @@
+name: Rust
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  cargo:
+    name: cargo fmt / clippy / test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format check
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Build
+        run: cargo build --workspace --locked
+
+      - name: Test
+        run: cargo test --workspace --locked
+
+  apply-test:
+    name: chezmoi apply (fresh machine bootstrap)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install mise (supplies rust)
+        uses: jdx/mise-action@v2
+
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: chezmoi apply (runs the cargo-install hook)
+        run: chezmoi apply --source="$GITHUB_WORKSPACE" --verbose --force
+
+      - name: Verify distributable Rust commands were installed to ~/.cargo/bin
+        run: |
+          # root dotfiles（core）
+          test -x "$HOME/.cargo/bin/dotfiles"
+          "$HOME/.cargo/bin/dotfiles" --version
+          # 各コマンド（存在のみ確認。外部ツール依存のものは実行しない）
+          for bin in color copy-obj v-sync gh-clone gcm git-upstream; do
+            test -x "$HOME/.cargo/bin/$bin"
+          done
+          # バックグラウンド worker
+          test -x "$HOME/.cargo/bin/daily-check-worker"
+          test -x "$HOME/.cargo/bin/git-background-fetch-worker"
+          # スモーク（外部ツール非依存のもののみ）
+          "$HOME/.cargo/bin/color" | head -1
+          "$HOME/.cargo/bin/git-upstream" --help
+
+      - name: Verify dev-only tools were NOT installed
+        run: |
+          # dotfiles-lint は repo 内部の開発専用ツール（非 install）。
+          # dotfiles-support は lib（bin を持たない）。いずれも ~/.cargo/bin に入らない。
+          for bin in dotfiles-lint dotfiles-support; do
+            if [ -e "$HOME/.cargo/bin/$bin" ]; then
+              echo "error: $bin must not be installed to ~/.cargo/bin" >&2
+              exit 1
+            fi
+          done

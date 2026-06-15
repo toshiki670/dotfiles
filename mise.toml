@@ -1,13 +1,29 @@
+[tools]
+# クレートのビルド・配布（cargo install）に使う Rust ツールチェーン。
+# fresh machine は mise で rust を取得してから chezmoi が cargo install する。
+rust = "latest"
+
+# lint オーケストレータが呼ぶフォーマッタ/リンタ群。
+# 再現性のため版をピンする（更新時は初回 `mise run lint` で差分を吸収）。
+# fish は brew 既存（mise では供給しない）。
+chezmoi    = "2.70.5"
+ruff       = "0.15.17"
+rumdl      = "0.2.16"
+shellcheck = "0.11.0"
+shfmt      = "3.13.1"
+stylua     = "2.5.2"
+taplo      = "0.10.0"
+
 [tasks.lint]
 description = "Run linter with auto-fix"
-run         = "nix run .#lint"
+run         = "cargo run --quiet -p dotfiles-lint -- fix"
 
 [tasks.check]
 description = "Run linter check only"
-run         = "nix run .#check"
+run         = "cargo run --quiet -p dotfiles-lint -- check"
 
 [tasks.release-prepare]
-description = "Trigger the Release Please workflow (creates a Release PR)"
+description = "Trigger the Release Prepare workflow (release-plz creates a Release PR)"
 run = """
 #!/usr/bin/env bash
 set -euo pipefail
@@ -19,7 +35,7 @@ case "$answer" in
   *) echo "キャンセルしました。"; exit 0 ;;
 esac
 
-gh workflow run release-please.yml --repo toshiki670/dotfiles
+gh workflow run release-prepare.yml --repo toshiki670/dotfiles
 echo "Workflow をトリガーしました。"
-echo "進捗: https://github.com/toshiki670/dotfiles/actions/workflows/release-please.yml"
+echo "進捗: https://github.com/toshiki670/dotfiles/actions/workflows/release-prepare.yml"
 """

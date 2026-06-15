@@ -6,13 +6,12 @@
 
 ```bash
 # Homebrew経由でインストール
-brew install git gh mise
+brew install git gh mise fish
 ```
 
-```bash
-# Nix（lint/check に必要）
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-```
+lint/format ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff / chezmoi）と
+Rust ツールチェーンは、リポジトリの `mise.toml` から `mise install` で供給されます
+（`fish` のみ brew）。
 
 dotfiles の利用に必要なツールは [`README.md`](README.md) を参照してください。
 
@@ -34,36 +33,41 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## リリースプロセス
 
-このリポジトリは [release-please](https://github.com/googleapis/release-please) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。
+このリポジトリは [release-plz](https://release-plz.dev/) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。version の source of truth は各 `Cargo.toml`、CHANGELOG は git-cliff（`cliff.toml`）で生成します。crates.io へは publish せず、git タグ + GitHub Release のみを作成します。
+
+**Cargo workspace の per-package バージョニング**: 配布物（root `dotfiles` + 各コマンド + workers）と共有 lib（`dotfiles-support`）はそれぞれ独立に版を振ります。タグは root `dotfiles` が `v{version}`（従来どおり）、その他の member が `<crate>-v{version}`。CHANGELOG は各クレート直下に per-package で生成されます。開発専用ツール `tools/dotfiles-lint` は `release = false` で release-plz の対象外（版を振りません）。下表のバンプ規則はパッケージごとに、そのパッケージに触れたコミットの type で判定されます。
 
 ### バージョン決定ルール
 
 | コミットタイプ | バンプ | 例 |
 | --- | --- | --- |
-| `feat!:` / `BREAKING CHANGE:` フッター | **major** | `v0.54.2` → `v1.0.0` |
-| `feat:` | **minor** | `v0.54.2` → `v0.55.0` |
-| `fix:` | **patch** | `v0.54.2` → `v0.54.3` |
+| `feat!:` / `BREAKING CHANGE:` フッター | **major** | `v0.68.0` → `v1.0.0` |
+| `feat:` | **minor** | `v0.68.0` → `v0.69.0` |
+| `fix:` / `perf:` | **patch** | `v0.68.0` → `v0.68.1` |
 | `chore:` / `docs:` / その他 | なし | バージョン変更なし |
 
 ### リリースフロー
 
-1. `feat:` / `fix:` / `feat!:` などのコミットが `main` に push されると、release-please が Release PR を自動作成・更新する
-2. Release PR には `CHANGELOG.md` と `.release-please-manifest.json` の更新が含まれる
-3. Release PR をマージすると GitHub Release とタグが自動作成される
+1. `mise run release-prepare`（または GitHub の Release Prepare workflow を `workflow_dispatch`）で release-plz が Release PR（`release-*` ブランチ）を作成・更新する。
+2. Release PR には `Cargo.toml` の version と `CHANGELOG.md` の更新が含まれる（必要なら PR 上で version を手動調整できる）。
+3. Release PR を `main` にマージすると Release Publish workflow が走り、per-package タグ（root は `v{version}`、その他は `<crate>-v{version}`）と GitHub Release が作成される。
 
-手動操作は不要。Release PR のマージがリリースのトリガー。
+`main` への直接 push は不要・不可。Release PR のマージがリリースのトリガー（ブランチ保護と両立）。
 
 ### 現在のバージョン確認
 
 ```bash
-git describe --tags --abbrev=0
+# root dotfiles（core）
+git describe --tags --abbrev=0 --match 'v[0-9]*'
+# 各コマンド（例: color）
+git describe --tags --abbrev=0 --match 'color-v*'
 ```
 
 ## テスト
 
 変更をコミットする前に、以下を確認してください：
 
-### Nix lint/check（推奨）
+### lint/check
 
 ```bash
 # 自動修正 + チェック
@@ -73,18 +77,19 @@ mise run lint
 mise run check
 ```
 
-`nix/lint`（および `tests/lint`）を変更したときのみ、以下で lint ランナー実装の品質確認を行ってください:
+lint は Rust 製オーケストレータ `dotfiles-lint`（`tools/dotfiles-lint`）が、mise 供給の
+各ツールを呼んで実行します。コマンドや lint オーケストレータを変更したときは、以下で
+workspace 全体のテスト（各クレートの unit + E2E）を確認してください:
 
 ```bash
-nix run .#lint-tests
-nix run .#lint-typecheck
-nix run .#lint-stylecheck
+cargo test --workspace
 ```
 
 補足:
 
-- CI は `nix flake check -L` と `nix run .#lint-tests` を実行します。
-- 詳細ログが必要な場合は `mise run check -- --summary --json` を使ってください。
+- CI は `cargo run -p dotfiles-lint -- check`（lint）と `cargo test --workspace`（unit + E2E）を
+  実行します。
+- 詳細ログが必要な場合は `cargo run -p dotfiles-lint -- check --summary --json` を使ってください。
 
 ## コードスタイル
 

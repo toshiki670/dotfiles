@@ -7,7 +7,7 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
-This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and scripts under `bin/`.
+This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`color`, `git-upstream`, `gcm`, `copy-obj`, `v-sync`, …) built from the repository-root crate and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
 
 # Prerequisites
 
@@ -131,9 +131,33 @@ On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config 
 ### macOS
 
 - Homebrew configurations will be applied automatically
-- Custom binaries in `bin/` will be added to PATH
+- Scripts under `bin/` (`$DOTFILES/bin`) and Rust commands (`~/.cargo/bin`) are added to PATH
 - Ghostty config symlink is set up as described above
+
+# Rust commands
+
+The CLI commands form a **Cargo workspace** at the repository root. The root package is `dotfiles` itself (core), and each individual command is an independent crate under `crates/*`. On `chezmoi apply`, a hook (`run_onchange_after_cargo-install`) installs the *distributable* crates into `~/.cargo/bin` via `cargo install` (the support library and the lint tool are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
+
+| Command | Crate | Description |
+| --- | --- | --- |
+| `dotfiles` | (root) | dotfiles core; currently a version / `--help` entry point (`dotfiles --version`) |
+| `color` | `crates/color` | Print an ANSI color table (16 + 256 colors) |
+| `git-upstream` | `crates/git-upstream` | Merge `upstream/master` / initialize the upstream remote |
+| `gcm` | `crates/gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
+| `copy-obj` | `crates/copy-obj` | Copy a file as a Finder-pasteable file object (macOS) |
+| `v-sync` | `crates/v-sync` | Sync Neovim plugins and re-add `lazy-lock.json` into chezmoi |
+| `gh-clone` | `crates/gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
+| `daily-check-worker`, `git-background-fetch-worker` | `crates/dotfiles-workers` | Background workers started from Fish `conf.d` hooks |
+
+Every command binary supports `--help` / `--version`, except the env-driven background workers. `gh-clone` keeps a thin Fish shim (`gh-clone.fish`) for the part that must change the parent shell (`cd`), with the logic in the Rust binary.
+
+Not installed (development only):
+
+- `crates/dotfiles-support` — shared library (`command_exists`, …) used by the command crates and the workers.
+- `tools/dotfiles-lint` — lint/format orchestrator, run via `mise run lint` / `mise run check`.
+
+Each distributable crate (and the support lib) is versioned independently via release-plz: per-package tags `<crate>-v<version>`, while the root `dotfiles` keeps `v<version>`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 
 # Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for lint, test, and release instructions. To trigger a release directly: [Run Release Workflow](https://github.com/toshiki670/dotfiles/actions/workflows/release.yml).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for lint, test, and release instructions. To trigger a release directly: [Run Release Prepare Workflow](https://github.com/toshiki670/dotfiles/actions/workflows/release-prepare.yml).

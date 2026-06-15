@@ -1,0 +1,24 @@
+# ファイルをファイルオブジェクトとしてクリップボードへコピーする配布コマンド（macOS 専用）。
+[package]
+description = "ファイルを Finder で貼り付け可能なファイルオブジェクトとしてコピーする（macOS）"
+edition     = { workspace = true }
+license     = { workspace = true }
+name        = "copy-obj"
+publish     = false
+repository  = { workspace = true }
+version     = "0.1.0"
+
+[dependencies]
+clap = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+rstest     = { workspace = true }
+
+[[test]]
+name = "e2e"
+path = "tests/e2e/mod.rs"
+
+[lints]
+workspace = true

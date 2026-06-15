@@ -1,0 +1,68 @@
+{{- $root := .chezmoi.config.sourceDir -}}
+#!/bin/bash
+# Build and install the dotfiles Rust commands into ~/.cargo/bin via `cargo
+# install`. The Cargo workspace lives at the repository root (outside chezmoi's
+# `home/` source tree), so cargo is pointed at the source dir
+# ({{ "{{ .chezmoi.config.sourceDir }}" }} == $DOTFILES), not the script's cwd.
+#
+# Only *distributable* crates are installed:
+#   - root `dotfiles` (core)
+#   - commands: color / copy-obj / v-sync / gh-clone / gcm / git-upstream
+#   - dotfiles-workers (daily-check-worker + git-background-fetch-worker)
+# The support lib (crates/dotfiles-support) and the dev-only lint orchestrator
+# (tools/dotfiles-lint) are NOT installed.
+#
+# Each crate is installed in turn into ~/.cargo/bin, but they share a single
+# --target-dir so workspace dependencies are compiled once and reused.
+#
+# rust/cargo is supplied on-demand by mise (`mise exec rust@latest`), so this
+# works on a fresh machine before `mise install` has run and regardless of the
+# create-once global mise config (~/.config/mise/config.toml) state.
+#
+# This is a run_onchange script: the embedded source hash below changes whenever
+# Cargo.toml / Cargo.lock / src/** / crates/** change, forcing a rebuild only
+# when needed (tools/** is intentionally excluded: it does not affect the
+# installed binaries).
+#
+# source hash (forces re-run on change):
+# {{ output "sh" "-c" (printf "find %s/Cargo.lock %s/Cargo.toml %s/src %s/crates -type f 2>/dev/null | LC_ALL=C sort | xargs cat 2>/dev/null | sha256sum" $root $root $root $root) }}
+set -euo pipefail
+
+repo_root="{{ $root }}"
+
+if [ ! -f "$repo_root/Cargo.toml" ]; then
+  echo "cargo-install: Cargo.toml not found at $repo_root; skipping." >&2
+  exit 0
+fi
+
+# 配布物（install 対象）のクレートパス。lib(dotfiles-support) と
+# 開発専用ツール(tools/dotfiles-lint) は含めない。
+crate_paths=(
+  "$repo_root" # root dotfiles（core）
+  "$repo_root/crates/color"
+  "$repo_root/crates/copy-obj"
+  "$repo_root/crates/v-sync"
+  "$repo_root/crates/gh-clone"
+  "$repo_root/crates/gcm"
+  "$repo_root/crates/git-upstream"
+  "$repo_root/crates/dotfiles-workers"
+)
+
+# ワークスペース依存を一度だけビルドして使い回すための共有ターゲットディレクトリ。
+target_dir="$repo_root/target/cargo-install"
+
+# cargo を mise 経由（fresh machine）か PATH 上のもので実行する。
+if command -v mise &>/dev/null; then
+  run_cargo() { mise exec rust@latest -- cargo "$@"; }
+elif command -v cargo &>/dev/null; then
+  run_cargo() { cargo "$@"; }
+else
+  echo "cargo-install: neither mise nor cargo found; skipping (run 'mise install' then re-apply)." >&2
+  exit 0
+fi
+
+echo "cargo-install: installing distributable dotfiles commands from $repo_root"
+for crate_path in "${crate_paths[@]}"; do
+  echo "cargo-install: -> $crate_path"
+  run_cargo install --path "$crate_path" --target-dir "$target_dir" --locked --force
+done
