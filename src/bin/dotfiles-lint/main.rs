@@ -3,11 +3,13 @@
 //! 使い方: `dotfiles-lint {fix|check} [--check-after-fix on|off] [--summary] [--json] [--verbose]`
 //! 通常は `mise run lint` / `mise run check` から `cargo run` 経由で呼ばれる。
 
+mod lint;
+
 use std::process::ExitCode;
 
 use clap::{Parser, ValueEnum};
 
-use dotfiles::lint::{Mode, Orchestrator, collect_files, find_repo_root};
+use lint::{Mode, Orchestrator, collect_files, find_repo_root};
 
 #[derive(Clone, Copy, ValueEnum)]
 enum ModeArg {

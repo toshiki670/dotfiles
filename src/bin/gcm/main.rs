@@ -4,10 +4,12 @@
 //! 生成し、対話的に承認/修正して 1 つ以上のコミットを実行する。JSON 解析は
 //! （fish 版の jq の代わりに）serde_json で行うため jq 依存は不要。
 
+mod proposals;
+
 use std::io::{self, Write};
 use std::process::{Command, ExitCode, Stdio};
 
-use dotfiles::gcm::{Commit, parse_proposals};
+use proposals::{Commit, parse_proposals};
 
 const SYSTEM_PROMPT: &str = "You are a git commit message generator using Conventional Commits.
 
