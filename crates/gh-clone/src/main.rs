@@ -9,9 +9,24 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process::{Command, ExitCode, Stdio};
 
+use clap::Parser;
 use dotfiles_support::command_exists;
 
+/// gh repo clone してから ghq migrate し、移設先パスを stdout に出力する。
+#[derive(Parser)]
+#[command(
+    name = "gh-clone",
+    version,
+    about = "Clone a repo with gh then ghq migrate, printing the migrated path"
+)]
+struct Cli {
+    /// clone するリポジトリ（owner/repo）。
+    repo: String,
+}
+
 fn main() -> ExitCode {
+    let cli = Cli::parse();
+
     if !command_exists("gh") {
         eprintln!("gh-clone: gh command not found.");
         return ExitCode::from(127);
@@ -21,12 +36,7 @@ fn main() -> ExitCode {
         return ExitCode::from(127);
     }
 
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.is_empty() {
-        eprintln!("Usage: gh-clone <owner/repo>");
-        return ExitCode::FAILURE;
-    }
-    let repo_spec = &args[0];
+    let repo_spec = &cli.repo;
 
     // gh repo clone: 進捗は stderr 継承。gh の stdout は捕捉して stderr に流し、
     // 本プロセスの stdout（= 移設先パス）を汚さない。

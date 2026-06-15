@@ -9,7 +9,17 @@ mod proposals;
 use std::io::{self, Write};
 use std::process::{Command, ExitCode, Stdio};
 
+use clap::Parser;
 use proposals::{Commit, parse_proposals};
+
+/// AI-powered git commit with Conventional Commits（claude -p）。
+#[derive(Parser)]
+#[command(
+    name = "gcm",
+    version,
+    about = "AI-powered git commit with Conventional Commits (claude -p)"
+)]
+struct Cli {}
 
 const SYSTEM_PROMPT: &str = "You are a git commit message generator using Conventional Commits.
 
@@ -27,6 +37,9 @@ Rules:
 - Every staged file must appear in exactly one entry's files array";
 
 fn main() -> ExitCode {
+    // 引数は取らないが、clap で --help / --version を提供する。
+    let _ = Cli::parse();
+
     let staged = staged_files();
     if staged.is_empty() {
         eprintln!("ステージされた変更がありません。");

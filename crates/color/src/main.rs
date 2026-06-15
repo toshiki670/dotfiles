@@ -6,6 +6,17 @@
 //! - <http://ascii-table.com/ansi-escape-sequences.php>
 //! - <http://archive.linux.or.jp/JF/JFdocs/Bash-Prompt-HOWTO-5.html>
 
+use clap::Parser;
+
+/// ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
+#[derive(Parser)]
+#[command(
+    name = "color",
+    version,
+    about = "Print an ANSI color table (16 + 256 colors)"
+)]
+struct Cli {}
+
 const RESET: &str = "\x1b[0m";
 
 /// (エスケープコード, 表示名) の 16 色定義。
@@ -29,6 +40,9 @@ const COLORS: &[(&str, &str)] = &[
 ];
 
 fn main() {
+    // 引数は取らないが、clap で --help / --version を提供する。
+    let _ = Cli::parse();
+
     println!("=== 16 Colors ===");
     println!(" On White(47)     On Black(40)     On Default     Color Code");
 

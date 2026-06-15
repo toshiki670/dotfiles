@@ -3,9 +3,22 @@
 
 use std::process::{Command, ExitCode};
 
+use clap::Parser;
 use dotfiles_support::command_exists;
 
+/// Neovim プラグインを同期し lazy-lock.json を chezmoi ソースへ re-add する。
+#[derive(Parser)]
+#[command(
+    name = "v-sync",
+    version,
+    about = "Sync Neovim plugins and re-add lazy-lock.json into chezmoi"
+)]
+struct Cli {}
+
 fn main() -> ExitCode {
+    // 引数は取らないが、clap で --help / --version を提供する。
+    let _ = Cli::parse();
+
     if !command_exists("nvim") {
         eprintln!("v-sync: nvim command not found.");
         return ExitCode::from(127);

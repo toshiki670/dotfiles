@@ -18,6 +18,7 @@ const UPSTREAM_PATH: &str = "upstream/master";
 #[derive(Parser)]
 #[command(
     name = CMDNAME,
+    version,
     about = "Upstream merger.",
     after_help = "Example:\n  $ git-upstream\n  $ git-upstream -i https://github.com/toshiki670/dotfiles.git"
 )]
