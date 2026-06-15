@@ -33,24 +33,24 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## リリースプロセス
 
-このリポジトリは [release-please](https://github.com/googleapis/release-please) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。
+このリポジトリは [release-plz](https://release-plz.dev/) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。version の source of truth は `Cargo.toml`、CHANGELOG は git-cliff（`cliff.toml`）で生成します。crates.io へは publish せず、git タグ + GitHub Release のみを作成します。
 
 ### バージョン決定ルール
 
 | コミットタイプ | バンプ | 例 |
 | --- | --- | --- |
-| `feat!:` / `BREAKING CHANGE:` フッター | **major** | `v0.54.2` → `v1.0.0` |
-| `feat:` | **minor** | `v0.54.2` → `v0.55.0` |
-| `fix:` | **patch** | `v0.54.2` → `v0.54.3` |
+| `feat!:` / `BREAKING CHANGE:` フッター | **major** | `v0.68.0` → `v1.0.0` |
+| `feat:` | **minor** | `v0.68.0` → `v0.69.0` |
+| `fix:` / `perf:` | **patch** | `v0.68.0` → `v0.68.1` |
 | `chore:` / `docs:` / その他 | なし | バージョン変更なし |
 
 ### リリースフロー
 
-1. `feat:` / `fix:` / `feat!:` などのコミットが `main` に push されると、release-please が Release PR を自動作成・更新する
-2. Release PR には `CHANGELOG.md` と `.release-please-manifest.json` の更新が含まれる
-3. Release PR をマージすると GitHub Release とタグが自動作成される
+1. `mise run release-prepare`（または GitHub の Release Prepare workflow を `workflow_dispatch`）で release-plz が Release PR（`release-*` ブランチ）を作成・更新する。
+2. Release PR には `Cargo.toml` の version と `CHANGELOG.md` の更新が含まれる（必要なら PR 上で version を手動調整できる）。
+3. Release PR を `main` にマージすると Release Publish workflow が走り、`v{version}` タグと GitHub Release が作成される。
 
-手動操作は不要。Release PR のマージがリリースのトリガー。
+`main` への直接 push は不要・不可。Release PR のマージがリリースのトリガー（ブランチ保護と両立）。
 
 ### 現在のバージョン確認
 

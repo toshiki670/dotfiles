@@ -1,0 +1,35 @@
+name: Release Publish
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release-publish:
+    name: release-publish
+    # Release PR（head が release-*）が main にマージされたときのみタグ/Release を作成する。
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Create tag and GitHub Release
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          # タグ/Release 作成のみ（main への直接 push なし）。crates.io publish は無効。
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

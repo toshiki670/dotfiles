@@ -1,0 +1,11 @@
+# release-plz: https://release-plz.dev/
+# dotfiles は配布物ではないため crates.io へは publish せず、git タグ + GitHub
+# Release + CHANGELOG のみを生成する（merge-ready の構成から publish を無効化）。
+[workspace]
+changelog_config   = "cliff.toml"
+changelog_update   = true
+git_release_draft  = false
+git_release_enable = true
+git_tag_name       = "v{{ version }}"
+pr_branch_prefix   = "release-"
+publish            = false

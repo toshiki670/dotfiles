@@ -1,0 +1,29 @@
+name: Release Prepare
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-prepare:
+    name: release-prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Create / update Release PR
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          # PAT で PR を作成し、Release PR 上で CI を発火させる（GITHUB_TOKEN では発火しない）。
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}

@@ -23,7 +23,7 @@ description = "Run linter check only"
 run         = "cargo run --quiet --bin dotfiles-lint -- check"
 
 [tasks.release-prepare]
-description = "Trigger the Release Please workflow (creates a Release PR)"
+description = "Trigger the Release Prepare workflow (release-plz creates a Release PR)"
 run = """
 #!/usr/bin/env bash
 set -euo pipefail
@@ -35,7 +35,7 @@ case "$answer" in
   *) echo "キャンセルしました。"; exit 0 ;;
 esac
 
-gh workflow run release-please.yml --repo toshiki670/dotfiles
+gh workflow run release-prepare.yml --repo toshiki670/dotfiles
 echo "Workflow をトリガーしました。"
-echo "進捗: https://github.com/toshiki670/dotfiles/actions/workflows/release-please.yml"
+echo "進捗: https://github.com/toshiki670/dotfiles/actions/workflows/release-prepare.yml"
 """
