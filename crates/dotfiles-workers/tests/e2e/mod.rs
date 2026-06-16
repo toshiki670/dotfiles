@@ -7,7 +7,6 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
 use std::process::Command as ProcessCommand;
-use tempfile::TempDir;
 
 const EMPTY_PATH: &str = "/nonexistent-dotfiles-e2e";
 const DATE_STUB: &str = "#!/bin/sh\nprintf '2026-06-16\\n'\n";
