@@ -9,8 +9,7 @@
 #   - root `dotfiles` (core)
 #   - commands: color / copy-obj / v-sync / gh-clone / gcm / git-upstream
 #   - dotfiles-workers (daily-check-worker + git-background-fetch-worker)
-# The support lib (crates/dotfiles-support) and the dev-only lint orchestrator
-# (tools/dotfiles-lint) are NOT installed.
+# The dev-only lint orchestrator (tools/dotfiles-lint) is NOT installed.
 #
 # Each crate is installed in turn into ~/.cargo/bin, but they share a single
 # --target-dir so workspace dependencies are compiled once and reused.
@@ -35,8 +34,7 @@ if [ ! -f "$repo_root/Cargo.toml" ]; then
   exit 0
 fi
 
-# 配布物（install 対象）のクレートパス。lib(dotfiles-support) と
-# 開発専用ツール(tools/dotfiles-lint) は含めない。
+# 配布物（install 対象）のクレートパス。開発専用ツール(tools/dotfiles-lint) は含めない。
 crate_paths=(
   "$repo_root" # root dotfiles（core）
   "$repo_root/crates/color"

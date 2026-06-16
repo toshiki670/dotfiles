@@ -4,7 +4,6 @@
 use std::process::{Command, ExitCode};
 
 use clap::Parser;
-use dotfiles_support::command_exists;
 
 /// Neovim プラグインを同期し lazy-lock.json を chezmoi ソースへ re-add する。
 #[derive(Parser)]
@@ -51,4 +50,10 @@ fn main() -> ExitCode {
         Ok(status) => ExitCode::from(status.code().unwrap_or(1) as u8),
         Err(_) => ExitCode::FAILURE,
     }
+}
+
+/// `command -q` 相当: PATH 上に指定コマンドの実行ファイルがあるか判定する。
+fn command_exists(cmd: &str) -> bool {
+    std::env::var_os("PATH")
+        .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(cmd).is_file()))
 }

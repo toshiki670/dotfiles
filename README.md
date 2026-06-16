@@ -153,10 +153,9 @@ Every command binary supports `--help` / `--version`, except the env-driven back
 
 Not installed (development only):
 
-- `crates/dotfiles-support` — shared library (`command_exists`, …) used by the command crates and the workers.
 - `tools/dotfiles-lint` — lint/format orchestrator, run via `mise run lint` / `mise run check`.
 
-Each distributable crate (and the support lib) is versioned independently via release-plz: per-package tags `<crate>-v<version>`, while the root `dotfiles` keeps `v<version>`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
+Each distributable crate is versioned independently via release-plz: per-package tags `<crate>-v<version>`, while the root `dotfiles` keeps `v<version>`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 
 # Development
 

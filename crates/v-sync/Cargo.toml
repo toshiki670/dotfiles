@@ -9,8 +9,7 @@ repository  = { workspace = true }
 version     = "0.1.0"
 
 [dependencies]
-clap             = { workspace = true }
-dotfiles-support = { path = "../dotfiles-support" }
+clap = { workspace = true }
 
 [dev-dependencies]
 assert_cmd = { workspace = true }
