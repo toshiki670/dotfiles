@@ -6,8 +6,6 @@
 
 use std::process::{Command, ExitCode};
 
-use dotfiles_support::command_exists;
-
 fn main() -> ExitCode {
     let ts = env_or_empty("DAILY_CHECK_TS");
     let cache = env_or_empty("DAILY_CHECK_CACHE");
@@ -69,4 +67,10 @@ fn env_or_empty(key: &str) -> String {
 fn capture(cmd: &str, args: &[&str]) -> Option<String> {
     let out = Command::new(cmd).args(args).output().ok()?;
     Some(String::from_utf8_lossy(&out.stdout).into_owned())
+}
+
+/// `command -q` 相当: PATH 上に指定コマンドの実行ファイルがあるか判定する。
+fn command_exists(cmd: &str) -> bool {
+    std::env::var_os("PATH")
+        .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(cmd).is_file()))
 }

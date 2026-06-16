@@ -9,9 +9,6 @@ publish     = false
 repository  = { workspace = true }
 version     = "0.1.0"
 
-[dependencies]
-dotfiles-support = { path = "../dotfiles-support" }
-
 [dev-dependencies]
 assert_cmd = { workspace = true }
 predicates = { workspace = true }

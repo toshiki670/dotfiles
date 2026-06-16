@@ -70,9 +70,8 @@ jobs:
 
       - name: Verify dev-only tools were NOT installed
         run: |
-          # dotfiles-lint は repo 内部の開発専用ツール（非 install）。
-          # dotfiles-support は lib（bin を持たない）。いずれも ~/.cargo/bin に入らない。
-          for bin in dotfiles-lint dotfiles-support; do
+          # dotfiles-lint は repo 内部の開発専用ツール（非 install）。~/.cargo/bin に入らない。
+          for bin in dotfiles-lint; do
             if [ -e "$HOME/.cargo/bin/$bin" ]; then
               echo "error: $bin must not be installed to ~/.cargo/bin" >&2
               exit 1

@@ -10,7 +10,6 @@ use std::path::Path;
 use std::process::{Command, ExitCode, Stdio};
 
 use clap::Parser;
-use dotfiles_support::command_exists;
 
 /// gh repo clone してから ghq migrate し、移設先パスを stdout に出力する。
 #[derive(Parser)]
@@ -80,4 +79,10 @@ fn main() -> ExitCode {
     let migrated_path = String::from_utf8_lossy(&migrate.stdout).trim().to_string();
     println!("{migrated_path}");
     ExitCode::SUCCESS
+}
+
+/// `command -q` 相当: PATH 上に指定コマンドの実行ファイルがあるか判定する。
+fn command_exists(cmd: &str) -> bool {
+    std::env::var_os("PATH")
+        .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(cmd).is_file()))
 }

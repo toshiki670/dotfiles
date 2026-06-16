@@ -210,7 +210,7 @@ checksum = "6184e33543162437515c2e2b48714794e37845ec9851711914eec9d308f6ebe8"
 
 [[package]]
 name = "dotfiles"
-version = "0.68.0"
+version = "0.69.0"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -228,15 +228,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "dotfiles-support"
-version = "0.1.0"
-
-[[package]]
 name = "dotfiles-workers"
 version = "0.1.0"
 dependencies = [
  "assert_cmd",
- "dotfiles-support",
  "predicates",
 ]
 
@@ -350,7 +345,6 @@ version = "0.1.0"
 dependencies = [
  "assert_cmd",
  "clap",
- "dotfiles-support",
  "predicates",
  "rstest",
 ]
@@ -828,7 +822,6 @@ version = "0.1.0"
 dependencies = [
  "assert_cmd",
  "clap",
- "dotfiles-support",
  "predicates",
  "rstest",
 ]
