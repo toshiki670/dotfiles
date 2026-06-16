@@ -1,0 +1,73 @@
+use super::super::{FileContext, Orchestrator, classify};
+use crate::lint::exec::{abs, capture, format_cmd};
+
+impl Orchestrator {
+    pub(crate) fn fix_fish(&mut self, f: &FileContext) -> i32 {
+        if classify::is_home_chezmoi_fish_template(&f.rel_path, &self.repo_root) {
+            return 0;
+        }
+        let abs = abs(f);
+        let cmd = ["fish_indent", abs.as_str()];
+        if self.verbose {
+            println!("[fix:fish] {}: {}", f.rel_path, format_cmd(&cmd));
+        }
+        match capture(&cmd, None) {
+            Some((0, formatted, _)) => {
+                let current = std::fs::read(&f.abs_path)
+                    .map(|b| String::from_utf8_lossy(&b).into_owned())
+                    .unwrap_or_default();
+                if formatted != current {
+                    let _ = std::fs::write(&f.abs_path, formatted.as_bytes());
+                }
+                0
+            }
+            Some((code, _, _)) => {
+                self.record(f, "fish", "fix", &cmd, code);
+                1
+            }
+            None => {
+                self.record(f, "fish", "fix", &cmd, 1);
+                1
+            }
+        }
+    }
+
+    pub(crate) fn check_fish(&mut self, f: &FileContext) -> i32 {
+        let is_tmpl = classify::is_home_chezmoi_fish_template(&f.rel_path, &self.repo_root);
+        let target = if is_tmpl {
+            match self.render_template(&f.rel_path, ".fish") {
+                Some(p) => p.to_string_lossy().into_owned(),
+                None => return 1,
+            }
+        } else {
+            abs(f)
+        };
+
+        let mut failed = 0;
+        if !is_tmpl
+            && !classify::is_home_chezmoi_fish_completion_template(&f.rel_path, &self.repo_root)
+            && self.run_rule_cmd(
+                f,
+                "fish",
+                "check",
+                &["fish_indent", "--check", &target],
+                None,
+                false,
+            ) != 0
+        {
+            failed = 1;
+        }
+        if self.run_rule_cmd(
+            f,
+            "fish",
+            "check",
+            &["fish", "--no-execute", &target],
+            None,
+            false,
+        ) != 0
+        {
+            failed = 1;
+        }
+        failed
+    }
+}
