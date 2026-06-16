@@ -147,9 +147,10 @@ The CLI commands form a **Cargo workspace** at the repository root. The root pac
 | `copy-obj` | `crates/copy-obj` | Copy a file as a Finder-pasteable file object (macOS) |
 | `v-sync` | `crates/v-sync` | Sync Neovim plugins and re-add `lazy-lock.json` into chezmoi |
 | `gh-clone` | `crates/gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
+| `fzf-ghq-cd` | `crates/fzf-picker` | Pick a ghq repo / linked worktree with fzf, printing the selected path (Fish shim cds) |
 | `daily-check-worker`, `git-background-fetch-worker` | `crates/dotfiles-workers` | Background workers started from Fish `conf.d` hooks |
 
-Every command binary supports `--help` / `--version`, except the env-driven background workers. `gh-clone` keeps a thin Fish shim (`gh-clone.fish`) for the part that must change the parent shell (`cd`), with the logic in the Rust binary.
+Every command binary supports `--help` / `--version`, except the env-driven background workers. `gh-clone` and the `fzf-picker` binaries (e.g. `fzf-ghq-cd`) keep a thin Fish shim for the part that must change the parent shell (`cd`), with the logic in the Rust binary.
 
 Not installed (development only):
 

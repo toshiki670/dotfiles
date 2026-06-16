@@ -315,6 +315,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fzf-picker"
+version = "0.1.0"
+dependencies = [
+ "assert_cmd",
+ "clap",
+ "predicates",
+ "rstest",
+ "tempfile",
+]
+
+[[package]]
 name = "gcm"
 version = "0.1.0"
 dependencies = [

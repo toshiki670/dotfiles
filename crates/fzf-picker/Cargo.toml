@@ -1,0 +1,31 @@
+# fzf 系ピッカー（旧 fish B 群）の配布クレート。複数 bin を持ち、選択結果（パス等）を
+# stdout に出して fish shim が cd する（gh-clone と同じ shim 定石）。共有ロジック
+# （worktree porcelain パーサ等）はクレート内部の src/lib.rs に置く。
+#
+# 注意: この lib は未公開（crates.io 非掲載）なので、他の配布クレートから path 依存
+# してはいけない（release-plz git_only で cargo package が壊れる）。共有はクレート内部
+# の bin からのみ。
+[package]
+description = "fzf 系ピッカー（ghq cd ほか）。選択結果を stdout に出力し fish shim が cd する"
+edition     = { workspace = true }
+license     = { workspace = true }
+name        = "fzf-picker"
+publish     = false
+repository  = { workspace = true }
+version     = "0.1.0"
+
+[dependencies]
+clap = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+rstest     = { workspace = true }
+tempfile   = { workspace = true }
+
+[[test]]
+name = "e2e"
+path = "tests/e2e/mod.rs"
+
+[lints]
+workspace = true
