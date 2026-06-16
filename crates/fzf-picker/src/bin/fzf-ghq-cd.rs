@@ -5,12 +5,13 @@
 //! shim（`_fzf_ghq_cd.fish`）が `cd` する（shim 定石）。fzf 本体はこのバイナリが
 //! TTY を継承して実行し、UI は fzf が `/dev/tty` に描く。stdout は選択パスのみ。
 
-use std::io::Write;
 use std::path::Path;
 use std::process::{Command, ExitCode, Stdio};
 
 use clap::Parser;
-use fzf_picker::{list_worktrees, picker_lines};
+use fzf_picker::format::picker_lines;
+use fzf_picker::launch::{command_exists, run_fzf};
+use fzf_picker::worktree::list_worktrees;
 
 /// ghq list + リンク worktree を fzf で選び、選択先パスを stdout に出力する。
 #[derive(Parser)]
@@ -43,7 +44,11 @@ fn main() -> ExitCode {
 
     let lines = build_lines(&root, &list);
 
-    match run_fzf(&lines) {
+    let preview = "fish -c \"__fzf_picker_preview {2} {3} {4}\"";
+    match run_fzf(
+        &lines,
+        &["--preview", preview, "--preview-window", "right:60%"],
+    ) {
         Ok(Some(selection)) => {
             // 表示 / 種別 / パス / ghq 相対パス。cd 先は 3 列目（パス）。
             if let Some(path) = selection.split(TAB).nth(2) {
@@ -74,45 +79,6 @@ fn build_lines(root: &str, list: &str) -> Vec<String> {
     picker_lines(root, &repos)
 }
 
-/// 候補行を stdin から流して fzf を起動し、選択行（あれば）を返す。
-///
-/// fzf は UI を `/dev/tty` に描くため stderr は継承で良い。stdout は捕捉して
-/// 選択行を読む。キャンセル（exit code != 0）や空選択は `None`。
-fn run_fzf(lines: &[String]) -> std::io::Result<Option<String>> {
-    let mut child = Command::new("fzf")
-        .args([
-            "--delimiter",
-            "\t",
-            "--with-nth",
-            "1",
-            "--preview",
-            "fish -c \"__fzf_picker_preview {2} {3} {4}\"",
-            "--preview-window",
-            "right:60%",
-        ])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .spawn()?;
-
-    {
-        let mut stdin = child.stdin.take().expect("piped stdin");
-        for line in lines {
-            writeln!(stdin, "{line}")?;
-        }
-        // stdin を drop して EOF を送る。
-    }
-
-    let output = child.wait_with_output()?;
-    if !output.status.success() {
-        return Ok(None);
-    }
-    let selection = String::from_utf8_lossy(&output.stdout)
-        .trim_end_matches('\n')
-        .to_string();
-    Ok((!selection.is_empty()).then_some(selection))
-}
-
 /// 指定コマンドを実行し、成功時の stdout を trim して返す。失敗時は `None`。
 /// コマンドの stderr は継承する。
 fn capture(cmd: &mut Command) -> Option<String> {
@@ -121,10 +87,4 @@ fn capture(cmd: &mut Command) -> Option<String> {
         .status
         .success()
         .then(|| String::from_utf8_lossy(&output.stdout).trim().to_string())
-}
-
-/// `command -q` 相当: PATH 上に指定コマンドの実行ファイルがあるか判定する。
-fn command_exists(cmd: &str) -> bool {
-    std::env::var_os("PATH")
-        .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(cmd).is_file()))
 }
