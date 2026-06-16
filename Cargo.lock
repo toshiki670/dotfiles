@@ -238,6 +238,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "env-tools"
+version = "0.1.0"
+dependencies = [
+ "assert_cmd",
+ "clap",
+ "predicates",
+ "rstest",
+ "tempfile",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

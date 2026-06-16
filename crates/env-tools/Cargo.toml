@@ -1,0 +1,31 @@
+# brew / mise / cargo などパッケージマネージャの一括更新・キャッシュ削除を行う配布クレート。
+# 旧 bin/upgrade-env・bin/cleanup-env（bash glue）の移植。複数 bin（cleanup-env / upgrade-env）
+# が共通の banner / command ヘルパーをクレート内部の src/lib.rs 経由で共有する（fzf-picker と同じ定石）。
+#
+# 注意: この lib は未公開（crates.io 非掲載）なので、他の配布クレートから path 依存して
+# はいけない（release-plz git_only で cargo package が壊れる）。共有はクレート内の bin
+# （src/bin/*.rs）からのみ。
+[package]
+description = "brew / mise / cargo の一括更新・キャッシュ削除（旧 upgrade-env・cleanup-env）"
+edition     = { workspace = true }
+license     = { workspace = true }
+name        = "env-tools"
+publish     = false
+repository  = { workspace = true }
+version     = "0.1.0"
+
+[dependencies]
+clap = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+rstest     = { workspace = true }
+tempfile   = { workspace = true }
+
+[[test]]
+name = "e2e"
+path = "tests/e2e/mod.rs"
+
+[lints]
+workspace = true
