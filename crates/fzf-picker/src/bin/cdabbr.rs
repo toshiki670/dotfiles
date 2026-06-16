@@ -9,9 +9,12 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Parser;
-use fzf_picker::expand::expand_abbreviated;
 use fzf_picker::launch::{command_exists, run_fzf};
 use fzf_picker::parse::{AbbrBase, parse_abbr_path};
+
+#[path = "cdabbr/expand.rs"]
+mod expand;
+use expand::expand_abbreviated;
 
 /// 省略パスを展開・選択し、選択先パスを stdout に出力する。
 #[derive(Parser)]

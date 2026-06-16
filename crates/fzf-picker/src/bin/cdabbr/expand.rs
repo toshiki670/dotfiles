@@ -1,15 +1,13 @@
-//! 展開: cdabbr の省略パスをファイルシステム上の実ディレクトリへ再帰展開する。
+//! `cdabbr` 専用: 省略パスをファイルシステム上の実ディレクトリへ再帰展開する。
 //!
-//! [`crate::parse::parse_abbr_path`] が出したセグメント列を、各段で前方一致する
-//! サブディレクトリへ降りながら辿る（`read_dir` を伴う IO だが、結果が決定的になる
-//! よう名前順に並べる）。
+//! 先頭から各セグメントを「前方一致するサブディレクトリ名」として辿る。
 
 use std::path::{Path, PathBuf};
 
 /// `base` から、各セグメントを「前方一致するサブディレクトリ名」として 1 段ずつ
 /// 下りていき、辿り着いたディレクトリ群を返す（旧 `_cdabbr_expand_recursive`）。
 /// セグメントが空なら `base` 自身を返す。順序は名前順で決定的にする。
-pub fn expand_abbreviated(base: &Path, segments: &[String]) -> Vec<PathBuf> {
+pub(super) fn expand_abbreviated(base: &Path, segments: &[String]) -> Vec<PathBuf> {
     let Some((seg, rest)) = segments.split_first() else {
         return vec![base.to_path_buf()];
     };
@@ -47,7 +45,6 @@ mod tests {
         std::fs::create_dir_all(base.join("documents/photos")).unwrap();
         std::fs::create_dir_all(base.join("downloads")).unwrap();
 
-        // "d" は dev/documents/downloads に一致、その下で "p" 始まりへ降りる。
         let segs = vec!["d".to_string(), "p".to_string()];
         let mut got = expand_abbreviated(base, &segs);
         got.sort();
