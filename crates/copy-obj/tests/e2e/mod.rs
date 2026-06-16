@@ -4,6 +4,7 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use rstest::rstest;
 use std::fs;
+#[cfg(target_os = "macos")]
 use tempfile::TempDir;
 
 fn copy_obj() -> Command {
