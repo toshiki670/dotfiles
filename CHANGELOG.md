@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.69.1] - 2026-06-16
+### Features
+- _fzf_ghq_cd を Rust 化（B群 Rust化 PR1/3） ([#413](https://github.com/toshiki670/dotfiles/pull/413)) ([`a041941`](https://github.com/toshiki670/dotfiles/commit/a041941bdc23a195a816dd496376d504c289646a))
+- _fzf_worktree_remove を Rust 化（B群 Rust化 PR2/3） ([#414](https://github.com/toshiki670/dotfiles/pull/414)) ([`0884b97`](https://github.com/toshiki670/dotfiles/commit/0884b973f5e5f4d4ea0e5b47c0ac8ad929bfae9c))
+- Cdabbr を Rust 化（B群 Rust化 PR3/3・完了） ([#415](https://github.com/toshiki670/dotfiles/pull/415)) ([`ef312d0`](https://github.com/toshiki670/dotfiles/commit/ef312d08243cfdc7ee23888f4669e39378847043))
+- メモリ棚卸し Skill memory-tidy を追加 ([#420](https://github.com/toshiki670/dotfiles/pull/420)) ([`4d8ce5c`](https://github.com/toshiki670/dotfiles/commit/4d8ce5ccb7b36f8aff53efcf8ff863e99e827520))
+- Cleanup-env・upgrade-env を Rust 化 ([#390](https://github.com/toshiki670/dotfiles/pull/390)) ([#421](https://github.com/toshiki670/dotfiles/pull/421)) ([`876dacd`](https://github.com/toshiki670/dotfiles/commit/876dacd14aff91ca396dd12a1c5441a15f007c85))
+### Fixes
+- Per-package CHANGELOG.md も markdown lint から除外 ([#411](https://github.com/toshiki670/dotfiles/pull/411)) ([`336fe09`](https://github.com/toshiki670/dotfiles/commit/336fe0996ec01f0d71283c9426651ed2d167ba16))
+
+
 ## [0.69.0] - 2026-06-16
 
 Rust / Cargo workspace 化のブートストラップリリース（epic #388）。シェル関数群を Rust バイナリへ移行し、release-plz による per-package バージョニングを確立した。以降のフォーマットは release-plz（git-cliff）に統一される。
