@@ -17,7 +17,6 @@ use clap::Parser;
 use claude::call_claude;
 use execute::execute;
 use git::{git_capture, staged_files};
-use proposals::Commit;
 use ui::display;
 
 /// AI-powered git commit with Conventional Commits（claude -p）。
