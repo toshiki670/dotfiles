@@ -34,7 +34,11 @@ fn main() {
     if command_exists("brew") {
         if confirm("Run brew cleanup?") {
             if cli.dry_run {
-                run("Homebrew cleanup (dry-run)", "brew", &["cleanup", "--dry-run"]);
+                run(
+                    "Homebrew cleanup (dry-run)",
+                    "brew",
+                    &["cleanup", "--dry-run"],
+                );
             } else {
                 run("Homebrew cleanup", "brew", &["cleanup"]);
             }
