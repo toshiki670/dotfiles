@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.69.0] - 2026-06-16
+
+Rust / Cargo workspace 化のブートストラップリリース（epic #388）。シェル関数群を Rust バイナリへ移行し、release-plz による per-package バージョニングを確立した。以降のフォーマットは release-plz（git-cliff）に統一される。
+
+### Features
+
+- 各コマンドを Rust バイナリ化し、`cargo install` × chezmoi で配布（color / copy-obj / v-sync / gh-clone / gcm / git-upstream、背景 worker の daily-check / git-background-fetch）
+- lint/format オーケストレータを Rust 化（rumdl / mise でツール供給）
+- Rust edition を 2024 に更新
+
+### Refactor
+
+- 単一利用モジュールを lib から各 bin 配下へ移動
+
+### Build
+
+- リリースを release-please から release-plz（git_only・per-package タグ）へ移行
+- Nix を撤去し lint を cargo + mise に一本化
+
 ## [0.68.0](https://github.com/toshiki670/dotfiles/compare/v0.67.0...v0.68.0) (2026-06-10)
 
 
