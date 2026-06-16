@@ -4,7 +4,7 @@
 #   バッジ/HTML・長行を許容するため無効。
 #   MD025(複数 H1) は README が `# Prerequisites` 等のセクション見出しに
 #   トップレベル見出しを意図的に使うため無効。
-# CHANGELOG.md は自動生成のため除外。
+# CHANGELOG.md は自動生成のため除外（root・各クレート直下の per-package とも）。
 [global]
 disable = [ "MD013", "MD025", "MD033", "MD041" ]
-exclude = [ "CHANGELOG.md" ]
+exclude = [ "CHANGELOG.md", "**/CHANGELOG.md" ]
