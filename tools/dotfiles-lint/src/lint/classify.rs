@@ -20,6 +20,11 @@ pub fn is_markdown(f: &str) -> bool {
     f.ends_with(".md")
 }
 
+/// 自動生成の CHANGELOG.md か（root・各クレート直下の per-package とも対象）。
+pub fn is_changelog(f: &str) -> bool {
+    f == "CHANGELOG.md" || f.ends_with("/CHANGELOG.md")
+}
+
 pub fn is_lua(f: &str) -> bool {
     f.ends_with(".lua")
 }
@@ -88,6 +93,10 @@ mod tests {
     #[test]
     fn extension_predicates() {
         assert!(is_markdown("README.md"));
+        assert!(is_changelog("CHANGELOG.md"));
+        assert!(is_changelog("crates/gh-clone/CHANGELOG.md"));
+        assert!(!is_changelog("README.md"));
+        assert!(!is_changelog("docs/CHANGELOG.md.bak"));
         assert!(is_lua("a.lua"));
         assert!(is_toml("Cargo.toml"));
         assert!(is_python("x.py"));

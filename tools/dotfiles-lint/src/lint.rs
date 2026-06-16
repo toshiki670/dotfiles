@@ -331,9 +331,10 @@ impl Orchestrator {
 
     // --- markdown (rumdl) --------------------------------------------------
 
-    /// CHANGELOG.md は自動生成のため除外する（.rumdl.toml の exclude と一致）。
+    /// CHANGELOG.md は自動生成のため除外する（root・各クレート直下の per-package
+    /// とも。.rumdl.toml の exclude と一致）。
     fn match_markdown(&self, f: &FileContext) -> bool {
-        classify::is_markdown(&f.rel_path) && f.rel_path != "CHANGELOG.md"
+        classify::is_markdown(&f.rel_path) && !classify::is_changelog(&f.rel_path)
     }
 
     fn fix_markdown(&mut self, f: &FileContext) -> i32 {
