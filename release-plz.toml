@@ -27,11 +27,14 @@ pr_branch_prefix = "release-"
 
 # root package = `dotfiles` 本体（core）。タグは従来どおり `v{version}` を維持する
 # （0.68.0 からの連続。`git_tag_name` を root だけ上書き）。
+# `git_release_name` も上書き: 既定は多パッケージ workspace で `{{ package }}-v{{ version }}`
+# となり Release 名が `dotfiles-v0.69.1` になる。タグ（v0.69.1）と揃えて `v{version}` にする。
 # `publish = false` を明示（workspace 値の継承に依存せず整合性チェックを確実に通す）。
 [[package]]
-git_tag_name = "v{{ version }}"
-name         = "dotfiles"
-publish      = false
+git_release_name = "v{{ version }}"
+git_tag_name     = "v{{ version }}"
+name             = "dotfiles"
+publish          = false
 
 # dotfiles-lint は repo 内部の開発専用ツール（xtask 定石）。版を振らず、リリース
 # もしない。`release = false` で release-plz の処理対象から完全に除外する。
