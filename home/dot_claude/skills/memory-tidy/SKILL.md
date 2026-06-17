@@ -1,6 +1,6 @@
 ---
 name: memory-tidy
-description: プロジェクトの Auto memory（~/.claude/projects/<project>/memory/ の MEMORY.md ＋ fact ファイル群）を棚卸しする。陳腐化したメモリの検出・更新、重複の統合、不要メモリの削除、索引の同期を行う。ユーザーが「メモリを棚卸し/整理/最適化して」「古いメモリある?」等と言ったとき、または /memory-tidy で起動する。
+description: "/memory-tidy で明示的に起動したときのみ使用する。プロジェクトの Auto memory（~/.claude/projects/<project>/memory/ の MEMORY.md ＋ fact ファイル群）を棚卸しする（陳腐化したメモリの検出・更新、重複の統合、不要メモリの削除、索引の同期）。ユーザーの自然言語の依頼では自動起動しない。"
 ---
 
 # memory-tidy — Auto memory の棚卸し
