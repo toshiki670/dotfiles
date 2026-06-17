@@ -1,3 +1,13 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [0.1.0] - 2026-06-16
+### Features
+- _fzf_ghq_cd を Rust 化（B群 Rust化 PR1/3） ([#413](https://github.com/toshiki670/dotfiles/pull/413)) ([`a041941`](https://github.com/toshiki670/dotfiles/commit/a041941bdc23a195a816dd496376d504c289646a))
+- _fzf_worktree_remove を Rust 化（B群 Rust化 PR2/3） ([#414](https://github.com/toshiki670/dotfiles/pull/414)) ([`0884b97`](https://github.com/toshiki670/dotfiles/commit/0884b973f5e5f4d4ea0e5b47c0ac8ad929bfae9c))
+- Cdabbr を Rust 化（B群 Rust化 PR3/3・完了） ([#415](https://github.com/toshiki670/dotfiles/pull/415)) ([`ef312d0`](https://github.com/toshiki670/dotfiles/commit/ef312d08243cfdc7ee23888f4669e39378847043))
+
+# Changelog
+
+All notable changes to this project will be documented in this file.
