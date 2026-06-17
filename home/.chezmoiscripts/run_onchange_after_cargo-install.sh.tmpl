@@ -7,7 +7,7 @@
 #
 # Only *distributable* crates are installed:
 #   - root `dotfiles` (core)
-#   - commands: color / copy-obj / v-sync / gh-clone / gcm / git-upstream / fzf-picker / env-tools
+#   - commands: color / clip / v-sync / gh-clone / gcm / git-upstream / fzf-picker / env-tools
 #   - dotfiles-workers (daily-check-worker + git-background-fetch-worker)
 # The dev-only lint orchestrator (tools/dotfiles-lint) is NOT installed.
 #
@@ -38,7 +38,7 @@ fi
 crate_paths=(
   "$repo_root" # root dotfiles（core）
   "$repo_root/crates/color"
-  "$repo_root/crates/copy-obj"
+  "$repo_root/crates/clip"
   "$repo_root/crates/v-sync"
   "$repo_root/crates/gh-clone"
   "$repo_root/crates/gcm"
@@ -60,6 +60,16 @@ else
   echo "cargo-install: neither mise nor cargo found; skipping (run 'mise install' then re-apply)." >&2
   exit 0
 fi
+
+# リネーム・廃止された旧コマンドを cargo uninstall で掃除する。バイナリを直接削除
+# すると cargo の登録簿（~/.cargo/.crates.toml）と不整合になるため、必ず cargo
+# uninstall を使う。未登録（既に掃除済み / 未インストール）なら黙って無視する。
+removed_crates=(
+  "copy-obj" # crates/copy-obj → crates/clip に統合・改名 (#435)
+)
+for crate in "${removed_crates[@]}"; do
+  run_cargo uninstall "$crate" &>/dev/null || true
+done
 
 echo "cargo-install: installing distributable dotfiles commands from $repo_root"
 for crate_path in "${crate_paths[@]}"; do

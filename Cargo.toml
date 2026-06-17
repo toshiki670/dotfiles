@@ -42,12 +42,13 @@ repository = "https://github.com/toshiki670/dotfiles"
 
 # 全 member 共通の依存（各 Cargo.toml から `xxx.workspace = true` で参照）。
 [workspace.dependencies]
-clap       = { version = "4", features = [ "derive" ] }
-ignore     = "0.4"
-libc       = "0.2"
-serde      = { version = "1", features = [ "derive" ] }
-serde_json = "1"
-tempfile   = "3"
+clap          = { version = "4", features = [ "derive" ] }
+clap_complete = "4"
+ignore        = "0.4"
+libc          = "0.2"
+serde         = { version = "1", features = [ "derive" ] }
+serde_json    = "1"
+tempfile      = "3"
 # E2E（dev-dependencies）
 assert_cmd = "2.2"
 predicates = "3.1"
