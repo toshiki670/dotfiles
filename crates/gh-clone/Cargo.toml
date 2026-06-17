@@ -4,7 +4,6 @@ description = "gh repo clone してから ghq migrate し、移設先パスを s
 edition     = { workspace = true }
 license     = { workspace = true }
 name        = "gh-clone"
-publish     = false
 repository  = { workspace = true }
 version     = "0.1.0"
 

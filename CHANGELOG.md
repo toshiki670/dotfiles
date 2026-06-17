@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.69.2] - 2026-06-17
+### Fixes
+- Root の Release 名から dotfiles- 接頭辞を外す ([#431](https://github.com/toshiki670/dotfiles/pull/431)) ([`72c6cf6`](https://github.com/toshiki670/dotfiles/commit/72c6cf6b43d2890191713be43ca337aa857112d0))
+
+
 ## [0.69.1] - 2026-06-16
 ### Features
 - _fzf_ghq_cd を Rust 化（B群 Rust化 PR1/3） ([#413](https://github.com/toshiki670/dotfiles/pull/413)) ([`a041941`](https://github.com/toshiki670/dotfiles/commit/a041941bdc23a195a816dd496376d504c289646a))

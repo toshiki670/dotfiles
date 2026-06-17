@@ -4,7 +4,6 @@ description = "AI-powered git commit with Conventional Commits（claude -p）"
 edition     = { workspace = true }
 license     = { workspace = true }
 name        = "gcm"
-publish     = false
 repository  = { workspace = true }
 version     = "0.1.0"
 
