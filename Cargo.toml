@@ -1,12 +1,14 @@
 # root package = `dotfiles` コマンド（= dotfiles 本体 / core）。
 # いまは chezmoi と各コマンドに委譲しているが、将来それらを取り込む器。
 # version は SoT（タグ `v{version}`）。当面は clap で `dotfiles --version` が取れれば十分。
+# publish はあえて false にしない: release-plz は Cargo.toml が publish=false の package を
+# release 対象から除外しタグを作らない（再追加すると release が "nothing to release" になる）。
+# crates.io への publish 抑止は release-plz config の publish=false + git_only に一本化。
 [package]
 description = "toshiki670/dotfiles 本体（core）コマンド"
 edition     = { workspace = true }
 license     = { workspace = true }
 name        = "dotfiles"
-publish     = false
 repository  = { workspace = true }
 version     = "0.69.1"
 
