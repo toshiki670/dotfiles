@@ -5,7 +5,6 @@ description = "dotfiles のバックグラウンド worker（daily-check / git-b
 edition     = { workspace = true }
 license     = { workspace = true }
 name        = "dotfiles-workers"
-publish     = false
 repository  = { workspace = true }
 version     = "0.1.0"
 
