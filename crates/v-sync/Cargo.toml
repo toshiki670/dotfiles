@@ -4,7 +4,6 @@ description = "Neovim プラグインを同期し lazy-lock.json を chezmoi ソ
 edition     = { workspace = true }
 license     = { workspace = true }
 name        = "v-sync"
-publish     = false
 repository  = { workspace = true }
 version     = "0.1.0"
 
