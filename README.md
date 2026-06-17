@@ -7,7 +7,7 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
-This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`color`, `git-upstream`, `gcm`, `copy-obj`, `v-sync`, …) built from the repository-root crate and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
+This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`color`, `git-upstream`, `gcm`, `clip`, `v-sync`, …) built from the repository-root crate and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
 
 # Prerequisites
 
@@ -144,7 +144,7 @@ The CLI commands form a **Cargo workspace** at the repository root. The root pac
 | `color` | `crates/color` | Print an ANSI color table (16 + 256 colors) |
 | `git-upstream` | `crates/git-upstream` | Merge `upstream/master` / initialize the upstream remote |
 | `gcm` | `crates/gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
-| `copy-obj` | `crates/copy-obj` | Copy a file as a Finder-pasteable file object (macOS) |
+| `clip` | `crates/clip` | Copy a file to the clipboard — `obj` (Finder object) / `text` (contents) / `path` (absolute path); macOS |
 | `v-sync` | `crates/v-sync` | Sync Neovim plugins and re-add `lazy-lock.json` into chezmoi |
 | `gh-clone` | `crates/gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
 | `fzf-ghq-cd` | `crates/fzf-picker` | Pick a ghq repo / linked worktree with fzf, printing the selected path (Fish shim cds) |

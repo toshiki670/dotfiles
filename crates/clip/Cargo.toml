@@ -1,0 +1,26 @@
+# ファイルをクリップボードへコピーする配布コマンド（macOS 専用）。サブコマンド
+# obj（Finder 貼り付け用ファイルオブジェクト）/ text（中身）/ path（絶対パス）。
+[package]
+description = "ファイルをクリップボードへコピーする（obj=Finder オブジェクト / text=中身 / path=絶対パス、macOS）"
+edition     = { workspace = true }
+license     = { workspace = true }
+name        = "clip"
+repository  = { workspace = true }
+version     = "0.1.0"
+
+[dependencies]
+clap          = { workspace = true }
+clap_complete = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+rstest     = { workspace = true }
+tempfile   = { workspace = true }
+
+[[test]]
+name = "e2e"
+path = "tests/e2e/mod.rs"
+
+[lints]
+workspace = true

@@ -58,7 +58,7 @@ jobs:
           test -x "$HOME/.cargo/bin/dotfiles"
           "$HOME/.cargo/bin/dotfiles" --version
           # 各コマンド（存在のみ確認。外部ツール依存のものは実行しない）
-          for bin in color copy-obj v-sync gh-clone gcm git-upstream; do
+          for bin in color clip v-sync gh-clone gcm git-upstream; do
             test -x "$HOME/.cargo/bin/$bin"
           done
           # バックグラウンド worker

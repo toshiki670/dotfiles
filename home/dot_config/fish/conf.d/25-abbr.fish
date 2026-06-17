@@ -3,13 +3,8 @@
 # ========== shell / misc ==========
 abbr --add reload 'exec fish -l'
 
-# ========== clipboard (macOS only; one-liner + --set-cursor, see abbr -h) ==========
-# Default % marker is removed; cursor lands there after expand.
-if test (uname -s) = Darwin
-    abbr --add c-path --set-cursor 'path resolve % | pbcopy; echo (pbpaste)'
-    abbr --add c-file --set-cursor 'pbcopy < %'
-    abbr --add c-obj --set-cursor 'copy-obj %'
-end
+# clipboard 系は `clip` コマンド（obj / text / path サブコマンド）へ統合。
+# 補完は completions/clip.fish.tmpl（clap_complete 生成）で供給するため abbr は廃止。
 
 # ========== docker ==========
 abbr --add d docker
