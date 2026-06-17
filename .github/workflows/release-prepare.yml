@@ -27,3 +27,32 @@ jobs:
         env:
           # PAT で PR を作成し、Release PR 上で CI を発火させる（GITHUB_TOKEN では発火しない）。
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      # release PR の title にルート dotfiles 版を付ける。release-plz の pr_name は
+      # 版が異なる多パッケージ時に version を埋められず（pr_name は特定パッケージ版を
+      # 参照不可）generic な "chore: release" になるため、ここで上書きする。bump 後の
+      # Cargo.toml は release ブランチ側にあり、main は未 bump な点に注意。
+      - name: Set Release PR title to root version
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          release_prs=$(gh pr list --repo "${{ github.repository }}" --state open \
+            --json number,headRefName \
+            --jq '[.[] | select(.headRefName | startswith("release-"))]')
+          pr_number=$(jq -r '.[0].number // empty' <<<"$release_prs")
+          head_branch=$(jq -r '.[0].headRefName // empty' <<<"$release_prs")
+          if [ -z "$pr_number" ] || [ -z "$head_branch" ]; then
+            echo "release PR が見つからないため title 変更をスキップ"
+            exit 0
+          fi
+          git fetch --quiet origin "$head_branch"
+          root_version=$(git show "FETCH_HEAD:Cargo.toml" \
+            | sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' | head -n1)
+          if [ -z "$root_version" ]; then
+            echo "::warning::ルート版を取得できず title 変更をスキップ"
+            exit 0
+          fi
+          new_title="chore: release v${root_version}"
+          echo "PR #${pr_number} の title を「${new_title}」に設定"
+          gh pr edit "$pr_number" --repo "${{ github.repository }}" --title "$new_title"
