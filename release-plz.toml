@@ -27,6 +27,10 @@ name         = "dotfiles"
 
 # dotfiles-lint は repo 内部の開発専用ツール（xtask 定石）。版を振らず、リリース
 # もしない。`release = false` で release-plz の処理対象から完全に除外する。
+# `publish = false` も明示する: package ブロックを持つと workspace の git_only による
+# publish=false が継承されず default(true) に解決され、Cargo.toml の publish=false と
+# 矛盾して release-plz の整合性チェックでエラーになるため（Cargo.toml と一致させる）。
 [[package]]
 name    = "dotfiles-lint"
+publish = false
 release = false
