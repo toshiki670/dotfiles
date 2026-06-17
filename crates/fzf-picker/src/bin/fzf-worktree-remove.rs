@@ -9,26 +9,17 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process::{Command, ExitCode, Stdio};
 
-use clap::Parser;
 use fzf_picker::format::removal_lines;
 use fzf_picker::launch::run_fzf;
 use fzf_picker::worktree::list_worktrees;
 
-/// リンク worktree を fzf で選んで削除する。退避が要るときだけパスを stdout に出力。
-#[derive(Parser)]
-#[command(
-    name = "fzf-worktree-remove",
-    version,
-    about = "Pick a linked git worktree with fzf and remove it"
-)]
-struct Cli {}
-
 /// fzf 各行のフィールド区切り（表示は 1 列目、削除対象パスは 2 列目）。
 const TAB: char = '\t';
 
-fn main() -> ExitCode {
-    Cli::parse();
+// fish shim（`_fzf_worktree_remove.fish`）から引数なしで呼ばれるだけなので、引数パース
+// （clap）は持たない。
 
+fn main() -> ExitCode {
     if !inside_work_tree() {
         eprintln!("not in a git repository");
         return ExitCode::FAILURE;
