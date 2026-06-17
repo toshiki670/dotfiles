@@ -1,6 +1,6 @@
 //! `fzf-worktree-remove` の E2E（実バイナリ + 実 git worktree で検証）。
 //!
-//! 検証: `--help`/`--version`、非 git repo で失敗、削除候補なしで `No worktrees to
+//! 検証: 非 git repo で失敗、削除候補なしで `No worktrees to
 //! delete`、確認 `y` で worktree 削除、確認 `n` で残置、fzf キャンセルで残置、削除対象
 //! の内側から実行したときに退避先（メイン worktree）パスを stdout 出力。
 
@@ -9,20 +9,12 @@ use std::path::{Path, PathBuf};
 
 use assert_cmd::Command;
 use predicates::prelude::*;
-use rstest::rstest;
 use tempfile::TempDir;
 
 use crate::{EMPTY_PATH, FZF_STUB, git, path_with, write_exec};
 
 fn fzf_worktree_remove() -> Command {
     Command::cargo_bin("fzf-worktree-remove").unwrap()
-}
-
-#[rstest]
-#[case("--help")]
-#[case("--version")]
-fn meta_flags_succeed(#[case] flag: &str) {
-    fzf_worktree_remove().arg(flag).assert().success();
 }
 
 #[test]

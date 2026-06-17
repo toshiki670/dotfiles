@@ -8,26 +8,17 @@
 use std::path::Path;
 use std::process::{Command, ExitCode, Stdio};
 
-use clap::Parser;
 use fzf_picker::format::picker_lines;
 use fzf_picker::launch::{command_exists, run_fzf};
 use fzf_picker::worktree::list_worktrees;
 
-/// ghq list + リンク worktree を fzf で選び、選択先パスを stdout に出力する。
-#[derive(Parser)]
-#[command(
-    name = "fzf-ghq-cd",
-    version,
-    about = "Pick a ghq repo or linked worktree with fzf and print its path"
-)]
-struct Cli {}
-
 /// fzf の各行のフィールド区切り（表示は 1 列目のみ、cd 先は 3 列目）。
 const TAB: char = '\t';
 
-fn main() -> ExitCode {
-    Cli::parse();
+// fish shim（`_fzf_ghq_cd.fish`）から引数なしで呼ばれるだけなので、引数パース（clap）
+// は持たない。
 
+fn main() -> ExitCode {
     if !command_exists("ghq") {
         eprintln!("fzf-ghq-cd: ghq command not found.");
         return ExitCode::from(127);

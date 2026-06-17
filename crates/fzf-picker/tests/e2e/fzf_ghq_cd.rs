@@ -1,6 +1,6 @@
 //! `fzf-ghq-cd` の E2E（実バイナリを起動して検証）。
 //!
-//! 検証: `--help`/`--version`、`ghq` 不在で 127、選択行の 3 列目（パス）を stdout に
+//! 検証: `ghq` 不在で 127、選択行の 3 列目（パス）を stdout に
 //! 出力、fzf キャンセルで無出力、空 `ghq list` で候補ゼロ、リンク worktree が repo 行
 //! 直下にツリー表示され（`is_main` のメインは除外）fzf へ渡る。
 
@@ -9,32 +9,12 @@ use std::path::PathBuf;
 
 use assert_cmd::Command;
 use predicates::prelude::*;
-use rstest::rstest;
 use tempfile::TempDir;
 
 use crate::{EMPTY_PATH, FZF_STUB, GHQ_STUB, git, path_with, write_exec};
 
 fn fzf_ghq_cd() -> Command {
     Command::cargo_bin("fzf-ghq-cd").unwrap()
-}
-
-#[rstest]
-#[case("--help")]
-#[case("-h")]
-fn help_flag_succeeds(#[case] flag: &str) {
-    fzf_ghq_cd().arg(flag).assert().success();
-}
-
-#[rstest]
-#[case("--version")]
-#[case("-V")]
-fn version_flag_prints_name_and_version(#[case] flag: &str) {
-    fzf_ghq_cd()
-        .arg(flag)
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("fzf-ghq-cd"))
-        .stdout(predicate::str::contains(env!("CARGO_PKG_VERSION")));
 }
 
 #[test]
