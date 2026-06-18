@@ -4,6 +4,7 @@
 //!
 //! - **役割ごとに 1 モジュール**。各ファイルは単一の責務だけを持つ:
 //!   - [`worktree`] — git worktree ドメイン（型と一覧取得 IO）
+//!   - [`gh`] — gh Issue/PR ピッカーのドメイン（型・純ロジック・一覧取得 IO）
 //!   - [`parse`] — テキスト → 構造のパース（純ロジック）
 //!   - [`format`] — 構造 → fzf 候補行の成形（純ロジック）
 //!   - [`launch`] — 外部コマンド（fzf 等）の起動・存在確認（IO）
@@ -15,6 +16,7 @@
 //!   共有はクレート内の bin（`src/bin/*.rs`）からのみ行う。
 
 pub mod format;
+pub mod gh;
 pub mod launch;
 pub mod parse;
 pub mod worktree;
