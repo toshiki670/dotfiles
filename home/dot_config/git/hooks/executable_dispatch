@@ -35,9 +35,14 @@ if [ "$hook_name" = "pre-commit" ]; then
 fi
 
 # --- 2. リポジトリ固有 hook へのチェイン（全 hook 種別） ----------------------
-# core.hooksPath 設定下では `git rev-parse --git-path hooks` はグローバル dir を
-# 返してしまうため使わない。実体の .git/hooks を --absolute-git-dir から組み立てる。
-local_hook="$(git rev-parse --absolute-git-dir)/hooks/$hook_name"
+# repo ローカル hook の場所を解決する。
+#   - `git rev-parse --git-path hooks` は core.hooksPath 設定下でグローバル dir
+#     （＝自分自身）を返すため使えない。
+#   - `--absolute-git-dir` は linked worktree で .git/worktrees/<name> を指し、共通
+#     の repo-local hooks (.git/hooks) を取りこぼす。
+# 共通 git dir を絶対パスで取得し、clone / worktree の双方で共通 hooks を参照する。
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+local_hook="$common_dir/hooks/$hook_name"
 
 if [ -x "$local_hook" ]; then
   # 自分自身（このディスパッチャ）を指していたら無限再帰になるので除外する。
