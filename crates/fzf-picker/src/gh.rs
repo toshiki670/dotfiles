@@ -57,12 +57,16 @@ impl Kind {
 }
 
 /// fzf が返した選択行（`表示\tkind\t番号`）から `(Kind, 番号)` を取り出す。
-/// 列が欠ける・種別が未知・番号が空ならいずれも `None`。
+///
+/// 末尾 2 列の `kind \t 番号` だけに依存し、**末尾から**読む。表示列（先頭）の title に
+/// 万一タブが紛れて列が増えても、kind/番号 を誤読しない（[`jq_for`] でも title を
+/// サニタイズしているので二重の安全策）。表示列が無い（最低 3 列に満たない）・種別が
+/// 未知・番号が空はいずれも `None`。
 pub fn parse_selection(line: &str) -> Option<(Kind, String)> {
-    let mut cols = line.split(TAB);
-    let _display = cols.next()?;
-    let kind = Kind::parse(cols.next()?)?;
+    let mut cols = line.rsplit(TAB);
     let number = cols.next()?.trim();
+    let kind = Kind::parse(cols.next()?)?;
+    cols.next()?; // 表示列が存在すること（最低 3 列）。
     (!number.is_empty()).then(|| (kind, number.to_string()))
 }
 
@@ -109,10 +113,14 @@ fn list_one(kind: Kind) -> io::Result<Vec<String>> {
 
 /// `gh … --jq` に渡す式。1 行を `[group] #番号 title @author →assignees\tgroup\t番号` に
 /// 成形する（assignee が無ければ ` →…` 部分を省く）。
+///
+/// `title` はタブ・改行を含み得るので空白へ置換しておく。これを怠ると、表示列の中に
+/// タブが入って列がずれたり、改行で 1 候補が 2 行に割れたりする（番号/種別は GitHub の
+/// 性質上タブ・改行を含まないので対象外）。
 fn jq_for(kind: Kind) -> String {
     let group = kind.group();
     format!(
-        r#".[] | "[{group}] #\(.number) \(.title) @\(.author.login)\(if (.assignees | length) > 0 then " →" + ([.assignees[].login] | join(",")) else "" end)\t{group}\t\(.number)""#
+        r#".[] | "[{group}] #\(.number) \(.title | gsub("[\t\n\r]"; " ")) @\(.author.login)\(if (.assignees | length) > 0 then " →" + ([.assignees[].login] | join(",")) else "" end)\t{group}\t\(.number)""#
     )
 }
 
@@ -166,6 +174,16 @@ mod tests {
     #[test]
     fn parse_selection_rejects_empty_number() {
         assert_eq!(parse_selection("display\tissue\t"), None);
+    }
+
+    #[test]
+    fn parse_selection_survives_tab_in_display() {
+        // title 由来のタブで表示列が割れても、末尾から読むので kind/番号 は正しく取れる。
+        let line = "[issue] #341 weird\ttitle\tissue\t341";
+        assert_eq!(
+            parse_selection(line),
+            Some((Kind::Issue, "341".to_string()))
+        );
     }
 
     #[test]
