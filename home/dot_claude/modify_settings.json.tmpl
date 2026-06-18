@@ -31,18 +31,25 @@ forced_json="$(cat <<'JSON'
           }
         ]
       }
-    ]{{ if lookPath "rtk" }},
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
+{{- if lookPath "rtk" }}
           {
             "type": "command",
             "command": "rtk hook claude"
+          },
+{{- end }}
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE '(^|[;&|(])[[:space:]]*rm([[:space:]]|$)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Do not use rm. Use trash (moves to the macOS Trash) instead, e.g. `trash <file/dir>`. trash handles directories as-is; no -r/-f needed. Only ask the user before permanently deleting if it is truly required.\"}}'; fi",
+            "statusMessage": "rm guard (trash)"
           }
         ]
       }
-    ]{{ end }}
+    ]
   }
 }
 JSON
