@@ -9,6 +9,7 @@
 //!   リンク worktree のツリー構築（メイン除外）
 //! - [`fzf_worktree_remove`]: 引数・非 git repo・削除候補なし・確認 y で削除・確認 n で
 //!   残置・fzf キャンセルで残置・削除対象の内側からの実行で退避パス出力
+//! - [`fzf_gh`]: gh 不在・Issue/PR 選択→アクション選択でコマンド組立・各段キャンセルで無出力
 //! - [`cdabbr`]: 引数・相対パス拒否・該当なし・fzf 不在で単一/再帰/複数・fzf 選択
 //!
 //! 外部コマンド `ghq` / `fzf` は PATH 先頭に置くスタブで差し替え、`git` は実物を使う
@@ -19,6 +20,7 @@ use std::fs;
 use std::path::Path;
 
 mod cdabbr;
+mod fzf_gh;
 mod fzf_ghq_cd;
 mod fzf_worktree_remove;
 
