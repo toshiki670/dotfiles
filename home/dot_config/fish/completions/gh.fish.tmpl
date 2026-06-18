@@ -3,39 +3,35 @@
 
 # Custom completions: ID selection for targeted commands
 
+# 最初の ID 位置でだけ補完を出す共有判定。`commandline -poc` はカーソルで切り、入力中の
+# 部分トークンを除いた「確定済みトークン列」を返す。それがちょうど `gh <group> <sub>`
+# （3 トークン）のときだけ真。これにより `gh issue edit 341 ` のように ID 入力済みでは
+# 候補が出なくなり、`gh issue edit 3` のように最初の ID 入力中は出る。
+function __gh_completing_first_id --argument-names group
+    set -l tokens (commandline -poc)
+    test (count $tokens) -eq 3
+        and test "$tokens[2]" = "$group"
+        and contains -- "$tokens[3]" $argv[2..-1]
+end
+
 function __gh_completing_issue_id
-    set -l cmd (commandline -po)
-    test (count $cmd) -ge 3
-        and test "$cmd[2]" = issue
-        and contains -- "$cmd[3]" view edit close reopen comment pin
+    __gh_completing_first_id issue view edit close reopen comment pin
 end
 
 function __gh_completing_pr_id
-    set -l cmd (commandline -po)
-    test (count $cmd) -ge 3
-        and test "$cmd[2]" = pr
-        and contains -- "$cmd[3]" view checkout review diff merge checks update-branch
+    __gh_completing_first_id pr view checkout review diff merge checks update-branch
 end
 
 function __gh_completing_run_id
-    set -l cmd (commandline -po)
-    test (count $cmd) -ge 3
-        and test "$cmd[2]" = run
-        and contains -- "$cmd[3]" view rerun cancel watch
+    __gh_completing_first_id run view rerun cancel watch
 end
 
 function __gh_completing_release_id
-    set -l cmd (commandline -po)
-    test (count $cmd) -ge 3
-        and test "$cmd[2]" = release
-        and contains -- "$cmd[3]" view delete edit upload
+    __gh_completing_first_id release view delete edit upload
 end
 
 function __gh_completing_gist_id
-    set -l cmd (commandline -po)
-    test (count $cmd) -ge 3
-        and test "$cmd[2]" = gist
-        and contains -- "$cmd[3]" view edit
+    __gh_completing_first_id gist view edit
 end
 
 function __gh_issue_candidates
