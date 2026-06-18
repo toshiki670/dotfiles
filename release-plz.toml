@@ -24,6 +24,12 @@ publish            = false
 # member の既定タグ。複数パッケージ workspace の既定値を明示しておく。
 git_tag_name     = "{{ package }}-v{{ version }}"
 pr_branch_prefix = "release-"
+# リリース対象とするコミットを限定する。これに「マッチするコミットが 1 つも無い」
+# パッケージは bump しない。狙いは Cargo.lock の transitive 依存更新（例: clip 追加で
+# syn が 2.0.117→2.0.118）だけで、ソース無変更のクレートまで一斉に patch bump される
+# 事故（#441）の抑止。正規表現は cliff.toml の commit_parsers（feat/fix/perf/refactor/
+# revert を採用、他は skip）と揃える。
+release_commits = "^(feat|fix|perf|refactor|revert)"
 
 # root package = `dotfiles` 本体（core）。タグは従来どおり `v{version}` を維持する
 # （0.68.0 からの連続。`git_tag_name` を root だけ上書き）。
