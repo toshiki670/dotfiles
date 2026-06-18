@@ -14,6 +14,15 @@
 # Each crate is installed in turn into ~/.cargo/bin, but they share a single
 # --target-dir so workspace dependencies are compiled once and reused.
 #
+# This is a run_*before* hook (not after) on purpose: fish completion templates
+# such as dot_config/fish/completions/clip.fish.tmpl gate generation on
+# `{{ "{{ if lookPath \"clip\" }}" }}`. chezmoi runs all run_before scripts, *then*
+# renders/applies file targets, so building the self-owned binaries here ensures
+# they are on $PATH by the time those templates evaluate lookPath — otherwise the
+# first apply that introduces a new self-owned command would write an empty
+# completion file and only recover on a second apply. External tools (bat/docker/
+# gh) are unaffected: their completions depend on separately-installed binaries.
+#
 # rust/cargo is supplied on-demand by mise (`mise exec rust@latest`), so this
 # works on a fresh machine before `mise install` has run and regardless of the
 # create-once global mise config (~/.config/mise/config.toml) state.
