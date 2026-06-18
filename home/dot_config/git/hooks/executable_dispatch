@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Global Git hooks dispatcher deployed by chezmoi.
+#
+# 実体はこの `dispatch` 1 本。git config の core.hooksPath を ~/.config/git/hooks
+# に向けているため git は全リポジトリ・全 hook 種別をこのディレクトリだけで探す。
+# 各 hook 名（pre-commit / commit-msg / pre-push ...）はこの `dispatch` への
+# シンボリックリンクとして配置し、起動名 basename "$0" で分岐する。`dispatch`
+# 自体は hook 名ではないので git から直接起動されることはない。
+#
+# 役割:
+#   1. pre-commit のときだけ、ステージ済み差分を gitleaks で検査する。
+#   2. すべての hook 種別で、リポジトリ固有の .git/hooks/<hook名> があれば引数と
+#      stdin をそのまま渡してチェイン実行する（グローバル hooksPath で握り潰され
+#      る repo ローカル hook を実質復活させる）。
+set -euo pipefail
+
+hook_name="$(basename "$0")"
+
+# --- 1. gitleaks による機密情報スキャン（pre-commit のみ） --------------------
+# gitleaks は必須ではない。未導入のホストでは警告のみ出してスキップし、commit は
+# 止めない（作業を妨げない安全側）。導入済みなら検出時に commit をブロックする。
+if [ "$hook_name" = "pre-commit" ]; then
+  if command -v gitleaks >/dev/null 2>&1; then
+    if ! gitleaks git --staged --redact --no-banner -v; then
+      {
+        echo "✖ gitleaks: 機密情報の可能性がある内容を検出しました。コミットを中止します。"
+        echo "  誤検知の場合は .gitleaks.toml の allowlist か、該当行末コメント 'gitleaks:allow' を利用してください。"
+        echo "  どうしても回避する場合は: git commit --no-verify"
+      } >&2
+      exit 1
+    fi
+  else
+    echo "⚠ gitleaks 未検出のため機密情報スキャンをスキップしました（brew install gitleaks 推奨）。" >&2
+  fi
+fi
+
+# --- 2. リポジトリ固有 hook へのチェイン（全 hook 種別） ----------------------
+# core.hooksPath 設定下では `git rev-parse --git-path hooks` はグローバル dir を
+# 返してしまうため使わない。実体の .git/hooks を --absolute-git-dir から組み立てる。
+local_hook="$(git rev-parse --absolute-git-dir)/hooks/$hook_name"
+
+if [ -x "$local_hook" ]; then
+  # 自分自身（このディスパッチャ）を指していたら無限再帰になるので除外する。
+  self="$(realpath "${BASH_SOURCE[0]}")"
+  if [ "$(realpath "$local_hook")" != "$self" ]; then
+    exec "$local_hook" "$@"
+  fi
+fi

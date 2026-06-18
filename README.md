@@ -16,7 +16,7 @@ This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is 
 These cover the Fish-first workflow and shared tooling (Git, editor, mise, CLI utilities).
 
 ```bash
-brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-delta
+brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-delta gitleaks
 ```
 
 ### Required Homebrew tool descriptions
@@ -34,6 +34,7 @@ brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-de
 - `zoxide` - Smarter cd command that learns your habits
 - `fzf` - Command-line fuzzy finder (used with zoxide and Fish key bindings)
 - `git-delta` - Syntax-highlighting pager for git, diff, and grep output
+- `gitleaks` - Scans staged changes for secrets; used by the global `pre-commit` hook (see [Configuration](#configuration)). Skipped with a warning if not installed.
 
 ## Optional Tools
 
@@ -125,6 +126,17 @@ exec $SHELL -l
 ## Ghostty (macOS)
 
 On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config path to `~/.config/ghostty/config`. If you use Ghostty, install it separately (see [Optional Tools](#optional-tools)). Ghostty works well as the terminal for a Fish-centric setup.
+
+## Git hooks (gitleaks)
+
+Git is configured with a global `core.hooksPath = ~/.config/git/hooks`, so the managed hooks run for **every** repository on the host. A single dispatcher script (`dispatch`) is symlinked under every client-side hook name (`pre-commit`, `commit-msg`, `prepare-commit-msg`, `pre-push`, `post-checkout`, `post-merge`, `post-commit`, `pre-rebase`, `pre-merge-commit`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`) and dispatches on `basename "$0"` (`dispatch` itself is not a hook name, so Git never runs it directly). It does two things:
+
+1. **Secret scan (pre-commit only)** — runs `gitleaks git --staged` on the staged diff. If a likely secret is found, the commit is **blocked**; secret values are redacted in the output. False positives can be silenced with a `.gitleaks.toml` allowlist or an inline `gitleaks:allow` comment. If `gitleaks` is not installed, the scan is **skipped with a warning** (the commit is not blocked).
+2. **Chaining (all hook types)** — because a global `core.hooksPath` makes Git stop looking at each repo's `.git/hooks`, the dispatcher explicitly invokes the repository-local `.git/hooks/<hook>` afterwards (if present and executable), forwarding arguments and stdin, so per-project hooks keep working.
+
+Bypass everything for a single commit with `git commit --no-verify`.
+
+**Note:** Repositories managed by husky / lefthook set their own `core.hooksPath` locally, which overrides the global one — in those repos these hooks (and the gitleaks scan) do not run.
 
 ## Platform-Specific Notes
 
