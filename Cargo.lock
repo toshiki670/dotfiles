@@ -174,7 +174,7 @@ dependencies = [
 
 [[package]]
 name = "color"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -221,7 +221,7 @@ checksum = "6184e33543162437515c2e2b48714794e37845ec9851711914eec9d308f6ebe8"
 
 [[package]]
 name = "dotfiles"
-version = "0.69.2"
+version = "0.69.3"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -240,7 +240,7 @@ dependencies = [
 
 [[package]]
 name = "dotfiles-workers"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assert_cmd",
  "predicates",
@@ -249,7 +249,7 @@ dependencies = [
 
 [[package]]
 name = "env-tools"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -339,7 +339,7 @@ dependencies = [
 
 [[package]]
 name = "fzf-picker"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "gcm"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -376,7 +376,7 @@ dependencies = [
 
 [[package]]
 name = "gh-clone"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -387,7 +387,7 @@ dependencies = [
 
 [[package]]
 name = "git-upstream"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -855,7 +855,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "v-sync"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "assert_cmd",
  "clap",

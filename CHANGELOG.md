@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.69.3] - 2026-06-18
+### Features
+- Copy-obj / c-file / c-path を clip コマンドへ統合 ([#435](https://github.com/toshiki670/dotfiles/pull/435)) ([`d9d247e`](https://github.com/toshiki670/dotfiles/commit/d9d247eb30bf6235a00594e0b10c84c79d917da0))
+- Java/kotlin のプロンプトから via を非表示化 ([#440](https://github.com/toshiki670/dotfiles/pull/440)) ([`31f0f84`](https://github.com/toshiki670/dotfiles/commit/31f0f84b79c6ef39445f4cbe0ce799e668e6111b))
+### Fixes
+- トリガーを /memory-tidy のみに限定 ([#433](https://github.com/toshiki670/dotfiles/pull/433)) ([`355f16d`](https://github.com/toshiki670/dotfiles/commit/355f16df411ca65ed90b8531d7b45e6eec612310))
+- Cargo-install フックを run_before 化し補完の初回取りこぼしを修正 ([#438](https://github.com/toshiki670/dotfiles/pull/438)) ([`9307bc7`](https://github.com/toshiki670/dotfiles/commit/9307bc7827e154f8e72a6485fd75015d30d3a837))
+
+
 ## [0.69.2] - 2026-06-17
 ### Fixes
 - Root の Release 名から dotfiles- 接頭辞を外す ([#431](https://github.com/toshiki670/dotfiles/pull/431)) ([`72c6cf6`](https://github.com/toshiki670/dotfiles/commit/72c6cf6b43d2890191713be43ca337aa857112d0))

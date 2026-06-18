@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2026-06-18
+### Refactor
+- 引数なしピッカーから clap を外す ([#434](https://github.com/toshiki670/dotfiles/pull/434)) ([`e6cd53e`](https://github.com/toshiki670/dotfiles/commit/e6cd53e2e479d5878ddc04d40efaed2dc5495b71))
+
+
 ## [0.1.0] - 2026-06-16
 ### Features
 - _fzf_ghq_cd を Rust 化（B群 Rust化 PR1/3） ([#413](https://github.com/toshiki670/dotfiles/pull/413)) ([`a041941`](https://github.com/toshiki670/dotfiles/commit/a041941bdc23a195a816dd496376d504c289646a))
