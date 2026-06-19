@@ -142,15 +142,12 @@ Bypass everything for a single commit with `git commit --no-verify`.
 
 `~/.claude/settings.json` is managed by a chezmoi `modify_` script (`home/dot_claude/modify_settings.json.tmpl`). It merges the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced. The `rtk` token-proxy hook is included only when `rtk` is on `PATH`.
 
-One enforced hook is a **`rm` → `trash` guard**: a `PreToolUse` / `Bash` hook that **denies** any command invoking `rm` and tells Claude Code to use `trash` (move to the macOS Trash) instead. It matches `rm` at command position, including:
+Deleting files is steered to `trash` (move to the macOS Trash, recoverable) by two layers:
 
-- common wrappers — `sudo` / `doas` / `command` / `builtin`, with options (e.g. `sudo -u user rm`)
-- absolute paths — `/bin/rm`, `/usr/bin/rm`, `/usr/local/bin/rm`
-- compound commands and substitutions — `a && rm b`, `foo; rm bar`, `$(rm x)`
+- **Primary — a standing instruction** (`~/.claude/rules/use-trash-not-rm.md`, auto-loaded by Claude Code). It tells Claude to delete via `trash` rather than `rm`. Being intent-based, it has no false positives and also covers other irreversible deletions the hook can't (`xargs rm`, `find … -delete`, `unlink`). This is the main mechanism.
+- **Backstop — a `PreToolUse` / `Bash` hook** that **denies** any command invoking `rm` and tells Claude to use `trash` instead, catching the rare case where the instruction is forgotten. It matches `rm` at command position, including common wrappers (`sudo` / `doas` / `command` / `builtin`, with options), absolute paths (`/bin/rm`), and compound commands / substitutions (`a && rm b`, `$(rm x)`). `git rm`, substrings (`charm`), and non-`rm` wrapper calls (`sudo apt …`) are not matched.
 
-`git rm`, `rm` as a substring (`charm`, `/var/rm-cache`), and non-`rm` wrapper calls (`sudo apt …`) are **not** matched. Requires the `trash` CLI (bundled with macOS 15+).
-
-**Known limitations:** `rm` reached via `xargs rm`, `find … -exec rm`, or the alias-bypass `\rm` is not caught. Because the guard inspects the command string, a command that merely *contains* the text `rm` at command position (e.g. inside a `gh` / `git` argument) is also denied — pass such content through a file instead.
+Requires the `trash` CLI (bundled with macOS 15+). The hook's regex is intentionally **frozen** — since the instruction does the real work, the hook fires rarely, so its edge cases are low-stakes: `rm` via `\rm` or `find -exec rm` slips through, and a command that merely *contains* the text `rm` at command position (e.g. inside a `gh` / `git` argument) is over-blocked (pass such content through a file).
 
 ## Platform-Specific Notes
 

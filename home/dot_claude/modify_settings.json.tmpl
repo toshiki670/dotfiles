@@ -4,6 +4,8 @@
 # 強制上書きする。chezmoi が既存ファイル内容を stdin で渡し、stdout を新しい内容として書き込む。
 #
 # 強制設定のうち PreToolUse/Bash には "rm→trash ガード" を含む。rm を deny し trash 利用を促す。
+# ただし主役は指示（rules/use-trash-not-rm.md）で、本フックは「指示を忘れた時の保険」。役割が
+# 保険なので regex は凍結（これ以上磨かない）= 下記の取りこぼし/過剰ブロックは許容する。
 # 検知対象 = コマンド位置の rm（sudo/doas/command/builtin ラッパー[オプション可]・絶対パス・
 # 複合コマンド/$() 含む）。git rm や rm 部分一致（charm 等）は非該当。
 # 既知の取りこぼし: xargs rm / find -exec rm / \rm、および rm を文字列に含むだけのコマンドも弾く
