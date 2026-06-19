@@ -2,6 +2,12 @@
 # modify_ script: ~/.claude/settings.json のローカル編集（model / effortLevel など）を
 # 温存しつつ、dotfiles 由来の共有設定（hooks/statusLine/language/voiceEnabled）を
 # 強制上書きする。chezmoi が既存ファイル内容を stdin で渡し、stdout を新しい内容として書き込む。
+#
+# 強制設定のうち PreToolUse/Bash には "rm→trash ガード" を含む。rm を deny し trash 利用を促す。
+# 検知対象 = コマンド位置の rm（sudo/doas/command/builtin ラッパー[オプション可]・絶対パス・
+# 複合コマンド/$() 含む）。git rm や rm 部分一致（charm 等）は非該当。
+# 既知の取りこぼし: xargs rm / find -exec rm / \rm、および rm を文字列に含むだけのコマンドも弾く
+# （回避 = 本文をファイル渡し）。ユーザー向け解説は README.md の "Claude Code" 節を参照。
 set -euo pipefail
 
 # 既存の ~/.claude/settings.json（初回 apply 時など未存在なら空 → {} を既定にする）

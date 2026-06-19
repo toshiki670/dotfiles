@@ -138,6 +138,20 @@ Bypass everything for a single commit with `git commit --no-verify`.
 
 **Note:** Repositories managed by husky / lefthook set their own `core.hooksPath` locally, which overrides the global one — in those repos these hooks (and the gitleaks scan) do not run.
 
+## Claude Code
+
+`~/.claude/settings.json` is managed by a chezmoi `modify_` script (`home/dot_claude/modify_settings.json.tmpl`). It merges the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced. The `rtk` token-proxy hook is included only when `rtk` is on `PATH`.
+
+One enforced hook is a **`rm` → `trash` guard**: a `PreToolUse` / `Bash` hook that **denies** any command invoking `rm` and tells Claude Code to use `trash` (move to the macOS Trash) instead. It matches `rm` at command position, including:
+
+- common wrappers — `sudo` / `doas` / `command` / `builtin`, with options (e.g. `sudo -u user rm`)
+- absolute paths — `/bin/rm`, `/usr/bin/rm`, `/usr/local/bin/rm`
+- compound commands and substitutions — `a && rm b`, `foo; rm bar`, `$(rm x)`
+
+`git rm`, `rm` as a substring (`charm`, `/var/rm-cache`), and non-`rm` wrapper calls (`sudo apt …`) are **not** matched. Requires the `trash` CLI (bundled with macOS 15+).
+
+**Known limitations:** `rm` reached via `xargs rm`, `find … -exec rm`, or the alias-bypass `\rm` is not caught. Because the guard inspects the command string, a command that merely *contains* the text `rm` at command position (e.g. inside a `gh` / `git` argument) is also denied — pass such content through a file instead.
+
 ## Platform-Specific Notes
 
 ### macOS
