@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.69.4] - 2026-06-19
+### Features
+- Gradle のプロンプトから via を非表示化 ([#445](https://github.com/toshiki670/dotfiles/pull/445)) ([`9148e25`](https://github.com/toshiki670/dotfiles/commit/9148e25b693ccd2d5807fb1ecd9577b15ddc31dc))
+- コミット時に gitleaks 検査するグローバル hook を全ホストに追加 ([#447](https://github.com/toshiki670/dotfiles/pull/447)) ([`03ac8a3`](https://github.com/toshiki670/dotfiles/commit/03ac8a38cc30e8607d25c71d20e738652551c983))
+- Issue/PR 横断 fzf ピッカー追加 + gh ID 補完バグ修正 ([#448](https://github.com/toshiki670/dotfiles/pull/448)) ([`7236104`](https://github.com/toshiki670/dotfiles/commit/7236104c4ac74173bd2866e0f9d5ccef8591f691))
+- ファイル削除を trash に誘導（指示ルール主役＋ガードフック保険） ([#449](https://github.com/toshiki670/dotfiles/pull/449)) ([`01ecf4e`](https://github.com/toshiki670/dotfiles/commit/01ecf4edc580a22e7018788dd630851787327378))
+
+
 ## [0.69.3] - 2026-06-18
 ### Features
 - Copy-obj / c-file / c-path を clip コマンドへ統合 ([#435](https://github.com/toshiki670/dotfiles/pull/435)) ([`d9d247e`](https://github.com/toshiki670/dotfiles/commit/d9d247eb30bf6235a00594e0b10c84c79d917da0))
