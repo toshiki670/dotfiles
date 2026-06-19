@@ -2,6 +2,13 @@
 # modify_ script: ~/.claude/settings.json のローカル編集（model / effortLevel など）を
 # 温存しつつ、dotfiles 由来の共有設定（hooks/statusLine/language/voiceEnabled）を
 # 強制上書きする。chezmoi が既存ファイル内容を stdin で渡し、stdout を新しい内容として書き込む。
+#
+# 強制設定のうち PreToolUse/Bash には "rm→trash ガード" を含む。rm を deny し trash 利用を促す。
+# 主役は意図ベースの指示（rules/use-trash-not-rm.md）で、本フックは「指示を忘れた時の保険」。
+# 保険なので regex は素朴に保つ: コマンド先頭/区切り直後・$() 内の rm のみ検知する。
+# sudo/絶対パス/command 経由・xargs rm 等は意図的に拾わない（指示側がカバー）。git rm や
+# rm 部分一致（charm 等）は非該当。rm を文字列に含むだけのコマンドも弾く点に注意（回避＝
+# 本文をファイル渡し）。ユーザー向け解説は README.md の "Claude Code" 節を参照。
 set -euo pipefail
 
 # 既存の ~/.claude/settings.json（初回 apply 時など未存在なら空 → {} を既定にする）
@@ -31,18 +38,25 @@ forced_json="$(cat <<'JSON'
           }
         ]
       }
-    ]{{ if lookPath "rtk" }},
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
+{{- if lookPath "rtk" }}
           {
             "type": "command",
             "command": "rtk hook claude"
+          },
+{{- end }}
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE '(^|[;&|()])[[:space:]]*rm([[:space:]]|$)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Do not use rm. Use trash (moves to the macOS Trash) instead, e.g. `trash <file/dir>`. trash handles directories as-is; no -r/-f needed. Only ask the user before permanently deleting if it is truly required.\"}}'; fi",
+            "statusMessage": "rm guard (trash)"
           }
         ]
       }
-    ]{{ end }}
+    ]
   }
 }
 JSON

@@ -138,6 +138,17 @@ Bypass everything for a single commit with `git commit --no-verify`.
 
 **Note:** Repositories managed by husky / lefthook set their own `core.hooksPath` locally, which overrides the global one — in those repos these hooks (and the gitleaks scan) do not run.
 
+## Claude Code
+
+`~/.claude/settings.json` is managed by a chezmoi `modify_` script (`home/dot_claude/modify_settings.json.tmpl`). It merges the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced. The `rtk` token-proxy hook is included only when `rtk` is on `PATH`.
+
+Deleting files is steered to `trash` (move to the macOS Trash, recoverable) by two layers:
+
+- **Primary — a standing instruction** (`~/.claude/rules/use-trash-not-rm.md`, auto-loaded by Claude Code). It tells Claude to delete via `trash` rather than `rm`. Being intent-based, it has no false positives and also covers other irreversible deletions the hook can't (`xargs rm`, `find … -delete`, `unlink`). This is the main mechanism.
+- **Backstop — a `PreToolUse` / `Bash` hook** that **denies** any command invoking `rm` and tells Claude to use `trash` instead, catching the rare case where the instruction is forgotten. Its regex is deliberately **simple**: it matches `rm` at command position only — at the start, right after a separator (`a && rm b`, `foo; rm bar`), or inside `$(rm x)`. `git rm` and substrings (`charm`, `/var/rm-cache`) are not matched.
+
+Requires the `trash` CLI (bundled with macOS 15+). Because the hook is only a backstop (the instruction does the real work and fires first), its regex is kept minimal rather than exhaustive — wrapper / absolute-path forms (`sudo rm`, `/bin/rm`, `command rm`, `xargs rm`) are intentionally **left to the instruction**, not the hook. One quirk to know: since the hook inspects the command string, a command that merely *contains* the text `rm` at command position (e.g. inside a `gh` / `git` argument) is over-blocked — pass such content through a file.
+
 ## Platform-Specific Notes
 
 ### macOS
