@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-06-19
+### Features
+- Issue/PR 横断 fzf ピッカー追加 + gh ID 補完バグ修正 ([#448](https://github.com/toshiki670/dotfiles/pull/448)) ([`7236104`](https://github.com/toshiki670/dotfiles/commit/7236104c4ac74173bd2866e0f9d5ccef8591f691))
+
+
 ## [0.1.1] - 2026-06-18
 ### Refactor
 - 引数なしピッカーから clap を外す ([#434](https://github.com/toshiki670/dotfiles/pull/434)) ([`e6cd53e`](https://github.com/toshiki670/dotfiles/commit/e6cd53e2e479d5878ddc04d40efaed2dc5495b71))
