@@ -1,0 +1,53 @@
+//! `dotfiles list`：configs の分散 manifest を集約し、配置先一覧を表示する。
+//!
+//! 設計書 §11 の「分散方式の弱点（全体一覧が横断的）を補う」俯瞰ビュー。各単位を
+//! source 相対名でソートし、`名前 → dst [属性]` の形で出力する。配置は行わないため
+//! `home` は不要（dst は manifest の生表記 `~/...` をそのまま見せる方が読みやすい）。
+
+use crate::discover::{self, MANIFEST};
+use crate::manifest::{Kind, Manifest};
+use std::path::Path;
+
+/// `source`（= `configs/`）配下の設定単位を一覧表示する。
+pub fn run(source: &Path) -> Result<(), String> {
+    let units = discover::collect(source)?;
+    if units.is_empty() {
+        println!(
+            "list: 対象なし（{} に manifest.toml がない）",
+            source.display()
+        );
+        return Ok(());
+    }
+
+    let mut rows = Vec::with_capacity(units.len());
+    for unit in &units {
+        let manifest = Manifest::load(&unit.dir.join(MANIFEST))?;
+        rows.push((unit.rel.to_string_lossy().into_owned(), manifest));
+    }
+    rows.sort_by(|a, b| a.0.cmp(&b.0));
+
+    let width = rows.iter().map(|(name, _)| name.len()).max().unwrap_or(0);
+    println!("dotfiles list（source: {}）", source.display());
+    for (name, manifest) in &rows {
+        println!(
+            "  {name:<width$}  → {dst}  [{attrs}]",
+            dst = manifest.dst,
+            attrs = attrs(manifest),
+        );
+    }
+    Ok(())
+}
+
+/// 1 単位の属性ラベル（kind ＋ private / executable）。
+fn attrs(manifest: &Manifest) -> String {
+    let mut parts = vec![match manifest.kind {
+        Kind::Copy => "copy",
+    }];
+    if manifest.private {
+        parts.push("private");
+    }
+    if manifest.executable {
+        parts.push("executable");
+    }
+    parts.join(", ")
+}

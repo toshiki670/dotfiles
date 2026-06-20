@@ -3,13 +3,17 @@
 //! 現状は chezmoi と各コマンド（`crates/*`）に委譲しつつ、それらを取り込む器。
 //! `--version` / `--help` はバージョンの source of truth（タグ `v{version}`）を担う。
 //!
-//! `apply` サブコマンドは dotfiles ネイティブ化（Epic #453）の最小骨格（S0 / #454）：
-//! 固定ソース `configs/` を走査し、`manifest.toml`（dst / kind=copy）に従って配置する。
+//! `apply` / `list` サブコマンドは dotfiles ネイティブ化（Epic #453）の一部：
+//! 固定ソース `configs/` を走査し、`manifest.toml` に従って copy 層で配置する（S1 / #455）。
+//! `apply` は配置（ディレクトリ単位 copy・再帰・パーミッション）、`list` は分散 manifest を
+//! 集約した配置先一覧を担う。
 
 use clap::{Parser, Subcommand};
 use std::path::Path;
 
 mod apply;
+mod discover;
+mod list;
 mod manifest;
 
 /// toshiki670/dotfiles 本体（core）。
@@ -27,8 +31,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// 固定ソース `configs/` を走査し設定を配置する（S0: copy のみ）。
+    /// 固定ソース `configs/` を走査し設定を配置する（copy 層）。
     Apply,
+    /// configs の manifest を集約し、配置先一覧を表示する。
+    List,
 }
 
 fn main() {
@@ -37,6 +43,12 @@ fn main() {
         Some(Commands::Apply) => {
             if let Err(e) = run_apply() {
                 eprintln!("dotfiles apply: {e}");
+                std::process::exit(1);
+            }
+        }
+        Some(Commands::List) => {
+            if let Err(e) = list::run(Path::new("configs")) {
+                eprintln!("dotfiles list: {e}");
                 std::process::exit(1);
             }
         }

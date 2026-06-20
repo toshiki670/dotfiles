@@ -124,6 +124,11 @@ dst = "~/.config/fish/conf.d"
 # 配置種別（省略時 = "copy"）。"generate" / "merge" のときだけ明記。
 kind = "copy"
 
+# パーミッション（copy。省略時 false）。chezmoi の private_ / executable_ 相当。
+# private = 所有者のみ（0600 起点）、executable = 実行ビット付与（0644→0755 / 0600→0700）。
+# private = true
+# executable = true
+
 # generate のとき: 実行するコマンド（src の代わり）。
 # cmd = ["gh", "completion", "fish"]
 
@@ -165,6 +170,8 @@ os = "darwin"
 | `dst` | 配置先 | ✅ | 全ツール |
 | `kind` | 3層種別（既定 copy） | 任意 | 補完=generate / claude=merge |
 | `cmd` | 生成コマンド（generate 時） | generate 必須 | `gh completion fish` 等 |
+| `private` | 所有者のみ（0600 起点。chezmoi `private_`） | 任意 | secrets 系 |
+| `executable` | 実行ビット付与（0644→0755 / 0600→0700。chezmoi `executable_`） | 任意 | スクリプト/フック |
 | `preserve` | 温存キー（merge 時） | merge 任意 | claude=`model`,`effortLevel` |
 | `theme` | light/dark 対応方式 | 任意 | ghostty=source / eza・delta=follower / bat・nvim・fzf=self |
 | `secrets` | マシンローカル注入 | 任意 | git `user.email`/`user.name` |
@@ -286,7 +293,7 @@ os = "darwin"
 ## 14. 未決事項・今後の検討
 
 - [ ] manifest の `dst` 表記（`~` 展開、`$XDG_*` の扱い）の正規化ルール
-- [ ] copy のパーミッション表現（`private_`=0600 / `executable_`=0700 相当）の属性化
+- [x] copy のパーミッション表現（`private_`=0600 / `executable_`=0700 相当）の属性化 → `private` / `executable` 属性（S1 #455）
 - [ ] git hooks（symlink_ 13本）の配置方式（copy か、配置後にリンク生成か）
 - [ ] hooks の onchange 検知方式（ソースハッシュ vs mtime）の確定
 - [ ] color 手動固定時の Ghostty 起点の扱い（§10.3）

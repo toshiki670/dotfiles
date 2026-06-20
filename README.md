@@ -163,7 +163,7 @@ The CLI commands form a **Cargo workspace** at the repository root. The root pac
 
 | Command | Crate | Description |
 | --- | --- | --- |
-| `dotfiles` | (root) | dotfiles core; currently a version / `--help` entry point (`dotfiles --version`) |
+| `dotfiles` | (root) | dotfiles core; version entry point (`dotfiles --version`) plus `apply` (place `configs/` via per-directory `manifest.toml`, copy layer) and `list` (overview of every config's destination) |
 | `color` | `crates/color` | Print an ANSI color table (16 + 256 colors) |
 | `git-upstream` | `crates/git-upstream` | Merge `upstream/master` / initialize the upstream remote |
 | `gcm` | `crates/gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
