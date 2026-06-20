@@ -456,3 +456,335 @@ fn list_shows_generate_kind_with_deps() {
         .stdout(predicate::str::contains("generate"))
         .stdout(predicate::str::contains("deps=foo"));
 }
+
+// --- 合成軸: overlay / strategy / when（S3 enabler / #471） -----------------
+//
+// dst=ファイルへ条件付き断片（overlay）を strategy で重ねる挙動と、§5.5 の評価順
+// 不変条件（①ユニット gate 短絡 / ②宣言順 / ③preserve 最後）を hermetic fixture で検証する。
+// when.dep は PATH 先頭スタブの有無で、when.os は現在 OS（chezmoi 互換表記）で gate する。
+
+/// 現在の OS を chezmoi 互換表記（macOS=darwin）で返す。`when.os` fixture に埋める。
+fn current_os() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "darwin"
+    } else {
+        std::env::consts::OS
+    }
+}
+
+/// concat overlay（base 常時 ＋ rtk 断片 when.dep=rtk）の単位を書き出す。
+fn write_concat_overlay_unit(work: &Path) {
+    let unit = work.join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo/out.txt\"\n\
+         strategy = \"concat\"\n\
+         [[overlay]]\n\
+         src = \"base.txt\"\n\
+         [[overlay]]\n\
+         src = \"rtk.txt\"\n\
+         when = { dep = \"rtk\" }\n",
+    )
+    .unwrap();
+    fs::write(unit.join("base.txt"), "BASE\n").unwrap();
+    fs::write(unit.join("rtk.txt"), "RTK\n").unwrap();
+}
+
+/// when.dep を満たす（rtk が PATH にある）と rtk 断片が宣言順で連結される。
+#[cfg(unix)]
+#[test]
+fn apply_overlay_concat_includes_fragment_when_dep_present() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+
+    write_stub(bin.path(), "rtk", "exit 0\n"); // 存在＋実行ビットだけで十分（実行はされない）。
+    write_concat_overlay_unit(work.path());
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .env("PATH", bin.path())
+        .assert()
+        .success();
+
+    let placed = home.path().join(".config/demo/out.txt");
+    assert_eq!(
+        fs::read_to_string(&placed).unwrap(),
+        "BASE\nRTK\n",
+        "when.dep を満たす rtk 断片が宣言順で連結されていない",
+    );
+}
+
+/// when.dep を満たさない（rtk 不在）と rtk 断片だけ脱落し、base は残る（dst は生成される）。
+#[cfg(unix)]
+#[test]
+fn apply_overlay_concat_drops_fragment_when_dep_absent() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let empty_bin = tempfile::tempdir().unwrap(); // rtk を置かない。
+
+    write_concat_overlay_unit(work.path());
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .env("PATH", empty_bin.path())
+        .assert()
+        .success();
+
+    let placed = home.path().join(".config/demo/out.txt");
+    assert_eq!(
+        fs::read_to_string(&placed).unwrap(),
+        "BASE\n",
+        "rtk 不在でも base だけで dst が生成されるべき（overlay when=false は断片だけ脱落）",
+    );
+}
+
+/// when.os は現在 OS 一致の断片だけ採用し、不一致の断片は脱落する。
+#[test]
+fn apply_overlay_when_os_gates_by_current_os() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        format!(
+            "dst = \"~/.config/demo/out.txt\"\n\
+             strategy = \"concat\"\n\
+             [[overlay]]\n\
+             src = \"base.txt\"\n\
+             [[overlay]]\n\
+             src = \"here.txt\"\n\
+             when = {{ os = \"{os}\" }}\n\
+             [[overlay]]\n\
+             src = \"elsewhere.txt\"\n\
+             when = {{ os = \"nonsuch-os\" }}\n",
+            os = current_os(),
+        ),
+    )
+    .unwrap();
+    fs::write(unit.join("base.txt"), "BASE\n").unwrap();
+    fs::write(unit.join("here.txt"), "HERE\n").unwrap();
+    fs::write(unit.join("elsewhere.txt"), "ELSEWHERE\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    let placed = home.path().join(".config/demo/out.txt");
+    assert_eq!(
+        fs::read_to_string(&placed).unwrap(),
+        "BASE\nHERE\n",
+        "現在 OS の断片だけ採用され、不一致 OS の断片は脱落するべき",
+    );
+}
+
+/// 不変条件①: ユニット os gate を満たさない単位は丸ごと skip し、dst を一切作らない。
+/// gate がユニット共通（copy にも効く）ことも兼ねて確認する。
+#[test]
+fn apply_unit_os_gate_short_circuits_without_touching_dst() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/maconly");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/maconly\"\nos = \"nonsuch-os\"\n",
+    )
+    .unwrap();
+    fs::write(unit.join("f.txt"), "x\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("skip"))
+        .stdout(predicate::str::contains("maconly"));
+
+    assert!(
+        !home.path().join(".config/maconly").exists(),
+        "os gate=false でユニット全体が skip されず dst が作られた",
+    );
+}
+
+/// claude/settings.json 相当（json-shallow）の合成単位を書き出す。
+/// overlay 宣言順: preserve（先頭）→ base → rtk（when.dep）。不変条件③で preserve は最後に効く。
+fn write_json_shallow_unit(work: &Path) {
+    let unit = work.join("configs/claude/settings");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.claude/settings.json\"\n\
+         strategy = \"json-shallow\"\n\
+         [[overlay]]\n\
+         preserve = [\"model\"]\n\
+         [[overlay]]\n\
+         src = \"settings.json\"\n\
+         [[overlay]]\n\
+         src = \"rtk.json\"\n\
+         when = { dep = \"rtk\" }\n",
+    )
+    .unwrap();
+    // base は model を共有値で持つ（preserve でローカル値に上書きされる対象）。
+    fs::write(
+        unit.join("settings.json"),
+        "{\"model\":\"shared\",\"hook\":\"base\"}\n",
+    )
+    .unwrap();
+    fs::write(unit.join("rtk.json"), "{\"rtkHook\":\"on\"}\n").unwrap();
+}
+
+/// json-shallow: rtk present＋既存ローカル値あり。後勝ち合成＋ preserve は宣言位置に関わらず最後。
+#[cfg(unix)]
+#[test]
+fn apply_json_shallow_merges_and_preserve_wins_last() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+
+    write_stub(bin.path(), "rtk", "exit 0\n");
+    write_json_shallow_unit(work.path());
+
+    // 既存 dst にローカル値（model）と preserve 外のキー（extra）を置く。
+    let dst = home.path().join(".claude/settings.json");
+    fs::create_dir_all(dst.parent().unwrap()).unwrap();
+    fs::write(&dst, "{\"model\":\"local\",\"extra\":\"drop\"}\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .env("PATH", bin.path())
+        .assert()
+        .success();
+
+    let out = fs::read_to_string(&dst).unwrap();
+    assert!(
+        out.contains("\"model\": \"local\""),
+        "preserve=model が宣言先頭でもローカル値で最後に勝つべき:\n{out}",
+    );
+    assert!(
+        out.contains("\"hook\": \"base\""),
+        "base のキーが残るべき:\n{out}"
+    );
+    assert!(
+        out.contains("\"rtkHook\": \"on\""),
+        "when.dep=rtk を満たす断片が重なるべき:\n{out}",
+    );
+    assert!(
+        !out.contains("extra"),
+        "preserve 外の既存キーは持ち込まれないべき:\n{out}",
+    );
+}
+
+/// json-shallow: rtk 不在でも base＋preserve で settings.json は書かれる（回帰解消の核）。
+#[cfg(unix)]
+#[test]
+fn apply_json_shallow_writes_base_without_gated_overlay() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let empty_bin = tempfile::tempdir().unwrap(); // rtk 不在。
+
+    write_json_shallow_unit(work.path());
+
+    let dst = home.path().join(".claude/settings.json");
+    fs::create_dir_all(dst.parent().unwrap()).unwrap();
+    fs::write(&dst, "{\"model\":\"local\"}\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .env("PATH", empty_bin.path())
+        .assert()
+        .success();
+
+    let out = fs::read_to_string(&dst).unwrap();
+    assert!(
+        out.contains("\"hook\": \"base\""),
+        "base が書かれるべき:\n{out}"
+    );
+    assert!(
+        out.contains("\"model\": \"local\""),
+        "preserve が効くべき:\n{out}"
+    );
+    assert!(
+        !out.contains("rtkHook"),
+        "rtk 不在なら when.dep 断片は脱落するべき:\n{out}",
+    );
+}
+
+/// 不変条件②（宣言順・後勝ち）: json-shallow で後ろの overlay が同名キーを上書きする。
+#[test]
+fn apply_json_shallow_later_overlay_wins() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo/out.json\"\n\
+         strategy = \"json-shallow\"\n\
+         [[overlay]]\n\
+         src = \"a.json\"\n\
+         [[overlay]]\n\
+         src = \"b.json\"\n",
+    )
+    .unwrap();
+    fs::write(unit.join("a.json"), "{\"k\":\"first\",\"only_a\":1}\n").unwrap();
+    fs::write(unit.join("b.json"), "{\"k\":\"second\"}\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    let out = fs::read_to_string(home.path().join(".config/demo/out.json")).unwrap();
+    assert!(
+        out.contains("\"k\": \"second\""),
+        "宣言順で後ろの overlay が後勝ちすべき:\n{out}",
+    );
+    assert!(
+        out.contains("\"only_a\": 1"),
+        "前の overlay のキーは残るべき:\n{out}"
+    );
+}
+
+/// `dotfiles list` が overlay/strategy/os 属性を表示する。
+#[test]
+fn list_shows_overlay_strategy_and_os_attrs() {
+    let work = tempfile::tempdir().unwrap();
+    write_json_shallow_unit(work.path());
+
+    let os_unit = work.path().join("configs/maconly");
+    fs::create_dir_all(&os_unit).unwrap();
+    fs::write(
+        os_unit.join("manifest.toml"),
+        "dst = \"~/.config/maconly\"\nos = \"darwin\"\n",
+    )
+    .unwrap();
+
+    dotfiles()
+        .arg("list")
+        .current_dir(work.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("json-shallow"))
+        .stdout(predicate::str::contains("overlay=3"))
+        .stdout(predicate::str::contains("os=darwin"));
+}

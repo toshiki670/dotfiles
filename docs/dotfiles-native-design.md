@@ -172,9 +172,9 @@ configs/
                            #   dst=~/.config/fish/completions/gh.fish, deps=["gh"]
   claude/
     settings/
-      manifest.toml        # kind=merge, dst=~/.claude/settings.json,
-                           #   preserve=["model","effortLevel"]
-      settings.base.json
+      manifest.toml        # strategy=json-shallow, dst=~/.claude/settings.json,
+                           #   overlay=[base, rtk(when.dep), preserve(model/effortLevel)]
+      settings.json
   ghostty/
     manifest.toml          # dst=~/.config/ghostty, theme="source", os="darwin",
                            #   hooks=[macos-symlink]
@@ -189,7 +189,7 @@ configs/
 ### 6.2 manifest.toml スキーマ
 
 ```toml
-# 配置先（必須）。copy/merge は実体の置き先、generate は生成物の置き先。
+# 配置先（必須）。copy は実体（ツリー）の置き先、generate / 合成は生成物（ファイル）の置き先。
 dst = "~/.config/fish/conf.d"
 
 # 生成方式（省略時 = "copy"）。"generate" のときだけ明記（§5.5 の生成軸）。

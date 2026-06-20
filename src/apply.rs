@@ -1,22 +1,16 @@
 //! `dotfiles apply`：固定ソース `configs/` を走査し配置を実行する。
 //!
-//! 走査（manifest 発見・再帰委譲）は [`crate::discover`]、実体配置は kind ごとに
-//! [`crate::copy`]（copy 層）/ [`crate::generate`]（generate 層）へ委譲する。本モジュールは
-//! オーケストレーション（単位ごとに kind で分岐し結果を表示）と、両層が共有する小道具
-//! （dst の `~` 展開・パーミッション適用）だけを持つ。merge / hooks は後続スライス。
+//! 走査（manifest 発見・再帰委譲）は [`crate::discover`]。各単位は §5.5 の評価順に従う:
+//! ①**ユニット gate（`deps` / `os`）を最初に評価し false なら短絡**（[`crate::gate`]、dst を
+//! 一切触らず skip）。生き残った単位は dst 種別で配置経路が分かれる ―
+//! dst=ディレクトリの copy は [`crate::copy`]（ツリー配置）、dst=ファイルの generate /
+//! overlay 明示は [`crate::compose`]（②宣言順 overlay ③preserve 最後の合成）。本モジュールは
+//! オーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
 use crate::discover::{self, MANIFEST, Unit};
-use crate::manifest::{Kind, Manifest};
-use crate::{copy, generate};
+use crate::manifest::{Kind, Manifest, Strategy};
+use crate::{compose, copy, gate};
 use std::path::{Path, PathBuf};
-
-/// 1 単位の配置結果。配置済みと「gate でスキップ」を表示で区別するために返す。
-pub enum Outcome {
-    /// 配置/生成した。
-    Placed,
-    /// 条件（deps gate / os 等）を満たさず配置しなかった。理由を持つ。
-    Skipped(String),
-}
 
 /// `source`（= `configs/`）配下を走査し、各 manifest の配置を実行する。
 /// `home` は dst の `~` 展開先。
@@ -36,25 +30,51 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// 1 単位を kind で分岐して配置し、結果を 1 行で表示する。
+/// 1 単位を評価順（§5.5）に従って配置し、結果を 1 行で表示する。
 fn apply_unit(unit: &Unit, home: &Path) -> Result<(), String> {
     let manifest = Manifest::load(&unit.dir.join(MANIFEST))?;
     let dst = expand_home(&manifest.dst, home);
-    let (kind, outcome) = match manifest.kind {
-        Kind::Copy => ("copy", copy::place(&unit.dir, &dst, &manifest)?),
-        Kind::Generate => ("generate", generate::place(&unit.dir, &dst, &manifest)?),
-    };
-
     let name = unit.rel.to_string_lossy();
-    match outcome {
-        Outcome::Placed => println!("apply: {name} → {} ({kind})", manifest.dst),
-        Outcome::Skipped(why) => println!("apply: {name} → skip ({kind}: {why})"),
+
+    // ①ユニット gate を最初に評価し、満たさなければユニット全体を skip（dst は触らない）。
+    if let Some(reason) = gate::unit_skip_reason(&manifest) {
+        println!("apply: {name} → skip ({reason})");
+        return Ok(());
     }
+
+    let label = placement_label(&manifest);
+    if uses_compose(&manifest) {
+        compose::place(&unit.dir, &dst, &manifest)?;
+    } else {
+        copy::place(&unit.dir, &dst, &manifest)?;
+    }
+    println!("apply: {name} → {} ({label})", manifest.dst);
     Ok(())
 }
 
+/// ファイル合成経路（[`crate::compose`]）を通すか。overlay 明示、または dst=ファイルの
+/// generate はファイル合成。それ以外（overlay 無しの copy）は copy ツリー配置。
+fn uses_compose(manifest: &Manifest) -> bool {
+    !manifest.overlay.is_empty() || manifest.kind == Kind::Generate
+}
+
+/// 表示用の配置ラベル（apply の 1 行出力）。overlay 明示は strategy を併記する。
+fn placement_label(manifest: &Manifest) -> &'static str {
+    if !manifest.overlay.is_empty() {
+        return match manifest.strategy {
+            Some(Strategy::JsonShallow) => "overlay/json-shallow",
+            Some(Strategy::Concat) => "overlay/concat",
+            None => "overlay",
+        };
+    }
+    match manifest.kind {
+        Kind::Copy => "copy",
+        Kind::Generate => "generate",
+    }
+}
+
 /// 配置済みファイルへ manifest のパーミッションを適用する（Unix のみ）。
-/// copy / generate 両層が共有する。
+/// copy / compose 両経路が共有する。
 #[cfg(unix)]
 pub fn set_mode(dst: &Path, manifest: &Manifest) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
