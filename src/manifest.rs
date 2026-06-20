@@ -2,8 +2,8 @@
 //!
 //! 設計書（docs/dotfiles-native-design.md §6.2 / §7）のスキーマのうち、現スライスまでで
 //! 必要な部分を解釈する: `dst`（必須）/ `kind`（省略時 copy）/ `private` / `executable`、
-//! および generate 用の `cmd` / `deps`（S2）。merge / theme / hooks / os / secrets は
-//! 後続スライスで追加する。
+//! generate 用の `cmd` / `deps`（S2）、merge 用の `preserve`（S3）。
+//! theme / hooks / os / secrets は後続スライスで追加する。
 
 use serde::Deserialize;
 use std::path::Path;
@@ -14,7 +14,7 @@ pub struct Manifest {
     /// 配置先（必須）。`~` は HOME に展開する。
     /// copy は実体を置くディレクトリ、generate は生成物を書き出すファイルパス。
     pub dst: String,
-    /// 配置種別（省略時 = copy）。S2 までで copy / generate に対応。
+    /// 配置種別（省略時 = copy）。S3 までで copy / generate / merge に対応。
     #[serde(default)]
     pub kind: Kind,
     /// 所有者のみアクセス可（chezmoi `private_` = 0600 相当）。省略時 false。
@@ -30,15 +30,21 @@ pub struct Manifest {
     /// 依存バイナリ（gate, §7）。PATH に揃わないものがあれば配置/生成をスキップする。
     #[serde(default)]
     pub deps: Vec<String>,
+    /// merge のとき、既存ファイルから温存する（ローカルが勝つ）トップレベルキー（§7）。
+    /// base を土台にしつつ、ここに挙げたキーだけは既存 dst の値で上書きする。
+    /// 例: claude settings の `model` / `effortLevel`。copy / generate では未使用。
+    #[serde(default)]
+    pub preserve: Vec<String>,
 }
 
-/// 配置種別。S2 までで copy / generate。merge は後続スライス（S3）。
+/// 配置種別。S3 までで copy / generate / merge。
 #[derive(Debug, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Kind {
     #[default]
     Copy,
     Generate,
+    Merge,
 }
 
 impl Manifest {

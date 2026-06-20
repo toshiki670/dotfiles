@@ -432,6 +432,196 @@ fn apply_generate_without_cmd_errors() {
         .stderr(predicate::str::contains("cmd が必要"));
 }
 
+// --- merge 層（S3 / #457） ------------------------------------------------
+//
+// kind=merge は base JSON を土台に、既存 dst から preserve キーだけを温存する
+// shallow merge。共有キー（hooks/statusLine/language 等）は base が常に勝つ。
+
+/// merge 単位 `configs/claude/settings`（dst=ファイル / preserve=model,effortLevel）を
+/// `work` 下に書き出す。base ファイル名は任意（merge は `manifest.toml` 以外の唯一の実ファイルを
+/// base とする）なので、ここではあえて `base.json` という名で置き、名前非依存を兼ねて確認する。
+fn write_merge_unit(work: &Path, base_json: &str) -> std::path::PathBuf {
+    let unit = work.join("configs/claude/settings");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.claude/settings.json\"\n\
+         kind = \"merge\"\n\
+         preserve = [\"model\", \"effortLevel\"]\n",
+    )
+    .unwrap();
+    fs::write(unit.join("base.json"), base_json).unwrap();
+    unit
+}
+
+/// dst の settings.json を読み JSON に parse する（テスト用ヘルパ）。
+fn read_settings(home: &Path) -> serde_json::Value {
+    let placed = home.join(".claude/settings.json");
+    let text = fs::read_to_string(&placed).unwrap_or_else(|e| panic!("{placed:?}: {e}"));
+    serde_json::from_str(&text).unwrap_or_else(|e| panic!("{placed:?} が JSON でない: {e}"))
+}
+
+/// 既存 settings.json があるとき、merge が preserve キー（model/effortLevel）を温存しつつ
+/// 共有キー（language/hooks）を base で上書きすることを検証する（受け入れ条件の核）。
+#[test]
+fn apply_merge_preserves_local_keys_and_overrides_shared() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    write_merge_unit(
+        work.path(),
+        r#"{"language": "日本語", "hooks": {"PreToolUse": []}}"#,
+    );
+
+    // 既存 dst: ローカル編集（model/effortLevel）＋ 共有キーの古い値（language/hooks）。
+    let dst = home.path().join(".claude/settings.json");
+    fs::create_dir_all(dst.parent().unwrap()).unwrap();
+    fs::write(
+        &dst,
+        r#"{"model": "opus", "effortLevel": "high", "language": "English", "hooks": {"PreToolUse": [{"old": true}]}}"#,
+    )
+    .unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("merge"));
+
+    let got = read_settings(home.path());
+    // preserve: ローカルが勝つ。
+    assert_eq!(got["model"], "opus", "model が温存されていない");
+    assert_eq!(got["effortLevel"], "high", "effortLevel が温存されていない");
+    // 共有キー: base が勝つ（dotfiles 上書き）。
+    assert_eq!(
+        got["language"], "日本語",
+        "共有キー language が上書きされていない"
+    );
+    assert_eq!(
+        got["hooks"]["PreToolUse"],
+        serde_json::json!([]),
+        "共有キー hooks が base で置き換わっていない（shallow merge）",
+    );
+}
+
+/// 既存 dst が無い初回 apply では、base がそのまま書き出される（preserve は no-op）。
+#[test]
+fn apply_merge_writes_base_when_dst_absent() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    write_merge_unit(work.path(), r#"{"language": "日本語", "theme": "auto"}"#);
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    let got = read_settings(home.path());
+    assert_eq!(got["language"], "日本語");
+    assert_eq!(got["theme"], "auto");
+    assert!(
+        got.get("model").is_none(),
+        "存在しない preserve キーが現れた"
+    );
+}
+
+/// preserve に無いローカル固有キーは温存されない（base 土台＝明示 allowlist の意味論）。
+#[test]
+fn apply_merge_drops_local_keys_not_in_preserve() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    write_merge_unit(work.path(), r#"{"language": "日本語"}"#);
+
+    let dst = home.path().join(".claude/settings.json");
+    fs::create_dir_all(dst.parent().unwrap()).unwrap();
+    // model は preserve に在り温存される。localOnly は preserve 外なので落ちる。
+    fs::write(&dst, r#"{"model": "opus", "localOnly": "x"}"#).unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    let got = read_settings(home.path());
+    assert_eq!(got["model"], "opus", "preserve キーが温存されていない");
+    assert!(
+        got.get("localOnly").is_none(),
+        "preserve 外のローカルキーが温存された（allowlist が効いていない）",
+    );
+}
+
+/// 実ソース configs/claude/settings を一時 HOME へ apply し、共有設定（hooks/statusLine 等）が
+/// 配置されることを検証する（実ツールでの merge）。
+#[test]
+fn apply_places_real_claude_settings() {
+    let repo_root = env!("CARGO_MANIFEST_DIR");
+    let home = tempfile::tempdir().unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(repo_root)
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    let got = read_settings(home.path());
+    assert_eq!(got["language"], "日本語", "共有設定が配置されていない");
+    assert!(
+        got["statusLine"]["command"].is_string(),
+        "statusLine が配置されていない",
+    );
+    assert!(
+        got["hooks"]["PreToolUse"].is_array(),
+        "hooks が配置されていない"
+    );
+}
+
+/// base ファイルが無い merge 単位はエラー終了する。
+#[test]
+fn apply_merge_without_base_errors() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/claude/settings");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.claude/settings.json\"\nkind = \"merge\"\n",
+    )
+    .unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("base ファイルが必要"));
+}
+
+/// `dotfiles list` が merge 単位を merge ＋ preserve 付きで表示することを検証する。
+#[test]
+fn list_shows_merge_kind_with_preserve() {
+    let work = tempfile::tempdir().unwrap();
+    write_merge_unit(work.path(), "{}");
+
+    dotfiles()
+        .arg("list")
+        .current_dir(work.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("merge"))
+        .stdout(predicate::str::contains("preserve=model+effortLevel"));
+}
+
 /// `dotfiles list` が generate 単位を generate ＋ deps 付きで表示することを検証する。
 #[test]
 fn list_shows_generate_kind_with_deps() {

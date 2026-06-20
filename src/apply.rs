@@ -1,13 +1,13 @@
 //! `dotfiles apply`：固定ソース `configs/` を走査し配置を実行する。
 //!
 //! 走査（manifest 発見・再帰委譲）は [`crate::discover`]、実体配置は kind ごとに
-//! [`crate::copy`]（copy 層）/ [`crate::generate`]（generate 層）へ委譲する。本モジュールは
-//! オーケストレーション（単位ごとに kind で分岐し結果を表示）と、両層が共有する小道具
-//! （dst の `~` 展開・パーミッション適用）だけを持つ。merge / hooks は後続スライス。
+//! [`crate::copy`]（copy 層）/ [`crate::generate`]（generate 層）/ [`crate::merge`]（merge 層）へ
+//! 委譲する。本モジュールはオーケストレーション（単位ごとに kind で分岐し結果を表示）と、
+//! 各層が共有する小道具（dst の `~` 展開・パーミッション適用）だけを持つ。hooks は後続スライス。
 
 use crate::discover::{self, MANIFEST, Unit};
 use crate::manifest::{Kind, Manifest};
-use crate::{copy, generate};
+use crate::{copy, generate, merge};
 use std::path::{Path, PathBuf};
 
 /// 1 単位の配置結果。配置済みと「gate でスキップ」を表示で区別するために返す。
@@ -43,6 +43,7 @@ fn apply_unit(unit: &Unit, home: &Path) -> Result<(), String> {
     let (kind, outcome) = match manifest.kind {
         Kind::Copy => ("copy", copy::place(&unit.dir, &dst, &manifest)?),
         Kind::Generate => ("generate", generate::place(&unit.dir, &dst, &manifest)?),
+        Kind::Merge => ("merge", merge::place(&unit.dir, &dst, &manifest)?),
     };
 
     let name = unit.rel.to_string_lossy();

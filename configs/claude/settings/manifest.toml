@@ -1,0 +1,16 @@
+# Claude Code の settings.json をマージ配置する（merge 層 / 設計書 §5・§7）。
+# 旧 chezmoi `modify_settings.json.tmpl` の置き換え。base = 同ディレクトリの settings.json
+# （manifest.toml 以外の唯一の実ファイル＝共有設定）を土台に、既存 ~/.claude/settings.json から
+# preserve キー（ローカル編集）だけを温存する。
+#
+# - preserve（model / effortLevel）= ローカルが勝つトップレベルキーの allowlist。
+# - 共有キー（hooks / statusLine / language / theme / voiceEnabled）は base が常に勝つ
+#   （shallow merge＝トップレベル単位で dotfiles が上書き）。
+# - preserve に無いローカル固有キーは温存されない（旧 modify_ の「ローカル全温存」とは異なる）。
+#
+# 注: base はテンプレートではないため、旧 .tmpl の `{{ if lookPath "rtk" }}` 条件は展開できず、
+# rtk hook を無条件で含める（このリポジトリの運用環境は rtk 前提）。条件付き取り込みは
+# merge 層の範囲外（template kind は設計に無い）— 必要なら後続スライスで扱う。
+dst      = "~/.claude/settings.json"
+kind     = "merge"
+preserve = [ "model", "effortLevel" ]
