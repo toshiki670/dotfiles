@@ -228,6 +228,7 @@ dependencies = [
  "predicates",
  "rstest",
  "serde",
+ "serde_json",
  "tempfile",
  "toml",
 ]
