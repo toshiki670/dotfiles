@@ -788,3 +788,55 @@ fn list_shows_overlay_strategy_and_os_attrs() {
         .stdout(predicate::str::contains("overlay=3"))
         .stdout(predicate::str::contains("os=darwin"));
 }
+
+/// overlay を明示しながら strategy を省略すると load 時にエラー（暗黙 concat を許さない）。
+#[test]
+fn apply_errors_when_overlay_without_strategy() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo/out.txt\"\n[[overlay]]\nsrc = \"a.txt\"\n",
+    )
+    .unwrap();
+    fs::write(unit.join("a.txt"), "A\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("strategy"));
+}
+
+/// overlay に src/cmd/preserve を 2 つ以上書くと load 時にエラー（黙殺される typo を弾く）。
+#[test]
+fn apply_errors_when_overlay_mixes_kinds() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo/out.json\"\n\
+         strategy = \"json-shallow\"\n\
+         [[overlay]]\n\
+         src = \"a.json\"\n\
+         preserve = [\"k\"]\n",
+    )
+    .unwrap();
+    fs::write(unit.join("a.json"), "{}\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("ちょうど 1 つ"));
+}

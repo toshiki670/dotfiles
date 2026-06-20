@@ -67,8 +67,9 @@ fn materialize(dir: &Path, ov: &Overlay) -> Result<Vec<u8>, String> {
 
 /// `strategy` で断片を 1 ファイル分のバイト列へ合成する。
 ///
-/// generate 既定（`strategy` 省略）は `concat`。`json-shallow` のときだけ、preserve があれば
-/// 既存 dst を読み最後に重ねる（既存が無ければ温存なし）。
+/// overlay 明示時は `strategy` を load 時に必須化済み（[`Manifest::validate`]）なので、`unwrap_or`
+/// の暗黙 `concat` は overlay 未記述の generate 既定挙動だけに効く。`json-shallow` のときだけ、
+/// preserve があれば既存 dst を読み最後に重ねる（既存が無ければ温存なし）。
 fn combine(
     manifest: &Manifest,
     dst: &Path,
