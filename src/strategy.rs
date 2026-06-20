@@ -43,13 +43,13 @@ pub fn json_shallow(
     }
 
     // preserve（既存 dst を読む built-in overlay）は常に最後に重ね、ローカル値を勝たせる。
-    if !preserve_keys.is_empty() {
-        if let Some(existing) = existing {
-            let obj = parse_object(existing).map_err(|e| format!("既存 dst {e}"))?;
-            for key in preserve_keys {
-                if let Some(v) = obj.get(key) {
-                    merged.insert(key.clone(), v.clone());
-                }
+    if !preserve_keys.is_empty()
+        && let Some(existing) = existing
+    {
+        let obj = parse_object(existing).map_err(|e| format!("既存 dst {e}"))?;
+        for key in preserve_keys {
+            if let Some(v) = obj.get(key) {
+                merged.insert(key.clone(), v.clone());
             }
         }
     }

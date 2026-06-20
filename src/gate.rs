@@ -27,10 +27,10 @@ pub fn unit_skip_reason(manifest: &Manifest) -> Option<String> {
     if let Some(missing) = first_missing_dep(&manifest.deps) {
         return Some(format!("依存 `{missing}` が PATH にない"));
     }
-    if let Some(want) = &manifest.os {
-        if want != current_os() {
-            return Some(format!("OS `{want}` 不一致（現在 {}）", current_os()));
-        }
+    if let Some(want) = &manifest.os
+        && want != current_os()
+    {
+        return Some(format!("OS `{want}` 不一致（現在 {}）", current_os()));
     }
     None
 }
@@ -42,15 +42,15 @@ pub fn when_satisfied(when: &Option<When>) -> bool {
     let Some(when) = when else {
         return true;
     };
-    if let Some(dep) = &when.dep {
-        if which(dep).is_none() {
-            return false;
-        }
+    if let Some(dep) = &when.dep
+        && which(dep).is_none()
+    {
+        return false;
     }
-    if let Some(os) = &when.os {
-        if os != current_os() {
-            return false;
-        }
+    if let Some(os) = &when.os
+        && os != current_os()
+    {
+        return false;
     }
     true
 }
