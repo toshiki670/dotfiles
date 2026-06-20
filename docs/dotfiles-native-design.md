@@ -257,7 +257,7 @@ os = "darwin"
 | --- | --- | --- | --- |
 | `dst` | 配置先 | ✅ | 全ツール |
 | `kind` | 生成方式（既定 copy）。copy / generate | 任意 | 補完=generate |
-| `strategy` | 合成戦略（複数 overlay 時）。concat / json-shallow | 任意 | claude=json-shallow / fish 合流点=concat |
+| `strategy` | 合成戦略（dst=ファイルへ複数断片を束ねる時）。concat / json-shallow | 任意 | claude=json-shallow / gh 補完=concat（生成物＋独自ブロック） |
 | `cmd` | 生成コマンド（generate 時） | generate 必須 | `gh completion fish` 等 |
 | `private` | 所有者のみ（0600 起点。chezmoi `private_`） | 任意 | secrets 系 |
 | `executable` | 実行ビット付与（0644→0755 / 0600→0700。chezmoi `executable_`） | 任意 | スクリプト/フック |
