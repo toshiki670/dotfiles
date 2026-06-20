@@ -276,7 +276,8 @@ os = "darwin"
 
 | chezmoi 責務 | dotfiles での代替 |
 | --- | --- |
-| デプロイ（dot_/private_/executable_ 変換） | copy 層（dst・パーミッションは manifest 属性で表現） |
+| デプロイ（dot_/private_/executable_ 変換） | copy 層（dst・パーミッションは `private`/`executable` 属性で表現。§7） |
+| `create_`（初回のみ生成・以後は温存。mise の machine-specific config 1件） | copy 層に **create-only 属性**（dst 既存なら上書きしない）が必要。未スライス（§14・後続 issue で追跡） |
 | symlink_（git hooks 13本） | copy 層 or hooks（git hooks は dispatch への参照。配置方式は実装時確定） |
 | 補完の動的生成（output） | generate 層（`cmd` ＋ `deps` gate） |
 | ファイル合成（git config includeTemplate） | git native `[include]` に置換（copy 層へ降格）。bash 部品も同様に整理 |
@@ -294,6 +295,7 @@ os = "darwin"
 
 - [ ] manifest の `dst` 表記（`~` 展開、`$XDG_*` の扱い）の正規化ルール
 - [x] copy のパーミッション表現（`private_`=0600 / `executable_`=0700 相当）の属性化 → `private` / `executable` 属性（S1 #455）
+- [ ] create-only 属性（chezmoi `create_` 相当: dst 既存なら上書きしない）＋ mise の `config.toml` 移行。**どのスライスにも無い**ため S1 で mise を見送り。**S9（home/ に残り無しが完了条件）の前提＝S9 ブロッカー**。後続 issue で追跡
 - [ ] git hooks（symlink_ 13本）の配置方式（copy か、配置後にリンク生成か）
 - [ ] hooks の onchange 検知方式（ソースハッシュ vs mtime）の確定
 - [ ] color 手動固定時の Ghostty 起点の扱い（§10.3）
