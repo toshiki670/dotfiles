@@ -1,0 +1,7 @@
+# eza の fish 連携（ls/la/lt エイリアス + ライト/ダークのテーマ追従）。
+# 設計: docs/dotfiles-native-design.md §5（conf.d 合流点への copy 集約）
+#
+# dst は fish の conf.d（複数ツールが断片を持ち寄る合流点）。`~` は HOME に展開。
+# kind は省略時 "copy"。ファイル名の番号 prefix (40-) が読み込み順を表す（§6.3 ルール4）。
+# テーマ追従（theme = "follower"）は color スライスで属性化する。
+dst = "~/.config/fish/conf.d"
