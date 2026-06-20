@@ -166,28 +166,6 @@
 	<string>bar_chart</string>
 	<key>LaunchAtLoginNext</key>
 	<true/>
-	<key>NSNavPanelExpandedSizeForOpenMode</key>
-	<string>{800, 448}</string>
-	<key>NSNavPanelExpandedSizeForSaveMode</key>
-	<string>{880, 448}</string>
-	<key>NSNavPanelExpandedStateForSaveMode</key>
-	<true/>
-	<key>NSOSPLastRootDirectory</key>
-	<data>
-	Ym9va3wCAAAAAAUQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAFwBAAAEAAAAAwMAAAAAACAFAAAAAQEAAFVzZXJzAAAAAQAAAAEB
-	AAB0AAAACAAAAAEGAAAQAAAAIAAAAAgAAAAEAwAAlkcAAAAAAAAIAAAABAMAAEZxBAAA
-	AAAACAAAAAEGAAA8AAAATAAAAAgAAAAABAAAQcd/5Zq63YkYAAAAAQIAAAIAAAAAAAAA
-	DwAAAAAAAAAAAAAAAAAAAAAAAAABBQAACAAAAAQDAAAAAAAAAAAAAAQAAAADAwAA9QEA
-	AAgAAAABCQAAZmlsZTovLy8MAAAAAQEAAE1hY2ludG9zaCBIRAgAAAAEAwAAAJCClucA
-	AAAIAAAAAAQAAEHH34AvAAAAJAAAAAEBAAAxODI3QjFFQS1COEU5LTQwNUYtOEU3Ri00
-	NjEwNDY5OUVGQUIYAAAAAQIAAIEAAAABAAAA7xMAAAEAAAAAAAAAAAAAAAEAAAABAQAA
-	LwAAANgAAAD+////AQAAAAAAAAARAAAABBAAACwAAAAAAAAABRAAAFwAAAAAAAAAEBAA
-	AHwAAAAAAAAAQBAAAGwAAAAAAAAAAiAAAFABAAAAAAAABSAAAMAAAAAAAAAAECAAANAA
-	AAAAAAAAESAAAAQBAAAAAAAAEiAAAOQAAAAAAAAAEyAAAPQAAAAAAAAAICAAADABAAAA
-	AAAAMCAAAJwAAAAAAAAAAcAAAKQAAAAAAAAAEcAAACAAAAAAAAAAEsAAALQAAAAAAAAA
-	AdAAAJwAAAAAAAAAENAAAAQAAAAAAAAA
-	</data>
 	<key>NSToolbar Configuration eu.exelban.Stats.Settings.Toolbar</key>
 	<dict>
 		<key>TB Display Mode</key>
@@ -199,10 +177,6 @@
 		<key>TB Size Mode</key>
 		<integer>1</integer>
 	</dict>
-	<key>NSWindow Frame NSNavPanelAutosaveName</key>
-	<string>1289 1170 430 135 0 0 3008 1667 </string>
-	<key>NSWindow Frame eu.exelban.Stats.Settings.WindowFrame</key>
-	<string>1317 698 925 944 0 0 3360 1860 </string>
 	<key>Network_base</key>
 	<string>byte</string>
 	<key>Network_chartFixedScale</key>
@@ -396,7 +370,7 @@
 	<key>update-interval</key>
 	<string>Once per day</string>
 	<key>updater_check_ts</key>
-	<integer>1781742071</integer>
+	<integer>1781883898</integer>
 	<key>updater_install_ts</key>
 	<integer>1781619658</integer>
 	<key>version</key>
