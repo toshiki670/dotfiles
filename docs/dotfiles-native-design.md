@@ -54,11 +54,13 @@
 | 決定 | 内容 |
 | --- | --- |
 | **D1 ツール第一級** | ソースは `configs/<tool>/` に「中身の帰属」で並べる。配置先は属性 |
-| **D2 copy/generate/merge の3層** | 配置は実体の書き出し（copy）。symlink は採用しない（理由は §5） |
+| **D2 配置は copy（symlink 不採用）** | 配置は実体の書き出し（copy）。symlink は採用しない（理由は §5） |
 | **D3 階層分散 manifest** | 設定単位（ディレクトリ）ごとに `manifest.toml` を置き、配置仕様を**明示**する |
 | **D4 二段ソース** | 本番は**バイナリ埋め込み**、dev/移行期は**作業ツリー直読み**（§8） |
 | **D5 color 統合** | 旧 `crates/color` を `dotfiles color` に吸収。テーマ切替＋カラーサンプルの2責務（§10） |
 | **D6 chezmoi 併用移行** | `home/`（chezmoi）と `configs/`（dotfiles）を併存させ、ツール単位で段階移行（§12） |
+| **D7 配置は2軸（生成方式×合成）** | 配置を **生成方式**（1断片をどう実体化するか＝copy / generate）と **合成**（複数の条件付き断片を1 dst へどう重ねるか）の2軸で捉える。`merge` は独立 kind ではなく合成の JSON 戦略（§5.5） |
+| **D8 条件付き overlay で分岐を統合** | dst を「base ＋ `when` で gate された断片（overlay）」の合成として組む。`when`（`dep` / `os` / `theme`）が rtk 有無・OS・テーマ分岐を**1機構**に畳み、chezmoi テンプレート（`lookPath` / `if eq .os`）を不要にする。color の build-time 切替もこの機構に乗る（§5.5・§10） |
 
 ---
 
@@ -71,15 +73,84 @@
 
 よって **配置は実体を書き出す copy 方式**を採用する。失うのは「編集即反映」だけで、これは `dotfiles apply` で取り戻す（chezmoi と同じワークフロー。痛点だったのは apply ではなく「場所が分からない／color が面倒」であり、そこは本設計で解消される）。
 
-### 3層モデル
+### 配置の2軸：生成方式 × 合成
 
-| 層 | 処理 | 対象（調査での実数） |
+配置は独立した2つの軸で捉える（D7）。当初は copy/generate/merge を「3層」と並べていたが、これらは別の問いに答えるものなので軸を分ける：
+
+| 軸 | 問い | 値 |
 | --- | --- | --- |
-| **copy** | 実体をそのまま書き出す | 大多数（fish 断片・nvim・bat・ghostty・zellij・mise・rules 等） |
-| **generate** | コマンド実行で生成 | 補完5本（`gh/docker/bat/clip/merge-ready`）。git config は **git native の `[include]` に置換**すれば copy に降格可能 |
-| **merge** | 既存ファイルとマージ | `~/.claude/settings.json` の**1件のみ** |
+| **生成方式（kind）** | 1つの断片を**どう実体化するか** | `copy`（ソース実ファイルをそのまま）/ `generate`（`cmd` 実行の stdout を採用） |
+| **合成（strategy）** | 複数の条件付き断片を**どう1つの dst へ重ねるか** | 単一 = そのまま書く / `concat`（テキスト連結）/ `json-shallow`（JSON のトップレベル shallow merge） |
 
-**集約は copy で自然に解ける。** `~/.config/fish/conf.d/` などの合流点は「ディレクトリに置けば全部読まれる」設計なので、複数ツールの断片をその dst へ copy で書き出すだけでよい（マージ機構は不要）。本当に合成／マージが要るのは **補完5本＋settings.json 1件**だけで、これらだけ generate/merge として隔離する。
+`merge` は「3つ目の kind」ではなく、**合成軸の JSON 戦略**である（既存ファイルの温存も「最後に重なる overlay」として表現する。§5.5）。生成方式と合成は直交する：例えば「`generate` した断片に、テーマ別の `copy` 断片を `concat` で重ねる」も表現できる。
+
+| 生成方式＼合成 | 単一（合成なし） | concat | json-shallow |
+| --- | --- | --- | --- |
+| **copy** | 大多数。**dst=ディレクトリへツリー配置**（nvim・bat・zellij、fish conf.d の断片群も各ファイルとして個別配置） | （将来）テーマ別断片を1ファイルへ連結 | — |
+| **generate** | — | 補完5本（生成物＋独自ブロック連結。dst=ファイル） | — |
+| **compose** | — | — | `~/.claude/settings.json`（base＋rtk 断片＋既存温存。dst=ファイル） |
+
+**集約は copy で自然に解ける。** `~/.config/fish/conf.d/` などの合流点は「ディレクトリに置けば全部読まれる」設計なので、複数ツールの断片をその dst（ディレクトリ）へ各ファイルとして copy で書き出すだけでよい（**連結ではなくツリー配置**）。**本当に1ファイルへ合成が要るのは 補完5本＋settings.json＋（将来）テーマ別断片**だけで、これらが合成軸（concat / json-shallow ＋ overlay）の対象になる。
+
+> **dst の種別が合成の要否を決める**（→ §5.5 不変条件）。**dst=ディレクトリ**なら配下を**ツリーのまま個別配置**（複数ファイルは普通に可・合成なし・overlay 不要）。**dst=ファイル**のときだけ、複数入力を1つに束ねる合成戦略（generate の sibling 連結や明示 overlay）が要る。
+
+### 5.5 合成軸：条件付き overlay
+
+1つの dst を「**順序付き overlay の合成**」として組む。各 overlay は **1断片（生成方式で実体化）＋ `when` gate（採用条件）** からなり、`when` を満たす overlay だけが合成戦略に従って重なる。
+
+```text
+最終 dst = strategy( overlay_1, overlay_2, … )      # when を満たすものだけ、宣言順に
+overlay  = { src | cmd | preserve } + when?          # when 省略 = 常時採用
+```
+
+**`when` が条件分岐を1機構へ統合する**（chezmoi テンプレートの代替）：
+
+| `when` キー | 意味 | 旧 chezmoi | 例 |
+| --- | --- | --- | --- |
+| `dep = "rtk"` | 依存バイナリが PATH にある時だけ採用 | `{{ if lookPath "rtk" }}` | settings.json の rtk hook 断片 |
+| `os = "darwin"` | OS 一致時だけ採用 | `{{ if eq .chezmoi.os "darwin" }}` | macOS 限定断片 |
+| `theme = "dark"` | 現在のテーマ状態が一致する時だけ採用 | （chezmoi に無い） | テーマ別 color 断片（§10） |
+
+既存の **`deps` / `os`（ユニット単位の gate, §7）は「ユニット全体に係る `when`」の退化形**として包含する。`merge` の **`preserve`（ローカル温存キー）は「既存 dst を読む built-in overlay」**として表現する（base を土台に、preserve キーだけ既存値で上書きする最後の overlay）。
+
+これにより、いまバラバラだった3つの分岐ニーズ ―依存 gate（`deps`）・OS 分岐（`os`）・テーマ追従（color）― が **`when` という1つの語彙**に畳まれる。
+
+#### 例：settings.json（base ＋ rtk 断片 ＋ 既存温存）
+
+```toml
+dst      = "~/.claude/settings.json"
+strategy = "json-shallow"            # 合成戦略
+
+[[overlay]]
+src = "settings.json"                # base（常時）
+
+[[overlay]]
+src  = "rtk.json"                    # rtk hook 断片だけ切り出す
+when = { dep = "rtk" }               # rtk が PATH にある時だけ重ねる
+
+[[overlay]]
+preserve = ["model", "effortLevel"]  # 既存 dst から温存（最後に重なる overlay）
+```
+
+rtk の有無で hook の有無が決まり、テンプレートも「rtk 不在で毎回 command-not-found」も無い。
+
+#### 評価順と不変条件（先に固定）
+
+実装差分をレビューしやすくするため、評価順は次を**不変条件**として先に固定する（細目は実装で詰めるが、この骨格は動かさない）：
+
+1. **ユニット gate を最初に評価し、false なら短絡**。ユニット単位 gate（`deps` / `os`）を overlay より先に評価する。満たさなければ**ユニット全体を skip**（dst は一切触らない）し、overlay は評価しない。これは S2 の `deps` gate（依存欠落で生成丸ごと skip）の挙動をそのまま保存する。
+2. **生き残ったユニットで overlay を宣言順に合成**。各 overlay の `when` を宣言順に評価し、満たすものだけを `strategy` に従い宣言順で重ねる（`json-shallow` は後勝ち、`concat` は後ろへ連結）。
+3. **`preserve`（既存 dst）overlay は常に最後**。ローカル温存は「local 優先」が本質なので、宣言位置に関わらず最後に合成する（`json-shallow` の後勝ちでローカル値が必ず勝つ）。
+
+**「false の意味」が階層で異なる**点が要：ユニット gate=false は **dst ごと無し**（all-or-nothing）、overlay `when`=false は **その断片だけ脱落**（dst は残りの overlay で生成される）。前者は「`gh` が無ければ補完を作らない」、後者は「rtk が無くても settings.json は base＋preserve で書かれる」を表す。
+
+#### 留保（実装スライスで詰める）
+
+> ⚠️ 確認前の論点。
+
+- 合成戦略は**内容型依存**（JSON=shallow-merge / テキスト=concat）。型ごとの戦略を manifest でどう宣言するか（`strategy` 明示 か dst 拡張子からの推測か）は実装時に確定する。
+- `json-shallow` はトップレベル単位の差し替え（deep merge はしない）。これは旧 `modify_` の `$local + $forced` と同じ粒度。深いマージが要る設定が現れたら別戦略を足す。
+- `when` に複数キー（例 `dep` ＋ `os`）を書いたときの結合（AND 既定とするか）と、`theme` 状態の供給元（§10 の状態ファイル）は実装時に固める。
 
 ---
 
@@ -121,8 +192,12 @@ configs/
 # 配置先（必須）。copy/merge は実体の置き先、generate は生成物の置き先。
 dst = "~/.config/fish/conf.d"
 
-# 配置種別（省略時 = "copy"）。"generate" / "merge" のときだけ明記。
+# 生成方式（省略時 = "copy"）。"generate" のときだけ明記（§5.5 の生成軸）。
 kind = "copy"
+
+# 合成戦略（複数 overlay を1 dst へ重ねるとき）。単一 overlay なら省略。
+# "concat"（テキスト連結）/ "json-shallow"（JSON トップレベル shallow merge）。
+# strategy = "json-shallow"
 
 # パーミッション（copy。省略時 false）。chezmoi の private_ / executable_ 相当。
 # private = 所有者のみ（0600 起点）、executable = 実行ビット付与（0644→0755 / 0600→0700）。
@@ -132,13 +207,11 @@ kind = "copy"
 # generate のとき: 実行するコマンド（src の代わり）。
 # cmd = ["gh", "completion", "fish"]
 
-# merge のとき: ローカル設定を温存するキー。
-# preserve = ["model", "effortLevel"]
-
 # テーマ対応方式（該当ツールのみ）: "source" / "follower" / "self"
 theme = "follower"
 
-# 依存バイナリ（該当のみ）。無い場合は配置/生成をスキップ（gate）。
+# 依存バイナリ（ユニット単位 gate。§7）。無い場合はユニット全体の配置/生成をスキップ。
+# = ユニット全体に係る when（dep）の退化形（§5.5）。
 deps = ["gh"]
 
 # onchange フック（該当のみ）。
@@ -149,16 +222,31 @@ os = "darwin"
 
 # マシンローカル値の注入（該当のみ。§9）。
 # secrets = ["user.email", "user.name"]
+
+# --- 合成 overlay（複数の条件付き断片を1 dst=ファイルへ重ねるとき。§5.5）---
+# overlay 未記述 = 生成方式の既定挙動。暗黙 concat ではない:
+#   - copy（dst=ディレクトリ）… 配下をツリーのまま個別配置。複数ファイルは普通に可・合成なし。
+#   - generate（dst=ファイル）… cmd 出力＋同ディレクトリの sibling を連結。
+# overlay/strategy は「dst=単一ファイルへ条件付き断片を重ねたい」時にだけ明示する。
+# [[overlay]]
+# src = "settings.json"            # この overlay の断片（copy）。または cmd=[…]（generate）
+#
+# [[overlay]]
+# src  = "rtk.json"
+# when = { dep = "rtk" }           # when を満たす時だけ採用。dep / os / theme
+#
+# [[overlay]]
+# preserve = ["model", "effortLevel"]   # 既存 dst を読む built-in overlay（merge の温存）
 ```
 
 ### 6.3 確定したルール
 
 1. **管轄の再帰委譲**：あるディレクトリに `manifest.toml` があれば、そのディレクトリ＋（サブ manifest の無い）配下を管轄する。サブディレクトリに別の `manifest.toml` があれば、そこから先はそちらに委譲する（ツリーを manifest で分割統治）。
-2. **kind ごとの src の扱い**：
+2. **生成方式ごとの src の扱い**：
    - `copy` … src ＝ 同ディレクトリの実ファイル（`manifest.toml` 以外）
    - `generate` … src 不要、`cmd` を持つ（ディレクトリは manifest だけでも可。補完がこれ）
-   - `merge` … src ＝ base ファイル ＋ `preserve` 等のマージ仕様
-3. **粒度の指針**：ディレクトリ分割は強制ではなく、**属性（kind/dst/theme/hooks/os）が分岐するときに使う道具**。同じ属性で済む範囲は1つの manifest にまとめてよい。
+   - overlay を明示するとき … 各 overlay が `src`（copy）/ `cmd`（generate）/ `preserve`（既存 dst）のいずれかを持つ。`merge` という独立 kind は廃し、**`strategy = "json-shallow"` ＋ overlay** で表現する（§5.5）。
+3. **粒度の指針**：ディレクトリ分割は強制ではなく、**属性（kind/dst/theme/hooks/os）が分岐するときに使う道具**。同じ dst でも「条件で内容が変わる」だけなら、ディレクトリを割らず `when` 付き overlay で表現する（rtk・テーマ別など）。同じ属性で済む範囲は1つの manifest にまとめてよい。
 4. **読み込み順**：fish の `conf.d` 等の順序は、既存のファイル名番号（`05` < `40` < `90`）で表す。番号がグローバルな順序の単一の真実。
 
 ---
@@ -168,16 +256,19 @@ os = "darwin"
 | 属性 | 意味 | 必須 | 調査での実例 |
 | --- | --- | --- | --- |
 | `dst` | 配置先 | ✅ | 全ツール |
-| `kind` | 3層種別（既定 copy） | 任意 | 補完=generate / claude=merge |
+| `kind` | 生成方式（既定 copy）。copy / generate | 任意 | 補完=generate |
+| `strategy` | 合成戦略（dst=ファイルへ複数断片を束ねる時）。concat / json-shallow | 任意 | claude=json-shallow / gh 補完=concat（生成物＋独自ブロック） |
 | `cmd` | 生成コマンド（generate 時） | generate 必須 | `gh completion fish` 等 |
 | `private` | 所有者のみ（0600 起点。chezmoi `private_`） | 任意 | secrets 系 |
 | `executable` | 実行ビット付与（0644→0755 / 0600→0700。chezmoi `executable_`） | 任意 | スクリプト/フック |
-| `preserve` | 温存キー（merge 時） | merge 任意 | claude=`model`,`effortLevel` |
-| `theme` | light/dark 対応方式 | 任意 | ghostty=source / eza・delta=follower / bat・nvim・fzf=self |
+| `overlay` | 条件付き断片の配列（§5.5）。各 overlay = `src`/`cmd`/`preserve` ＋ `when?` | 任意 | claude=base+rtk+preserve |
+| `when` | overlay の採用条件。`dep` / `os` / `theme` | 任意 | rtk hook=`dep=rtk` |
+| `preserve` | 既存 dst から温存するキー（built-in overlay の糖衣） | 任意 | claude=`model`,`effortLevel` |
+| `theme` | light/dark 対応方式（runtime 追従の宣言。§10） | 任意 | ghostty=source / eza・delta=follower / bat・nvim・fzf=self |
 | `secrets` | マシンローカル注入 | 任意 | git `user.email`/`user.name` |
-| `deps` | 依存バイナリ（gate） | 任意 | 補完=`gh`等 / worker=自前bin |
+| `deps` | 依存バイナリ（ユニット単位 gate ＝ ユニット全体に係る `when.dep` の退化形） | 任意 | 補完=`gh`等 / worker=自前bin |
 | `hooks` | onchange 処理 | 任意 | bat cache / ghostty symlink / cargo install |
-| `os` | OS 条件 | 任意 | ghostty=darwin |
+| `os` | OS 条件（ユニット単位 gate ＝ `when.os` の退化形） | 任意 | ghostty=darwin |
 
 ---
 
@@ -225,6 +316,17 @@ os = "darwin"
 - **状態ファイル**（例 `$XDG_STATE_HOME/dotfiles/theme` または `~/.config/dotfiles/theme`）に `dark` / `light` / `auto` を書く。
 - 各ツール連携は **「状態ファイルの override があればそれを優先、無ければ従来の OS追従」** を参照する。各ツールの追従方式は manifest の `theme` 属性（source/follower/self）で宣言され、`dotfiles color` はこの属性を横断して切替を駆動する。
 
+### 10.2.1 overlay 機構との接続（§5.5）
+
+color には **2系統**ある。両者は排他ではなく、ツールごとに使い分ける：
+
+| 系統 | 仕組み | 対象 | 駆動 |
+| --- | --- | --- | --- |
+| **runtime 追従**（現状・既定） | 1ファイルを置き、ツールが実行時にテーマを検出して反応 | fish 変数追従（eza/delta/fish）・bat/nvim/fzf の self | 状態ファイル＋ツール側ロジック |
+| **build-time 切替**（overlay） | `when.theme` で gate したテーマ別断片を合成し、`dotfiles color` が**ファイルを書き直す** | 実行時に追従**できない**ツール（設定値を起動時に焼くもの等） | `dotfiles color` が theme 状態を変えて apply 相当を再実行 |
+
+➡ **overlay は color を build-time で切り替える「もう一つの道」を開く。** `when.theme` は rtk(`dep`)・OS(`os`) と同じ gate 語彙の一員で、テーマ別断片もこの1機構に乗る。ただし**現状の runtime 追従（§10.1）を全面置換するものではない**ので、どのツールを runtime のままにし、どれを build-time overlay へ寄せるかは color スライスで個別に決める（過度な build-time 化は、既に動く追従を壊しうる）。
+
 ### 10.3 未確定の難所（PoC で検証）
 
 > ⚠️ 以下は確認前の論点であり、事実として確定したものではない。
@@ -238,7 +340,7 @@ os = "darwin"
 
 | コマンド | 役割 |
 | --- | --- |
-| `dotfiles apply [--source DIR]` | configs を走査し copy/generate/merge を実行＋ hooks 起動 |
+| `dotfiles apply [--source DIR]` | configs を走査し生成（copy/generate）×合成（overlay）を実行＋ hooks 起動 |
 | `dotfiles list` / `dotfiles status` | 管理ツール一覧・配置状況の俯瞰（分散 manifest を集約表示） |
 | `dotfiles color <dark\|light\|auto>` | テーマ手動固定／追従 |
 | `dotfiles color sample` | ANSIカラー確認表（旧 color クレート吸収） |
@@ -276,17 +378,18 @@ os = "darwin"
 
 | chezmoi 責務 | dotfiles での代替 |
 | --- | --- |
-| デプロイ（dot_/private_/executable_ 変換） | copy 層（dst・パーミッションは `private`/`executable` 属性で表現。§7） |
-| `create_`（初回のみ生成・以後は温存。mise の machine-specific config 1件） | copy 層に **create-only 属性**（dst 既存なら上書きしない）が必要。未スライス（§14・後続 issue で追跡） |
-| symlink_（git hooks 13本） | copy 層 or hooks（git hooks は dispatch への参照。配置方式は実装時確定） |
-| 補完の動的生成（output） | generate 層（`cmd` ＋ `deps` gate） |
-| ファイル合成（git config includeTemplate） | git native `[include]` に置換（copy 層へ降格）。bash 部品も同様に整理 |
-| settings.json マージ（modify_） | merge 層（`preserve`） |
+| デプロイ（dot_/private_/executable_ 変換） | copy（生成方式）。dst・パーミッションは `private`/`executable` 属性で表現（§7） |
+| `create_`（初回のみ生成・以後は温存。mise の machine-specific config 1件） | copy に **create-only 属性**（dst 既存なら上書きしない）が必要。未スライス（§14・後続 issue で追跡） |
+| symlink_（git hooks 13本） | copy or hooks（git hooks は dispatch への参照。配置方式は実装時確定） |
+| 補完の動的生成（output） | generate（`cmd` ＋ `deps` gate） |
+| ファイル合成（git config includeTemplate） | git native `[include]` に置換（copy へ降格）。bash 部品も同様に整理 |
+| settings.json マージ（modify_） | 合成軸：`strategy="json-shallow"` ＋ overlay（base＋`preserve` の既存温存 overlay。§5.5） |
+| **テンプレート条件**（`{{ if lookPath … }}` / 部分的な if） | **overlay の `when`**（`dep` / `os` / `theme`）。テンプレートエンジンは持たず宣言的 gate で表現（§5.5） |
 | シークレット注入（env） | secrets 属性＋ git native include（§9） |
 | run_ フック（cargo install/bat cache/ghostty/doctor） | hooks 属性。onchange は前回適用ソースのハッシュを状態に保存して比較 |
 | `.chezmoiignore` | 「configs に置かない」＝管理対象外。明示除外が要れば manifest で表現 |
 | `.chezmoiroot` | 不要（configs がソースルート） |
-| OS 分岐（`if eq .chezmoi.os`） | `os` 属性 |
+| OS 分岐（`if eq .chezmoi.os`） | `os` 属性（＝ ユニット単位の `when.os`。§5.5） |
 | `.chezmoi.config.sourceDir` 参照 | `--source`／作業ツリー検出／埋め込みで解決（§8） |
 
 ---
@@ -295,6 +398,10 @@ os = "darwin"
 
 - [ ] manifest の `dst` 表記（`~` 展開、`$XDG_*` の扱い）の正規化ルール
 - [x] copy のパーミッション表現（`private_`=0600 / `executable_`=0700 相当）の属性化 → `private` / `executable` 属性（S1 #455）
+- [x] テンプレート条件（`lookPath` 等の部分的 if）の置き場 → **合成軸の overlay ＋ `when` gate**（§5.5・D8）。テンプレートエンジンは持たない。設計確定、実装は後続（リファクタリングで `merge` を `strategy`＋overlay へ移行し、rtk hook を `when.dep` 化）
+- [x] `when` の評価順・ユニット gate との優先関係 → **不変条件として確定**（§5.5「評価順と不変条件」: ①ユニット gate 先・false で短絡 ②overlay は宣言順 ③preserve は常に最後）
+- [ ] 合成戦略の宣言方法（`strategy` 明示 vs dst 拡張子からの推測）、`when` 複数キーの結合（AND 既定か）、`theme` 状態の供給元（§5.5 留保）
+- [ ] `when.theme` を build-time color に使う範囲（どのツールを runtime 追従のまま残すか。§10.2.1）
 - [ ] create-only 属性（chezmoi `create_` 相当: dst 既存なら上書きしない）＋ mise の `config.toml` 移行。**どのスライスにも無い**ため S1 で mise を見送り。**S9（home/ に残り無しが完了条件）の前提＝S9 ブロッカー**。後続 issue で追跡
 - [ ] git hooks（symlink_ 13本）の配置方式（copy か、配置後にリンク生成か）
 - [ ] hooks の onchange 検知方式（ソースハッシュ vs mtime）の確定
@@ -307,8 +414,9 @@ os = "darwin"
 ## 付録：合意済みの設計決定（サマリ）
 
 1. 第一級エンティティは**ツール**。ソースは中身の帰属で並べ、配置先は属性。
-2. 配置は **copy/generate/merge の3層**。symlink は不採用（cargo install 配布と非互換）。
-3. データ構造は **`configs/` 階層 ＋ 各設定単位の `manifest.toml`（placement 明示）**。kind 混在はディレクトリ分割で解決。
-4. ソースは **埋め込み（本番）＋作業ツリー直読み（dev/移行期）** の二段構え。
-5. color は **`dotfiles color`** に統合（切替＋サンプル）。テーマは横断的関心事として状態ファイル＋ manifest の `theme` 属性で駆動。
-6. 移行は **chezmoi 併用**（`chezmoi apply` → `dotfiles apply`、ツール単位で段階移行、止めれば chezmoi へ復帰）。
+2. 配置は **2軸 ＝ 生成方式（copy / generate）× 合成（単一 / concat / json-shallow）**。`merge` は独立 kind ではなく合成の JSON 戦略。symlink は不採用（cargo install 配布と非互換）。
+3. dst は **条件付き overlay の合成**として組む。各 overlay は断片＋ `when`（`dep` / `os` / `theme`）gate を持ち、rtk・OS・テーマ分岐を1機構へ統合（chezmoi テンプレート不要）。`deps`/`os` はユニット単位 gate、`preserve` は既存温存 overlay の糖衣。
+4. データ構造は **`configs/` 階層 ＋ 各設定単位の `manifest.toml`（placement 明示）**。属性が分岐するときはディレクトリ分割、内容だけが条件で変わるなら `when` 付き overlay。
+5. ソースは **埋め込み（本番）＋作業ツリー直読み（dev/移行期）** の二段構え。
+6. color は **`dotfiles color`** に統合（切替＋サンプル）。runtime 追従（既定）と build-time overlay（`when.theme`）の2系統をツールごとに使い分ける。
+7. 移行は **chezmoi 併用**（`chezmoi apply` → `dotfiles apply`、ツール単位で段階移行、止めれば chezmoi へ復帰）。
