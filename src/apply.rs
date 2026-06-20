@@ -13,7 +13,16 @@ const MANIFEST: &str = "manifest.toml";
 /// `home` は dst の `~` 展開先。
 pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     if !source.is_dir() {
-        return Err(format!("ソースが見つからない: {}", source.display()));
+        let looked = std::env::current_dir()
+            .map(|cwd| cwd.join(source))
+            .unwrap_or_else(|_| source.to_path_buf());
+        return Err(format!(
+            "ソース {src} が見つかりません（探索先: {looked}）。\n\
+             {src} はカレントディレクトリからの相対パスです。\
+             configs/ のあるリポジトリのルートに移動してから実行してください。",
+            src = source.display(),
+            looked = looked.display(),
+        ));
     }
 
     let mut units = Vec::new();

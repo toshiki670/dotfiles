@@ -108,5 +108,7 @@ fn apply_errors_when_source_missing() {
         .env("HOME", home.path())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("ソースが見つからない"));
+        .stderr(predicate::str::contains("が見つかりません"))
+        .stderr(predicate::str::contains("探索先:"))
+        .stderr(predicate::str::contains("リポジトリのルート"));
 }
