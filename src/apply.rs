@@ -1,14 +1,22 @@
 //! `dotfiles apply`：固定ソース `configs/` を走査し配置を実行する。
 //!
-//! 走査（manifest 発見・再帰委譲）は [`crate::discover`] に委譲する。本モジュールは
-//! copy 層の実体配置を担う: ディレクトリ単位 copy・複数ファイル・サブディレクトリ再帰、
-//! および manifest の `private` / `executable` 属性に基づくパーミッション付与（§7）。
-//! ソース解決（検出 / 判定 / 埋め込み）は持たない（→ S8）。generate / merge / hooks も
-//! 後続スライス。
+//! 走査（manifest 発見・再帰委譲）は [`crate::discover`]、実体配置は kind ごとに
+//! [`crate::copy`]（copy 層）/ [`crate::generate`]（generate 層）へ委譲する。本モジュールは
+//! オーケストレーション（単位ごとに kind で分岐し結果を表示）と、両層が共有する小道具
+//! （dst の `~` 展開・パーミッション適用）だけを持つ。merge / hooks は後続スライス。
 
-use crate::discover::{self, MANIFEST};
+use crate::discover::{self, MANIFEST, Unit};
 use crate::manifest::{Kind, Manifest};
+use crate::{copy, generate};
 use std::path::{Path, PathBuf};
+
+/// 1 単位の配置結果。配置済みと「gate でスキップ」を表示で区別するために返す。
+pub enum Outcome {
+    /// 配置/生成した。
+    Placed,
+    /// 条件（deps gate / os 等）を満たさず配置しなかった。理由を持つ。
+    Skipped(String),
+}
 
 /// `source`（= `configs/`）配下を走査し、各 manifest の配置を実行する。
 /// `home` は dst の `~` 展開先。
@@ -23,67 +31,32 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     }
 
     for unit in &units {
-        apply_unit(&unit.dir, home)?;
+        apply_unit(unit, home)?;
     }
     Ok(())
 }
 
-/// 1 単位を配置する。S1 は kind=copy のみ。
-fn apply_unit(dir: &Path, home: &Path) -> Result<(), String> {
-    let manifest = Manifest::load(&dir.join(MANIFEST))?;
+/// 1 単位を kind で分岐して配置し、結果を 1 行で表示する。
+fn apply_unit(unit: &Unit, home: &Path) -> Result<(), String> {
+    let manifest = Manifest::load(&unit.dir.join(MANIFEST))?;
     let dst = expand_home(&manifest.dst, home);
-    match manifest.kind {
-        Kind::Copy => copy_tree(dir, dir, &dst, &manifest)?,
-    }
-    println!(
-        "apply: {} → {} (copy)",
-        dir.file_name().and_then(|n| n.to_str()).unwrap_or("?"),
-        manifest.dst,
-    );
-    Ok(())
-}
+    let (kind, outcome) = match manifest.kind {
+        Kind::Copy => ("copy", copy::place(&unit.dir, &dst, &manifest)?),
+        Kind::Generate => ("generate", generate::place(&unit.dir, &dst, &manifest)?),
+    };
 
-/// `src_root` 配下の実ファイルを、相対構造を保ったまま `dst_root` へコピーする。
-/// `manifest.toml` 自体と、別 manifest を持つサブツリーは除外する（委譲先の責務）。
-fn copy_tree(
-    current: &Path,
-    src_root: &Path,
-    dst_root: &Path,
-    manifest: &Manifest,
-) -> Result<(), String> {
-    for entry in discover::read_dir(current)? {
-        let path = entry.path();
-        if path.is_dir() {
-            // サブ manifest を持つディレクトリは別単位なので委譲（コピー対象外）。
-            if path.join(MANIFEST).is_file() {
-                continue;
-            }
-            copy_tree(&path, src_root, dst_root, manifest)?;
-        } else if entry.file_name() != MANIFEST {
-            let rel = path
-                .strip_prefix(src_root)
-                .map_err(|e| format!("{}: 相対パス算出失敗: {e}", path.display()))?;
-            copy_file(&path, &dst_root.join(rel), manifest)?;
-        }
+    let name = unit.rel.to_string_lossy();
+    match outcome {
+        Outcome::Placed => println!("apply: {name} → {} ({kind})", manifest.dst),
+        Outcome::Skipped(why) => println!("apply: {name} → skip ({kind}: {why})"),
     }
-    Ok(())
-}
-
-/// 親ディレクトリを作りつつ 1 ファイルをコピーし、manifest のパーミッションを与える。
-fn copy_file(src: &Path, dst: &Path, manifest: &Manifest) -> Result<(), String> {
-    if let Some(parent) = dst.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("{}: ディレクトリ作成失敗: {e}", parent.display()))?;
-    }
-    std::fs::copy(src, dst)
-        .map_err(|e| format!("{} → {}: コピー失敗: {e}", src.display(), dst.display()))?;
-    set_mode(dst, manifest)?;
     Ok(())
 }
 
 /// 配置済みファイルへ manifest のパーミッションを適用する（Unix のみ）。
+/// copy / generate 両層が共有する。
 #[cfg(unix)]
-fn set_mode(dst: &Path, manifest: &Manifest) -> Result<(), String> {
+pub fn set_mode(dst: &Path, manifest: &Manifest) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
     std::fs::set_permissions(dst, std::fs::Permissions::from_mode(manifest.mode()))
         .map_err(|e| format!("{}: パーミッション設定失敗: {e}", dst.display()))
@@ -91,7 +64,7 @@ fn set_mode(dst: &Path, manifest: &Manifest) -> Result<(), String> {
 
 /// 非 Unix では no-op（パーミッションモデルが異なるため）。
 #[cfg(not(unix))]
-fn set_mode(_dst: &Path, _manifest: &Manifest) -> Result<(), String> {
+pub fn set_mode(_dst: &Path, _manifest: &Manifest) -> Result<(), String> {
     Ok(())
 }
 
