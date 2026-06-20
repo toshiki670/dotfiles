@@ -5,15 +5,14 @@
 //! 持つサブツリー（委譲先の責務）は除外する。パーミッションは manifest の
 //! `private` / `executable` 属性に従う（§7、適用は [`crate::apply::set_mode`]）。
 
-use crate::apply::{Outcome, set_mode};
+use crate::apply::set_mode;
 use crate::discover::{self, MANIFEST};
 use crate::manifest::Manifest;
 use std::path::Path;
 
 /// 1 単位（`dir`）を copy で `dst`（ディレクトリ）へ配置する。
-pub fn place(dir: &Path, dst: &Path, manifest: &Manifest) -> Result<Outcome, String> {
-    copy_tree(dir, dir, dst, manifest)?;
-    Ok(Outcome::Placed)
+pub fn place(dir: &Path, dst: &Path, manifest: &Manifest) -> Result<(), String> {
+    copy_tree(dir, dir, dst, manifest)
 }
 
 /// `src_root` 配下の実ファイルを、相対構造を保ったまま `dst_root` へコピーする。

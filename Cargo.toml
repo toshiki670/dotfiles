@@ -12,12 +12,10 @@ name        = "dotfiles"
 repository  = { workspace = true }
 version     = "0.69.4"
 
-# serde_json は merge 層（settings.json）用。preserve_order で base のキー順を保ち、
-# 再 apply 時の差分を安定させる（IndexMap は toml 経由で既にツリーに居る）。
 [dependencies]
 clap       = { workspace = true }
 serde      = { workspace = true }
-serde_json = { workspace = true, features = [ "preserve_order" ] }
+serde_json = { workspace = true }
 toml       = { workspace = true }
 
 [lints]

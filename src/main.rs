@@ -4,21 +4,24 @@
 //! `--version` / `--help` はバージョンの source of truth（タグ `v{version}`）を担う。
 //!
 //! `apply` / `list` サブコマンドは dotfiles ネイティブ化（Epic #453）の一部：
-//! 固定ソース `configs/` を走査し、`manifest.toml` に従って配置する。copy 層（S1 / #455）・
-//! generate 層（コマンド実行で補完を生成・配置＋ deps gate。S2 / #456）に加え、
-//! merge 層（base へ既存ファイルの `preserve` キーを温存。S3 / #457）に対応する。
+//! 固定ソース `configs/` を走査し、`manifest.toml` に従って配置する。配置は **2軸**
+//! （生成方式 `kind`=copy/generate × 合成 `strategy`=concat/json-shallow）＋条件付き overlay
+//! （`when` gate）で捉える（設計書 §5 / §5.5）。copy はツリー配置、generate / overlay 明示は
+//! ファイル合成（[`compose`]）を通り、`deps` / `os` はユニット単位 gate（[`gate`]）。
 //! `apply` は配置、`list` は分散 manifest を集約した配置先一覧を担う。
 
 use clap::{Parser, Subcommand};
 use std::path::Path;
 
 mod apply;
+mod compose;
 mod copy;
 mod discover;
+mod gate;
 mod generate;
 mod list;
 mod manifest;
-mod merge;
+mod strategy;
 
 /// toshiki670/dotfiles 本体（core）。
 #[derive(Parser)]

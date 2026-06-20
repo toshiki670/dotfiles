@@ -5,7 +5,7 @@
 //! `home` は不要（dst は manifest の生表記 `~/...` をそのまま見せる方が読みやすい）。
 
 use crate::discover::{self, MANIFEST};
-use crate::manifest::{Kind, Manifest};
+use crate::manifest::{Kind, Manifest, Strategy};
 use std::path::Path;
 
 /// `source`（= `configs/`）配下の設定単位を一覧表示する。
@@ -38,16 +38,28 @@ pub fn run(source: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// 1 単位の属性ラベル（kind ＋ private / executable ＋ deps ＋ preserve）。
+/// 1 単位の属性ラベル（2軸モデル, §7）。
+/// kind ＋ strategy ＋ overlay 数 ＋ private / executable ＋ deps / os。
 fn attrs(manifest: &Manifest) -> String {
     let mut parts = vec![
         match manifest.kind {
             Kind::Copy => "copy",
             Kind::Generate => "generate",
-            Kind::Merge => "merge",
         }
         .to_string(),
     ];
+    if let Some(strategy) = manifest.strategy {
+        parts.push(
+            match strategy {
+                Strategy::Concat => "concat",
+                Strategy::JsonShallow => "json-shallow",
+            }
+            .to_string(),
+        );
+    }
+    if !manifest.overlay.is_empty() {
+        parts.push(format!("overlay={}", manifest.overlay.len()));
+    }
     if manifest.private {
         parts.push("private".to_string());
     }
@@ -57,8 +69,8 @@ fn attrs(manifest: &Manifest) -> String {
     if !manifest.deps.is_empty() {
         parts.push(format!("deps={}", manifest.deps.join("+")));
     }
-    if !manifest.preserve.is_empty() {
-        parts.push(format!("preserve={}", manifest.preserve.join("+")));
+    if let Some(os) = &manifest.os {
+        parts.push(format!("os={os}"));
     }
     parts.join(", ")
 }
