@@ -38,16 +38,23 @@ pub fn run(source: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// 1 単位の属性ラベル（kind ＋ private / executable）。
+/// 1 単位の属性ラベル（kind ＋ private / executable ＋ deps）。
 fn attrs(manifest: &Manifest) -> String {
-    let mut parts = vec![match manifest.kind {
-        Kind::Copy => "copy",
-    }];
+    let mut parts = vec![
+        match manifest.kind {
+            Kind::Copy => "copy",
+            Kind::Generate => "generate",
+        }
+        .to_string(),
+    ];
     if manifest.private {
-        parts.push("private");
+        parts.push("private".to_string());
     }
     if manifest.executable {
-        parts.push("executable");
+        parts.push("executable".to_string());
+    }
+    if !manifest.deps.is_empty() {
+        parts.push(format!("deps={}", manifest.deps.join("+")));
     }
     parts.join(", ")
 }
