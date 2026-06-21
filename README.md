@@ -127,13 +127,12 @@ exec $SHELL -l
 
 On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config path to `~/.config/ghostty/config`. If you use Ghostty, install it separately (see [Optional Tools](#optional-tools)). Ghostty works well as the terminal for a Fish-centric setup.
 
-## Git hooks (gitleaks, force-push guard)
+## Git hooks (gitleaks)
 
-Git is configured with a global `core.hooksPath = ~/.config/git/hooks`, so the managed hooks run for **every** repository on the host. A single dispatcher script (`dispatch`) is symlinked under every client-side hook name (`pre-commit`, `commit-msg`, `prepare-commit-msg`, `pre-push`, `post-checkout`, `post-merge`, `post-commit`, `pre-rebase`, `pre-merge-commit`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`) and dispatches on `basename "$0"` (`dispatch` itself is not a hook name, so Git never runs it directly). It does three things:
+Git is configured with a global `core.hooksPath = ~/.config/git/hooks`, so the managed hooks run for **every** repository on the host. A single dispatcher script (`dispatch`) is symlinked under every client-side hook name (`pre-commit`, `commit-msg`, `prepare-commit-msg`, `pre-push`, `post-checkout`, `post-merge`, `post-commit`, `pre-rebase`, `pre-merge-commit`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`) and dispatches on `basename "$0"` (`dispatch` itself is not a hook name, so Git never runs it directly). It does two things:
 
 1. **Secret scan (pre-commit only)** — runs `gitleaks git --staged` on the staged diff. If a likely secret is found, the commit is **blocked**; secret values are redacted in the output. False positives can be silenced with a `.gitleaks.toml` allowlist or an inline `gitleaks:allow` comment. If `gitleaks` is not installed, the scan is **skipped with a warning** (the commit is not blocked).
-2. **Force-push / non-fast-forward guard (pre-push only)** — **blocks** any push that rewrites already-published history (a non-fast-forward ref update — what `--force` / `--force-with-lease` pushes through). Fast-forwards, new branches, and branch deletions are allowed; a re-pointed tag counts as non-fast-forward and is blocked. Because pre-push cannot distinguish a force-push from a *forgot-to-pull* push, the message is dual-purpose (pull/rebase **or** stop and defer to a human). Shallow clones that cannot resolve ancestry are **not** blocked (left to Git's own non-ff rejection). A human can bypass with `git push --no-verify`; an automated agent must not.
-3. **Chaining (all hook types)** — because a global `core.hooksPath` makes Git stop looking at each repo's `.git/hooks`, the dispatcher explicitly invokes the repository-local `.git/hooks/<hook>` afterwards (if present and executable), forwarding arguments and stdin, so per-project hooks keep working.
+2. **Chaining (all hook types)** — because a global `core.hooksPath` makes Git stop looking at each repo's `.git/hooks`, the dispatcher explicitly invokes the repository-local `.git/hooks/<hook>` afterwards (if present and executable), forwarding arguments and stdin, so per-project hooks keep working.
 
 Bypass everything for a single commit with `git commit --no-verify`.
 
@@ -143,12 +142,12 @@ Bypass everything for a single commit with `git commit --no-verify`.
 
 `~/.claude/settings.json` is managed by a chezmoi `modify_` script (`home/dot_claude/modify_settings.json.tmpl`). It merges the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced. The `rtk` token-proxy hook is included only when `rtk` is on `PATH`.
 
-Deleting files is steered to `trash` (move to the macOS Trash, recoverable) by two layers:
+`PreToolUse` / `Bash` hooks provide two safety rails:
 
-- **Primary — a standing instruction** (`~/.claude/rules/use-trash-not-rm.md`, auto-loaded by Claude Code). It tells Claude to delete via `trash` rather than `rm`. Being intent-based, it has no false positives and also covers other irreversible deletions the hook can't (`xargs rm`, `find … -delete`, `unlink`). This is the main mechanism.
-- **Backstop — a `PreToolUse` / `Bash` hook** that **denies** any command invoking `rm` and tells Claude to use `trash` instead, catching the rare case where the instruction is forgotten. Its regex is deliberately **simple**: it matches `rm` at command position only — at the start, right after a separator (`a && rm b`, `foo; rm bar`), or inside `$(rm x)`. `git rm` and substrings (`charm`, `/var/rm-cache`) are not matched.
+- **`rm` guard** — denies commands invoking `rm` and tells Claude to use `trash` instead. This keeps file deletion recoverable by default.
+- **force-push guard** — denies `git push` commands that include `--force`, `-f`, `--force-with-lease`, or `--no-verify` so history rewrites and hook bypasses are blocked before execution.
 
-Requires the `trash` CLI (bundled with macOS 15+). Because the hook is only a backstop (the instruction does the real work and fires first), its regex is kept minimal rather than exhaustive — wrapper / absolute-path forms (`sudo rm`, `/bin/rm`, `command rm`, `xargs rm`) are intentionally **left to the instruction**, not the hook. One quirk to know: since the hook inspects the command string, a command that merely *contains* the text `rm` at command position (e.g. inside a `gh` / `git` argument) is over-blocked — pass such content through a file.
+Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally string-based and simple: they are meant as practical pre-execution safety rails, not full shell parsers.
 
 ## Platform-Specific Notes
 

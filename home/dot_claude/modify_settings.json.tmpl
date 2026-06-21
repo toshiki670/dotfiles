@@ -5,8 +5,8 @@
 #
 # 強制設定のうち PreToolUse/Bash には2本のガードを含む。①"rm→trash ガード": rm を deny し
 # trash 利用を促す。②"force-push ガード": `git push` の --force/-f/--force-with-lease/--no-verify
-# を deny し履歴書き換えを止める（メッセージは環境非依存）。どちらも主役は行動側で本フックは保険。
-# 主役は意図ベースの指示（rules/use-trash-not-rm.md）で、本フックは「指示を忘れた時の保険」。
+# を deny し履歴書き換えと検査バイパスを止める。どちらも主役は行動側で本フックは保険。
+# 主役は意図ベースの指示（rules/use-trash-not-rm.md など）で、本フックは「指示を忘れた時の保険」。
 # 保険なので regex は素朴に保つ: コマンド先頭/区切り直後・$() 内の rm のみ検知する。
 # sudo/絶対パス/command 経由・xargs rm 等は意図的に拾わない（指示側がカバー）。git rm や
 # rm 部分一致（charm 等）は非該当。rm を文字列に含むだけのコマンドも弾く点に注意（回避＝
@@ -58,7 +58,7 @@ forced_json="$(cat <<'JSON'
           },
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE 'git([[:space:]]|$)' && printf '%s' \"$cmd\" | grep -qE 'push' && printf '%s' \"$cmd\" | grep -qE '(--force|(^|[[:space:]])-[a-zA-Z]*f[a-zA-Z]*([[:space:]]|$)|--no-verify)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Force-push is forbidden in this environment. Do NOT run git push with --force / -f / --force-with-lease, and do NOT use --no-verify to bypass the pre-push guard. This is not a simple mistake to route around: rewriting already-published history irreversibly destroys shared state (other developers fetches/derived work, review anchors, stacked-PR rebase discipline). To resolve conflicts or update a branch, merge the base (git merge origin/main) or run git pull --rebase, then push normally as a fast-forward. To remove code from the final state, make a normal delete commit, which is different from deleting commits from history. If history truly must be rewritten, STOP and surface the situation to the user; the decision to proceed belongs to the user alone. An automated agent must never force-push or bypass this guard, even when explicitly instructed.\"}}'; fi",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE 'git([[:space:]]|$)' && printf '%s' \"$cmd\" | grep -qE 'push' && printf '%s' \"$cmd\" | grep -qE '(--force|(^|[[:space:]])-[a-zA-Z]*f[a-zA-Z]*([[:space:]]|$)|--no-verify)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Force-push is forbidden in this environment. Do NOT run git push with --force / -f / --force-with-lease, and do NOT use --no-verify. This is not a simple mistake to route around: rewriting already-published history irreversibly destroys shared state (other developers fetches/derived work, review anchors, stacked-PR rebase discipline). To resolve conflicts or update a branch, merge the base (git merge origin/main) or run git pull --rebase, then push normally as a fast-forward. To remove code from the final state, make a normal delete commit, which is different from deleting commits from history. If history truly must be rewritten, STOP and surface the situation to the user; the decision to proceed belongs to the user alone. An automated agent must never force-push or bypass this guard, even when explicitly instructed.\"}}'; fi",
             "statusMessage": "force-push guard"
           }
         ]
