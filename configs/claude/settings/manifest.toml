@@ -1,21 +1,24 @@
 # Claude Code の settings.json を json-shallow 合成で配置する（合成軸 / 設計書 §5.5・§7）。
-# 旧 chezmoi `modify_settings.json.tmpl` の置き換え。dst を「順序付き overlay の合成」として組む:
+# 旧 chezmoi `modify_settings.json.tmpl`（`jq '$local + $forced'`）の置き換え。dst を
+# 「既存 dst を土台にした順序付き overlay の合成」として組む:
 #
-#   1. base（settings.json, 常時）= 共有設定の土台。hooks は rtk 抜き（rm→trash ガードのみ）。
-#   2. rtk（rtk.json, when.dep=rtk）= rtk が PATH にある時だけ重ねる hooks 断片。
+#   1. preserve = true（ユニット属性）= 既存 dst を json-shallow の最下層（土台）に敷く。
+#      dotfiles が定義しないトップレベルキー（model / effortLevel や任意のローカル固有キー）を
+#      全保持し、dotfiles 所有キーだけを下の overlay で上書きする（旧 `$local + $forced` と同値）。
+#   2. base（settings.json, 常時）= 共有設定の土台。hooks は rtk 抜き（rm→trash ガードのみ）。
+#   3. rtk（rtk.json, when.dep=rtk）= rtk が PATH にある時だけ重ねる hooks 断片。
 #      旧 .tmpl の `{{ if lookPath "rtk" }}` を when で表現し、無条件化の回帰を解消する。
-#   3. preserve（model / effortLevel）= 既存 dst を読む built-in overlay。宣言位置に関わらず
-#      最後に重なり、ローカル編集値を勝たせる（旧 `$local + $forced` と同じトップレベル粒度）。
 #
 # 合成は json-shallow（JSON トップレベル shallow merge・後勝ち。deep merge はしない）。
 # 共有キー（hooks / statusLine / language / theme / voiceEnabled）は base/rtk が常に勝つ。
-# preserve に無いローカル固有キーは温存されない（旧 modify_ の「ローカル全温存」とは異なる）。
 #
 # 注: json-shallow は `hooks` を object ごと差し替えるため、rtk.json は rm→trash ガードを含む
 # hooks 全体を持つ（base と一部重複する）。これは「rtk hook だけ条件付き」を deep merge 無しで
 # 表現する設計上のコスト。rm ガードを変えるときは settings.json と rtk.json の両方を直すこと。
 dst      = "~/.claude/settings.json"
 strategy = "json-shallow"
+# 既存 dst を土台に温存（旧 modify_ の `$local + $forced`）。非管理キーは全保持。
+preserve = true
 
 # base（常時）: 共有設定の土台。hooks は rtk 抜き（rm→trash ガードのみ）。
 [[overlay]]
@@ -25,7 +28,3 @@ src = "settings.json"
 [[overlay]]
 src  = "rtk.json"
 when = { dep = "rtk" }
-
-# 既存 dst から温存（最後に重なる overlay）: ローカル編集値を勝たせる。
-[[overlay]]
-preserve = [ "model", "effortLevel" ]

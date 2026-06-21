@@ -622,8 +622,9 @@ fn apply_unit_os_gate_short_circuits_without_touching_dst() {
     );
 }
 
-/// claude/settings.json 相当（json-shallow）の合成単位を書き出す。
-/// overlay 宣言順: preserve（先頭）→ base → rtk（when.dep）。不変条件③で preserve は最後に効く。
+/// claude/settings.json 相当（json-shallow ＋ preserve）の合成単位を書き出す。
+/// preserve=true で既存 dst を最下層の土台にし、overlay は base → rtk（when.dep）の宣言順で重なる。
+/// base は dotfiles 所有キー（language / hook）だけを持ち、model 等の非管理キーは定義しない。
 fn write_json_shallow_unit(work: &Path) {
     let unit = work.join("configs/claude/settings");
     fs::create_dir_all(&unit).unwrap();
@@ -631,8 +632,7 @@ fn write_json_shallow_unit(work: &Path) {
         unit.join("manifest.toml"),
         "dst = \"~/.claude/settings.json\"\n\
          strategy = \"json-shallow\"\n\
-         [[overlay]]\n\
-         preserve = [\"model\"]\n\
+         preserve = true\n\
          [[overlay]]\n\
          src = \"settings.json\"\n\
          [[overlay]]\n\
@@ -640,19 +640,20 @@ fn write_json_shallow_unit(work: &Path) {
          when = { dep = \"rtk\" }\n",
     )
     .unwrap();
-    // base は model を共有値で持つ（preserve でローカル値に上書きされる対象）。
+    // base は dotfiles 所有キー（language=共有値 / hook）を持つ。model は定義しない（=非管理）。
     fs::write(
         unit.join("settings.json"),
-        "{\"model\":\"shared\",\"hook\":\"base\"}\n",
+        "{\"language\":\"ja\",\"hook\":\"base\"}\n",
     )
     .unwrap();
     fs::write(unit.join("rtk.json"), "{\"rtkHook\":\"on\"}\n").unwrap();
 }
 
-/// json-shallow: rtk present＋既存ローカル値あり。後勝ち合成＋ preserve は宣言位置に関わらず最後。
+/// json-shallow ＋ preserve: rtk present。既存 dst を土台に非管理キー（model / effortLevel）を
+/// 全保持し、dotfiles 所有キー（language）は断片が土台を上書きする（旧 $local + $forced）。
 #[cfg(unix)]
 #[test]
-fn apply_json_shallow_merges_and_preserve_wins_last() {
+fn apply_json_shallow_preserves_unmanaged_and_overwrites_owned() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let bin = tempfile::tempdir().unwrap();
@@ -660,10 +661,14 @@ fn apply_json_shallow_merges_and_preserve_wins_last() {
     write_stub(bin.path(), "rtk", "exit 0\n");
     write_json_shallow_unit(work.path());
 
-    // 既存 dst にローカル値（model）と preserve 外のキー（extra）を置く。
+    // 既存 dst: model/effortLevel=非管理（保持）、language=dotfiles 所有（断片で上書きされる）。
     let dst = home.path().join(".claude/settings.json");
     fs::create_dir_all(dst.parent().unwrap()).unwrap();
-    fs::write(&dst, "{\"model\":\"local\",\"extra\":\"drop\"}\n").unwrap();
+    fs::write(
+        &dst,
+        "{\"model\":\"local\",\"effortLevel\":\"high\",\"language\":\"en\"}\n",
+    )
+    .unwrap();
 
     dotfiles()
         .arg("apply")
@@ -676,7 +681,15 @@ fn apply_json_shallow_merges_and_preserve_wins_last() {
     let out = fs::read_to_string(&dst).unwrap();
     assert!(
         out.contains("\"model\": \"local\""),
-        "preserve=model が宣言先頭でもローカル値で最後に勝つべき:\n{out}",
+        "dotfiles 非管理キー model は土台のまま保持されるべき:\n{out}",
+    );
+    assert!(
+        out.contains("\"effortLevel\": \"high\""),
+        "dotfiles 非管理キー effortLevel は土台のまま保持されるべき:\n{out}",
+    );
+    assert!(
+        out.contains("\"language\": \"ja\""),
+        "dotfiles 所有キー language は断片が土台を上書きすべき:\n{out}",
     );
     assert!(
         out.contains("\"hook\": \"base\""),
@@ -686,13 +699,9 @@ fn apply_json_shallow_merges_and_preserve_wins_last() {
         out.contains("\"rtkHook\": \"on\""),
         "when.dep=rtk を満たす断片が重なるべき:\n{out}",
     );
-    assert!(
-        !out.contains("extra"),
-        "preserve 外の既存キーは持ち込まれないべき:\n{out}",
-    );
 }
 
-/// json-shallow: rtk 不在でも base＋preserve で settings.json は書かれる（回帰解消の核）。
+/// json-shallow ＋ preserve: rtk 不在でも base＋土台で settings.json は書かれる（回帰解消の核）。
 #[cfg(unix)]
 #[test]
 fn apply_json_shallow_writes_base_without_gated_overlay() {
@@ -721,11 +730,49 @@ fn apply_json_shallow_writes_base_without_gated_overlay() {
     );
     assert!(
         out.contains("\"model\": \"local\""),
-        "preserve が効くべき:\n{out}"
+        "非管理キー model が土台のまま保持されるべき:\n{out}",
     );
     assert!(
         !out.contains("rtkHook"),
         "rtk 不在なら when.dep 断片は脱落するべき:\n{out}",
+    );
+}
+
+/// preserve 無しの json-shallow は既存 dst を土台にしない（純 dotfiles 所有 json は従来挙動）。
+#[test]
+fn apply_json_shallow_without_preserve_ignores_existing() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/owned");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/owned/out.json\"\n\
+         strategy = \"json-shallow\"\n\
+         [[overlay]]\n\
+         src = \"a.json\"\n",
+    )
+    .unwrap();
+    fs::write(unit.join("a.json"), "{\"k\":\"new\"}\n").unwrap();
+
+    // 既存 dst にローカルキーを置いても、preserve 無しなら土台にされず破棄される。
+    let dst = home.path().join(".config/owned/out.json");
+    fs::create_dir_all(dst.parent().unwrap()).unwrap();
+    fs::write(&dst, "{\"stale\":\"x\"}\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    let out = fs::read_to_string(&dst).unwrap();
+    assert!(out.contains("\"k\": \"new\""), "断片が書かれるべき:\n{out}");
+    assert!(
+        !out.contains("stale"),
+        "preserve 無しなら既存 dst は土台にされないべき:\n{out}",
     );
 }
 
@@ -788,7 +835,8 @@ fn list_shows_overlay_strategy_and_os_attrs() {
         .assert()
         .success()
         .stdout(predicate::str::contains("json-shallow"))
-        .stdout(predicate::str::contains("overlay=3"))
+        .stdout(predicate::str::contains("overlay=2"))
+        .stdout(predicate::str::contains("preserve"))
         .stdout(predicate::str::contains("os=darwin"));
 }
 
@@ -816,7 +864,7 @@ fn apply_errors_when_overlay_without_strategy() {
         .stderr(predicate::str::contains("strategy"));
 }
 
-/// overlay に src/cmd/preserve を 2 つ以上書くと load 時にエラー（黙殺される typo を弾く）。
+/// overlay に src/cmd を 2 つ以上書くと load 時にエラー（黙殺される typo を弾く）。
 #[test]
 fn apply_errors_when_overlay_mixes_kinds() {
     let work = tempfile::tempdir().unwrap();
@@ -830,7 +878,7 @@ fn apply_errors_when_overlay_mixes_kinds() {
          strategy = \"json-shallow\"\n\
          [[overlay]]\n\
          src = \"a.json\"\n\
-         preserve = [\"k\"]\n",
+         cmd = [\"echo\"]\n",
     )
     .unwrap();
     fs::write(unit.join("a.json"), "{}\n").unwrap();
@@ -844,13 +892,67 @@ fn apply_errors_when_overlay_mixes_kinds() {
         .stderr(predicate::str::contains("ちょうど 1 つ"));
 }
 
+/// preserve = true を json-shallow 以外と併記すると load 時にエラー（typo を黙殺しない）。
+#[test]
+fn apply_errors_when_preserve_without_json_shallow() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo/out.txt\"\n\
+         strategy = \"concat\"\n\
+         preserve = true\n\
+         [[overlay]]\n\
+         src = \"a.txt\"\n",
+    )
+    .unwrap();
+    fs::write(unit.join("a.txt"), "A\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("preserve"));
+}
+
+/// preserve = true ＋ json-shallow でも overlay 無し ＋ kind=copy（既定）なら load 時にエラー。
+/// この構成は compose 経路に入らず preserve が黙って無視されるため、配置前に弾いて固定する。
+#[test]
+fn apply_errors_when_preserve_without_compose_routing() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo/out.json\"\n\
+         strategy = \"json-shallow\"\n\
+         preserve = true\n",
+    )
+    .unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("preserve"));
+}
+
 // --- claude/settings 実 config（S3 / #457） --------------------------------
 //
 // 実ソース configs/claude/settings を一時 work へ隔離コピーし、PATH で rtk の有無を
-// 決定的に与えて apply する。json-shallow overlay（base ＋ rtk(when.dep) ＋ preserve）が
-// 実ファイルで「ローカル温存・共有上書き・rtk 条件付き hook」を満たすことを検証する
-// （overlay/strategy/when の純機構は上の hermetic 群が網羅。ここは実 config の結線確認）。
-// rtk スタブ／PATH 制御は unix 限定。
+// 決定的に与えて apply する。json-shallow overlay（base ＋ rtk(when.dep) ＋ preserve=true）が
+// 実ファイルで「ローカル（非管理キー）全温存・共有上書き・rtk 条件付き hook」を満たすことを
+// 検証する（overlay/strategy/when/preserve の純機構は上の hermetic 群が網羅。ここは実 config の
+// 結線確認）。rtk スタブ／PATH 制御は unix 限定。
 
 /// 実ソース configs/claude/settings の全ファイルを work/configs/claude/settings へコピーする。
 #[cfg(unix)]
@@ -874,8 +976,8 @@ fn write_existing_settings(home: &Path, body: &str) {
     fs::write(&dst, body).unwrap();
 }
 
-/// rtk 在: ローカル（model / effortLevel）を温存しつつ共有（language）を上書きし、
-/// when.dep=rtk を満たして rtk hook が入る。preserve 外のローカルキーは持ち込まれない。
+/// rtk 在: ローカルの非管理キー（model / effortLevel / 任意の localOnly）を全温存しつつ共有
+/// （language）を base で上書きし、when.dep=rtk を満たして rtk hook が入る（旧 `$local + $forced`）。
 #[cfg(unix)]
 #[test]
 fn apply_real_claude_settings_preserves_local_and_overrides_with_rtk() {
@@ -912,8 +1014,8 @@ fn apply_real_claude_settings_preserves_local_and_overrides_with_rtk() {
         "共有 language が base で上書きされるべき:\n{out}"
     );
     assert!(
-        !out.contains("localOnly"),
-        "preserve 外のローカルキーは温存されないべき:\n{out}"
+        out.contains("\"localOnly\": \"keepme\""),
+        "preserve=true は dotfiles 非管理キー localOnly も土台のまま全温存すべき:\n{out}"
     );
     assert!(
         out.contains("rtk hook claude"),
