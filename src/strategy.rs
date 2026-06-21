@@ -2,9 +2,10 @@
 //!
 //! - `concat` … テキスト連結（後ろへ連結。境目に改行を 1 つ補う）。generate の
 //!   「cmd 出力＋sibling 連結」もこの戦略へ統一する（出力は従来と不変）。
-//! - `json_shallow` … JSON のトップレベル shallow merge（後勝ち）。`preserve` キーは
-//!   既存 dst の値で最後に上書きし、ローカル値を勝たせる（旧 `modify_` の `$local + $forced`
-//!   と同じ粒度。deep merge はしない）。
+//! - `json_shallow` … JSON のトップレベル shallow merge（後勝ち）。`base`（既存 dst）を
+//!   与えると最下層の土台として最初に畳み、dotfiles 所有のトップレベルキーだけを断片で
+//!   上書きする。dotfiles が定義しない非管理キーは土台のまま全保持される（旧 `modify_` の
+//!   `jq '$local + $forced'` と同値。deep merge はしない）。
 //!
 //! どちらも副作用のない純関数で、配置（書き込み）は [`crate::compose`] が行う。
 
@@ -25,32 +26,27 @@ pub fn concat(frags: &[Vec<u8>]) -> Vec<u8> {
     out
 }
 
-/// JSON 断片をトップレベル shallow merge（宣言順・後勝ち）し、`preserve` キーだけ既存 dst の
-/// 値で最後に上書きする。各断片・既存 dst は JSON オブジェクトであることを要する。
+/// JSON 断片をトップレベル shallow merge（宣言順・後勝ち）する。`base`（既存 dst）を与えると
+/// 最下層の土台として最初に畳み、その上に断片を重ねる。各断片・`base` は JSON オブジェクトを要する。
 ///
-/// 出力は pretty JSON ＋末尾改行。`existing` が無い／`preserve` キーが既存に無い場合は温存をしない。
-pub fn json_shallow(
-    frags: &[Vec<u8>],
-    preserve_keys: &[String],
-    existing: Option<&[u8]>,
-) -> Result<Vec<u8>, String> {
+/// `base` の意味は「dotfiles 非管理のトップレベルキーを全保持し、dotfiles 所有キー（断片が
+/// 定義するキー）だけを断片で上書きする」（旧 `$local + $forced`）。`base` が無ければ純粋に
+/// 断片だけを合成する。出力は pretty JSON ＋末尾改行。
+pub fn json_shallow(frags: &[Vec<u8>], base: Option<&[u8]>) -> Result<Vec<u8>, String> {
     let mut merged = Map::new();
-    for (i, frag) in frags.iter().enumerate() {
-        let obj = parse_object(frag).map_err(|e| format!("overlay {} {e}", i + 1))?;
+
+    // preserve = true のとき、既存 dst を最下層の土台として最初に畳む（非管理キーを保持）。
+    if let Some(base) = base {
+        let obj = parse_object(base).map_err(|e| format!("既存 dst {e}"))?;
         for (k, v) in obj {
-            merged.insert(k, v); // 後勝ち（BTreeMap.insert が既存キーを置換）。
+            merged.insert(k, v);
         }
     }
 
-    // preserve（既存 dst を読む built-in overlay）は常に最後に重ね、ローカル値を勝たせる。
-    if !preserve_keys.is_empty()
-        && let Some(existing) = existing
-    {
-        let obj = parse_object(existing).map_err(|e| format!("既存 dst {e}"))?;
-        for key in preserve_keys {
-            if let Some(v) = obj.get(key) {
-                merged.insert(key.clone(), v.clone());
-            }
+    for (i, frag) in frags.iter().enumerate() {
+        let obj = parse_object(frag).map_err(|e| format!("overlay {} {e}", i + 1))?;
+        for (k, v) in obj {
+            merged.insert(k, v); // 後勝ち。dotfiles 所有キーが土台を上書き（トップレベル粒度）。
         }
     }
 
@@ -110,7 +106,7 @@ mod tests {
 
     #[test]
     fn json_shallow_later_frag_wins() {
-        let out = json_shallow(&[b(r#"{"a":1,"b":2}"#), b(r#"{"b":3,"c":4}"#)], &[], None).unwrap();
+        let out = json_shallow(&[b(r#"{"a":1,"b":2}"#), b(r#"{"b":3,"c":4}"#)], None).unwrap();
         let v: Value = serde_json::from_slice(&out).unwrap();
         assert_eq!(v["a"], 1);
         assert_eq!(v["b"], 3); // 後勝ち。
@@ -118,41 +114,46 @@ mod tests {
     }
 
     #[test]
-    fn json_shallow_preserve_keeps_existing_value() {
-        let base = b(r#"{"model":"shared","hook":"x"}"#);
-        let existing = b(r#"{"model":"local","other":"y"}"#);
-        let out = json_shallow(&[base], &["model".to_string()], Some(&existing)).unwrap();
+    fn json_shallow_base_preserves_unmanaged_and_overwrites_owned() {
+        // base＝既存 dst。dotfiles 断片が定義するキー（language）は断片が勝ち、断片が
+        // 定義しない非管理キー（model / effortLevel）は土台のまま全保持される（旧 $local+$forced）。
+        let frag = b(r#"{"language":"ja","hook":"base"}"#);
+        let existing = b(r#"{"model":"local","effortLevel":"high","language":"en"}"#);
+        let out = json_shallow(&[frag], Some(&existing)).unwrap();
         let v: Value = serde_json::from_slice(&out).unwrap();
-        assert_eq!(v["model"], "local"); // 既存（ローカル）値が勝つ。
-        assert_eq!(v["hook"], "x"); // base のキーは残る。
+        assert_eq!(v["model"], "local"); // 非管理キーは保持。
+        assert_eq!(v["effortLevel"], "high"); // 非管理キーは保持。
+        assert_eq!(v["language"], "ja"); // dotfiles 所有キーは断片が土台を上書き。
+        assert_eq!(v["hook"], "base"); // 断片のキーは残る。
+    }
+
+    #[test]
+    fn json_shallow_owned_key_replaces_wholesale_not_deep_merge() {
+        // dotfiles 所有のトップレベルキーはオブジェクトごと置き換え（deep merge しない）。
+        let frag = b(r#"{"hooks":{"a":1}}"#);
+        let existing = b(r#"{"hooks":{"b":2}}"#);
+        let out = json_shallow(&[frag], Some(&existing)).unwrap();
+        let v: Value = serde_json::from_slice(&out).unwrap();
+        assert_eq!(v["hooks"]["a"], 1);
         assert!(
-            v.get("other").is_none(),
-            "preserve 外の既存キーは持ち込まない"
+            v["hooks"].get("b").is_none(),
+            "トップレベル粒度で丸ごと置換（配下を deep merge しない）"
         );
     }
 
     #[test]
-    fn json_shallow_preserve_noop_when_key_absent_or_no_existing() {
-        // 既存に preserve キーが無い → 温存しない（base 値のまま）。
-        let empty = b(r#"{}"#);
-        let out = json_shallow(
-            &[b(r#"{"model":"shared"}"#)],
-            &["model".to_string()],
-            Some(&empty),
-        )
-        .unwrap();
+    fn json_shallow_without_base_is_frags_only() {
+        // base が無ければ純粋に断片だけを合成する（preserve 無しの純 dotfiles 所有 json）。
+        let out = json_shallow(&[b(r#"{"model":"shared"}"#)], None).unwrap();
         let v: Value = serde_json::from_slice(&out).unwrap();
         assert_eq!(v["model"], "shared");
-        // 既存ファイルが無い → エラーにせず base のまま。
-        let out2 =
-            json_shallow(&[b(r#"{"model":"shared"}"#)], &["model".to_string()], None).unwrap();
-        let v2: Value = serde_json::from_slice(&out2).unwrap();
-        assert_eq!(v2["model"], "shared");
     }
 
     #[test]
-    fn json_shallow_rejects_non_object_fragment() {
-        assert!(json_shallow(&[b("[1,2,3]")], &[], None).is_err());
-        assert!(json_shallow(&[b("\"scalar\"")], &[], None).is_err());
+    fn json_shallow_rejects_non_object_fragment_or_base() {
+        assert!(json_shallow(&[b("[1,2,3]")], None).is_err());
+        assert!(json_shallow(&[b("\"scalar\"")], None).is_err());
+        let bad_base = b("[1,2,3]");
+        assert!(json_shallow(&[b("{}")], Some(&bad_base)).is_err());
     }
 }

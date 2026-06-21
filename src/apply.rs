@@ -4,7 +4,7 @@
 //! ①**ユニット gate（`deps` / `os`）を最初に評価し false なら短絡**（[`crate::gate`]、dst を
 //! 一切触らず skip）。生き残った単位は dst 種別で配置経路が分かれる ―
 //! dst=ディレクトリの copy は [`crate::copy`]（ツリー配置）、dst=ファイルの generate /
-//! overlay 明示は [`crate::compose`]（②宣言順 overlay ③preserve 最後の合成）。本モジュールは
+//! overlay 明示は [`crate::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。本モジュールは
 //! オーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
 use crate::discover::{self, MANIFEST, Unit};

@@ -5,8 +5,8 @@
 //! - **合成 `strategy`**（複数の条件付き断片を1 dst=ファイルへどう重ねるか）= `concat` /
 //!   `json-shallow`。`merge` は独立 kind ではなく合成軸の JSON 戦略（§5.5）。
 //! - **条件付き overlay**（`[[overlay]]` ＋ `when`）= dst を「base ＋ gate された断片」の合成
-//!   として組む。各 overlay は `src`（copy 断片）/ `cmd`（generate 断片）/ `preserve`（既存 dst
-//!   を読む built-in overlay）のいずれか ＋ `when`（`dep` / `os`）。
+//!   として組む。各 overlay は `src`（copy 断片）/ `cmd`（generate 断片）のどちらか ＋
+//!   `when`（`dep` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
 //!
 //! `deps` / `os` はユニット単位 gate（＝ ユニット全体に係る `when` の退化形, §5.5）。
 //! theme / hooks / secrets は後続スライスで追加する。
@@ -27,6 +27,12 @@ pub struct Manifest {
     /// generate の既定挙動（cmd 出力＋sibling 連結）は暗黙 `concat`。
     #[serde(default)]
     pub strategy: Option<Strategy>,
+    /// 既存 dst を `json-shallow` の最下層（土台）として温存する（§5.5）。`true` で dotfiles が
+    /// 定義しないトップレベルキー（例 `model` / `effortLevel` や任意のローカル固有キー）を
+    /// 全保持し、dotfiles 所有キーだけ断片で上書きする（旧 `jq '$local + $forced'` と同値）。
+    /// `json-shallow` 専用（他 strategy・省略との併記は load 時エラー）。省略時 false。
+    #[serde(default)]
+    pub preserve: bool,
     /// 所有者のみアクセス可（chezmoi `private_` = 0600 相当）。省略時 false。
     #[serde(default)]
     pub private: bool,
@@ -46,7 +52,7 @@ pub struct Manifest {
     #[serde(default)]
     pub os: Option<String>,
     /// 合成 overlay（条件付き断片の配列, §5.5）。空 = 生成方式の既定挙動。
-    /// 各 overlay は `src` / `cmd` / `preserve` のいずれか ＋ `when?` を持つ。
+    /// 各 overlay は `src` / `cmd` のどちらか ＋ `when?` を持つ。
     #[serde(default)]
     pub overlay: Vec<Overlay>,
 }
@@ -71,7 +77,8 @@ pub enum Strategy {
 }
 
 /// 1 つの overlay（条件付き断片, §5.5）。`when` を満たす時だけ合成に参加する。
-/// 断片の実体化方法は `src`（copy）/ `cmd`（generate）/ `preserve`（既存 dst 読み）の択一。
+/// 断片の実体化方法は `src`（copy）/ `cmd`（generate）の択一。既存 dst の温存は overlay では
+/// なくユニット属性 [`Manifest::preserve`]。
 #[derive(Debug, Deserialize)]
 pub struct Overlay {
     /// copy 断片: 単位ディレクトリからの相対ファイル。内容をそのまま断片にする。
@@ -80,10 +87,6 @@ pub struct Overlay {
     /// generate 断片: 実行する argv。標準出力を断片にする。
     #[serde(default)]
     pub cmd: Vec<String>,
-    /// 既存 dst から温存するトップレベルキー（built-in overlay の糖衣, §5.5）。
-    /// `json-shallow` で常に最後に重なり、ローカル値を勝たせる。
-    #[serde(default)]
-    pub preserve: Vec<String>,
     /// 採用条件（省略 = 常時採用）。`dep` / `os` を AND で評価する。
     #[serde(default)]
     pub when: Option<When>,
@@ -98,13 +101,6 @@ pub struct When {
     /// OS 一致時だけ採用（旧 `{{ if eq .chezmoi.os … }}`）。chezmoi 互換表記。
     #[serde(default)]
     pub os: Option<String>,
-}
-
-impl Overlay {
-    /// 既存 dst を読む built-in overlay（`preserve` だけを持つ）か。
-    pub fn is_preserve(&self) -> bool {
-        !self.preserve.is_empty()
-    }
 }
 
 impl Manifest {
@@ -125,26 +121,39 @@ impl Manifest {
     /// - **overlay 明示時は `strategy` 必須**。合成戦略を一意に決めるため、暗黙の `concat` は
     ///   overlay 未記述の generate 既定挙動だけに限る（overlay を書いて戦略を省くと、意図しない
     ///   text concat になりうるのを防ぐ）。
-    /// - **各 overlay は `src` / `cmd` / `preserve` のうちちょうど 1 つ**（生成方式は択一）。
-    ///   2 つ以上は一方が黙って無視される typo、0 個は断片を実体化できない。
+    /// - **`preserve = true` は `strategy = "json-shallow"` 専用**。既存 dst を土台に重ねる
+    ///   意味論は JSON shallow merge でしか定義しないため、他 strategy・省略との併記は typo
+    ///   として弾く（静かに無視しない）。
+    /// - **`preserve = true` は compose 経路（overlay 明示 か `kind = generate`）を要する**。
+    ///   ファイル合成は [`crate::apply`] の `uses_compose`（overlay 非空 or generate）でだけ
+    ///   起動するため、overlay 無しの copy 直行では preserve が黙って無視される。実行されない
+    ///   構成を load 時に弾く（土台だけ再直列化する退化形に意味は無い）。
+    /// - **各 overlay は `src` / `cmd` のうちちょうど 1 つ**（生成方式は択一）。2 つは一方が
+    ///   黙って無視される typo、0 個は断片を実体化できない。
     fn validate(&self) -> Result<(), String> {
         if !self.overlay.is_empty() && self.strategy.is_none() {
             return Err(
                 "overlay を明示する場合は strategy（concat / json-shallow）が必要です".to_string(),
             );
         }
+        if self.preserve && self.strategy != Some(Strategy::JsonShallow) {
+            return Err("preserve = true は strategy = \"json-shallow\" 専用です".to_string());
+        }
+        if self.preserve && self.overlay.is_empty() && self.kind != Kind::Generate {
+            return Err(
+                "preserve = true は overlay か kind = generate を要します（overlay 無しの copy は \
+                 compose 経路に入らず preserve が無視されます）"
+                    .to_string(),
+            );
+        }
         for (i, ov) in self.overlay.iter().enumerate() {
-            let kinds = [
-                ov.src.is_some(),
-                !ov.cmd.is_empty(),
-                !ov.preserve.is_empty(),
-            ]
-            .into_iter()
-            .filter(|&set| set)
-            .count();
+            let kinds = [ov.src.is_some(), !ov.cmd.is_empty()]
+                .into_iter()
+                .filter(|&set| set)
+                .count();
             if kinds != 1 {
                 return Err(format!(
-                    "overlay[{i}] は src / cmd / preserve のうちちょうど 1 つを持つ必要があります（現在 {kinds} 個）"
+                    "overlay[{i}] は src / cmd のうちちょうど 1 つを持つ必要があります（現在 {kinds} 個）"
                 ));
             }
         }
@@ -195,14 +204,61 @@ mod tests {
 
     #[test]
     fn validate_rejects_overlay_with_multiple_kinds() {
-        // preserve と src を併記 → 一方が黙って無視される typo。
+        // src と cmd を併記 → 一方が黙って無視される typo。
         let err = parse(
-            "dst = \"~/x\"\nstrategy = \"json-shallow\"\n[[overlay]]\nsrc = \"a\"\npreserve = [\"k\"]\n",
+            "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\ncmd = [\"foo\"]\n",
         )
         .unwrap_err();
         assert!(
             err.contains("ちょうど 1 つ"),
             "排他違反が検知されていない: {err}"
+        );
+    }
+
+    #[test]
+    fn validate_rejects_preserve_without_json_shallow() {
+        // preserve = true は json-shallow 専用。concat と併記 → load 時エラー（typo 黙殺しない）。
+        let err = parse(
+            "dst = \"~/x\"\nstrategy = \"concat\"\npreserve = true\n[[overlay]]\nsrc = \"a\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("preserve") && err.contains("json-shallow"),
+            "preserve × 非 json-shallow が弾かれていない: {err}"
+        );
+        // strategy 省略との併記も同様にエラー。
+        assert!(parse("dst = \"~/x\"\npreserve = true\n").is_err());
+    }
+
+    #[test]
+    fn validate_accepts_preserve_with_json_shallow() {
+        // preserve = true ＋ json-shallow ＋ overlay は正規形（claude/settings 相当）。
+        assert!(
+            parse(
+                "dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n\
+                 [[overlay]]\nsrc = \"settings.json\"\n",
+            )
+            .is_ok()
+        );
+        // generate（cmd 出力を土台へ重ねる）も compose 経路なので overlay 無しでも可。
+        assert!(
+            parse(
+                "dst = \"~/x\"\nkind = \"generate\"\nstrategy = \"json-shallow\"\n\
+                 preserve = true\ncmd = [\"foo\"]\n",
+            )
+            .is_ok()
+        );
+    }
+
+    #[test]
+    fn validate_rejects_preserve_without_compose_routing() {
+        // preserve = true ＋ json-shallow だが overlay 無し ＋ kind=copy（既定）→ copy 直行で
+        // preserve が黙って無視される構成。load 時に弾く（静かな no-op を許さない）。
+        let err =
+            parse("dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n").unwrap_err();
+        assert!(
+            err.contains("preserve") && err.contains("overlay"),
+            "overlay 無しの copy 直行 preserve が弾かれていない: {err}"
         );
     }
 
@@ -220,13 +276,12 @@ mod tests {
 
     #[test]
     fn validate_accepts_well_formed_overlays() {
-        // base(src) ＋ rtk(src+when) ＋ preserve の正規形。
+        // preserve = true（ユニット属性）＋ base(src) ＋ rtk(src+when) の正規形。
         assert!(
             parse(
-                "dst = \"~/x\"\nstrategy = \"json-shallow\"\n\
+                "dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n\
                  [[overlay]]\nsrc = \"base.json\"\n\
-                 [[overlay]]\nsrc = \"rtk.json\"\nwhen = { dep = \"rtk\" }\n\
-                 [[overlay]]\npreserve = [\"model\"]\n",
+                 [[overlay]]\nsrc = \"rtk.json\"\nwhen = { dep = \"rtk\" }\n",
             )
             .is_ok()
         );
