@@ -39,7 +39,7 @@ pub fn run(source: &Path) -> Result<(), String> {
 }
 
 /// 1 単位の属性ラベル（2軸モデル, §7）。
-/// kind ＋ strategy ＋ overlay 数 ＋ private / executable ＋ deps / os。
+/// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ deps / os。
 fn attrs(manifest: &Manifest) -> String {
     let mut parts = vec![
         match manifest.kind {
@@ -59,6 +59,9 @@ fn attrs(manifest: &Manifest) -> String {
     }
     if !manifest.overlay.is_empty() {
         parts.push(format!("overlay={}", manifest.overlay.len()));
+    }
+    if manifest.preserve {
+        parts.push("preserve".to_string());
     }
     if manifest.private {
         parts.push("private".to_string());
