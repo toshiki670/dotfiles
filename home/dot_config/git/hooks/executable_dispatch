@@ -9,7 +9,10 @@
 #
 # 役割:
 #   1. pre-commit のときだけ、ステージ済み差分を gitleaks で検査する。
-#   2. すべての hook 種別で、リポジトリ固有の .git/hooks/<hook名> があれば引数と
+#   2. pre-push のときだけ、非 fast-forward（force-push が通す履歴書き換え）をブロック
+#      する。force と「pull 忘れの通常 push」は pre-push では判別不能なので両義メッセージ
+#      を出す。万能バックストップ（Claude 以外の人手/スクリプトも捕捉）。
+#   3. すべての hook 種別で、リポジトリ固有の .git/hooks/<hook名> があれば引数と
 #      stdin をそのまま渡してチェイン実行する（グローバル hooksPath で握り潰され
 #      る repo ローカル hook を実質復活させる）。
 set -euo pipefail
@@ -34,7 +37,54 @@ if [ "$hook_name" = "pre-commit" ]; then
   fi
 fi
 
-# --- 2. リポジトリ固有 hook へのチェイン（全 hook 種別） ----------------------
+# --- 2. force-push / 非 fast-forward ガード（pre-push のみ） -------------------
+# git は pre-push の stdin に「<local ref> <local oid> <remote ref> <remote oid>」を 1 行
+# ずつ渡す。remote oid は接続して得たライブのリモート先端（古いローカル追跡 ref ではない）。
+# remote が local の祖先でなければ非 ff＝履歴書き換え（force が通すもの）でブロックする。
+# pre-push は --force フラグを受け取らないため「force」か「pull 忘れの通常 push」かは判別
+# 不能。両者とも非 ff でブロックが正しいので、メッセージを両義にして読み手に分岐させる。
+# stdin はここで消費するため、後段のチェイン（section 3）へ再供給できるようバッファする。
+push_stdin=""
+if [ "$hook_name" = "pre-push" ]; then
+  push_stdin="$(cat)"
+  nonff=0
+  while read -r _lref loid _rref roid; do
+    [ -z "${loid:-}" ] && continue
+    [ -z "${roid:-}" ] && continue
+    # local oid が全 0＝ブランチ削除、remote oid が全 0＝新規ブランチ。どちらも非 ff ではない。
+    [[ "$loid" =~ ^0+$ ]] && continue
+    [[ "$roid" =~ ^0+$ ]] && continue
+    if ! git merge-base --is-ancestor "$roid" "$loid" 2>/dev/null; then
+      nonff=1
+    fi
+  done <<<"$push_stdin"
+
+  if [ "$nonff" -eq 1 ]; then
+    cat >&2 <<'MSG'
+✖ pre-push 中止: 非 fast-forward（リモート先端を含まない）push を検出しました。
+
+[STOP — read before retrying]
+This push does NOT contain the current remote tip as an ancestor (non-fast-forward).
+Two situations land here — pick the one that applies:
+
+(1) You just forgot to pull (the remote moved ahead).
+    -> Integrate first: `git pull --rebase` (or merge origin/<branch>), then push normally.
+    -> Do NOT add --force to "make it go through."
+
+(2) You intended to rewrite already-published history (force-push).
+    -> Forbidden here. Not a "simple mistake" — it irreversibly destroys shared state
+       (others' fetches/derived work, review anchors, stacked-PR rebase discipline).
+    -> An automated agent must NEVER force-push, even when instructed. Stop and surface
+       the situation to the user; the decision to proceed is the user's alone.
+
+Do NOT bypass this guard with --no-verify; overriding it is a conscious human decision,
+never an automated one.
+MSG
+    exit 1
+  fi
+fi
+
+# --- 3. リポジトリ固有 hook へのチェイン（全 hook 種別） ----------------------
 # repo ローカル hook の場所を解決する。
 #   - `git rev-parse --git-path hooks` は core.hooksPath 設定下でグローバル dir
 #     （＝自分自身）を返すため使えない。
@@ -48,6 +98,11 @@ if [ -x "$local_hook" ]; then
   # 自分自身（このディスパッチャ）を指していたら無限再帰になるので除外する。
   self="$(realpath "${BASH_SOURCE[0]}")"
   if [ "$(realpath "$local_hook")" != "$self" ]; then
-    exec "$local_hook" "$@"
+    if [ "$hook_name" = "pre-push" ]; then
+      # section 2 で stdin を消費済みなので、バッファした ref 行を再供給する。
+      exec "$local_hook" "$@" <<<"$push_stdin"
+    else
+      exec "$local_hook" "$@"
+    fi
   fi
 fi
