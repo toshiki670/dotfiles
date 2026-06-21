@@ -43,9 +43,11 @@ impl Store {
         self.values.insert(name.to_string(), value.to_string());
     }
 
-    /// ストアを 0600 で書き出す（親ディレクトリを作成）。秘匿値を含むため、作成時点から
-    /// 所有者のみのモードで開き（新規ファイルの 0644 露出窓を作らない）、既存ファイルにも
-    /// 念のため 0600 を再設定する。
+    /// ストアを **原子的に** 0600 で書き出す（親ディレクトリを作成）。同一ディレクトリへ
+    /// 一時ファイルを 0600 で作成し、fsync してから rename で置き換える。rename は既存の
+    /// `local.toml`（live ファイル）を切り詰めないため、書き込み途中のクラッシュ/kill でも
+    /// 既存値は無傷で残る（空/部分書き込みにならない）。一時ファイルの後始末は `tempfile` が
+    /// Drop で行う（明示削除なし）。
     pub fn save(&self) -> Result<(), String> {
         if let Some(parent) = self.path.parent() {
             std::fs::create_dir_all(parent)
@@ -57,30 +59,26 @@ impl Store {
     }
 }
 
-/// 所有者のみ（0600）で書き出す（Unix）。create-mode 0600 で開いて作成窓を塞ぎ、
-/// 既存ファイルにも 0600 を再設定する。
-#[cfg(unix)]
+/// 所有者のみ（0600）で原子的に書き出す。同一ディレクトリの一時ファイル（`tempfile` が Unix では
+/// 0600 で作成）へ書き、fsync 後に rename で `path` を置き換える。失敗時は一時ファイルが Drop で
+/// 消える（本書き込みは未反映）。秘匿値の露出窓と、live ファイルの truncate を両方避ける。
 fn write_private(path: &Path, bytes: &[u8]) -> Result<(), String> {
     use std::io::Write;
-    use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 
-    let mut file = std::fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .mode(0o600)
-        .open(path)
+    let dir = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let mut tmp = tempfile::NamedTempFile::new_in(dir)
+        .map_err(|e| format!("{}: 一時ファイル作成失敗: {e}", dir.display()))?;
+    tmp.write_all(bytes)
         .map_err(|e| format!("{}: 書き込み失敗: {e}", path.display()))?;
-    file.write_all(bytes)
-        .map_err(|e| format!("{}: 書き込み失敗: {e}", path.display()))?;
-    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))
-        .map_err(|e| format!("{}: パーミッション設定失敗: {e}", path.display()))
-}
-
-/// 非 Unix ではパーミッションモデルが異なるため通常の書き込み。
-#[cfg(not(unix))]
-fn write_private(path: &Path, bytes: &[u8]) -> Result<(), String> {
-    std::fs::write(path, bytes).map_err(|e| format!("{}: 書き込み失敗: {e}", path.display()))
+    tmp.as_file()
+        .sync_all()
+        .map_err(|e| format!("{}: fsync 失敗: {e}", path.display()))?;
+    tmp.persist(path)
+        .map_err(|e| format!("{}: 原子的置換失敗: {}", path.display(), e.error))?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -124,5 +122,30 @@ mod tests {
             .mode()
             & 0o777;
         assert_eq!(mode, 0o600, "ストアは 0600 で書かれる");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn overwriting_existing_store_keeps_owner_only() {
+        // 原子的置換（rename）でも、既存ファイルの上書き後に 0600 と最新値が保たれる。
+        use std::os::unix::fs::PermissionsExt;
+        let home = tempfile::tempdir().unwrap();
+
+        let mut first = Store::load(home.path()).unwrap();
+        first.set("git.email", "old@example.com");
+        first.save().unwrap();
+
+        let mut second = Store::load(home.path()).unwrap();
+        second.set("git.email", "new@example.com");
+        second.save().unwrap();
+
+        let path = Store::path(home.path());
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o600, "上書き後も 0600 を保つ");
+        assert_eq!(
+            Store::load(home.path()).unwrap().get("git.email"),
+            Some("new@example.com"),
+            "最新値で置き換わる",
+        );
     }
 }

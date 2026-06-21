@@ -17,6 +17,7 @@ clap       = { workspace = true }
 libc       = { workspace = true }
 serde      = { workspace = true }
 serde_json = { workspace = true }
+tempfile   = { workspace = true }
 toml       = { workspace = true }
 
 [lints]
@@ -26,7 +27,6 @@ workspace = true
 assert_cmd = { workspace = true }
 predicates = { workspace = true }
 rstest     = { workspace = true }
-tempfile   = { workspace = true }
 
 [[test]]
 name = "e2e"
