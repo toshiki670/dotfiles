@@ -916,3 +916,29 @@ fn apply_errors_when_preserve_without_json_shallow() {
         .failure()
         .stderr(predicate::str::contains("preserve"));
 }
+
+/// preserve = true ＋ json-shallow でも overlay 無し ＋ kind=copy（既定）なら load 時にエラー。
+/// この構成は compose 経路に入らず preserve が黙って無視されるため、配置前に弾いて固定する。
+#[test]
+fn apply_errors_when_preserve_without_compose_routing() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo/out.json\"\n\
+         strategy = \"json-shallow\"\n\
+         preserve = true\n",
+    )
+    .unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("preserve"));
+}

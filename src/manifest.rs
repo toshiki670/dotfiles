@@ -124,6 +124,10 @@ impl Manifest {
     /// - **`preserve = true` は `strategy = "json-shallow"` 専用**。既存 dst を土台に重ねる
     ///   意味論は JSON shallow merge でしか定義しないため、他 strategy・省略との併記は typo
     ///   として弾く（静かに無視しない）。
+    /// - **`preserve = true` は compose 経路（overlay 明示 か `kind = generate`）を要する**。
+    ///   ファイル合成は [`crate::apply`] の `uses_compose`（overlay 非空 or generate）でだけ
+    ///   起動するため、overlay 無しの copy 直行では preserve が黙って無視される。実行されない
+    ///   構成を load 時に弾く（土台だけ再直列化する退化形に意味は無い）。
     /// - **各 overlay は `src` / `cmd` のうちちょうど 1 つ**（生成方式は択一）。2 つは一方が
     ///   黙って無視される typo、0 個は断片を実体化できない。
     fn validate(&self) -> Result<(), String> {
@@ -134,6 +138,13 @@ impl Manifest {
         }
         if self.preserve && self.strategy != Some(Strategy::JsonShallow) {
             return Err("preserve = true は strategy = \"json-shallow\" 専用です".to_string());
+        }
+        if self.preserve && self.overlay.is_empty() && self.kind != Kind::Generate {
+            return Err(
+                "preserve = true は overlay か kind = generate を要します（overlay 無しの copy は \
+                 compose 経路に入らず preserve が無視されます）"
+                    .to_string(),
+            );
         }
         for (i, ov) in self.overlay.iter().enumerate() {
             let kinds = [ov.src.is_some(), !ov.cmd.is_empty()]
@@ -221,13 +232,33 @@ mod tests {
 
     #[test]
     fn validate_accepts_preserve_with_json_shallow() {
-        // preserve = true ＋ json-shallow は正規形（overlay 無しでも可＝土台のみ再直列化）。
+        // preserve = true ＋ json-shallow ＋ overlay は正規形（claude/settings 相当）。
         assert!(
             parse(
                 "dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n\
                  [[overlay]]\nsrc = \"settings.json\"\n",
             )
             .is_ok()
+        );
+        // generate（cmd 出力を土台へ重ねる）も compose 経路なので overlay 無しでも可。
+        assert!(
+            parse(
+                "dst = \"~/x\"\nkind = \"generate\"\nstrategy = \"json-shallow\"\n\
+                 preserve = true\ncmd = [\"foo\"]\n",
+            )
+            .is_ok()
+        );
+    }
+
+    #[test]
+    fn validate_rejects_preserve_without_compose_routing() {
+        // preserve = true ＋ json-shallow だが overlay 無し ＋ kind=copy（既定）→ copy 直行で
+        // preserve が黙って無視される構成。load 時に弾く（静かな no-op を許さない）。
+        let err =
+            parse("dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n").unwrap_err();
+        assert!(
+            err.contains("preserve") && err.contains("overlay"),
+            "overlay 無しの copy 直行 preserve が弾かれていない: {err}"
         );
     }
 
