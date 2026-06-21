@@ -1,0 +1,23 @@
+[alias]
+  # Alias Management ===================================
+  alias = !"cat \"$HOME/.config/git/configs/alias\" | grep -v '^\\[' | sed 's/^  //'"
+
+  # Diff (PR base, side-by-side) =======================
+  diff-base = diff-base-helper
+  d-base = diff-base
+
+  d-s = -c delta.side-by-side=true diff
+  ds-s = -c delta.side-by-side=true diff --staged
+  diff-base-s = diff-base-helper -c delta.side-by-side=true
+  d-base-s = diff-base-s
+
+  diff-base-helper = !"f() { git fetch && git \"$@\" diff $(gh pr view --json baseRefOid --jq '.baseRefOid')...HEAD; }; f"
+
+  # Branch & Switch ===================================
+  main = !git switch main && git pull
+  master = !git switch master && git pull
+
+  # GitHub PR Workflow =================================
+  merged = !"[ \"$(gh pr view --json state --jq '.state')\" = \"MERGED\" ]"
+  base = !"gh pr view --json baseRefName --jq '.baseRefName'"
+  done = !"git merged && current=$(git branch --show-current) && base=$(git base) && [ -n \"$base\" ] && git switch \"$base\" && git pull && git branch -d \"$current\" && git fetch --prune"

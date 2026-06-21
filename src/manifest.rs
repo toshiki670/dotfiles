@@ -9,7 +9,8 @@
 //!   `when`（`dep` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
 //!
 //! `deps` / `os` はユニット単位 gate（＝ ユニット全体に係る `when` の退化形, §5.5）。
-//! theme / hooks / secrets は後続スライスで追加する。
+//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。theme / hooks は
+//! 後続スライスで追加する。
 
 use serde::Deserialize;
 use std::path::Path;
@@ -55,6 +56,17 @@ pub struct Manifest {
     /// 各 overlay は `src` / `cmd` のどちらか ＋ `when?` を持つ。
     #[serde(default)]
     pub overlay: Vec<Overlay>,
+    /// マシンローカル値（named value）の宣言（§9）。ここで宣言した名前 `n` に対し、この単位の
+    /// 配置ファイル中の `@@n@@` をストア（`~/.config/dotfiles/local.toml`）の値で置換する。
+    /// 置換は `locals` を宣言した単位のファイルにだけ走る（無関係ファイルの `@@…@@` を巻き込まない）。
+    /// 例: `locals = ["git.email", "git.name"]`。
+    #[serde(default)]
+    pub locals: Vec<String>,
+    /// `locals` のうち秘匿値（対話取得時にエコー/ログを抑制する）。git の email/name は commit に
+    /// 載るため**非 sensitive**。`sensitive ⊆ locals` を load 時に検証する（§9.1）— typo で名前が
+    /// `locals` とズレると非エコー抑制が黙って効かず秘匿値が漏れる footgun を防ぐ。
+    #[serde(default)]
+    pub sensitive: Vec<String>,
 }
 
 /// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
@@ -130,6 +142,9 @@ impl Manifest {
     ///   構成を load 時に弾く（土台だけ再直列化する退化形に意味は無い）。
     /// - **各 overlay は `src` / `cmd` のうちちょうど 1 つ**（生成方式は択一）。2 つは一方が
     ///   黙って無視される typo、0 個は断片を実体化できない。
+    /// - **`sensitive ⊆ locals`**（§9.1）。`sensitive` に `locals` 未宣言の名前があると、その名は
+    ///   非エコー/ログ抑制の対象にならず（resolve は `locals` を走査するため）秘匿値が黙って漏れる。
+    ///   typo を配置前に弾く。
     fn validate(&self) -> Result<(), String> {
         if !self.overlay.is_empty() && self.strategy.is_none() {
             return Err(
@@ -156,6 +171,11 @@ impl Manifest {
                     "overlay[{i}] は src / cmd のうちちょうど 1 つを持つ必要があります（現在 {kinds} 個）"
                 ));
             }
+        }
+        if let Some(orphan) = self.sensitive.iter().find(|s| !self.locals.contains(s)) {
+            return Err(format!(
+                "sensitive `{orphan}` が locals に宣言されていません（sensitive ⊆ locals）"
+            ));
         }
         Ok(())
     }
@@ -271,6 +291,31 @@ mod tests {
         assert!(
             err.contains("ちょうど 1 つ"),
             "0 個が検知されていない: {err}"
+        );
+    }
+
+    #[test]
+    fn validate_accepts_sensitive_subset_of_locals() {
+        // sensitive ⊆ locals は正規形（§9.1）。email/name は非 sensitive のまま宣言できる。
+        assert!(
+            parse(
+                "dst = \"~/x\"\nlocals = [\"git.email\", \"git.name\", \"github.token\"]\n\
+                 sensitive = [\"github.token\"]\n",
+            )
+            .is_ok()
+        );
+        // sensitive 省略（全て非秘匿）も可。
+        assert!(parse("dst = \"~/x\"\nlocals = [\"git.email\", \"git.name\"]\n").is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_sensitive_not_in_locals() {
+        // locals に無い名を sensitive に書く typo → 非エコー抑制が効かず漏れる footgun。
+        let err = parse("dst = \"~/x\"\nlocals = [\"git.email\"]\nsensitive = [\"githb.token\"]\n")
+            .unwrap_err();
+        assert!(
+            err.contains("sensitive") && err.contains("githb.token"),
+            "sensitive ⊄ locals が弾かれていない: {err}"
         );
     }
 

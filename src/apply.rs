@@ -4,16 +4,21 @@
 //! ①**ユニット gate（`deps` / `os`）を最初に評価し false なら短絡**（[`crate::gate`]、dst を
 //! 一切触らず skip）。生き残った単位は dst 種別で配置経路が分かれる ―
 //! dst=ディレクトリの copy は [`crate::copy`]（ツリー配置）、dst=ファイルの generate /
-//! overlay 明示は [`crate::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。本モジュールは
-//! オーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
+//! overlay 明示は [`crate::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。
+//! 配置の直前に `locals`（named value）を解決し（[`crate::resolve`]）、配置ファイルの `@@name@@` を
+//! 注入する（§9）。本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・
+//! パーミッション適用）を持つ。
 
 use crate::discover::{self, MANIFEST, Unit};
 use crate::manifest::{Kind, Manifest, Strategy};
-use crate::{compose, copy, gate};
+use crate::store::Store;
+use crate::{compose, copy, gate, prompt, resolve};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 /// `source`（= `configs/`）配下を走査し、各 manifest の配置を実行する。
-/// `home` は dst の `~` 展開先。
+/// `home` は dst の `~` 展開先。`locals` の取得・注入に使う named value ストアは
+/// 開始時に1回ロードし（[`Store`]）、各単位の対話取得（TTY）で逐次更新する。
 pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     let units = discover::collect(source)?;
     if units.is_empty() {
@@ -24,14 +29,15 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
         return Ok(());
     }
 
+    let mut store = Store::load(home)?;
     for unit in &units {
-        apply_unit(unit, home)?;
+        apply_unit(unit, home, &mut store)?;
     }
     Ok(())
 }
 
 /// 1 単位を評価順（§5.5）に従って配置し、結果を 1 行で表示する。
-fn apply_unit(unit: &Unit, home: &Path) -> Result<(), String> {
+fn apply_unit(unit: &Unit, home: &Path, store: &mut Store) -> Result<(), String> {
     let manifest = Manifest::load(&unit.dir.join(MANIFEST))?;
     let dst = expand_home(&manifest.dst, home);
     let name = unit.rel.to_string_lossy();
@@ -42,11 +48,19 @@ fn apply_unit(unit: &Unit, home: &Path) -> Result<(), String> {
         return Ok(());
     }
 
+    // `locals` 宣言があれば配置前に解決する（TTY=対話 / 非TTY=警告のみ）。宣言が無ければ空マップ
+    // ＝注入経路を素通りし、無関係ファイルの `@@…@@` を巻き込まない（§9.1）。
+    let locals = if manifest.locals.is_empty() {
+        BTreeMap::new()
+    } else {
+        resolve::fill(&manifest, store, prompt::is_tty())?
+    };
+
     let label = placement_label(&manifest);
     if uses_compose(&manifest) {
-        compose::place(&unit.dir, &dst, &manifest)?;
+        compose::place(&unit.dir, &dst, &manifest, &locals)?;
     } else {
-        copy::place(&unit.dir, &dst, &manifest)?;
+        copy::place(&unit.dir, &dst, &manifest, &locals)?;
     }
     println!("apply: {name} → {} ({label})", manifest.dst);
     Ok(())
