@@ -14,6 +14,7 @@
 //! - [`generate`]: generate 層（S2/#456）— cmd 実行・deps gate・sibling 連結・list 表示
 //! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群
 //! - [`claude_settings`]: claude/settings 実 config（S3/#457）の結線確認
+//! - [`locals`]: マシンローカル値（S4/#458）— ストア注入・非 TTY 警告・secret set・doctor
 
 use assert_cmd::Command;
 
@@ -22,6 +23,7 @@ mod claude_settings;
 mod cli;
 mod generate;
 mod list;
+mod locals;
 mod overlay;
 
 /// 実バイナリ `dotfiles` を起動する Command を返す（全テスト共通）。

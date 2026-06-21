@@ -75,5 +75,11 @@ fn attrs(manifest: &Manifest) -> String {
     if let Some(os) = &manifest.os {
         parts.push(format!("os={os}"));
     }
+    if !manifest.locals.is_empty() {
+        parts.push(format!("locals={}", manifest.locals.join("+")));
+    }
+    if !manifest.sensitive.is_empty() {
+        parts.push(format!("sensitive={}", manifest.sensitive.join("+")));
+    }
     parts.join(", ")
 }

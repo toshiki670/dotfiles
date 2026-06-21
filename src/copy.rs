@@ -8,20 +8,25 @@
 use crate::apply::set_mode;
 use crate::discover::{self, MANIFEST};
 use crate::manifest::Manifest;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// 1 単位（`dir`）を copy で `dst`（ディレクトリ）へ配置する。
-pub fn place(dir: &Path, dst: &Path, manifest: &Manifest) -> Result<(), String> {
-    copy_tree(dir, dir, dst, manifest)
+/// 1 単位（`dir`）を copy で `dst`（ディレクトリ）へ配置し、書き出した実ファイル群を返す。
+/// 戻り値は `locals` 注入（[`crate::inject`]）の置換対象になる。
+pub fn place(dir: &Path, dst: &Path, manifest: &Manifest) -> Result<Vec<PathBuf>, String> {
+    let mut written = Vec::new();
+    copy_tree(dir, dir, dst, manifest, &mut written)?;
+    Ok(written)
 }
 
 /// `src_root` 配下の実ファイルを、相対構造を保ったまま `dst_root` へコピーする。
 /// `manifest.toml` 自体と、別 manifest を持つサブツリーは除外する（委譲先の責務）。
+/// 書き出した dst パスを `written` に積む。
 fn copy_tree(
     current: &Path,
     src_root: &Path,
     dst_root: &Path,
     manifest: &Manifest,
+    written: &mut Vec<PathBuf>,
 ) -> Result<(), String> {
     for entry in discover::read_dir(current)? {
         let path = entry.path();
@@ -30,12 +35,14 @@ fn copy_tree(
             if path.join(MANIFEST).is_file() {
                 continue;
             }
-            copy_tree(&path, src_root, dst_root, manifest)?;
+            copy_tree(&path, src_root, dst_root, manifest, written)?;
         } else if entry.file_name() != MANIFEST {
             let rel = path
                 .strip_prefix(src_root)
                 .map_err(|e| format!("{}: 相対パス算出失敗: {e}", path.display()))?;
-            copy_file(&path, &dst_root.join(rel), manifest)?;
+            let out = dst_root.join(rel);
+            copy_file(&path, &out, manifest)?;
+            written.push(out);
         }
     }
     Ok(())

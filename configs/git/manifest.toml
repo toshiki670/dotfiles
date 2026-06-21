@@ -1,0 +1,8 @@
+# git の user identity（マシンローカル値, §9）。`@@git.email@@` / `@@git.name@@` を
+# ストア（~/.config/dotfiles/local.toml）の値で穴埋めして ~/.config/git/user に配置する。
+# email/name は commit に載るため非 sensitive（sensitive 指定しない）。
+#
+# 残りの git 設定（alias/core/delta…）と hooks は当面 chezmoi 管理のまま。chezmoi 側の
+# git config は native [include] で本ファイルを取り込む（env "DOTFILES_GIT_*" 注入は廃止）。
+dst    = "~/.config/git"
+locals = [ "git.email", "git.name" ]

@@ -9,7 +9,8 @@
 //!   `when`（`dep` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
 //!
 //! `deps` / `os` はユニット単位 gate（＝ ユニット全体に係る `when` の退化形, §5.5）。
-//! theme / hooks / secrets は後続スライスで追加する。
+//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9）= 配置ファイルの
+//! `@@name@@` をストア値で穴埋めする対象。theme / hooks は後続スライスで追加する。
 
 use serde::Deserialize;
 use std::path::Path;
@@ -55,6 +56,15 @@ pub struct Manifest {
     /// 各 overlay は `src` / `cmd` のどちらか ＋ `when?` を持つ。
     #[serde(default)]
     pub overlay: Vec<Overlay>,
+    /// マシンローカル値（named value）の宣言（§9）。ここに挙げた名前は、配置ファイル中の
+    /// `@@name@@` プレースホルダがストア（`~/.config/dotfiles/local.toml`）の値で置換される。
+    /// 宣言の無いユニットは置換対象外（無関係ファイルの `@@…@@` を巻き込まない）。
+    #[serde(default)]
+    pub locals: Vec<String>,
+    /// `locals` のうち秘匿値（対話取得時にエコー/ログを抑制）。`sensitive ⊆ locals` を load 時に
+    /// 検証する（typo で名前が `locals` とズレると非エコーが黙って効かない footgun を防ぐ, §9.1）。
+    #[serde(default)]
+    pub sensitive: Vec<String>,
 }
 
 /// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
@@ -130,6 +140,8 @@ impl Manifest {
     ///   構成を load 時に弾く（土台だけ再直列化する退化形に意味は無い）。
     /// - **各 overlay は `src` / `cmd` のうちちょうど 1 つ**（生成方式は択一）。2 つは一方が
     ///   黙って無視される typo、0 個は断片を実体化できない。
+    /// - **`sensitive ⊆ locals`**（§9.1）。`sensitive` に `locals` 外の名前があれば typo として
+    ///   弾く（名前がズレると非エコー/ログ抑制が黙って効かず秘匿値が漏れる footgun を防ぐ）。
     fn validate(&self) -> Result<(), String> {
         if !self.overlay.is_empty() && self.strategy.is_none() {
             return Err(
@@ -156,6 +168,11 @@ impl Manifest {
                     "overlay[{i}] は src / cmd のうちちょうど 1 つを持つ必要があります（現在 {kinds} 個）"
                 ));
             }
+        }
+        if let Some(orphan) = self.sensitive.iter().find(|s| !self.locals.contains(s)) {
+            return Err(format!(
+                "sensitive `{orphan}` が locals に宣言されていません（sensitive ⊆ locals）"
+            ));
         }
         Ok(())
     }
@@ -271,6 +288,31 @@ mod tests {
         assert!(
             err.contains("ちょうど 1 つ"),
             "0 個が検知されていない: {err}"
+        );
+    }
+
+    #[test]
+    fn validate_accepts_sensitive_subset_of_locals() {
+        // sensitive ⊆ locals（github.token は locals にも在る）→ 正規形。
+        assert!(
+            parse(
+                "dst = \"~/x\"\nlocals = [\"git.email\", \"github.token\"]\n\
+                 sensitive = [\"github.token\"]\n",
+            )
+            .is_ok()
+        );
+        // sensitive 空・locals のみも可。
+        assert!(parse("dst = \"~/x\"\nlocals = [\"git.email\"]\n").is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_sensitive_not_in_locals() {
+        // sensitive に locals 外の名前（typo）→ load 時エラー（footgun を弾く）。
+        let err = parse("dst = \"~/x\"\nlocals = [\"git.email\"]\nsensitive = [\"githb.token\"]\n")
+            .unwrap_err();
+        assert!(
+            err.contains("sensitive") && err.contains("locals"),
+            "sensitive ⊄ locals が弾かれていない: {err}"
         );
     }
 

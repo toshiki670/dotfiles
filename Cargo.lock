@@ -225,6 +225,7 @@ version = "0.69.4"
 dependencies = [
  "assert_cmd",
  "clap",
+ "libc",
  "predicates",
  "rstest",
  "serde",

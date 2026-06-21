@@ -8,10 +8,11 @@
 use crate::apply::set_mode;
 use crate::manifest::{Manifest, Overlay, Strategy};
 use crate::{gate, generate, strategy};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// 1 単位（`dir`）を overlay 合成で `dst`（ファイル）へ生成・配置する。
-pub fn place(dir: &Path, dst: &Path, manifest: &Manifest) -> Result<(), String> {
+/// 1 単位（`dir`）を overlay 合成で `dst`（ファイル）へ生成・配置し、書き出した dst を返す。
+/// 戻り値は `locals` 注入（[`crate::inject`]）の置換対象になる。
+pub fn place(dir: &Path, dst: &Path, manifest: &Manifest) -> Result<Vec<PathBuf>, String> {
     let frags = resolve_fragments(dir, manifest)?;
     let bytes = combine(manifest, dst, &frags)?;
 
@@ -21,7 +22,7 @@ pub fn place(dir: &Path, dst: &Path, manifest: &Manifest) -> Result<(), String> 
     }
     std::fs::write(dst, &bytes).map_err(|e| format!("{}: 書き込み失敗: {e}", dst.display()))?;
     set_mode(dst, manifest)?;
-    Ok(())
+    Ok(vec![dst.to_path_buf()])
 }
 
 /// 採用する断片列を解決する（不変条件②）。`preserve`（土台＝既存 dst）の配線は [`combine`]。

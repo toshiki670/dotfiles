@@ -1,0 +1,5 @@
+# Machine-local git identity — `dotfiles apply` が配置し、`@@name@@` を
+# ~/.config/dotfiles/local.toml の値で置換する（`dotfiles secret set git.email <value>`）。
+[user]
+	email = @@git.email@@
+	name = @@git.name@@
