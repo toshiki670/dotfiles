@@ -10,16 +10,27 @@ use crate::{dotfiles, write_stub};
 use std::fs;
 use std::path::Path;
 
-/// 実ソース configs/claude/settings の全ファイルを work/configs/claude/settings へコピーする。
+/// 実ソース configs/claude/settings を work/configs/claude/settings へコピーする。
+/// 「実 config の結線確認」が意図なので、将来サブツリー（schema/snippets 等）が
+/// 増えても丸ごと拾えるよう再帰コピーする。
 #[cfg(unix)]
 fn copy_real_claude_settings(work: &Path) {
     let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("configs/claude/settings");
     let dst = work.join("configs/claude/settings");
-    fs::create_dir_all(&dst).unwrap();
-    for entry in fs::read_dir(&src).unwrap() {
+    copy_dir_recursive(&src, &dst);
+}
+
+/// `src` ディレクトリの中身を `dst` へ再帰コピーする（サブディレクトリ込み）。
+#[cfg(unix)]
+fn copy_dir_recursive(src: &Path, dst: &Path) {
+    fs::create_dir_all(dst).unwrap();
+    for entry in fs::read_dir(src).unwrap() {
         let entry = entry.unwrap();
-        if entry.file_type().unwrap().is_file() {
-            fs::copy(entry.path(), dst.join(entry.file_name())).unwrap();
+        let to = dst.join(entry.file_name());
+        if entry.file_type().unwrap().is_dir() {
+            copy_dir_recursive(&entry.path(), &to);
+        } else {
+            fs::copy(entry.path(), &to).unwrap();
         }
     }
 }

@@ -48,9 +48,16 @@ fn list_shows_units_sorted_with_attrs() {
         .clone();
     let stdout = String::from_utf8(out).unwrap();
 
-    let a = stdout.find("alpha").expect("alpha 行が無い");
-    let b = stdout.find("beta").expect("beta 行が無い");
-    assert!(a < b, "名前順に並んでいない:\n{stdout}");
+    // 並び順は先頭列（単位名）だけで判定する。dst や属性に名前の部分文字列が
+    // 現れても（例: ~/.config/alpha）引っ張られないよう、行を split して先頭トークンで照合する。
+    let name_row = |name: &str| {
+        stdout
+            .lines()
+            .position(|l| l.split_whitespace().next() == Some(name))
+    };
+    let a = name_row("alpha").expect("alpha 行が無い");
+    let b = name_row("beta").expect("beta 行が無い");
+    assert!(a < b, "名前順（先頭列）に並んでいない:\n{stdout}");
     assert!(
         stdout.contains("~/.config/alpha"),
         "dst が出ていない:\n{stdout}"
