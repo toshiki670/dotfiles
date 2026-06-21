@@ -48,13 +48,28 @@ push_stdin=""
 if [ "$hook_name" = "pre-push" ]; then
   push_stdin="$(cat)"
   nonff=0
+  # shallow clone は祖先を完全に辿れず is-ancestor がエラーになり得る。後段で「解決不能」を
+  # 非 ff と誤判定して正当な ff push を誤ブロックしないよう、shallow か一度だけ判定しておく。
+  is_shallow=false
+  [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" = "true" ] && is_shallow=true
   while read -r _lref loid _rref roid; do
     [ -z "${loid:-}" ] && continue
     [ -z "${roid:-}" ] && continue
     # local oid が全 0＝ブランチ削除、remote oid が全 0＝新規ブランチ。どちらも非 ff ではない。
     [[ "$loid" =~ ^0+$ ]] && continue
     [[ "$roid" =~ ^0+$ ]] && continue
-    if ! git merge-base --is-ancestor "$roid" "$loid" 2>/dev/null; then
+    # is-ancestor: 0=祖先(ff) / 1=祖先でない(非ff確定) / それ以外=解決不能(エラー)。
+    # set -e 下で終了コードを失わないよう rc を先に 0 にして || で捕捉する。
+    rc=0
+    git merge-base --is-ancestor "$roid" "$loid" 2>/dev/null || rc=$?
+    if [ "$rc" -eq 0 ]; then
+      : # remote 先端は local の祖先＝fast-forward。許可。
+    elif [ "$rc" -eq 1 ]; then
+      nonff=1 # 祖先でないと確定＝非 ff（force が通す履歴書き換え）。
+    elif [ "$is_shallow" = true ]; then
+      : # shallow で祖先を解決できない。誤ブロックを避け許可し、git 本来の非 ff 判定に委ねる。
+    else
+      # full repo で remote oid が解決不能＝local から到達不能＝非 ff 確定（祖先なら手元に在るはず）。
       nonff=1
     fi
   done <<<"$push_stdin"

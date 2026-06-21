@@ -3,7 +3,9 @@
 # 温存しつつ、dotfiles 由来の共有設定（hooks/statusLine/language/voiceEnabled）を
 # 強制上書きする。chezmoi が既存ファイル内容を stdin で渡し、stdout を新しい内容として書き込む。
 #
-# 強制設定のうち PreToolUse/Bash には "rm→trash ガード" を含む。rm を deny し trash 利用を促す。
+# 強制設定のうち PreToolUse/Bash には2本のガードを含む。①"rm→trash ガード": rm を deny し
+# trash 利用を促す。②"force-push ガード": `git push` の --force/-f/--force-with-lease/--no-verify
+# を deny し履歴書き換えを止める（メッセージは環境非依存）。どちらも主役は行動側で本フックは保険。
 # 主役は意図ベースの指示（rules/use-trash-not-rm.md）で、本フックは「指示を忘れた時の保険」。
 # 保険なので regex は素朴に保つ: コマンド先頭/区切り直後・$() 内の rm のみ検知する。
 # sudo/絶対パス/command 経由・xargs rm 等は意図的に拾わない（指示側がカバー）。git rm や
