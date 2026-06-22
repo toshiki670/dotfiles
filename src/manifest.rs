@@ -6,9 +6,12 @@
 //!   `json-shallow`。`merge` は独立 kind ではなく合成軸の JSON 戦略（§5.5）。
 //! - **条件付き overlay**（`[[overlay]]` ＋ `when`）= dst を「base ＋ gate された断片」の合成
 //!   として組む。各 overlay は `src`（copy 断片）/ `cmd`（generate 断片）のどちらか ＋
-//!   `when`（`dep` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
+//!   `when`（`deps` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
 //!
-//! `deps` / `os` はユニット単位 gate（＝ ユニット全体に係る `when` の退化形, §5.5）。
+//! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ）に一本化する。**書く位置でスコープが
+//! 決まる**: トップレベルの `when` はユニット全体 gate（false なら dst も `hooks` も触らず skip ＝
+//! all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否（§5.5）。両者は同じ評価規則を
+//! [`crate::gate`] で共有する。
 //! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は onchange
 //! フック（§13, S5）の**コマンド（argv）**宣言で、各 argv が非空であることを load 時に検証する
 //! （実行は [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
@@ -18,7 +21,11 @@ use serde::Deserialize;
 use std::path::Path;
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
+///
+/// `deny_unknown_fields` で未知キーを load 時に弾く。旧 gate 語彙（unit 属性 `deps` / `os`）が
+/// 残った manifest はここでエラーになる（§5.5: 後方互換は持たせず、誤連想の再発を防ぐ）。
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Manifest {
     /// 配置先（必須）。`~` は HOME に展開する。
     /// copy は実体を置くディレクトリ、generate / 合成は生成物を書き出すファイルパス。
@@ -46,14 +53,12 @@ pub struct Manifest {
     /// 標準出力を断片とする。copy では未使用。
     #[serde(default)]
     pub cmd: Vec<String>,
-    /// 依存バイナリ（ユニット単位 gate, §7）。PATH に揃わないものがあればユニット全体を
-    /// スキップする（＝ ユニット全体に係る `when.dep` の退化形）。
+    /// ユニット全体 gate（§5.5・§7）。トップレベルに書いた `when` はユニットスコープで、
+    /// 満たさなければユニット全体を skip する（dst も `hooks` も触らない ＝ all-or-nothing）。
+    /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致した時だけ真。
+    /// 省略時は常時採用。同じ語彙を `[[overlay]]` の `when` がその断片スコープで再利用する。
     #[serde(default)]
-    pub deps: Vec<String>,
-    /// OS 条件（ユニット単位 gate, §7）。chezmoi 互換表記（例 `darwin` / `linux`）。
-    /// 不一致ならユニット全体をスキップする（＝ ユニット全体に係る `when.os` の退化形）。
-    #[serde(default)]
-    pub os: Option<String>,
+    pub when: Option<When>,
     /// 合成 overlay（条件付き断片の配列, §5.5）。空 = 生成方式の既定挙動。
     /// 各 overlay は `src` / `cmd` のどちらか ＋ `when?` を持つ。
     #[serde(default)]
@@ -74,8 +79,8 @@ pub struct Manifest {
     /// `hooks = [["bat", "cache", "--build"]]`）。ツール固有ロジックは binary に持たず、実行する
     /// コマンドをデータとして宣言する（[`crate::generate`] の `cmd` と同思想）→ 新ツールのフック
     /// 追加に binary 変更は不要・configs と疎結合。各 argv が非空であることを load 時に検証する。
-    /// ユニット gate（`deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない
-    /// （＝ os 属性でフックを分岐できる, §5.5 不変条件①）。
+    /// トップレベル `when`（ユニット gate）が false のユニットは配置ごと skip されるため hooks も
+    /// 走らない（＝ `when.os` でフックを分岐できる, §5.5 不変条件①）。
     #[serde(default)]
     pub hooks: Vec<Vec<String>>,
 }
@@ -103,6 +108,7 @@ pub enum Strategy {
 /// 断片の実体化方法は `src`（copy）/ `cmd`（generate）の択一。既存 dst の温存は overlay では
 /// なくユニット属性 [`Manifest::preserve`]。
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Overlay {
     /// copy 断片: 単位ディレクトリからの相対ファイル。内容をそのまま断片にする。
     #[serde(default)]
@@ -110,20 +116,34 @@ pub struct Overlay {
     /// generate 断片: 実行する argv。標準出力を断片にする。
     #[serde(default)]
     pub cmd: Vec<String>,
-    /// 採用条件（省略 = 常時採用）。`dep` / `os` を AND で評価する。
+    /// 採用条件（省略 = 常時採用）。この断片スコープで `when`（`deps` / `os`）を AND 評価する。
     #[serde(default)]
     pub when: Option<When>,
 }
 
-/// overlay の採用条件（§5.5）。複数キーは AND（全て満たす時だけ採用）。
+/// gate の採用条件（§5.5）。トップレベル（ユニットスコープ）と overlay（断片スコープ）で共有する
+/// 1 つの語彙。複数キーは AND（全て満たす時だけ採用）。
 #[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct When {
-    /// 依存バイナリが PATH にある時だけ採用（旧 `{{ if lookPath … }}`）。
+    /// 依存バイナリ（配列・AND）。全て PATH にある時だけ採用（旧 `{{ if lookPath … }}`）。
+    /// 単数 `dep` は廃止し、複数形＝配列で統一する（語感の破綻を避ける, §5.5）。
     #[serde(default)]
-    pub dep: Option<String>,
-    /// OS 一致時だけ採用（旧 `{{ if eq .chezmoi.os … }}`）。chezmoi 互換表記。
+    pub deps: Vec<String>,
+    /// OS（スカラ）。現在 OS と一致時だけ採用（旧 `{{ if eq .chezmoi.os … }}`）。chezmoi 互換表記。
     #[serde(default)]
     pub os: Option<String>,
+}
+
+impl When {
+    /// 実効キー（`deps` / `os`）を 1 つも持たないか。
+    ///
+    /// 空テーブル `when = {}` や `when = { deps = [] }` は常時採用の silent no-op になり、
+    /// 「gate を書いたのに効かない」typo（編集で内部キーだけ消えた等）を黙って通す。これを
+    /// load 時に弾くため [`Manifest::validate`] が使う。`theme` 等のキー追加時はここに足す。
+    fn has_no_effective_key(&self) -> bool {
+        self.deps.is_empty() && self.os.is_none()
+    }
 }
 
 impl Manifest {
@@ -194,6 +214,23 @@ impl Manifest {
         }
         if self.hooks.iter().any(|argv| argv.is_empty()) {
             return Err("hooks の各要素は非空のコマンド（argv）である必要があります".to_string());
+        }
+        if let Some(when) = &self.when
+            && when.has_no_effective_key()
+        {
+            return Err(
+                "when は実効キー（deps / os）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+                    .to_string(),
+            );
+        }
+        if let Some(i) = self
+            .overlay
+            .iter()
+            .position(|ov| ov.when.as_ref().is_some_and(When::has_no_effective_key))
+        {
+            return Err(format!(
+                "overlay[{i}] の when は実効キー（deps / os）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+            ));
         }
         Ok(())
     }
@@ -303,9 +340,10 @@ mod tests {
     #[test]
     fn validate_rejects_overlay_with_no_kind() {
         // when だけで src/cmd/preserve が無い → 断片を実体化できない。
-        let err =
-            parse("dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nwhen = { dep = \"rtk\" }\n")
-                .unwrap_err();
+        let err = parse(
+            "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nwhen = { deps = [\"rtk\"] }\n",
+        )
+        .unwrap_err();
         assert!(
             err.contains("ちょうど 1 つ"),
             "0 個が検知されていない: {err}"
@@ -360,9 +398,61 @@ mod tests {
             parse(
                 "dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n\
                  [[overlay]]\nsrc = \"base.json\"\n\
-                 [[overlay]]\nsrc = \"rtk.json\"\nwhen = { dep = \"rtk\" }\n",
+                 [[overlay]]\nsrc = \"rtk.json\"\nwhen = { deps = [\"rtk\"] }\n",
             )
             .is_ok()
+        );
+    }
+
+    #[test]
+    fn parse_accepts_top_level_when() {
+        // トップレベル when（ユニットスコープ gate）= deps 配列 ＋ os スカラ。
+        assert!(parse("dst = \"~/x\"\nwhen = { deps = [\"ghostty\"], os = \"darwin\" }\n").is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_top_level_empty_when() {
+        // when = {} / when = { deps = [] } は常時採用の silent no-op。load 時に弾く（fail loud）。
+        assert!(parse("dst = \"~/x\"\nwhen = {}\n").is_err());
+        let err = parse("dst = \"~/x\"\nwhen = { deps = [] }\n").unwrap_err();
+        assert!(
+            err.contains("when") && err.contains("実効キー"),
+            "実効キーの無いトップレベル when が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn validate_rejects_overlay_empty_when() {
+        // overlay の when も同様に実効キー必須（断片が常時採用される silent no-op を弾く）。
+        let err =
+            parse("dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = {}\n")
+                .unwrap_err();
+        assert!(
+            err.contains("overlay[0]") && err.contains("実効キー"),
+            "実効キーの無い overlay の when が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn parse_rejects_legacy_unit_deps() {
+        // 旧 unit 属性 deps は廃止。deny_unknown_fields が load 時に弾く（後方互換なし, §5.5）。
+        assert!(toml::from_str::<Manifest>("dst = \"~/x\"\ndeps = [\"gh\"]\n").is_err());
+    }
+
+    #[test]
+    fn parse_rejects_legacy_unit_os() {
+        // 旧 unit 属性 os も同様に廃止。
+        assert!(toml::from_str::<Manifest>("dst = \"~/x\"\nos = \"darwin\"\n").is_err());
+    }
+
+    #[test]
+    fn parse_rejects_legacy_singular_dep_in_when() {
+        // overlay の単数 dep は廃止し複数形 deps へ。旧キーは load 時エラー。
+        assert!(
+            toml::from_str::<Manifest>(
+                "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = { dep = \"rtk\" }\n",
+            )
+            .is_err()
         );
     }
 }

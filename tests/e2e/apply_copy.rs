@@ -174,7 +174,7 @@ fn apply_sets_permissions_from_manifest(#[case] name: &str, #[case] attr: &str, 
 /// 実ソース configs/bat を一時 HOME へ apply し、themes/ サブディレクトリを含めて
 /// 再帰配置されることを検証する（実ツールでのサブディレクトリ再帰）。
 ///
-/// configs/bat は `deps = ["bat"]` でユニット gate される（§7）。CI（ubuntu・bat 不在）でも
+/// configs/bat は `when = { deps = ["bat"] }` でユニット gate される（§7）。CI（ubuntu・bat 不在）でも
 /// 実 config の配置を検証できるよう、PATH 先頭に bat スタブを置いて gate を通す（bat-cache hook も
 /// no-op スタブが走る）。スタブは sh スクリプトなので unix 限定。
 #[cfg(unix)]

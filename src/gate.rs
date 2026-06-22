@@ -1,16 +1,18 @@
-//! gate の評価: ユニット単位 gate（`deps` / `os`）と overlay の `when`。
+//! gate の評価: トップレベル `when`（ユニットスコープ）と `[[overlay]]` の `when`（断片スコープ）。
 //!
-//! 設計書 §5.5「評価順と不変条件」の gate 語彙を 1 か所に集約する。`deps` / `os` は
-//! ユニット全体に係る gate（満たさなければユニットごと skip）、overlay の `when`（`dep` /
-//! `os`）はその断片だけの採否で、**同じ評価規則**（PATH 探索・OS 正規化・複数キー AND）を
-//! 共有する。ここはその共有ロジックと、PATH 上の実行ファイル探索（`which`）を持つ。
+//! 設計書 §5.5「評価順と不変条件」の gate 語彙を 1 か所に集約する。gate 語彙は `when`
+//! （`deps` 配列・AND / `os` スカラ）に一本化されており、**書く位置でスコープが決まる**:
+//! トップレベルの `when` はユニット全体 gate（満たさなければユニットごと skip）、overlay の
+//! `when` はその断片だけの採否。両者は **同じ評価規則**（[`when_unsatisfied_reason`]: PATH 探索・
+//! OS 正規化・複数キー AND）を共有する。ここはその共有ロジックと、PATH 上の実行ファイル探索
+//! （`which`）を持つ。
 
 use crate::manifest::{Manifest, When};
 use std::path::{Path, PathBuf};
 
 /// 現在の OS を chezmoi 互換表記で返す（macOS は `darwin`）。
 ///
-/// manifest の `os` / `when.os` は chezmoi の `.chezmoi.os` と同じ表記（`darwin` / `linux`）で
+/// manifest の `when.os` は chezmoi の `.chezmoi.os` と同じ表記（`darwin` / `linux`）で
 /// 書くため、Rust の `std::env::consts::OS`（macOS では `macos`）を `darwin` に正規化して比較する。
 pub fn current_os() -> &'static str {
     match std::env::consts::OS {
@@ -19,40 +21,38 @@ pub fn current_os() -> &'static str {
     }
 }
 
-/// ユニット単位 gate（`deps` / `os`）を評価し、満たさないとき skip 理由を返す（満たせば None）。
+/// トップレベル `when`（ユニットスコープ gate）を評価し、満たさないとき skip 理由を返す
+/// （満たせば None）。
 ///
-/// 不変条件①（§5.5）の短絡判定に使う。`deps` は 1 つでも PATH に無ければ skip、`os` は
-/// 指定があり現在 OS と一致しなければ skip。複数条件は AND（どれか 1 つでも欠ければ skip）。
+/// 不変条件①（§5.5）の短絡判定に使う。`when` 省略のユニットは常時採用（None）。判定は
+/// overlay と共有の [`when_unsatisfied_reason`] に委譲する。
 pub fn unit_skip_reason(manifest: &Manifest) -> Option<String> {
-    if let Some(missing) = first_missing_dep(&manifest.deps) {
+    manifest.when.as_ref().and_then(when_unsatisfied_reason)
+}
+
+/// overlay の `when`（断片スコープ gate）を満たすか（省略は真）。
+///
+/// ユニット gate と同じ [`when_unsatisfied_reason`] を共有し、理由が無い（None）＝満たす。
+pub fn when_satisfied(when: &Option<When>) -> bool {
+    when.as_ref()
+        .is_none_or(|when| when_unsatisfied_reason(when).is_none())
+}
+
+/// `when`（`deps` 配列・AND / `os` スカラ）を評価し、満たさないとき理由を返す（満たせば None）。
+///
+/// ユニットスコープ（[`unit_skip_reason`]）と断片スコープ（[`when_satisfied`]）が共有する
+/// 唯一の評価本体。`deps` は 1 つでも PATH に無ければ不成立、`os` は指定があり現在 OS と
+/// 一致しなければ不成立。複数キーは AND（どれか 1 つでも欠ければ不成立）。
+fn when_unsatisfied_reason(when: &When) -> Option<String> {
+    if let Some(missing) = first_missing_dep(&when.deps) {
         return Some(format!("依存 `{missing}` が PATH にない"));
     }
-    if let Some(want) = &manifest.os
+    if let Some(want) = &when.os
         && want != current_os()
     {
         return Some(format!("OS `{want}` 不一致（現在 {}）", current_os()));
     }
     None
-}
-
-/// overlay の `when` を満たすか（省略キーは真、複数キーは AND）。
-///
-/// `dep` は PATH に在れば真、`os` は現在 OS と一致すれば真。`when` 省略（None）は常時採用。
-pub fn when_satisfied(when: &Option<When>) -> bool {
-    let Some(when) = when else {
-        return true;
-    };
-    if let Some(dep) = &when.dep
-        && which(dep).is_none()
-    {
-        return false;
-    }
-    if let Some(os) = &when.os
-        && os != current_os()
-    {
-        return false;
-    }
-    true
 }
 
 /// `deps` のうち最初に PATH 上で見つからないものを返す（全て揃えば None）。
@@ -113,13 +113,13 @@ mod tests {
     #[test]
     fn when_os_matches_current_only() {
         let hit = When {
-            dep: None,
+            deps: vec![],
             os: Some(current_os().to_string()),
         };
         assert!(when_satisfied(&Some(hit)));
 
         let miss = When {
-            dep: None,
+            deps: vec![],
             os: Some("nonsuch-os".to_string()),
         };
         assert!(!when_satisfied(&Some(miss)));
@@ -127,16 +127,16 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn when_dep_checks_path_via_absolute_executable() {
+    fn when_deps_check_path_via_absolute_executable() {
         // パス区切りを含む名前は PATH 探索せず直接判定する（/bin/sh は実行可能）。
         let present = When {
-            dep: Some("/bin/sh".to_string()),
+            deps: vec!["/bin/sh".to_string()],
             os: None,
         };
         assert!(when_satisfied(&Some(present)));
 
         let absent = When {
-            dep: Some("/nonexistent/itic-bin".to_string()),
+            deps: vec!["/nonexistent/itic-bin".to_string()],
             os: None,
         };
         assert!(!when_satisfied(&Some(absent)));
@@ -144,10 +144,21 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn when_is_and_of_keys() {
-        // dep は満たすが os が外れる → 全体は false（AND）。
+    fn when_deps_are_and_of_array() {
+        // deps は配列 AND: 1 つでも欠ければ不成立。
         let mixed = When {
-            dep: Some("/bin/sh".to_string()),
+            deps: vec!["/bin/sh".to_string(), "/nonexistent/itic-bin".to_string()],
+            os: None,
+        };
+        assert!(!when_satisfied(&Some(mixed)));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn when_is_and_of_keys() {
+        // deps は満たすが os が外れる → 全体は false（AND）。
+        let mixed = When {
+            deps: vec!["/bin/sh".to_string()],
             os: Some("nonsuch-os".to_string()),
         };
         assert!(!when_satisfied(&Some(mixed)));

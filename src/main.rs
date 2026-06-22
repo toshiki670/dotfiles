@@ -7,7 +7,7 @@
 //! 固定ソース `configs/` を走査し、`manifest.toml` に従って配置する。配置は **2軸**
 //! （生成方式 `kind`=copy/generate × 合成 `strategy`=concat/json-shallow）＋条件付き overlay
 //! （`when` gate）で捉える（設計書 §5 / §5.5）。copy はツリー配置、generate / overlay 明示は
-//! ファイル合成（[`compose`]）を通り、`deps` / `os` はユニット単位 gate（[`gate`]）。配置の直前に
+//! ファイル合成（[`compose`]）を通り、トップレベル `when`（`deps` / `os`）はユニット単位 gate（[`gate`]）。配置の直前に
 //! `locals`（named value）を解決・注入する（[`resolve`] / [`inject`] / [`store`] / [`prompt`]、§9）。
 //! 配置後は `hooks`（onchange フック）をユニットのソースハッシュ変化時だけ実行する
 //! （[`hooks`] / [`onchange`]、§13）。`apply` は配置＋フック、`list` は配置先一覧、`secret set` は
