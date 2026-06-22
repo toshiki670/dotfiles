@@ -80,6 +80,14 @@ impl State {
 /// [`discover::unit_files`] が返すデプロイ対象ファイルを（既にソート済み）順に、
 /// **`dir` からの相対パス → 内容**の順で hasher に与える。相対パスも混ぜることで、
 /// ファイルの追加・改名・移動も検知する（内容だけの concat より厳密）。
+///
+/// **`manifest.toml` 自体はハッシュ対象外**（`unit_files` が除外）。これは意図的で、ハッシュは
+/// 「フックが消費するデプロイ内容（例: bat の theme・ghostty の config）が変わったか」を測るもの
+/// だから ― `dst` 変更やパーミッション属性の変更は配置先を変えるだけでフックの入力には影響しない。
+/// なお **hook の追加**は再実行を妨げない: onchange 状態は `<unit>::<hook>` キーで持ち、新しい
+/// hook 名は未記録（`None`）なので初回として必ず走る（[`crate::hooks::run_if_changed`]）。
+/// manifest だけの変更でも既存 hook を再評価したくなったら、状態キーに manifest ハッシュを混ぜる
+/// 等の拡張余地はあるが、現状その要求は無いので最小に留める。
 pub fn hash_dir(dir: &Path) -> Result<String, String> {
     let mut hasher = Sha256::new();
     for file in discover::unit_files(dir)? {

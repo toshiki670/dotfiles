@@ -98,10 +98,21 @@ fn bat_cache() -> Result<Outcome, String> {
 ///
 /// 既に正しい symlink なら何もしない。異なる実体（誤ったリンク・実ファイル）があれば
 /// [`std::fs::remove_file`] で除去してから張り直す ― これはツールが所有する参照リンクの更新で
-/// あり、ユーザーデータの削除ではない。ghostty ユニットは `os = "darwin"` で gate されるため
-/// macOS でのみ到達する。
+/// あり、ユーザーデータの削除ではない。
+///
+/// **darwin ガードは二重**にする: ghostty ユニットの `os = "darwin"`（manifest）が主役の gate
+/// だが、フック名 `ghostty-macos-symlink` は [`KNOWN`] で公開されているため、別ユニットが
+/// `os` を付け忘れて宣言すると Linux（`cfg(unix)` で本関数がコンパイルされる）で
+/// `~/Library/Application Support/...` を作りかねない。アクション自身も実行時 OS を確認し、
+/// darwin 以外なら `Skipped`（保険）にして macOS 専用ディレクトリを生成しない。
 #[cfg(unix)]
 fn ghostty_macos_symlink(home: &Path) -> Result<Outcome, String> {
+    // 保険: manifest の os gate を抜けても、darwin 以外では macOS 専用パスに触れない。
+    if gate::current_os() != "darwin" {
+        return Ok(Outcome::Skipped(
+            "ghostty-macos-symlink は darwin 専用".to_string(),
+        ));
+    }
     let support_dir = home.join("Library/Application Support/com.mitchellh.ghostty");
     let link = support_dir.join("config");
     let source = home.join(".config/ghostty/config");
