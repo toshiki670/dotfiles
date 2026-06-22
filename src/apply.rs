@@ -6,19 +6,22 @@
 //! dst=ディレクトリの copy は [`crate::copy`]（ツリー配置）、dst=ファイルの generate /
 //! overlay 明示は [`crate::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。
 //! 配置の直前に `locals`（named value）を解決し（[`crate::resolve`]）、配置ファイルの `@@name@@` を
-//! 注入する（§9）。本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・
-//! パーミッション適用）を持つ。
+//! 注入する（§9）。配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時
+//! から変わっていれば実行する（[`crate::hooks`] / [`crate::onchange`]、§13）。ユニット gate が false の
+//! ときは配置前に短絡 return するため、その hooks も走らない（＝ os 属性でフックを分岐できる）。
+//! 本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
 use crate::discover::{self, MANIFEST, Unit};
 use crate::manifest::{Kind, Manifest, Strategy};
+use crate::onchange::State as HookState;
 use crate::store::Store;
-use crate::{compose, copy, gate, prompt, resolve};
+use crate::{compose, copy, gate, hooks, prompt, resolve};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 /// `source`（= `configs/`）配下を走査し、各 manifest の配置を実行する。
-/// `home` は dst の `~` 展開先。`locals` の取得・注入に使う named value ストアは
-/// 開始時に1回ロードし（[`Store`]）、各単位の対話取得（TTY）で逐次更新する。
+/// `home` は dst の `~` 展開先。`locals` の取得・注入に使う named value ストアと、`hooks` の onchange
+/// 状態（[`HookState`]）は開始時に1回ロードし、各単位で逐次更新する。
 pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     let units = discover::collect(source)?;
     if units.is_empty() {
@@ -30,19 +33,26 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     }
 
     let mut store = Store::load(home)?;
+    let mut hook_state = HookState::load(home);
     for unit in &units {
-        apply_unit(unit, home, &mut store)?;
+        apply_unit(unit, home, &mut store, &mut hook_state)?;
     }
     Ok(())
 }
 
-/// 1 単位を評価順（§5.5）に従って配置し、結果を 1 行で表示する。
-fn apply_unit(unit: &Unit, home: &Path, store: &mut Store) -> Result<(), String> {
+/// 1 単位を評価順（§5.5）に従って配置し、結果を 1 行で表示する。配置成功後、ユニットが宣言した
+/// `hooks` を onchange gate を通して実行する（§13）。
+fn apply_unit(
+    unit: &Unit,
+    home: &Path,
+    store: &mut Store,
+    hook_state: &mut HookState,
+) -> Result<(), String> {
     let manifest = Manifest::load(&unit.dir.join(MANIFEST))?;
     let dst = expand_home(&manifest.dst, home);
     let name = unit.rel.to_string_lossy();
 
-    // ①ユニット gate を最初に評価し、満たさなければユニット全体を skip（dst は触らない）。
+    // ①ユニット gate を最初に評価し、満たさなければユニット全体を skip（dst も hooks も触らない）。
     if let Some(reason) = gate::unit_skip_reason(&manifest) {
         println!("apply: {name} → skip ({reason})");
         return Ok(());
@@ -63,6 +73,9 @@ fn apply_unit(unit: &Unit, home: &Path, store: &mut Store) -> Result<(), String>
         copy::place(&unit.dir, &dst, &manifest, &locals)?;
     }
     println!("apply: {name} → {} ({label})", manifest.dst);
+
+    // 配置後（after フェーズ）に onchange フックを走らせる。ソースが前回適用時と同じなら skip。
+    hooks::run_unit_hooks(&unit.dir, &name, &manifest.hooks, hook_state)?;
     Ok(())
 }
 

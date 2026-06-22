@@ -15,6 +15,8 @@
 //! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群
 //! - [`claude_settings`]: claude/settings 実 config（S3/#457）の結線確認
 //! - [`secrets`]: マシンローカル値（S4/#458）— secret set / 注入 / doctor / 実 git 結線
+//! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証
+//!   （ソースハッシュ skip/run・os gate・未インストール skip・非ゼロ終了エラー）
 
 use assert_cmd::Command;
 
@@ -22,6 +24,7 @@ mod apply_copy;
 mod claude_settings;
 mod cli;
 mod generate;
+mod hooks;
 mod list;
 mod overlay;
 mod secrets;

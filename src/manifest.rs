@@ -9,8 +9,10 @@
 //!   `when`（`dep` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
 //!
 //! `deps` / `os` はユニット単位 gate（＝ ユニット全体に係る `when` の退化形, §5.5）。
-//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。theme / hooks は
-//! 後続スライスで追加する。
+//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は onchange
+//! フック（§13, S5）の**コマンド（argv）**宣言で、各 argv が非空であることを load 時に検証する
+//! （実行は [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
+//! theme は後続（color）スライスで追加する。
 
 use serde::Deserialize;
 use std::path::Path;
@@ -67,6 +69,15 @@ pub struct Manifest {
     /// `locals` とズレると非エコー抑制が黙って効かず秘匿値が漏れる footgun を防ぐ。
     #[serde(default)]
     pub sensitive: Vec<String>,
+    /// onchange フック（§13, S5）。このユニットの配置後（after フェーズ）に、ユニットのソースが
+    /// 前回適用時から変わっていれば実行する**コマンド（argv）の配列**（例
+    /// `hooks = [["bat", "cache", "--build"]]`）。ツール固有ロジックは binary に持たず、実行する
+    /// コマンドをデータとして宣言する（[`crate::generate`] の `cmd` と同思想）→ 新ツールのフック
+    /// 追加に binary 変更は不要・configs と疎結合。各 argv が非空であることを load 時に検証する。
+    /// ユニット gate（`deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない
+    /// （＝ os 属性でフックを分岐できる, §5.5 不変条件①）。
+    #[serde(default)]
+    pub hooks: Vec<Vec<String>>,
 }
 
 /// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
@@ -145,6 +156,10 @@ impl Manifest {
     /// - **`sensitive ⊆ locals`**（§9.1）。`sensitive` に `locals` 未宣言の名前があると、その名は
     ///   非エコー/ログ抑制の対象にならず（resolve は `locals` を走査するため）秘匿値が黙って漏れる。
     ///   typo を配置前に弾く。
+    /// - **`hooks` の各コマンド（argv）は非空**（§13, S5）。空の argv は実体化できないコマンドで、
+    ///   apply で黙って無視/panic されると事故になるため load 時に弾く（他の検証群と同じ
+    ///   「静かに無視しない」方針）。フック名のレジストリ検証は持たない ― フックはツール名でなく
+    ///   コマンドそのものをデータとして宣言する（binary は実行するだけ）。
     fn validate(&self) -> Result<(), String> {
         if !self.overlay.is_empty() && self.strategy.is_none() {
             return Err(
@@ -176,6 +191,9 @@ impl Manifest {
             return Err(format!(
                 "sensitive `{orphan}` が locals に宣言されていません（sensitive ⊆ locals）"
             ));
+        }
+        if self.hooks.iter().any(|argv| argv.is_empty()) {
+            return Err("hooks の各要素は非空のコマンド（argv）である必要があります".to_string());
         }
         Ok(())
     }
@@ -316,6 +334,22 @@ mod tests {
         assert!(
             err.contains("sensitive") && err.contains("githb.token"),
             "sensitive ⊄ locals が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn validate_accepts_command_hook() {
+        // 非空の argv は受理（エンジンは中身を解釈しない, §13）。
+        assert!(parse("dst = \"~/x\"\nhooks = [[\"cmd\", \"sub\", \"--flag\"]]\n").is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_empty_hook() {
+        // 空の argv は実体化できないコマンド。load 時に弾く（黙って無視/panic しない）。
+        let err = parse("dst = \"~/x\"\nhooks = [[]]\n").unwrap_err();
+        assert!(
+            err.contains("hooks") && err.contains("非空"),
+            "空コマンドが弾かれていない: {err}"
         );
     }
 

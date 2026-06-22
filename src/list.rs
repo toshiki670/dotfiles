@@ -39,7 +39,7 @@ pub fn run(source: &Path) -> Result<(), String> {
 }
 
 /// 1 単位の属性ラベル（2軸モデル, §7）。
-/// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ deps / os。
+/// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ deps / os ＋ hooks。
 fn attrs(manifest: &Manifest) -> String {
     let mut parts = vec![
         match manifest.kind {
@@ -74,6 +74,10 @@ fn attrs(manifest: &Manifest) -> String {
     }
     if let Some(os) = &manifest.os {
         parts.push(format!("os={os}"));
+    }
+    if !manifest.hooks.is_empty() {
+        // フックはコマンド（argv）なので、一覧では件数だけ示す（詳細は manifest を見る）。
+        parts.push(format!("hooks={}", manifest.hooks.len()));
     }
     parts.join(", ")
 }

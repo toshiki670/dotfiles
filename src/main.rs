@@ -9,7 +9,9 @@
 //! （`when` gate）で捉える（設計書 §5 / §5.5）。copy はツリー配置、generate / overlay 明示は
 //! ファイル合成（[`compose`]）を通り、`deps` / `os` はユニット単位 gate（[`gate`]）。配置の直前に
 //! `locals`（named value）を解決・注入する（[`resolve`] / [`inject`] / [`store`] / [`prompt`]、§9）。
-//! `apply` は配置、`list` は配置先一覧、`secret set` は named value 設定、`doctor` は診断（雛形）。
+//! 配置後は `hooks`（onchange フック）をユニットのソースハッシュ変化時だけ実行する
+//! （[`hooks`] / [`onchange`]、§13）。`apply` は配置＋フック、`list` は配置先一覧、`secret set` は
+//! named value 設定、`doctor` は診断（雛形）。
 
 use clap::{Parser, Subcommand};
 use std::ffi::OsString;
@@ -22,9 +24,11 @@ mod discover;
 mod doctor;
 mod gate;
 mod generate;
+mod hooks;
 mod inject;
 mod list;
 mod manifest;
+mod onchange;
 mod prompt;
 mod resolve;
 mod secret;
