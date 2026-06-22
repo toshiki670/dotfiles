@@ -135,8 +135,9 @@ mod tests {
     #[test]
     fn short_hash_is_stable_and_distinguishes_commands() {
         // 同じ入力は同じ短ハッシュ、違うコマンドは違う短ハッシュ（状態キーの衝突防止）。
-        assert_eq!(short_hash("bat\u{0}cache"), short_hash("bat\u{0}cache"));
-        assert_ne!(short_hash("bat\u{0}cache"), short_hash("sh\u{0}-c\u{0}ln"));
+        // 中立なサンプル（特定ツール名に依存しない）。
+        assert_eq!(short_hash("cmd-a\u{0}x"), short_hash("cmd-a\u{0}x"));
+        assert_ne!(short_hash("cmd-a\u{0}x"), short_hash("cmd-b\u{0}y"));
         assert_eq!(short_hash("x").len(), 16);
     }
 

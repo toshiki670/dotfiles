@@ -339,10 +339,9 @@ mod tests {
 
     #[test]
     fn validate_accepts_command_hook() {
-        // hooks はコマンド（argv）の配列。非空なら受理される（§13, S5）。
-        assert!(
-            parse("dst = \"~/.config/bat\"\nhooks = [[\"bat\", \"cache\", \"--build\"]]\n").is_ok()
-        );
+        // hooks はコマンド（argv）の配列。エンジンは中身を解釈しないので、検証は「非空」だけ。
+        // 特定ツールに依存しない汎用テスト ― サンプルも実ツール名でなく中立な argv にする。
+        assert!(parse("dst = \"~/x\"\nhooks = [[\"cmd\", \"sub\", \"--flag\"]]\n").is_ok());
     }
 
     #[test]
