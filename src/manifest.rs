@@ -312,9 +312,10 @@ mod tests {
     #[test]
     fn validate_rejects_overlay_with_no_kind() {
         // when だけで src/cmd/preserve が無い → 断片を実体化できない。
-        let err =
-            parse("dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nwhen = { deps = [\"rtk\"] }\n")
-                .unwrap_err();
+        let err = parse(
+            "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nwhen = { deps = [\"rtk\"] }\n",
+        )
+        .unwrap_err();
         assert!(
             err.contains("ちょうど 1 つ"),
             "0 個が検知されていない: {err}"
