@@ -84,10 +84,9 @@ impl State {
 /// **`manifest.toml` 自体はハッシュ対象外**（`unit_files` が除外）。これは意図的で、ハッシュは
 /// 「フックが消費するデプロイ内容（例: bat の theme・ghostty の config）が変わったか」を測るもの
 /// だから ― `dst` 変更やパーミッション属性の変更は配置先を変えるだけでフックの入力には影響しない。
-/// なお **hook の追加**は再実行を妨げない: onchange 状態は `<unit>::<hook>` キーで持ち、新しい
-/// hook 名は未記録（`None`）なので初回として必ず走る（[`crate::hooks::run_if_changed`]）。
-/// manifest だけの変更でも既存 hook を再評価したくなったら、状態キーに manifest ハッシュを混ぜる
-/// 等の拡張余地はあるが、現状その要求は無いので最小に留める。
+/// なお **hook の追加・コマンド変更**は取りこぼさない: onchange 状態は `<unit>::<コマンド短ハッシュ>`
+/// キーで持つので（[`crate::hooks`]）、新しい/変更後のコマンドは未記録（`None`）= 初回として必ず走る
+/// （manifest がハッシュ対象外でも、キー側にコマンド内容が入るため）。
 pub fn hash_dir(dir: &Path) -> Result<String, String> {
     let mut hasher = Sha256::new();
     for file in discover::unit_files(dir)? {
@@ -102,6 +101,15 @@ pub fn hash_dir(dir: &Path) -> Result<String, String> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+/// 文字列を SHA-256 で畳んだ先頭 16 桁の安定ハッシュ。フックの状態キー suffix（コマンド内容の
+/// 同一性判定）に使う ― 生のコマンド文字列をキーにすると空白/クォートで toml キーが壊れうるため、
+/// 短い 16 進へ畳む。64bit 相当で、1 ユニット内の数個のコマンド間の衝突は無視できる。
+pub fn short_hash(data: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(data.as_bytes());
+    format!("{:x}", hasher.finalize())[..16].to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -110,18 +118,26 @@ mod tests {
     fn missing_state_loads_empty() {
         let home = tempfile::tempdir().unwrap();
         let state = State::load(home.path());
-        assert_eq!(state.get("bat::bat-cache"), None);
+        assert_eq!(state.get("demo::abc123"), None);
     }
 
     #[test]
     fn set_save_load_round_trips() {
         let home = tempfile::tempdir().unwrap();
         let mut state = State::load(home.path());
-        state.set("bat::bat-cache", "deadbeef");
+        state.set("demo::abc123", "deadbeef");
         state.save().unwrap();
 
         let reloaded = State::load(home.path());
-        assert_eq!(reloaded.get("bat::bat-cache"), Some("deadbeef"));
+        assert_eq!(reloaded.get("demo::abc123"), Some("deadbeef"));
+    }
+
+    #[test]
+    fn short_hash_is_stable_and_distinguishes_commands() {
+        // 同じ入力は同じ短ハッシュ、違うコマンドは違う短ハッシュ（状態キーの衝突防止）。
+        assert_eq!(short_hash("bat\u{0}cache"), short_hash("bat\u{0}cache"));
+        assert_ne!(short_hash("bat\u{0}cache"), short_hash("sh\u{0}-c\u{0}ln"));
+        assert_eq!(short_hash("x").len(), 16);
     }
 
     #[test]

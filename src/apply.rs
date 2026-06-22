@@ -75,9 +75,7 @@ fn apply_unit(
     println!("apply: {name} → {} ({label})", manifest.dst);
 
     // 配置後（after フェーズ）に onchange フックを走らせる。ソースが前回適用時と同じなら skip。
-    for hook in &manifest.hooks {
-        hooks::run_if_changed(hook, &unit.dir, &name, home, hook_state)?;
-    }
+    hooks::run_unit_hooks(&unit.dir, &name, &manifest.hooks, hook_state)?;
     Ok(())
 }
 

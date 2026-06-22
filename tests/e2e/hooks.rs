@@ -1,10 +1,11 @@
 //! `dotfiles apply` の onchange フック（S5 / #459）の E2E。
 //!
-//! 実バイナリ（bat 等）に依存せず、PATH 先頭スタブ（[`crate::write_stub`]）と temp HOME で
-//! 組み込みフックの挙動を hermetic に検証する。中心は **onchange gate**: ユニットのソースが
-//! 前回適用時と同じならフックを skip、変化（または初回）なら実行する（受け入れ条件④）。
-//! あわせて os ユニット gate が hooks を覆うこと（条件③）・未知フックの load 時拒否・
-//! ghostty symlink（条件②, macOS 限定）・list の hooks 表示を確認する。
+//! フックは manifest がコマンド（argv）をデータとして宣言し、binary は汎用に実行する。実バイナリ
+//! （bat 等）に依存せず、PATH 先頭スタブ（[`crate::write_stub`]）と temp HOME で挙動を hermetic に
+//! 検証する。中心は **onchange gate**: ユニットのソースが前回適用時と同じならフックを skip、変化
+//! （または初回）なら実行する（受け入れ条件④）。あわせて os ユニット gate が hooks を覆うこと
+//! （条件③）・空コマンドの load 時拒否・ghostty symlink を汎用エンジンで実行（条件②, macOS 限定）・
+//! list の hooks 表示を確認する。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
@@ -18,15 +19,15 @@ fn marker_lines(home: &Path) -> usize {
         .unwrap_or(0)
 }
 
-/// bat-cache フックを宣言した bat ユニット（dst＋theme ファイル）を `work` に書き出す。
-/// `theme_body` を変えるとユニットのソースハッシュが変わり、onchange が再実行を促す。
+/// `bat cache --build` フック（コマンド argv）を宣言した bat ユニット（dst＋theme ファイル）を
+/// `work` に書き出す。`theme_body` を変えるとユニットのソースハッシュが変わり、onchange が再実行を促す。
 #[cfg(unix)]
 fn write_bat_unit(work: &Path, theme_body: &str) {
     let unit = work.join("configs/bat");
     fs::create_dir_all(unit.join("themes")).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/bat\"\nhooks = [\"bat-cache\"]\n",
+        "dst = \"~/.config/bat\"\nhooks = [[\"bat\", \"cache\", \"--build\"]]\n",
     )
     .unwrap();
     fs::write(unit.join("themes/ayu.tmTheme"), theme_body).unwrap();
@@ -52,7 +53,7 @@ fn hook_runs_on_first_apply_skips_when_unchanged_reruns_on_change() {
         .env("PATH", bin.path())
         .assert()
         .success()
-        .stdout(predicate::str::contains("hook: bat-cache"))
+        .stdout(predicate::str::contains("hook: bat cache --build"))
         .stdout(predicate::str::contains("ran"));
     assert_eq!(marker_lines(home.path()), 1, "初回はフックが実行されるべき");
 
@@ -102,7 +103,7 @@ fn os_gate_skips_unit_hooks() {
     fs::create_dir_all(unit.join("themes")).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/bat\"\nos = \"nonsuch-os\"\nhooks = [\"bat-cache\"]\n",
+        "dst = \"~/.config/bat\"\nos = \"nonsuch-os\"\nhooks = [[\"bat\", \"cache\", \"--build\"]]\n",
     )
     .unwrap();
     fs::write(unit.join("themes/ayu.tmTheme"), "v1").unwrap();
@@ -124,9 +125,9 @@ fn os_gate_skips_unit_hooks() {
     );
 }
 
-/// 未知のフック名は load 時に弾く（apply 失敗・stderr にフック名）。typo を黙殺しない。
+/// 空のコマンド（argv）を持つ hook は load 時に弾く（apply 失敗）。実体化できない typo を黙殺しない。
 #[test]
-fn unknown_hook_fails_at_load() {
+fn empty_hook_command_fails_at_load() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
 
@@ -134,7 +135,7 @@ fn unknown_hook_fails_at_load() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nhooks = [\"nope\"]\n",
+        "dst = \"~/.config/demo\"\nhooks = [[]]\n",
     )
     .unwrap();
     fs::write(unit.join("f.txt"), "x\n").unwrap();
@@ -145,11 +146,12 @@ fn unknown_hook_fails_at_load() {
         .env("HOME", home.path())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("hook"))
-        .stderr(predicate::str::contains("nope"));
+        .stderr(predicate::str::contains("hooks"))
+        .stderr(predicate::str::contains("非空"));
 }
 
-/// 条件②（macOS 限定）: ghostty symlink フックが config を配置し、macOS 参照先へ symlink を張る。
+/// 条件②（macOS 限定）: 汎用エンジンが manifest 宣言の symlink コマンドを実行し、config を配置して
+/// macOS 参照先へ symlink を張る（ツール固有の Rust コードは無く、コマンドはデータ）。
 #[cfg(target_os = "macos")]
 #[test]
 fn ghostty_macos_symlink_links_config() {
@@ -158,9 +160,15 @@ fn ghostty_macos_symlink_links_config() {
 
     let unit = work.path().join("configs/ghostty");
     fs::create_dir_all(&unit).unwrap();
+    // 実 configs/ghostty と同じ symlink コマンド（argv をデータとして宣言）。
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/ghostty\"\nos = \"darwin\"\nhooks = [\"ghostty-macos-symlink\"]\n",
+        r#"dst = "~/.config/ghostty"
+os = "darwin"
+hooks = [
+  ["sh", "-c", "mkdir -p \"$HOME/Library/Application Support/com.mitchellh.ghostty\" && ln -sf \"$HOME/.config/ghostty/config\" \"$HOME/Library/Application Support/com.mitchellh.ghostty/config\""],
+]
+"#,
     )
     .unwrap();
     fs::write(unit.join("config"), "theme = dark\n").unwrap();
@@ -187,7 +195,7 @@ fn ghostty_macos_symlink_links_config() {
     );
 }
 
-/// `dotfiles list` が hooks 属性を表示する。
+/// `dotfiles list` が hooks 属性（件数）を表示する。
 #[test]
 fn list_shows_hooks_attr() {
     let work = tempfile::tempdir().unwrap();
@@ -196,7 +204,7 @@ fn list_shows_hooks_attr() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/bat\"\nhooks = [\"bat-cache\"]\n",
+        "dst = \"~/.config/bat\"\nhooks = [[\"bat\", \"cache\", \"--build\"]]\n",
     )
     .unwrap();
 
@@ -205,5 +213,5 @@ fn list_shows_hooks_attr() {
         .current_dir(work.path())
         .assert()
         .success()
-        .stdout(predicate::str::contains("hooks=bat-cache"));
+        .stdout(predicate::str::contains("hooks=1"));
 }

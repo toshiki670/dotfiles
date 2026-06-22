@@ -76,7 +76,8 @@ fn attrs(manifest: &Manifest) -> String {
         parts.push(format!("os={os}"));
     }
     if !manifest.hooks.is_empty() {
-        parts.push(format!("hooks={}", manifest.hooks.join("+")));
+        // フックはコマンド（argv）なので、一覧では件数だけ示す（詳細は manifest を見る）。
+        parts.push(format!("hooks={}", manifest.hooks.len()));
     }
     parts.join(", ")
 }

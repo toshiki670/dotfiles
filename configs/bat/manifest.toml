@@ -4,8 +4,9 @@
 # サブディレクトリ themes/ も相対構造を保って再帰配置される（ディレクトリ単位 copy）。
 # kind は省略時 "copy"。
 #
-# hooks = ["bat-cache"]: 配置後にソース（このユニットの中身）が前回適用時から変われば
-# `bat cache --build` を実行し、カスタムテーマ ayu-dark を bat/delta に登録し直す（onchange,
-# §13）。旧 chezmoi run_onchange_after_build-bat-cache の移植。
+# hooks: 配置後にソース（このユニットの中身）が前回適用時から変われば `bat cache --build` を
+# 実行し、カスタムテーマ ayu-dark を bat/delta に登録し直す（onchange, §13）。フックは
+# 「実行するコマンド（argv）」をデータとして宣言する（binary はツール名を持たず実行するだけ）。
+# 旧 chezmoi run_onchange_after_build-bat-cache の移植。bat が未インストールなら skip される。
 dst   = "~/.config/bat"
-hooks = [ "bat-cache" ]
+hooks = [ [ "bat", "cache", "--build" ] ]
