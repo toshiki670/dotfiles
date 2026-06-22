@@ -9,8 +9,9 @@
 //!   `when`（`dep` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
 //!
 //! `deps` / `os` はユニット単位 gate（＝ ユニット全体に係る `when` の退化形, §5.5）。
-//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。theme / hooks は
-//! 後続スライスで追加する。
+//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は onchange
+//! フック（§13, S5）の宣言で、フック名は [`crate::hooks`] の組み込みレジストリと突き合わせて
+//! load 時に検証する。theme は後続（color）スライスで追加する。
 
 use serde::Deserialize;
 use std::path::Path;
@@ -67,6 +68,13 @@ pub struct Manifest {
     /// `locals` とズレると非エコー抑制が黙って効かず秘匿値が漏れる footgun を防ぐ。
     #[serde(default)]
     pub sensitive: Vec<String>,
+    /// onchange フック（§13, S5）。このユニットの配置後（after フェーズ）に、ユニットのソースが
+    /// 前回適用時から変わっていれば実行する組み込みフック名の列（例 `["bat-cache"]`）。フック名は
+    /// [`crate::hooks::is_known`] と突き合わせ、未知名は load 時エラーにする（typo を黙殺しない）。
+    /// ユニット gate（`deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない
+    /// （＝ os 属性でフックを分岐できる, §5.5 不変条件①）。
+    #[serde(default)]
+    pub hooks: Vec<String>,
 }
 
 /// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
@@ -145,6 +153,9 @@ impl Manifest {
     /// - **`sensitive ⊆ locals`**（§9.1）。`sensitive` に `locals` 未宣言の名前があると、その名は
     ///   非エコー/ログ抑制の対象にならず（resolve は `locals` を走査するため）秘匿値が黙って漏れる。
     ///   typo を配置前に弾く。
+    /// - **`hooks` は組み込みレジストリの名前のみ**（§13, S5）。未知のフック名（typo・未実装）は
+    ///   apply で黙って無視されると「効いているつもり」事故になるため、[`crate::hooks::is_known`] と
+    ///   突き合わせて load 時に弾く（他の検証群と同じ「静かに無視しない」方針）。
     fn validate(&self) -> Result<(), String> {
         if !self.overlay.is_empty() && self.strategy.is_none() {
             return Err(
@@ -175,6 +186,12 @@ impl Manifest {
         if let Some(orphan) = self.sensitive.iter().find(|s| !self.locals.contains(s)) {
             return Err(format!(
                 "sensitive `{orphan}` が locals に宣言されていません（sensitive ⊆ locals）"
+            ));
+        }
+        if let Some(unknown) = self.hooks.iter().find(|h| !crate::hooks::is_known(h)) {
+            return Err(format!(
+                "未知の hook `{unknown}`（既知: {}）",
+                crate::hooks::KNOWN.join(", ")
             ));
         }
         Ok(())
@@ -316,6 +333,22 @@ mod tests {
         assert!(
             err.contains("sensitive") && err.contains("githb.token"),
             "sensitive ⊄ locals が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn validate_accepts_known_hook() {
+        // 組み込みレジストリにある hook 名は受理される（§13, S5）。
+        assert!(parse("dst = \"~/.config/bat\"\nhooks = [\"bat-cache\"]\n").is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_unknown_hook() {
+        // 未知のフック名（typo・未実装）は load 時に弾く（黙って無視しない）。
+        let err = parse("dst = \"~/x\"\nhooks = [\"nope\"]\n").unwrap_err();
+        assert!(
+            err.contains("hook") && err.contains("nope"),
+            "未知 hook が弾かれていない: {err}"
         );
     }
 

@@ -1,0 +1,17 @@
+# ghostty の設定（config）を配置し、macOS 参照先への symlink を張る。
+# 設計: docs/dotfiles-native-design.md §6.1（ghostty 例）・§13
+#
+# kind は省略時 "copy"（config をそのまま ~/.config/ghostty へ配置）。
+#
+# os = "darwin": ghostty の symlink フックは macOS 専用なので、ユニットごと darwin gate する
+#   （§6.1 の例に準拠）。darwin 以外では配置も hooks も skip される（ユニット gate が hooks を覆う）。
+#
+# hooks = ["ghostty-macos-symlink"]: 配置後、~/Library/Application Support/com.mitchellh.ghostty/config
+#   → ~/.config/ghostty/config の symlink を冪等に張る（onchange, §13）。旧 chezmoi
+#   run_after_setup-ghostty-macos-symlink の移植。
+#
+# 注: テーマ（config 内の theme 行）の light/dark 切替は color スライスの担当。`theme` 属性は
+#   そのスライスで付与する（S5 では付けない）。
+dst   = "~/.config/ghostty"
+hooks = [ "ghostty-macos-symlink" ]
+os    = "darwin"
