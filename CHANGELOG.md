@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.69.5] - 2026-06-22
+### Features
+- Apply 最小骨格（固定ソース configs/・copy のみ）[S0 #454] ([#464](https://github.com/toshiki670/dotfiles/pull/464)) ([`336bed3`](https://github.com/toshiki670/dotfiles/commit/336bed33d37c434e1bf7ee41d8f089b514508497))
+- Copy 層拡張＋dotfiles list、eza/nvim/bat 移行 [S1 #455] ([#466](https://github.com/toshiki670/dotfiles/pull/466)) ([`bb64b86`](https://github.com/toshiki670/dotfiles/commit/bb64b86f499dce7d042ef33d72534a1a57bf8f4e))
+- Generate 層＋deps gate、補完5本を configs 化 [S2 #456] ([#468](https://github.com/toshiki670/dotfiles/pull/468)) ([`2063a23`](https://github.com/toshiki670/dotfiles/commit/2063a238378d9de7e4ae54a8104e2c6982cb332f))
+- Claude settings を json-shallow overlay で配置 [S3 #457] ([#469](https://github.com/toshiki670/dotfiles/pull/469)) ([`51f85d9`](https://github.com/toshiki670/dotfiles/commit/51f85d9cd64da5fd659df0abdd5d9370a26cfcc0))
+- マシンローカル値 named value 機構を実装 [S4 #458] ([#484](https://github.com/toshiki670/dotfiles/pull/484)) ([`9906b0b`](https://github.com/toshiki670/dotfiles/commit/9906b0bda5efa150428627011a2a10c98ddbb67a))
+- Onchange フック機構（manifest 宣言コマンドの汎用実行）を実装し bat/ghostty を移行 [S5 #459] ([#486](https://github.com/toshiki670/dotfiles/pull/486)) ([`eb2847b`](https://github.com/toshiki670/dotfiles/commit/eb2847b8de33ff54a3cbe9da17a02fad9128e6c3))
+### Refactor
+- 配置を2軸（生成方式×合成）＋overlay/when へ再構成 [#471] ([#472](https://github.com/toshiki670/dotfiles/pull/472)) ([`2d58ba2`](https://github.com/toshiki670/dotfiles/commit/2d58ba2ccaa9ad52a9737e46c4d73602b10589f2))
+- Settings 既存温存を $local+$forced 意味論へ（preserve=true・json-shallow 土台化） [#475] ([#476](https://github.com/toshiki670/dotfiles/pull/476)) ([`a4a1a4a`](https://github.com/toshiki670/dotfiles/commit/a4a1a4accf28582072bcd194e660e79771f281e1))
+- Force-push guard を Claude PreToolUse に一本化 [#473] ([#482](https://github.com/toshiki670/dotfiles/pull/482)) ([`9874929`](https://github.com/toshiki670/dotfiles/commit/9874929e923e6c1692b8a17da2a1ef5794dcc280))
+- Gate 語彙を when へ一本化（unit deps/os 廃止）[#493] ([#495](https://github.com/toshiki670/dotfiles/pull/495)) ([`949f618`](https://github.com/toshiki670/dotfiles/commit/949f6184a88bdfc5879abe48fe4ffa3107e70b94))
+
+
 ## [0.69.4] - 2026-06-19
 ### Features
 - Gradle のプロンプトから via を非表示化 ([#445](https://github.com/toshiki670/dotfiles/pull/445)) ([`9148e25`](https://github.com/toshiki670/dotfiles/commit/9148e25b693ccd2d5807fb1ecd9577b15ddc31dc))
