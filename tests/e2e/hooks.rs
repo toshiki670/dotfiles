@@ -1,24 +1,16 @@
 //! `dotfiles apply` の onchange フック（S5 / #459）の E2E。
 //!
-//! フックは manifest がコマンド（argv）をデータとして宣言し、binary はそれを汎用に実行する。
-//! よって**実ツール名に依存せず**、架空のフックコマンド `faketool`（PATH 先頭スタブ）でエンジンの
-//! 振る舞いだけを保証する（[`crate::generate`] の `foo` と同方式）。中心は **onchange gate**:
-//! ユニットのソースが前回適用時と同じならフックを skip、変化（または初回）なら実行する
-//! （受け入れ条件④）。あわせて os ユニット gate が hooks を覆うこと（条件③）・未インストール
-//! （PATH 不在）は中断せず skip・実行して非ゼロ終了は apply エラー・空コマンドの load 時拒否・
-//! list の hooks 表示を確認する。
-//!
-//! 実ツール（bat の cache build / ghostty の symlink）は manifest 内の**コマンド（データ）**で
-//! あり、その内容の妥当性はエンジンの責務ではない。エンジンは「宣言された任意のコマンドを onchange
-//! で実行する」ことだけを保証すればよく、本テストはそれを架空コマンドで検証する。
+//! 架空のフックコマンド `faketool`（PATH 先頭スタブ）と temp HOME で、エンジンの契約を検証する:
+//! ①onchange skip/run（ソースハッシュ・条件④）②os ユニット gate が hooks を覆う（条件③）
+//! ③未インストール（PATH 不在）は中断せず skip ④実行して非ゼロ終了は apply エラー
+//! ⑤空コマンドの load 時拒否 ⑥list の hooks 表示。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
 
-/// 架空のフックコマンド `faketool` の PATH スタブを置く（呼ばれるたび `$HOME/hook-ran` へ 1 行追記）。
-/// 実ツールに依存せず「エンジンが宣言コマンドを実行したか」を行数で測るための観測点。
+/// `faketool` の PATH スタブを置く（呼ばれるたび `$HOME/hook-ran` へ 1 行追記＝実行回数の観測点）。
 #[cfg(unix)]
 fn write_faketool(bin: &Path) {
     write_stub(bin, "faketool", "printf 'x\\n' >> \"$HOME/hook-ran\"\n");
