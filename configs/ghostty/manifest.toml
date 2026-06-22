@@ -3,6 +3,10 @@
 #
 # kind は省略時 "copy"（config をそのまま ~/.config/ghostty へ配置）。
 #
+# deps = ["ghostty"]: ghostty が PATH に無い環境ではユニットごと skip（配置も symlink も走らない,
+#   §7）。ghostty が無ければ config 配置も macOS 参照先への symlink も無意味なので gate する。
+#   （ghostty CLI は /Applications/Ghostty.app/Contents/MacOS/ghostty で PATH 解決される。）
+#
 # os = "darwin": ghostty の symlink フックは macOS 専用なので、ユニットごと darwin gate する
 #   （§6.1 の例に準拠）。darwin 以外では配置も hooks も skip される（ユニット gate が hooks を覆う）。
 #   フックが macOS 専用である知識はこの manifest（os 属性＋下記コマンド）が持ち、binary は関知しない。
@@ -14,6 +18,7 @@
 #
 # 注: テーマ（config 内の theme 行）の light/dark 切替は color スライスの担当。`theme` 属性は
 #   そのスライスで付与する（S5 では付けない）。
+deps = [ "ghostty" ]
 dst = "~/.config/ghostty"
 hooks = [
   [

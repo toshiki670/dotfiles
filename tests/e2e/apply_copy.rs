@@ -4,6 +4,8 @@
 //! 入れ子 manifest の委譲・パーミッション属性の合成を検証する。
 
 use crate::dotfiles;
+#[cfg(unix)]
+use crate::write_stub;
 use predicates::prelude::*;
 use rstest::rstest;
 use std::fs;
@@ -171,15 +173,29 @@ fn apply_sets_permissions_from_manifest(#[case] name: &str, #[case] attr: &str, 
 
 /// 実ソース configs/bat を一時 HOME へ apply し、themes/ サブディレクトリを含めて
 /// 再帰配置されることを検証する（実ツールでのサブディレクトリ再帰）。
+///
+/// configs/bat は `deps = ["bat"]` でユニット gate される（§7）。CI（ubuntu・bat 不在）でも
+/// 実 config の配置を検証できるよう、PATH 先頭に bat スタブを置いて gate を通す（bat-cache hook も
+/// no-op スタブが走る）。スタブは sh スクリプトなので unix 限定。
+#[cfg(unix)]
 #[test]
 fn apply_places_real_bat_config_with_theme_subdir() {
     let repo_root = env!("CARGO_MANIFEST_DIR");
     let home = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+
+    write_stub(bin.path(), "bat", "exit 0\n");
+    let path = format!(
+        "{}:{}",
+        bin.path().display(),
+        std::env::var("PATH").unwrap_or_default()
+    );
 
     dotfiles()
         .arg("apply")
         .current_dir(repo_root)
         .env("HOME", home.path())
+        .env("PATH", path)
         .assert()
         .success();
 
