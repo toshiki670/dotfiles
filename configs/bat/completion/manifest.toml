@@ -1,8 +1,8 @@
 # bat の fish 補完を生成・配置する（generate 層 / 設計書 §5・§7）。
 # `bat --completion fish` の出力を dst のファイルへ書き出す。
 # 親の configs/bat（kind=copy）からはこの単位（自前 manifest）は委譲され除外される。
-# deps = bat が PATH に無ければ生成をスキップ（gate）。
+# when.deps = bat が PATH に無ければ生成をスキップ（ユニット gate, §5.5）。
 cmd  = [ "bat", "--completion", "fish" ]
-deps = [ "bat" ]
 dst  = "~/.config/fish/completions/bat.fish"
 kind = "generate"
+when = { deps = [ "bat" ] }

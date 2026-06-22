@@ -11,9 +11,9 @@
 //! 実行は onchange gate（[`crate::onchange`]）を通す: ユニットのソースハッシュ＋コマンド内容が
 //! 前回適用時と同じならスキップ、変化（初回・**コマンド変更**を含む）なら実行する。プログラムが
 //! PATH に無い（未インストール）ときは skip してハッシュを保存せず、後で入れたら再実行されるように
-//! する（chezmoi の `command -v` ガード相当を、ツール名を持たずに汎用化）。ユニット gate
-//! （`deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない
-//! （＝ os 属性でフックを分岐できる）。
+//! する（chezmoi の `command -v` ガード相当を、ツール名を持たずに汎用化）。トップレベル `when`
+//! （ユニット gate, `deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない
+//! （＝ `when.os` でフックを分岐できる）。
 
 use crate::onchange::{self, State};
 use std::path::Path;

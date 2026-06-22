@@ -1,7 +1,7 @@
 //! `dotfiles apply` の claude/settings 実 config（S3 / #457）の E2E。
 //!
 //! 実ソース configs/claude/settings を一時 work へ隔離コピーし、PATH で rtk の有無を
-//! 決定的に与えて apply する。json-shallow overlay（base ＋ rtk(when.dep) ＋ preserve=true）が
+//! 決定的に与えて apply する。json-shallow overlay（base ＋ rtk(when.deps) ＋ preserve=true）が
 //! 実ファイルで「ローカル（非管理キー）全温存・共有上書き・rtk 条件付き hook」を満たすことを
 //! 検証する（overlay/strategy/when/preserve の純機構は [`crate::overlay`] の hermetic 群が網羅。
 //! ここは実 config の結線確認）。rtk スタブ／PATH 制御は unix 限定。
@@ -44,7 +44,7 @@ fn write_existing_settings(home: &Path, body: &str) {
 }
 
 /// rtk 在: ローカルの非管理キー（model / effortLevel / 任意の localOnly）を全温存しつつ共有
-/// （language）を base で上書きし、when.dep=rtk を満たして rtk hook が入る（旧 `$local + $forced`）。
+/// （language）を base で上書きし、when.deps=["rtk"] を満たして rtk hook が入る（旧 `$local + $forced`）。
 #[cfg(unix)]
 #[test]
 fn apply_real_claude_settings_preserves_local_and_overrides_with_rtk() {
@@ -86,7 +86,7 @@ fn apply_real_claude_settings_preserves_local_and_overrides_with_rtk() {
     );
     assert!(
         out.contains("rtk hook claude"),
-        "rtk 在で when.dep=rtk 断片の rtk hook が入るべき:\n{out}"
+        "rtk 在で when.deps=[\"rtk\"] 断片の rtk hook が入るべき:\n{out}"
     );
     assert!(
         out.contains("rm guard (trash)"),
@@ -117,7 +117,7 @@ fn apply_real_claude_settings_omits_rtk_hook_when_absent() {
     let out = fs::read_to_string(home.path().join(".claude/settings.json")).unwrap();
     assert!(
         !out.contains("rtk hook claude"),
-        "rtk 不在なら when.dep 断片は脱落し rtk hook は入らないべき:\n{out}"
+        "rtk 不在なら when.deps 断片は脱落し rtk hook は入らないべき:\n{out}"
     );
     assert!(
         out.contains("rm guard (trash)"),
