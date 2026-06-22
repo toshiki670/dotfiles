@@ -11,12 +11,12 @@
 //! - [`cli`]: `--help` / `--version` / 引数なし
 //! - [`apply_copy`]: copy 層（S0/S1）— 実 config 配置・tilde 展開・再帰委譲・パーミッション
 //! - [`list`]: 分散 manifest の集約・名前順・属性ラベル・ソース欠落
-//! - [`generate`]: generate 層（S2/#456）— cmd 実行・deps gate・sibling 連結・list 表示
+//! - [`generate`]: generate 層（S2/#456）— cmd 実行・when.deps gate・sibling 連結・list 表示
 //! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群
 //! - [`claude_settings`]: claude/settings 実 config（S3/#457）の結線確認
 //! - [`secrets`]: マシンローカル値（S4/#458）— secret set / 注入 / doctor / 実 git 結線
 //! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証
-//!   （ソースハッシュ skip/run・os gate・未インストール skip・非ゼロ終了エラー）
+//!   （ソースハッシュ skip/run・when.os gate・未インストール skip・非ゼロ終了エラー）
 
 use assert_cmd::Command;
 

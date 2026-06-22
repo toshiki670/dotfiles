@@ -6,7 +6,7 @@
 #      dotfiles が定義しないトップレベルキー（model / effortLevel や任意のローカル固有キー）を
 #      全保持し、dotfiles 所有キーだけを下の overlay で上書きする（旧 `$local + $forced` と同値）。
 #   2. base（settings.json, 常時）= 共有設定の土台。hooks は rtk 抜き（rm→trash ガードのみ）。
-#   3. rtk（rtk.json, when.dep=rtk）= rtk が PATH にある時だけ重ねる hooks 断片。
+#   3. rtk（rtk.json, when.deps=["rtk"]）= rtk が PATH にある時だけ重ねる hooks 断片。
 #      旧 .tmpl の `{{ if lookPath "rtk" }}` を when で表現し、無条件化の回帰を解消する。
 #
 # 合成は json-shallow（JSON トップレベル shallow merge・後勝ち。deep merge はしない）。
@@ -27,4 +27,4 @@ src = "settings.json"
 # rtk hook 断片: rtk が PATH にある時だけ hooks を rtk 入りで差し替える。
 [[overlay]]
 src  = "rtk.json"
-when = { dep = "rtk" }
+when = { deps = [ "rtk" ] }

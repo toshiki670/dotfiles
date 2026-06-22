@@ -1,7 +1,7 @@
 //! `dotfiles apply` の onchange フック（S5 / #459）の E2E。
 //!
 //! 架空のフックコマンド `faketool`（PATH 先頭スタブ）と temp HOME で、エンジンの契約を検証する:
-//! ①onchange skip/run（ソースハッシュ・条件④）②os ユニット gate が hooks を覆う（条件③）
+//! ①onchange skip/run（ソースハッシュ・条件④）②when.os ユニット gate が hooks を覆う（条件③）
 //! ③未インストール（PATH 不在）は中断せず skip ④実行して非ゼロ終了は apply エラー
 //! ⑤空コマンドの load 時拒否 ⑥list の hooks 表示。
 
@@ -89,7 +89,7 @@ fn hook_runs_on_first_apply_skips_when_unchanged_reruns_on_change() {
     );
 }
 
-/// 条件③: os ユニット gate が false のユニットは配置ごと skip され、その hooks も走らない。
+/// 条件③: when.os ユニット gate が false のユニットは配置ごと skip され、その hooks も走らない。
 /// `faketool` は PATH にあるが、os 不一致でユニットが skip されるためマーカーは作られない。
 #[cfg(unix)]
 #[test]
@@ -103,7 +103,7 @@ fn os_gate_skips_unit_hooks() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nos = \"nonsuch-os\"\nhooks = [[\"faketool\"]]\n",
+        "dst = \"~/.config/demo\"\nwhen = { os = \"nonsuch-os\" }\nhooks = [[\"faketool\"]]\n",
     )
     .unwrap();
     fs::write(unit.join("data.txt"), "v1").unwrap();

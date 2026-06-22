@@ -2,9 +2,9 @@
 //!
 //! dst=ファイルへ条件付き断片（overlay）を strategy で重ねる挙動と、§5.5 の評価順
 //! 不変条件（①ユニット gate 短絡 / ②宣言順 / ③preserve 最後）を hermetic fixture で検証する。
-//! when.dep は PATH 先頭スタブ（[`crate::write_stub`]）の有無で、when.os は現在 OS
-//! （chezmoi 互換表記）で gate する。末尾は overlay/strategy/preserve の不正な組合せを
-//! load 時に弾く検証群。
+//! when.deps（配列・AND）は PATH 先頭スタブ（[`crate::write_stub`]）の有無で、when.os は現在 OS
+//! （chezmoi 互換表記）で gate する。トップレベル when はユニットスコープ、`[[overlay]]` の when は
+//! 断片スコープ（同じ語彙）。末尾は overlay/strategy/preserve の不正な組合せを load 時に弾く検証群。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
@@ -20,7 +20,7 @@ fn current_os() -> &'static str {
     }
 }
 
-/// concat overlay（base 常時 ＋ rtk 断片 when.dep=rtk）の単位を書き出す。
+/// concat overlay（base 常時 ＋ rtk 断片 when.deps=["rtk"]）の単位を書き出す。
 fn write_concat_overlay_unit(work: &Path) {
     let unit = work.join("configs/demo");
     fs::create_dir_all(&unit).unwrap();
@@ -32,14 +32,14 @@ fn write_concat_overlay_unit(work: &Path) {
          src = \"base.txt\"\n\
          [[overlay]]\n\
          src = \"rtk.txt\"\n\
-         when = { dep = \"rtk\" }\n",
+         when = { deps = [\"rtk\"] }\n",
     )
     .unwrap();
     fs::write(unit.join("base.txt"), "BASE\n").unwrap();
     fs::write(unit.join("rtk.txt"), "RTK\n").unwrap();
 }
 
-/// when.dep を満たす（rtk が PATH にある）と rtk 断片が宣言順で連結される。
+/// when.deps を満たす（rtk が PATH にある）と rtk 断片が宣言順で連結される。
 #[cfg(unix)]
 #[test]
 fn apply_overlay_concat_includes_fragment_when_dep_present() {
@@ -62,11 +62,11 @@ fn apply_overlay_concat_includes_fragment_when_dep_present() {
     assert_eq!(
         fs::read_to_string(&placed).unwrap(),
         "BASE\nRTK\n",
-        "when.dep を満たす rtk 断片が宣言順で連結されていない",
+        "when.deps を満たす rtk 断片が宣言順で連結されていない",
     );
 }
 
-/// when.dep を満たさない（rtk 不在）と rtk 断片だけ脱落し、base は残る（dst は生成される）。
+/// when.deps を満たさない（rtk 不在）と rtk 断片だけ脱落し、base は残る（dst は生成される）。
 #[cfg(unix)]
 #[test]
 fn apply_overlay_concat_drops_fragment_when_dep_absent() {
@@ -136,7 +136,7 @@ fn apply_overlay_when_os_gates_by_current_os() {
     );
 }
 
-/// 不変条件①: ユニット os gate を満たさない単位は丸ごと skip し、dst を一切作らない。
+/// 不変条件①: トップレベル when.os gate を満たさない単位は丸ごと skip し、dst を一切作らない。
 /// gate がユニット共通（copy にも効く）ことも兼ねて確認する。
 #[test]
 fn apply_unit_os_gate_short_circuits_without_touching_dst() {
@@ -147,7 +147,7 @@ fn apply_unit_os_gate_short_circuits_without_touching_dst() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/maconly\"\nos = \"nonsuch-os\"\n",
+        "dst = \"~/.config/maconly\"\nwhen = { os = \"nonsuch-os\" }\n",
     )
     .unwrap();
     fs::write(unit.join("f.txt"), "x\n").unwrap();
@@ -168,7 +168,7 @@ fn apply_unit_os_gate_short_circuits_without_touching_dst() {
 }
 
 /// claude/settings.json 相当（json-shallow ＋ preserve）の合成単位を書き出す。
-/// preserve=true で既存 dst を最下層の土台にし、overlay は base → rtk（when.dep）の宣言順で重なる。
+/// preserve=true で既存 dst を最下層の土台にし、overlay は base → rtk（when.deps）の宣言順で重なる。
 /// base は dotfiles 所有キー（language / hook）だけを持ち、model 等の非管理キーは定義しない。
 fn write_json_shallow_unit(work: &Path) {
     let unit = work.join("configs/claude/settings");
@@ -182,7 +182,7 @@ fn write_json_shallow_unit(work: &Path) {
          src = \"settings.json\"\n\
          [[overlay]]\n\
          src = \"rtk.json\"\n\
-         when = { dep = \"rtk\" }\n",
+         when = { deps = [\"rtk\"] }\n",
     )
     .unwrap();
     // base は dotfiles 所有キー（language=共有値 / hook）を持つ。model は定義しない（=非管理）。
@@ -242,7 +242,7 @@ fn apply_json_shallow_preserves_unmanaged_and_overwrites_owned() {
     );
     assert!(
         out.contains("\"rtkHook\": \"on\""),
-        "when.dep=rtk を満たす断片が重なるべき:\n{out}",
+        "when.deps=[\"rtk\"] を満たす断片が重なるべき:\n{out}",
     );
 }
 
@@ -279,7 +279,7 @@ fn apply_json_shallow_writes_base_without_gated_overlay() {
     );
     assert!(
         !out.contains("rtkHook"),
-        "rtk 不在なら when.dep 断片は脱落するべき:\n{out}",
+        "rtk 不在なら when.deps 断片は脱落するべき:\n{out}",
     );
 }
 
@@ -370,7 +370,7 @@ fn list_shows_overlay_strategy_and_os_attrs() {
     fs::create_dir_all(&os_unit).unwrap();
     fs::write(
         os_unit.join("manifest.toml"),
-        "dst = \"~/.config/maconly\"\nos = \"darwin\"\n",
+        "dst = \"~/.config/maconly\"\nwhen = { os = \"darwin\" }\n",
     )
     .unwrap();
 
@@ -382,7 +382,7 @@ fn list_shows_overlay_strategy_and_os_attrs() {
         .stdout(predicate::str::contains("json-shallow"))
         .stdout(predicate::str::contains("overlay=2"))
         .stdout(predicate::str::contains("preserve"))
-        .stdout(predicate::str::contains("os=darwin"));
+        .stdout(predicate::str::contains("when.os=darwin"));
 }
 
 /// overlay を明示しながら strategy を省略すると load 時にエラー（暗黙 concat を許さない）。

@@ -1,14 +1,14 @@
 //! `dotfiles apply` の generate 層（S2 / #456）の E2E。
 //!
 //! 実バイナリ（gh/bat 等）に依存せず、PATH 先頭に置いたスタブ（[`crate::write_stub`]）で
-//! `cmd` 実行と deps gate を検証する。スタブは sh スクリプトなので unix 限定。
+//! `cmd` 実行と when.deps gate を検証する。スタブは sh スクリプトなので unix 限定。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
 
-/// generate 単位 `configs/foo/completion`（dst=ファイル / cmd=foo / deps=foo）を書き出す。
+/// generate 単位 `configs/foo/completion`（dst=ファイル / cmd=foo / when.deps=["foo"]）を書き出す。
 #[cfg(unix)]
 fn write_generate_unit(work: &Path) -> std::path::PathBuf {
     let unit = work.join("configs/foo/completion");
@@ -18,7 +18,7 @@ fn write_generate_unit(work: &Path) -> std::path::PathBuf {
         "dst = \"~/.config/fish/completions/foo.fish\"\n\
          kind = \"generate\"\n\
          cmd = [\"foo\"]\n\
-         deps = [\"foo\"]\n",
+         when = { deps = [\"foo\"] }\n",
     )
     .unwrap();
     unit
@@ -51,7 +51,7 @@ fn apply_generate_runs_cmd_and_writes_output() {
     );
 }
 
-/// deps gate: 依存バイナリが PATH に無ければ生成をスキップし、ファイルを作らない（成功終了）。
+/// when.deps gate: 依存バイナリが PATH に無ければ生成をスキップし、ファイルを作らない（成功終了）。
 #[cfg(unix)]
 #[test]
 fn apply_generate_gate_skips_when_dep_missing() {
@@ -144,7 +144,7 @@ fn list_shows_generate_kind_with_deps() {
         "dst = \"~/.config/fish/completions/foo.fish\"\n\
          kind = \"generate\"\n\
          cmd = [\"foo\"]\n\
-         deps = [\"foo\"]\n",
+         when = { deps = [\"foo\"] }\n",
     )
     .unwrap();
 
@@ -154,5 +154,5 @@ fn list_shows_generate_kind_with_deps() {
         .assert()
         .success()
         .stdout(predicate::str::contains("generate"))
-        .stdout(predicate::str::contains("deps=foo"));
+        .stdout(predicate::str::contains("when.deps=foo"));
 }

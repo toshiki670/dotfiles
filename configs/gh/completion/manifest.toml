@@ -3,8 +3,8 @@
 # ブロック）を連結して dst へ書き出す（生成物の後ろへ sibling を追記する generate の規則）。
 # fish は補完をコマンド名のファイル（gh.fish）でのみ autoload するため、独自補完も
 # 同じ gh.fish へ同梱する必要がある。
-# deps = gh が PATH に無ければ生成をスキップ（gate）。
+# when.deps = gh が PATH に無ければ生成をスキップ（ユニット gate, §5.5）。
 cmd  = [ "gh", "completion", "--shell", "fish" ]
-deps = [ "gh" ]
 dst  = "~/.config/fish/completions/gh.fish"
 kind = "generate"
+when = { deps = [ "gh" ] }

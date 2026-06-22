@@ -39,7 +39,7 @@ pub fn run(source: &Path) -> Result<(), String> {
 }
 
 /// 1 単位の属性ラベル（2軸モデル, §7）。
-/// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ deps / os ＋ hooks。
+/// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ when.deps / when.os ＋ hooks。
 fn attrs(manifest: &Manifest) -> String {
     let mut parts = vec![
         match manifest.kind {
@@ -69,11 +69,13 @@ fn attrs(manifest: &Manifest) -> String {
     if manifest.executable {
         parts.push("executable".to_string());
     }
-    if !manifest.deps.is_empty() {
-        parts.push(format!("deps={}", manifest.deps.join("+")));
-    }
-    if let Some(os) = &manifest.os {
-        parts.push(format!("os={os}"));
+    if let Some(when) = &manifest.when {
+        if !when.deps.is_empty() {
+            parts.push(format!("when.deps={}", when.deps.join("+")));
+        }
+        if let Some(os) = &when.os {
+            parts.push(format!("when.os={os}"));
+        }
     }
     if !manifest.hooks.is_empty() {
         // フックはコマンド（argv）なので、一覧では件数だけ示す（詳細は manifest を見る）。

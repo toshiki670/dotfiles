@@ -1,14 +1,14 @@
 //! `dotfiles apply`：固定ソース `configs/` を走査し配置を実行する。
 //!
 //! 走査（manifest 発見・再帰委譲）は [`crate::discover`]。各単位は §5.5 の評価順に従う:
-//! ①**ユニット gate（`deps` / `os`）を最初に評価し false なら短絡**（[`crate::gate`]、dst を
+//! ①**トップレベル `when`（ユニット gate）を最初に評価し false なら短絡**（[`crate::gate`]、dst を
 //! 一切触らず skip）。生き残った単位は dst 種別で配置経路が分かれる ―
 //! dst=ディレクトリの copy は [`crate::copy`]（ツリー配置）、dst=ファイルの generate /
 //! overlay 明示は [`crate::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。
 //! 配置の直前に `locals`（named value）を解決し（[`crate::resolve`]）、配置ファイルの `@@name@@` を
 //! 注入する（§9）。配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時
 //! から変わっていれば実行する（[`crate::hooks`] / [`crate::onchange`]、§13）。ユニット gate が false の
-//! ときは配置前に短絡 return するため、その hooks も走らない（＝ os 属性でフックを分岐できる）。
+//! ときは配置前に短絡 return するため、その hooks も走らない（＝ `when.os` でフックを分岐できる）。
 //! 本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
 use crate::discover::{self, MANIFEST, Unit};
@@ -52,7 +52,7 @@ fn apply_unit(
     let dst = expand_home(&manifest.dst, home);
     let name = unit.rel.to_string_lossy();
 
-    // ①ユニット gate を最初に評価し、満たさなければユニット全体を skip（dst も hooks も触らない）。
+    // ①トップレベル when（ユニット gate）を最初に評価し、満たさなければユニット全体を skip（dst も hooks も触らない）。
     if let Some(reason) = gate::unit_skip_reason(&manifest) {
         println!("apply: {name} → skip ({reason})");
         return Ok(());
