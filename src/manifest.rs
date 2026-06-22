@@ -135,6 +135,17 @@ pub struct When {
     pub os: Option<String>,
 }
 
+impl When {
+    /// 実効キー（`deps` / `os`）を 1 つも持たないか。
+    ///
+    /// 空テーブル `when = {}` や `when = { deps = [] }` は常時採用の silent no-op になり、
+    /// 「gate を書いたのに効かない」typo（編集で内部キーだけ消えた等）を黙って通す。これを
+    /// load 時に弾くため [`Manifest::validate`] が使う。`theme` 等のキー追加時はここに足す。
+    fn has_no_effective_key(&self) -> bool {
+        self.deps.is_empty() && self.os.is_none()
+    }
+}
+
 impl Manifest {
     /// `manifest.toml` を読み込み、パース後にセマンティックバリデーション（§5.5）を行う。
     pub fn load(path: &Path) -> Result<Self, String> {
@@ -203,6 +214,23 @@ impl Manifest {
         }
         if self.hooks.iter().any(|argv| argv.is_empty()) {
             return Err("hooks の各要素は非空のコマンド（argv）である必要があります".to_string());
+        }
+        if let Some(when) = &self.when
+            && when.has_no_effective_key()
+        {
+            return Err(
+                "when は実効キー（deps / os）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+                    .to_string(),
+            );
+        }
+        if let Some(i) = self
+            .overlay
+            .iter()
+            .position(|ov| ov.when.as_ref().is_some_and(When::has_no_effective_key))
+        {
+            return Err(format!(
+                "overlay[{i}] の when は実効キー（deps / os）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+            ));
         }
         Ok(())
     }
@@ -380,6 +408,29 @@ mod tests {
     fn parse_accepts_top_level_when() {
         // トップレベル when（ユニットスコープ gate）= deps 配列 ＋ os スカラ。
         assert!(parse("dst = \"~/x\"\nwhen = { deps = [\"ghostty\"], os = \"darwin\" }\n").is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_top_level_empty_when() {
+        // when = {} / when = { deps = [] } は常時採用の silent no-op。load 時に弾く（fail loud）。
+        assert!(parse("dst = \"~/x\"\nwhen = {}\n").is_err());
+        let err = parse("dst = \"~/x\"\nwhen = { deps = [] }\n").unwrap_err();
+        assert!(
+            err.contains("when") && err.contains("実効キー"),
+            "実効キーの無いトップレベル when が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn validate_rejects_overlay_empty_when() {
+        // overlay の when も同様に実効キー必須（断片が常時採用される silent no-op を弾く）。
+        let err =
+            parse("dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = {}\n")
+                .unwrap_err();
+        assert!(
+            err.contains("overlay[0]") && err.contains("実効キー"),
+            "実効キーの無い overlay の when が弾かれていない: {err}"
+        );
     }
 
     #[test]

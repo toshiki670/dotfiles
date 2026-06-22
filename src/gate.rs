@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 /// 現在の OS を chezmoi 互換表記で返す（macOS は `darwin`）。
 ///
-/// manifest の `os` / `when.os` は chezmoi の `.chezmoi.os` と同じ表記（`darwin` / `linux`）で
+/// manifest の `when.os` は chezmoi の `.chezmoi.os` と同じ表記（`darwin` / `linux`）で
 /// 書くため、Rust の `std::env::consts::OS`（macOS では `macos`）を `darwin` に正規化して比較する。
 pub fn current_os() -> &'static str {
     match std::env::consts::OS {

@@ -154,5 +154,5 @@ fn list_shows_generate_kind_with_deps() {
         .assert()
         .success()
         .stdout(predicate::str::contains("generate"))
-        .stdout(predicate::str::contains("deps=foo"));
+        .stdout(predicate::str::contains("when.deps=foo"));
 }

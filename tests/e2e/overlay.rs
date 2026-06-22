@@ -382,7 +382,7 @@ fn list_shows_overlay_strategy_and_os_attrs() {
         .stdout(predicate::str::contains("json-shallow"))
         .stdout(predicate::str::contains("overlay=2"))
         .stdout(predicate::str::contains("preserve"))
-        .stdout(predicate::str::contains("os=darwin"));
+        .stdout(predicate::str::contains("when.os=darwin"));
 }
 
 /// overlay を明示しながら strategy を省略すると load 時にエラー（暗黙 concat を許さない）。
