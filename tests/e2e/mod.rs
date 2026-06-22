@@ -14,6 +14,7 @@
 //! - [`generate`]: generate 層（S2/#456）— cmd 実行・deps gate・sibling 連結・list 表示
 //! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群
 //! - [`claude_settings`]: claude/settings 実 config（S3/#457）の結線確認
+//! - [`secrets`]: マシンローカル値（S4/#458）— secret set / 注入 / doctor / 実 git 結線
 
 use assert_cmd::Command;
 
@@ -23,6 +24,7 @@ mod cli;
 mod generate;
 mod list;
 mod overlay;
+mod secrets;
 
 /// 実バイナリ `dotfiles` を起動する Command を返す（全テスト共通）。
 pub(crate) fn dotfiles() -> Command {

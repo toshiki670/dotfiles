@@ -1,0 +1,15 @@
+# Dotfiles' git config（dotfiles ネイティブ化・設計書 §13）。
+#
+# 旧 chezmoi は config.tmpl の includeTemplate で 8 部品をビルド時に inline 連結していた。
+# dotfiles では部品を configs/ へバラのまま配置し、ここで git native [include] で実行時に束ねる
+# （「ファイル合成 → git native [include]（copy へ降格）」§13）。include の相対パスは本ファイルの
+# あるディレクトリ（~/.config/git）基準で解決される。順序は同名キー後勝ちに効くため旧構成を踏襲。
+[include]
+	path = configs/alias
+	path = configs/core
+	path = configs/delta
+	path = configs/fast_forward
+	path = configs/ghq
+	path = configs/push
+	path = configs/user
+	path = configs/vimdiff
