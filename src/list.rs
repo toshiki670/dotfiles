@@ -5,7 +5,7 @@
 //! `home` は不要（dst は manifest の生表記 `~/...` をそのまま見せる方が読みやすい）。
 
 use crate::discover::{self, MANIFEST};
-use crate::manifest::{Kind, Manifest, Strategy};
+use crate::manifest::Manifest;
 use std::path::Path;
 
 /// `source`（= `configs/`）配下の設定単位を一覧表示する。
@@ -41,21 +41,10 @@ pub fn run(source: &Path) -> Result<(), String> {
 /// 1 単位の属性ラベル（2軸モデル, §7）。
 /// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ when.deps / when.os ＋ hooks。
 fn attrs(manifest: &Manifest) -> String {
-    let mut parts = vec![
-        match manifest.kind {
-            Kind::Copy => "copy",
-            Kind::Generate => "generate",
-        }
-        .to_string(),
-    ];
+    // 表示名は Kind / Strategy の Display に集約する（apply のラベルと同じ出所）。
+    let mut parts = vec![manifest.kind.to_string()];
     if let Some(strategy) = manifest.strategy {
-        parts.push(
-            match strategy {
-                Strategy::Concat => "concat",
-                Strategy::JsonShallow => "json-shallow",
-            }
-            .to_string(),
-        );
+        parts.push(strategy.to_string());
     }
     if !manifest.overlay.is_empty() {
         parts.push(format!("overlay={}", manifest.overlay.len()));

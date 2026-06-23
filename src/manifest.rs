@@ -19,6 +19,7 @@
 
 use serde::Deserialize;
 use std::path::Path;
+use strum::Display;
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
 ///
@@ -86,8 +87,11 @@ pub struct Manifest {
 }
 
 /// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
-#[derive(Debug, Deserialize, Default, PartialEq, Eq)]
+/// 表示名（`Display`）と受理する TOML トークン（serde）を一致させるため `serialize_all` と
+/// `rename_all` は同じ規則で揃える（ズレは tests の round-trip が検出する）。
+#[derive(Debug, Deserialize, Default, PartialEq, Eq, Display)]
 #[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
 pub enum Kind {
     #[default]
     Copy,
@@ -95,8 +99,10 @@ pub enum Kind {
 }
 
 /// 合成戦略（複数断片を1 dst=ファイルへ重ねる方法, §5.5）。
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+/// 表示名と TOML トークンを揃える規則は [`Kind`] と同じ（`serialize_all` / `rename_all` を `kebab-case` に）。
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display)]
 #[serde(rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
 pub enum Strategy {
     /// テキスト連結（後ろへ連結）。境目に改行を 1 つ補う。
     Concat,
@@ -182,12 +188,17 @@ impl Manifest {
     ///   コマンドそのものをデータとして宣言する（binary は実行するだけ）。
     fn validate(&self) -> Result<(), String> {
         if !self.overlay.is_empty() && self.strategy.is_none() {
-            return Err(
-                "overlay を明示する場合は strategy（concat / json-shallow）が必要です".to_string(),
-            );
+            return Err(format!(
+                "overlay を明示する場合は strategy（{} / {}）が必要です",
+                Strategy::Concat,
+                Strategy::JsonShallow,
+            ));
         }
         if self.preserve && self.strategy != Some(Strategy::JsonShallow) {
-            return Err("preserve = true は strategy = \"json-shallow\" 専用です".to_string());
+            return Err(format!(
+                "preserve = true は strategy = \"{}\" 専用です",
+                Strategy::JsonShallow
+            ));
         }
         if self.preserve && self.overlay.is_empty() && self.kind != Kind::Generate {
             return Err(
@@ -260,6 +271,31 @@ mod tests {
         let manifest: Manifest = toml::from_str(toml_src).map_err(|e| e.to_string())?;
         manifest.validate()?;
         Ok(manifest)
+    }
+
+    #[test]
+    fn kind_display_round_trips_through_serde() {
+        // Display（表示名の出所）が serde の受理トークンと一致することを固定する。ズレると
+        // apply / list の表示が manifest に書ける値からズレる。
+        for kind in [Kind::Copy, Kind::Generate] {
+            let parsed = parse(&format!("dst = \"~/x\"\nkind = \"{kind}\"\n")).unwrap();
+            assert_eq!(
+                parsed.kind, kind,
+                "Display と serde 表現がズレている: {kind}"
+            );
+        }
+    }
+
+    #[test]
+    fn strategy_display_round_trips_through_serde() {
+        for strategy in [Strategy::Concat, Strategy::JsonShallow] {
+            let parsed = parse(&format!("dst = \"~/x\"\nstrategy = \"{strategy}\"\n")).unwrap();
+            assert_eq!(
+                parsed.strategy,
+                Some(strategy),
+                "Display と serde 表現がズレている: {strategy}"
+            );
+        }
     }
 
     #[test]
