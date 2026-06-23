@@ -307,7 +307,7 @@ mod tests {
 
     #[test]
     fn validate_accepts_preserve_with_json_shallow() {
-        // preserve = true ＋ json-shallow ＋ overlay は正規形（claude/settings 相当）。
+        // preserve = true ＋ json-shallow ＋ overlay は正規形（既存 dst を土台に断片を重ねる合成）。
         assert!(
             parse(
                 "dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n\
@@ -341,7 +341,7 @@ mod tests {
     fn validate_rejects_overlay_with_no_kind() {
         // when だけで src/cmd/preserve が無い → 断片を実体化できない。
         let err = parse(
-            "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nwhen = { deps = [\"rtk\"] }\n",
+            "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nwhen = { deps = [\"faketool\"] }\n",
         )
         .unwrap_err();
         assert!(
@@ -393,12 +393,12 @@ mod tests {
 
     #[test]
     fn validate_accepts_well_formed_overlays() {
-        // preserve = true（ユニット属性）＋ base(src) ＋ rtk(src+when) の正規形。
+        // preserve = true（ユニット属性）＋ base(src) ＋ 条件付き断片(src+when) の正規形。
         assert!(
             parse(
                 "dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n\
                  [[overlay]]\nsrc = \"base.json\"\n\
-                 [[overlay]]\nsrc = \"rtk.json\"\nwhen = { deps = [\"rtk\"] }\n",
+                 [[overlay]]\nsrc = \"faketool.json\"\nwhen = { deps = [\"faketool\"] }\n",
             )
             .is_ok()
         );
@@ -450,7 +450,7 @@ mod tests {
         // overlay の単数 dep は廃止し複数形 deps へ。旧キーは load 時エラー。
         assert!(
             toml::from_str::<Manifest>(
-                "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = { dep = \"rtk\" }\n",
+                "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = { dep = \"faketool\" }\n",
             )
             .is_err()
         );

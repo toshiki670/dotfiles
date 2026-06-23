@@ -1,8 +1,10 @@
 //! マシンローカル値（named value）機構の E2E（S4 / #458）。
 //!
 //! `dotfiles secret set` でストアへ設定 →`apply` で `@@name@@` 注入、未設定時の非 TTY 警告と
-//! placeholder 残し、`doctor` の未設定警告、実 config（configs/git）の user 注入を検証する。
+//! placeholder 残し、`doctor` の未設定警告を架空 fixture（`demo` 単位）で検証する。
 //! sensitive の非エコー対話（TTY）は pty 依存で自動化困難なため手動検証（PR 説明参照）。
+//! 出荷する実 configs（locals を持つ単位）が load/apply されることは [`crate::real_configs`] が
+//! data-driven に確かめる（特定ツールを名指ししない / #488）。
 //!
 //! 注: `assert_cmd` の `.assert()` は `Command::output()` 経由で子の stdin を継承しない（= 非 TTY）。
 //! よって apply は常に非対話経路（警告のみ）を通り、テストがプロンプトでハングしない。
@@ -161,38 +163,4 @@ fn apply_rejects_sensitive_not_in_locals() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("sensitive"));
-}
-
-/// 実 config: configs/git の user.email/user.name が apply 時にストア値で注入される。
-#[test]
-fn apply_injects_real_git_user() {
-    let repo_root = env!("CARGO_MANIFEST_DIR");
-    let home = tempfile::tempdir().unwrap();
-
-    dotfiles()
-        .args(["secret", "set", "git.email", "me@example.com"])
-        .env("HOME", home.path())
-        .assert()
-        .success();
-    dotfiles()
-        .args(["secret", "set", "git.name", "Toshiki"])
-        .env("HOME", home.path())
-        .assert()
-        .success();
-    dotfiles()
-        .arg("apply")
-        .current_dir(repo_root)
-        .env("HOME", home.path())
-        .assert()
-        .success();
-
-    let user = fs::read_to_string(home.path().join(".config/git/configs/user")).unwrap();
-    assert!(
-        user.contains("email = me@example.com") && user.contains("name = Toshiki"),
-        "git user へストア値が注入されていない:\n{user}",
-    );
-    assert!(
-        !user.contains("@@git."),
-        "未置換の placeholder が残っている:\n{user}",
-    );
 }

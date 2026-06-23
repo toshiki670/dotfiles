@@ -1,43 +1,13 @@
 //! `dotfiles apply` の copy 層（S0/S1）の E2E。
 //!
-//! 実 config 配置・kind 省略時の copy 既定と `~` 展開・サブディレクトリ再帰と
-//! 入れ子 manifest の委譲・パーミッション属性の合成を検証する。
+//! kind 省略時の copy 既定と `~` 展開・サブディレクトリ再帰と入れ子 manifest の委譲・
+//! パーミッション属性の合成を、架空 fixture の hermetic 群で検証する（特定ツールを名指ししない）。
+//! 出荷する実 configs が copy で配置されることは [`crate::real_configs`] が data-driven に確かめる。
 
 use crate::dotfiles;
-#[cfg(unix)]
-use crate::write_stub;
 use predicates::prelude::*;
 use rstest::rstest;
 use std::fs;
-use std::path::Path;
-
-/// `dotfiles apply` が固定ソース `configs/` を読み、`manifest.toml`（dst / kind=copy 既定）
-/// に従って一時 HOME へ実体を配置することを検証する（S0 / #454 の受け入れ条件）。
-/// 実ソースである repo の `configs/zellij` をそのまま使い、configs 化が機能することを確かめる。
-#[test]
-fn apply_places_real_zellij_config_into_home() {
-    let repo_root = env!("CARGO_MANIFEST_DIR");
-    let src = Path::new(repo_root).join("configs/zellij/config.kdl");
-    let home = tempfile::tempdir().unwrap();
-
-    dotfiles()
-        .arg("apply")
-        .current_dir(repo_root)
-        .env("HOME", home.path())
-        .assert()
-        .success();
-
-    let placed = home.path().join(".config/zellij/config.kdl");
-    assert!(
-        placed.is_file(),
-        "zellij config が配置されていない: {placed:?}"
-    );
-    assert_eq!(
-        fs::read_to_string(&placed).unwrap(),
-        fs::read_to_string(&src).unwrap(),
-        "配置された内容がソースと一致しない",
-    );
-}
 
 /// kind 省略時に copy として扱われ、`~` が HOME に展開されることを、
 /// 一時ソース fixture で検証する（hermetic）。
@@ -169,47 +139,4 @@ fn apply_sets_permissions_from_manifest(#[case] name: &str, #[case] attr: &str, 
     let placed = home.path().join(".config").join(name).join("f.txt");
     let mode = fs::metadata(&placed).unwrap().permissions().mode() & 0o777;
     assert_eq!(mode, want, "{name}: パーミッションが期待と異なる");
-}
-
-/// 実ソース configs/bat を一時 HOME へ apply し、themes/ サブディレクトリを含めて
-/// 再帰配置されることを検証する（実ツールでのサブディレクトリ再帰）。
-///
-/// configs/bat は `when = { deps = ["bat"] }` でユニット gate される（§7）。CI（ubuntu・bat 不在）でも
-/// 実 config の配置を検証できるよう、PATH 先頭に bat スタブを置いて gate を通す（bat-cache hook も
-/// no-op スタブが走る）。スタブは sh スクリプトなので unix 限定。
-#[cfg(unix)]
-#[test]
-fn apply_places_real_bat_config_with_theme_subdir() {
-    let repo_root = env!("CARGO_MANIFEST_DIR");
-    let home = tempfile::tempdir().unwrap();
-    let bin = tempfile::tempdir().unwrap();
-
-    write_stub(bin.path(), "bat", "exit 0\n");
-    let path = format!(
-        "{}:{}",
-        bin.path().display(),
-        std::env::var("PATH").unwrap_or_default()
-    );
-
-    dotfiles()
-        .arg("apply")
-        .current_dir(repo_root)
-        .env("HOME", home.path())
-        .env("PATH", path)
-        .assert()
-        .success();
-
-    for rel in ["config", "themes/ayu-dark.tmTheme"] {
-        let placed = home.path().join(".config/bat").join(rel);
-        let src = Path::new(repo_root).join("configs/bat").join(rel);
-        assert!(
-            placed.is_file(),
-            "bat の {rel} が配置されていない: {placed:?}"
-        );
-        assert_eq!(
-            fs::read_to_string(&placed).unwrap(),
-            fs::read_to_string(&src).unwrap(),
-            "bat の {rel} の内容がソースと一致しない",
-        );
-    }
 }
