@@ -51,7 +51,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// 固定ソース `configs/` を走査し設定を配置する（copy 層）。
+    /// 固定ソース `configs/` を走査し、copy / generate / overlay 合成で設定を配置する。
     Apply,
     /// configs の manifest を集約し、配置先一覧を表示する。
     List,
