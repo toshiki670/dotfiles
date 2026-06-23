@@ -1,26 +1,8 @@
-//! `dotfiles list` の E2E — 分散 manifest の集約・名前順・属性ラベル・ソース欠落。
+//! `dotfiles list` の E2E — 名前順・属性ラベル・ソース欠落を検証する。
 
 use crate::dotfiles;
 use predicates::prelude::*;
 use std::fs;
-
-/// `dotfiles list` が実 configs の分散 manifest を集約し、配置先一覧を表示する。
-#[test]
-fn list_aggregates_real_manifests() {
-    dotfiles()
-        .arg("list")
-        .current_dir(env!("CARGO_MANIFEST_DIR"))
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("bat"))
-        .stdout(predicate::str::contains("nvim"))
-        .stdout(predicate::str::contains("zellij"))
-        .stdout(predicate::str::contains("claude/settings"))
-        .stdout(predicate::str::contains("~/.config/"))
-        .stdout(predicate::str::contains("~/.claude/settings.json"))
-        .stdout(predicate::str::contains("copy"))
-        .stdout(predicate::str::contains("json-shallow"));
-}
 
 /// `dotfiles list` が単位を名前順に並べ、dst と属性ラベルを表示することを検証する。
 #[test]

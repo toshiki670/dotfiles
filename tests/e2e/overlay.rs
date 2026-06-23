@@ -20,7 +20,7 @@ fn current_os() -> &'static str {
     }
 }
 
-/// concat overlay（base 常時 ＋ rtk 断片 when.deps=["rtk"]）の単位を書き出す。
+/// concat overlay（base 常時 ＋ faketool 断片 when.deps=["faketool"]）の単位を書き出す。
 fn write_concat_overlay_unit(work: &Path) {
     let unit = work.join("configs/demo");
     fs::create_dir_all(&unit).unwrap();
@@ -31,15 +31,15 @@ fn write_concat_overlay_unit(work: &Path) {
          [[overlay]]\n\
          src = \"base.txt\"\n\
          [[overlay]]\n\
-         src = \"rtk.txt\"\n\
-         when = { deps = [\"rtk\"] }\n",
+         src = \"faketool.txt\"\n\
+         when = { deps = [\"faketool\"] }\n",
     )
     .unwrap();
     fs::write(unit.join("base.txt"), "BASE\n").unwrap();
-    fs::write(unit.join("rtk.txt"), "RTK\n").unwrap();
+    fs::write(unit.join("faketool.txt"), "FRAG\n").unwrap();
 }
 
-/// when.deps を満たす（rtk が PATH にある）と rtk 断片が宣言順で連結される。
+/// when.deps を満たす（faketool が PATH にある）と断片が宣言順で連結される。
 #[cfg(unix)]
 #[test]
 fn apply_overlay_concat_includes_fragment_when_dep_present() {
@@ -47,7 +47,7 @@ fn apply_overlay_concat_includes_fragment_when_dep_present() {
     let home = tempfile::tempdir().unwrap();
     let bin = tempfile::tempdir().unwrap();
 
-    write_stub(bin.path(), "rtk", "exit 0\n"); // 存在＋実行ビットだけで十分（実行はされない）。
+    write_stub(bin.path(), "faketool", "exit 0\n"); // 存在＋実行ビットだけで十分（実行はされない）。
     write_concat_overlay_unit(work.path());
 
     dotfiles()
@@ -61,18 +61,18 @@ fn apply_overlay_concat_includes_fragment_when_dep_present() {
     let placed = home.path().join(".config/demo/out.txt");
     assert_eq!(
         fs::read_to_string(&placed).unwrap(),
-        "BASE\nRTK\n",
-        "when.deps を満たす rtk 断片が宣言順で連結されていない",
+        "BASE\nFRAG\n",
+        "when.deps を満たす断片が宣言順で連結されていない",
     );
 }
 
-/// when.deps を満たさない（rtk 不在）と rtk 断片だけ脱落し、base は残る（dst は生成される）。
+/// when.deps を満たさない（faketool 不在）と断片だけ脱落し、base は残る（dst は生成される）。
 #[cfg(unix)]
 #[test]
 fn apply_overlay_concat_drops_fragment_when_dep_absent() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
-    let empty_bin = tempfile::tempdir().unwrap(); // rtk を置かない。
+    let empty_bin = tempfile::tempdir().unwrap(); // faketool を置かない。
 
     write_concat_overlay_unit(work.path());
 
@@ -88,7 +88,7 @@ fn apply_overlay_concat_drops_fragment_when_dep_absent() {
     assert_eq!(
         fs::read_to_string(&placed).unwrap(),
         "BASE\n",
-        "rtk 不在でも base だけで dst が生成されるべき（overlay when=false は断片だけ脱落）",
+        "faketool 不在でも base だけで dst が生成されるべき（overlay when=false は断片だけ脱落）",
     );
 }
 
@@ -167,22 +167,22 @@ fn apply_unit_os_gate_short_circuits_without_touching_dst() {
     );
 }
 
-/// claude/settings.json 相当（json-shallow ＋ preserve）の合成単位を書き出す。
-/// preserve=true で既存 dst を最下層の土台にし、overlay は base → rtk（when.deps）の宣言順で重なる。
+/// アプリの settings.json 相当（json-shallow ＋ preserve）の合成単位を書き出す。
+/// preserve=true で既存 dst を最下層の土台にし、overlay は base → faketool（when.deps）の宣言順で重なる。
 /// base は dotfiles 所有キー（language / hook）だけを持ち、model 等の非管理キーは定義しない。
 fn write_json_shallow_unit(work: &Path) {
-    let unit = work.join("configs/claude/settings");
+    let unit = work.join("configs/app");
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.claude/settings.json\"\n\
+        "dst = \"~/.config/app/settings.json\"\n\
          strategy = \"json-shallow\"\n\
          preserve = true\n\
          [[overlay]]\n\
          src = \"settings.json\"\n\
          [[overlay]]\n\
-         src = \"rtk.json\"\n\
-         when = { deps = [\"rtk\"] }\n",
+         src = \"faketool.json\"\n\
+         when = { deps = [\"faketool\"] }\n",
     )
     .unwrap();
     // base は dotfiles 所有キー（language=共有値 / hook）を持つ。model は定義しない（=非管理）。
@@ -191,10 +191,10 @@ fn write_json_shallow_unit(work: &Path) {
         "{\"language\":\"ja\",\"hook\":\"base\"}\n",
     )
     .unwrap();
-    fs::write(unit.join("rtk.json"), "{\"rtkHook\":\"on\"}\n").unwrap();
+    fs::write(unit.join("faketool.json"), "{\"faketoolKey\":\"on\"}\n").unwrap();
 }
 
-/// json-shallow ＋ preserve: rtk present。既存 dst を土台に非管理キー（model / effortLevel）を
+/// json-shallow ＋ preserve: faketool present。既存 dst を土台に非管理キー（model / effortLevel）を
 /// 全保持し、dotfiles 所有キー（language）は断片が土台を上書きする（旧 $local + $forced）。
 #[cfg(unix)]
 #[test]
@@ -203,11 +203,11 @@ fn apply_json_shallow_preserves_unmanaged_and_overwrites_owned() {
     let home = tempfile::tempdir().unwrap();
     let bin = tempfile::tempdir().unwrap();
 
-    write_stub(bin.path(), "rtk", "exit 0\n");
+    write_stub(bin.path(), "faketool", "exit 0\n");
     write_json_shallow_unit(work.path());
 
     // 既存 dst: model/effortLevel=非管理（保持）、language=dotfiles 所有（断片で上書きされる）。
-    let dst = home.path().join(".claude/settings.json");
+    let dst = home.path().join(".config/app/settings.json");
     fs::create_dir_all(dst.parent().unwrap()).unwrap();
     fs::write(
         &dst,
@@ -241,22 +241,22 @@ fn apply_json_shallow_preserves_unmanaged_and_overwrites_owned() {
         "base のキーが残るべき:\n{out}"
     );
     assert!(
-        out.contains("\"rtkHook\": \"on\""),
-        "when.deps=[\"rtk\"] を満たす断片が重なるべき:\n{out}",
+        out.contains("\"faketoolKey\": \"on\""),
+        "when.deps=[\"faketool\"] を満たす断片が重なるべき:\n{out}",
     );
 }
 
-/// json-shallow ＋ preserve: rtk 不在でも base＋土台で settings.json は書かれる（回帰解消の核）。
+/// json-shallow ＋ preserve: faketool 不在でも base＋土台で settings.json は書かれる（回帰解消の核）。
 #[cfg(unix)]
 #[test]
 fn apply_json_shallow_writes_base_without_gated_overlay() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
-    let empty_bin = tempfile::tempdir().unwrap(); // rtk 不在。
+    let empty_bin = tempfile::tempdir().unwrap(); // faketool 不在。
 
     write_json_shallow_unit(work.path());
 
-    let dst = home.path().join(".claude/settings.json");
+    let dst = home.path().join(".config/app/settings.json");
     fs::create_dir_all(dst.parent().unwrap()).unwrap();
     fs::write(&dst, "{\"model\":\"local\"}\n").unwrap();
 
@@ -278,8 +278,8 @@ fn apply_json_shallow_writes_base_without_gated_overlay() {
         "非管理キー model が土台のまま保持されるべき:\n{out}",
     );
     assert!(
-        !out.contains("rtkHook"),
-        "rtk 不在なら when.deps 断片は脱落するべき:\n{out}",
+        !out.contains("faketoolKey"),
+        "faketool 不在なら when.deps 断片は脱落するべき:\n{out}",
     );
 }
 

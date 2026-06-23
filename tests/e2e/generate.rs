@@ -1,6 +1,6 @@
 //! `dotfiles apply` の generate 層（S2 / #456）の E2E。
 //!
-//! 実バイナリ（gh/bat 等）に依存せず、PATH 先頭に置いたスタブ（[`crate::write_stub`]）で
+//! 実バイナリに依存せず、PATH 先頭に置いたスタブ（架空 `foo` / [`crate::write_stub`]）で
 //! `cmd` 実行と when.deps gate を検証する。スタブは sh スクリプトなので unix 限定。
 
 use crate::{dotfiles, write_stub};
@@ -80,7 +80,7 @@ fn apply_generate_gate_skips_when_dep_missing() {
     );
 }
 
-/// generate は単位内の `manifest.toml` 以外のファイル（gh の独自補完ブロック相当）を
+/// generate は単位内の `manifest.toml` 以外のファイル（同梱した独自補完ブロック相当）を
 /// 生成物の後ろへ連結する。
 #[cfg(unix)]
 #[test]
