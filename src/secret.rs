@@ -1,7 +1,7 @@
 //! `dotfiles secret set`（§9・§11）: named value をストアへ設定する明示経路。
 //!
 //! ストアの読み書きは [`crate::store`]。コマンド名 `secret` は仮称（email/name 等の非秘匿値も
-//! 扱うため概念とズレる。§15 で最終命名）。値は argv に載るためシェル履歴/ps に残る点は呼び出し側
+//! 扱うため概念とズレる。§16 で最終命名）。値は argv に載るためシェル履歴/ps に残る点は呼び出し側
 //! の選択であり、対話取得の非エコー（[`crate::prompt`]）は apply の TTY 経路が担う別物。
 
 use crate::store::Store;
