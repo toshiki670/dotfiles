@@ -2,8 +2,8 @@
 //!
 //! 2 つの責務を持つ:
 //! - **ソースハッシュ計算**（[`hash_dir`]）: ユニットのデプロイ対象ファイル（[`crate::discover::unit_files`]）
-//!   を相対パス＋内容で SHA-256 に畳む。設計書 §15 の未決項目「mtime vs ソースハッシュ」をソース
-//!   ハッシュで確定する（mtime は touch/clone で揺れるため内容ハッシュを採る）。chezmoi の
+//!   を相対パス＋内容で SHA-256 に畳む。設計書 §13.1（hooks 仕様）どおり、mtime ではなくソース
+//!   ハッシュを採る（mtime は touch/clone で揺れるため内容ハッシュ）。chezmoi の
 //!   `run_onchange_*` が埋め込みソースの `sha256sum` を比較していたのと同じ役割。
 //! - **状態の永続化**（[`State`]）: フックごとの前回ハッシュを `~/.config/dotfiles/hooks.toml` に
 //!   持つ。秘匿値ではない（[`crate::store`] と違い 0600 不要）ため平文で書き、破損時は warn して

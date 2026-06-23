@@ -116,7 +116,7 @@ pub fn set_mode(_dst: &Path, _manifest: &Manifest) -> Result<(), String> {
 }
 
 /// dst の `~` / `~/...` を `home` に展開する。
-/// `$XDG_*` 等の正規化は設計書 §15 で確定。
+/// `$XDG_*` 等の正規化は設計書 §16 で確定。
 fn expand_home(dst: &str, home: &Path) -> PathBuf {
     if let Some(rest) = dst.strip_prefix("~/") {
         home.join(rest)

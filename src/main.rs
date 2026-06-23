@@ -63,7 +63,7 @@ enum Commands {
     Doctor,
 }
 
-/// `secret` のサブコマンド。コマンド名 `secret` は仮称（非秘匿値も扱う。§15 で最終命名）。
+/// `secret` のサブコマンド。コマンド名 `secret` は仮称（非秘匿値も扱う。§16 で最終命名）。
 #[derive(Subcommand)]
 enum SecretAction {
     /// 名前→値をストア（`~/.config/dotfiles/local.toml`）へ設定する。
