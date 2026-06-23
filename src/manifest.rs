@@ -18,6 +18,7 @@
 //! theme は後続（color）スライスで追加する。
 
 use serde::Deserialize;
+use std::fmt;
 use std::path::Path;
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
@@ -94,6 +95,17 @@ pub enum Kind {
     Generate,
 }
 
+/// 表示名の唯一の出所。apply のラベル・list の属性が共有する。文字列は serde の `rename_all`
+/// （受理する TOML トークン）と一致させる（一致は tests の round-trip が保証する）。
+impl fmt::Display for Kind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Copy => "copy",
+            Self::Generate => "generate",
+        })
+    }
+}
+
 /// 合成戦略（複数断片を1 dst=ファイルへ重ねる方法, §5.5）。
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -102,6 +114,17 @@ pub enum Strategy {
     Concat,
     /// JSON のトップレベル shallow merge（後勝ち）。deep merge はしない。
     JsonShallow,
+}
+
+/// 表示名の唯一の出所。apply のラベル・list の属性・validate のエラー文が共有する。文字列は
+/// serde の `rename_all`（受理する TOML トークン）と一致させる（一致は tests の round-trip が保証する）。
+impl fmt::Display for Strategy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Concat => "concat",
+            Self::JsonShallow => "json-shallow",
+        })
+    }
 }
 
 /// 1 つの overlay（条件付き断片, §5.5）。`when` を満たす時だけ合成に参加する。
@@ -182,12 +205,17 @@ impl Manifest {
     ///   コマンドそのものをデータとして宣言する（binary は実行するだけ）。
     fn validate(&self) -> Result<(), String> {
         if !self.overlay.is_empty() && self.strategy.is_none() {
-            return Err(
-                "overlay を明示する場合は strategy（concat / json-shallow）が必要です".to_string(),
-            );
+            return Err(format!(
+                "overlay を明示する場合は strategy（{} / {}）が必要です",
+                Strategy::Concat,
+                Strategy::JsonShallow,
+            ));
         }
         if self.preserve && self.strategy != Some(Strategy::JsonShallow) {
-            return Err("preserve = true は strategy = \"json-shallow\" 専用です".to_string());
+            return Err(format!(
+                "preserve = true は strategy = \"{}\" 専用です",
+                Strategy::JsonShallow
+            ));
         }
         if self.preserve && self.overlay.is_empty() && self.kind != Kind::Generate {
             return Err(
@@ -260,6 +288,31 @@ mod tests {
         let manifest: Manifest = toml::from_str(toml_src).map_err(|e| e.to_string())?;
         manifest.validate()?;
         Ok(manifest)
+    }
+
+    #[test]
+    fn kind_display_round_trips_through_serde() {
+        // Display（表示名の出所）が serde の受理トークンと一致することを固定する。ズレると
+        // apply / list の表示が manifest に書ける値からズレる。
+        for kind in [Kind::Copy, Kind::Generate] {
+            let parsed = parse(&format!("dst = \"~/x\"\nkind = \"{kind}\"\n")).unwrap();
+            assert_eq!(
+                parsed.kind, kind,
+                "Display と serde 表現がズレている: {kind}"
+            );
+        }
+    }
+
+    #[test]
+    fn strategy_display_round_trips_through_serde() {
+        for strategy in [Strategy::Concat, Strategy::JsonShallow] {
+            let parsed = parse(&format!("dst = \"~/x\"\nstrategy = \"{strategy}\"\n")).unwrap();
+            assert_eq!(
+                parsed.strategy,
+                Some(strategy),
+                "Display と serde 表現がズレている: {strategy}"
+            );
+        }
     }
 
     #[test]

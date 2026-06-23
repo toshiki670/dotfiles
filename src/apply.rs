@@ -12,7 +12,7 @@
 //! 本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
 use crate::discover::{self, MANIFEST, Unit};
-use crate::manifest::{Kind, Manifest, Strategy};
+use crate::manifest::{Kind, Manifest};
 use crate::onchange::State as HookState;
 use crate::store::Store;
 use crate::{compose, copy, gate, hooks, prompt, resolve};
@@ -86,18 +86,15 @@ fn uses_compose(manifest: &Manifest) -> bool {
 }
 
 /// 表示用の配置ラベル（apply の 1 行出力）。overlay 明示は strategy を併記する。
-fn placement_label(manifest: &Manifest) -> &'static str {
+/// 表示名は [`Kind`] / [`crate::manifest::Strategy`] の `Display` に集約する（list の属性と同じ出所）。
+fn placement_label(manifest: &Manifest) -> String {
     if !manifest.overlay.is_empty() {
         return match manifest.strategy {
-            Some(Strategy::JsonShallow) => "overlay/json-shallow",
-            Some(Strategy::Concat) => "overlay/concat",
-            None => "overlay",
+            Some(strategy) => format!("overlay/{strategy}"),
+            None => "overlay".to_string(),
         };
     }
-    match manifest.kind {
-        Kind::Copy => "copy",
-        Kind::Generate => "generate",
-    }
+    manifest.kind.to_string()
 }
 
 /// 配置済みファイルへ manifest のパーミッションを適用する（Unix のみ）。
