@@ -16,7 +16,7 @@
 //! （＝ `when.os` でフックを分岐できる）。
 
 use crate::onchange::{self, State};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// ユニットが宣言した全 hooks を onchange gate を通して順に実行する（[`crate::apply`] が配置後に呼ぶ）。
@@ -32,7 +32,7 @@ pub fn run_unit_hooks(
     }
     let source_hash = onchange::hash_dir(unit_dir)?;
     for argv in hooks {
-        run_one(argv, unit_rel, &source_hash, state)?;
+        run_one(argv, unit_dir, unit_rel, &source_hash, state)?;
     }
     Ok(())
 }
@@ -44,6 +44,7 @@ pub fn run_unit_hooks(
 /// これが無いとコマンド変更を取りこぼす）。値はユニットの**ソース**ハッシュ（中身の変化で再実行）。
 fn run_one(
     argv: &[String],
+    unit_dir: &Path,
     unit_rel: &str,
     source_hash: &str,
     state: &mut State,
@@ -60,7 +61,7 @@ fn run_one(
         return Ok(());
     }
 
-    match exec(argv)? {
+    match exec(argv, unit_dir)? {
         Exec::Ran => {
             // 実行できたときだけ前回ハッシュを更新する（途中失敗時の取りこぼし防止に逐次保存）。
             state.set(&key, source_hash);
@@ -89,11 +90,25 @@ enum Exec {
 /// ツール名を持たずに汎用再現する。なお `NotFound` 判定は `argv[0]` のみが対象で、`["sh", "-c", …]`
 /// の内側コマンドは含まれない（内側依存は `when.deps` で gate する, §13.1）。
 ///
-/// `current_dir` は未設定 ＝ プロセス CWD を継承する。設計書 §13.3 の確定仕様（相対パス hook は
-/// ユニットの `manifest.toml` ディレクトリ基準）とは差分があり、追従は #498。現状の hooks は絶対
-/// パス / `$HOME` / PATH 解決で CWD 非依存なので顕在化しない。
-fn exec(argv: &[String]) -> Result<Exec, String> {
-    let output = match Command::new(&argv[0]).args(&argv[1..]).output() {
+/// `current_dir` をユニットの `manifest.toml` ディレクトリ（`unit_dir`）に固定する（設計書 §13.3）。
+/// これにより相対パス引数とフック自身の実行時 CWD がそのディレクトリ基準になる。プログラムパス
+/// （`argv[0]`）が区切り付きの相対パス（`./script.sh` 等）のときは [`program_path`] で同ディレクトリ
+/// 基準へ明示解決する ― `current_dir` に頼った相対プログラムパスの解決はプラットフォーム依存
+/// （unstable; std のドキュメント参照）なため、ここで曖昧さを消す。
+///
+/// 先に `unit_dir` を**絶対パス化**してから program/`current_dir` の双方に使う。相対のまま
+/// program を join すると `current_dir`（chdir）と二重適用され（chdir 後の CWD から更に `unit_dir`
+/// を辿ってしまう）解決が壊れるため。絶対化は [`std::path::absolute`]（symlink は辿らず字句的に
+/// プロセス CWD を前置するだけ）で行い、manifest dir の見た目を保つ。フックスクリプトは manifest と
+/// 同じ `configs/<unit>/` に置く想定。PATH 解決される bare コマンド名（`bat` 等）・絶対パスはこの基準の
+/// 影響を受けない（PATH 探索・絶対参照は CWD に依らないため素通しする）。
+fn exec(argv: &[String], unit_dir: &Path) -> Result<Exec, String> {
+    let dir = std::path::absolute(unit_dir).unwrap_or_else(|_| unit_dir.to_path_buf());
+    let output = match Command::new(program_path(&argv[0], &dir))
+        .args(&argv[1..])
+        .current_dir(&dir)
+        .output()
+    {
         Ok(o) => o,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Exec::ProgramMissing),
         Err(e) => return Err(format!("{}: 実行失敗: {e}", argv[0])),
@@ -106,5 +121,57 @@ fn exec(argv: &[String]) -> Result<Exec, String> {
             output.status,
             String::from_utf8_lossy(&output.stderr).trim()
         ))
+    }
+}
+
+/// hook プログラム（`argv[0]`）の実行パスを決める（§13.3）。**区切りを含む相対パス**（`./script.sh`・
+/// `dir/script.sh`・`../x`）だけを `unit_dir`（呼び出し側で絶対化済み）に join して解決する。
+/// **bare コマンド名**（`bat` のように区切りを含まない＝コンポーネント 1 個）は PATH 探索に委ねるため
+/// 素通しし、**絶対パス**もそのまま使う。`components().count() > 1` が「区切りを含む相対パス」の判定
+/// （`./x`＝`CurDir`＋`Normal`、`dir/x`＝`Normal`×2、`../x`＝`ParentDir`＋`Normal` はいずれも 2 以上。
+/// bare 名は 1）。
+fn program_path(arg0: &str, unit_dir: &Path) -> PathBuf {
+    let p = Path::new(arg0);
+    if !p.is_absolute() && p.components().count() > 1 {
+        unit_dir.join(p)
+    } else {
+        p.to_path_buf()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const UNIT: &str = "/u/configs/demo";
+
+    /// 区切りを含む相対パスは unit_dir 基準へ解決する（`./` / サブディレクトリ / `..`）。
+    #[test]
+    fn relative_with_separator_resolves_against_unit_dir() {
+        let unit = Path::new(UNIT);
+        assert_eq!(program_path("./hook.sh", unit), unit.join("./hook.sh"));
+        assert_eq!(program_path("bin/hook.sh", unit), unit.join("bin/hook.sh"));
+        assert_eq!(
+            program_path("../shared/hook.sh", unit),
+            unit.join("../shared/hook.sh")
+        );
+    }
+
+    /// 区切りを含まない bare 名は PATH 探索に委ねる（unit_dir を前置しない）。
+    #[test]
+    fn bare_command_name_is_left_for_path_lookup() {
+        let unit = Path::new(UNIT);
+        assert_eq!(program_path("bat", unit), PathBuf::from("bat"));
+        assert_eq!(program_path("faketool", unit), PathBuf::from("faketool"));
+    }
+
+    /// 絶対パスはそのまま（CWD 非依存）。
+    #[test]
+    fn absolute_path_is_untouched() {
+        let unit = Path::new(UNIT);
+        assert_eq!(
+            program_path("/usr/bin/bat", unit),
+            PathBuf::from("/usr/bin/bat")
+        );
     }
 }
