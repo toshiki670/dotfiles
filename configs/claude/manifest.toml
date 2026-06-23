@@ -1,0 +1,16 @@
+# Claude Code の静的設定一式（rules / skills / statusline スクリプト）を ~/.claude へ copy する。
+# 設計: docs/dotfiles-native-design.md §5・§6
+#
+# dst=~/.claude のディレクトリ単位 copy。配下は相対構造を保って再帰配置される:
+#   rules/*.md                     → ~/.claude/rules/*.md
+#   skills/memory-tidy/SKILL.md    → ~/.claude/skills/memory-tidy/SKILL.md
+#   statusline-command.py          → ~/.claude/statusline-command.py
+# kind は省略時 "copy"。いずれも 0644（statusline-command.py は python3 経由で起動されるため
+# 実行ビット不要 ＝ executable は付けない）。
+#
+# settings/（json-shallow 合成で settings.json を組む別単位）はサブ manifest を持つので、
+# この copy からは委譲され除外される（§6.3 ルール1。bat/completion と同じ親子関係）。
+#
+# 依存の結線: settings/settings.json は statusLine に `python3 ~/.claude/statusline-command.py`
+# を指す。そのスクリプト実体をこの単位が配置することで、両単位が揃って初めて statusLine が成立する。
+dst = "~/.claude"
