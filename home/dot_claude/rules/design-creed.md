@@ -1,12 +1,12 @@
 ---
-description: Universal design creed for every repo — stable core, humble edges (lifecycle alignment, stability over volatility, known before unknown, intent in structure, conform-then-improve in others' repos)
+description: Universal design creed for every repo — stable core, humble edges (lifecycle alignment, stability over volatility, known before unknown, intent in structure, conform-then-improve in others' repos, leave no trace in artifacts)
 ---
 
 # 設計信条 — Stable core, humble edges
 
 これは特定プロジェクトの指針ではなく、**あらゆるリポジトリでの開発に常時効かせる普遍的な設計信条**。**計画の前後・実装の前後**で都度この信条に立ち返り、整合を確かめる（迷ったときだけの拠り所にしない）。ただし他者のリポジトリでは原則 V が常に優先する（信条は不変・適用は謙虚）。
 
-## 信条（5 + 1）
+## 信条（6 + 1）
 
 ### I. ライフサイクル整合（Lifecycle alignment）
 
@@ -44,6 +44,14 @@ core（長命・安定）は detail（短命・置換可能）に依存しない
 2. 既存の流儀のまま、小さく漸進的に直す（Boy Scout / Strangler）。
 3. 原則は共有してよいが、決定権は持ち主に返す。
 
+### VI. 信条は手段であって印ではない（Leave no trace）
+
+信条は成果物を作るための手段であり、成果物に署名するためのものではない。信条を適用して生んだ成果物（コード・文書・コミット・説明・対話の産物）は、信条を知らない当事者が見ても、その文脈にネイティブなものと見分けがつかないこと。信条そのものへの参照・メタ語彙・出自の痕跡を残さない。読み手が信条の存在を知る必要は一切ない。
+
+ここで言う「成果物」は信条を適用して生む別の生成物を指す。信条を記すこの文書自体は SSOT であって痕跡ではない（IV）。
+
+- **足場テスト**: 「この成果物から、信条を知らない他者が、信条の存在に気づく要素があるか？（『原則◯による』などのメタ参照・命名規約名・出自の指紋）」 — あれば足場が外れていない。
+
 **貫く一言: Stable core, humble edges**（信条は不変・適用は謙虚）。近縁は *Strong opinions, weakly held*、根は*時間軸への敬意*。
 
 ## 必須フロー
@@ -53,6 +61,7 @@ core（長命・安定）は detail（短命・置換可能）に依存しない
 3. 説明・構成・対話の並びを既知 → 未知の順にし、前借りテストで未知が先に来ていないか確かめる（III）。
 4. 意図は型・境界・名前で表し、SSOT を割らない（IV）。
 5. 自分の管理下にないリポでは既定で既存の流儀に従い、逸脱は「明らかな問題」に限って漸進的に行う（V）。
+6. 信条を適用して生んだ成果物に、信条への参照・出自の痕跡を残さない。足場テストで指紋が残っていないか確かめる（VI）。
 
 ## 例外
 
