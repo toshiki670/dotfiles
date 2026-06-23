@@ -18,8 +18,8 @@
 //! theme は後続（color）スライスで追加する。
 
 use serde::Deserialize;
-use std::fmt;
 use std::path::Path;
+use strum::Display;
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
 ///
@@ -87,44 +87,31 @@ pub struct Manifest {
 }
 
 /// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
-#[derive(Debug, Deserialize, Default, PartialEq, Eq)]
+///
+/// 表示名（apply のラベル・list の属性）は変種名を唯一の出所として導出する: `Display`
+/// （strum `serialize_all`）と serde `rename_all` が同じ `lowercase` 規則で変換するため、
+/// 変種を足すと両方へ同時に反映される。両規則が揃っていることは tests の round-trip が保証する。
+#[derive(Debug, Deserialize, Default, PartialEq, Eq, Display)]
 #[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
 pub enum Kind {
     #[default]
     Copy,
     Generate,
 }
 
-/// 表示名の唯一の出所。apply のラベル・list の属性が共有する。文字列は serde の `rename_all`
-/// （受理する TOML トークン）と一致させる（一致は tests の round-trip が保証する）。
-impl fmt::Display for Kind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            Self::Copy => "copy",
-            Self::Generate => "generate",
-        })
-    }
-}
-
 /// 合成戦略（複数断片を1 dst=ファイルへ重ねる方法, §5.5）。
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+///
+/// 表示名（apply のラベル・list の属性・validate のエラー文）は [`Kind`] と同様、変種名を唯一の
+/// 出所として `Display`（strum `serialize_all`）と serde `rename_all` が同じ `kebab-case` 規則で導出する。
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display)]
 #[serde(rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
 pub enum Strategy {
     /// テキスト連結（後ろへ連結）。境目に改行を 1 つ補う。
     Concat,
     /// JSON のトップレベル shallow merge（後勝ち）。deep merge はしない。
     JsonShallow,
-}
-
-/// 表示名の唯一の出所。apply のラベル・list の属性・validate のエラー文が共有する。文字列は
-/// serde の `rename_all`（受理する TOML トークン）と一致させる（一致は tests の round-trip が保証する）。
-impl fmt::Display for Strategy {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            Self::Concat => "concat",
-            Self::JsonShallow => "json-shallow",
-        })
-    }
 }
 
 /// 1 つの overlay（条件付き断片, §5.5）。`when` を満たす時だけ合成に参加する。
