@@ -1,22 +1,13 @@
-//! ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
+//! `dotfiles color sample`（§10.2 / §11）: ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
 //!
-//! 旧 `bin/color`（Python）の移植。
+//! 旧 `crates/color`（さらに遡れば `bin/color`（Python））の責務を dotfiles へ吸収したもの。
+//! 出力は端末で色を確認するための表で、入力は取らない。
 //!
 //! 参考:
 //! - <http://ascii-table.com/ansi-escape-sequences.php>
 //! - <http://archive.linux.or.jp/JF/JFdocs/Bash-Prompt-HOWTO-5.html>
 
-use clap::Parser;
-
-/// ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
-#[derive(Parser)]
-#[command(
-    name = "color",
-    version,
-    about = "Print an ANSI color table (16 + 256 colors)"
-)]
-struct Cli {}
-
+/// 全シーケンスを既定へ戻す ANSI リセット。
 const RESET: &str = "\x1b[0m";
 
 /// (エスケープコード, 表示名) の 16 色定義。
@@ -39,10 +30,8 @@ const COLORS: &[(&str, &str)] = &[
     ("1;36", "Light Cyan  "),
 ];
 
-fn main() {
-    // 引数は取らないが、clap で --help / --version を提供する。
-    let _ = Cli::parse();
-
+/// 16 色（前景 × 背景）と 256 色の確認表を stdout へ出力する。
+pub fn sample() {
     println!("=== 16 Colors ===");
     println!(" On White(47)     On Black(40)     On Default     Color Code");
 

@@ -11,13 +11,14 @@
 //! `locals`（named value）を解決・注入する（[`resolve`] / [`inject`] / [`store`] / [`prompt`]、§9）。
 //! 配置後は `hooks`（onchange フック）をユニットのソースハッシュ変化時だけ実行する
 //! （[`hooks`] / [`onchange`]、§13）。`apply` は配置＋フック、`list` は配置先一覧、`secret set` は
-//! named value 設定、`doctor` は診断（雛形）。
+//! named value 設定、`color sample` は ANSI 確認表（旧 `crates/color` を吸収、§10）、`doctor` は診断（雛形）。
 
 use clap::{Parser, Subcommand};
 use std::ffi::OsString;
 use std::path::Path;
 
 mod apply;
+mod color;
 mod compose;
 mod copy;
 mod discover;
@@ -59,8 +60,20 @@ enum Commands {
         #[command(subcommand)]
         action: SecretAction,
     },
+    /// テーマ／カラー関連（§10）。現状は確認表出力の `sample` のみ。
+    Color {
+        #[command(subcommand)]
+        action: ColorAction,
+    },
     /// 依存・`locals` 未設定などを診断する（雛形・§9）。
     Doctor,
+}
+
+/// `color` のサブコマンド。テーマ手動固定（dark/light/auto）は後続スライスで追加予定（§10.2）。
+#[derive(Subcommand)]
+enum ColorAction {
+    /// ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
+    Sample,
 }
 
 /// `secret` のサブコマンド。コマンド名 `secret` は仮称（非秘匿値も扱う。§16 で最終命名）。
@@ -78,6 +91,12 @@ fn main() {
         Some(Commands::Secret {
             action: SecretAction::Set { name, value },
         }) => run_secret_set(&name, &value),
+        Some(Commands::Color {
+            action: ColorAction::Sample,
+        }) => {
+            color::sample();
+            Ok(())
+        }
         Some(Commands::Doctor) => run_doctor(),
         // サブコマンドなし: 従来どおりバージョンを表示する。
         None => {
