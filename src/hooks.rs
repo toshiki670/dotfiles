@@ -82,13 +82,14 @@ enum Exec {
     ProgramMissing,
 }
 
-/// argv を実行する。spawn が `NotFound`（プログラム未インストール）なら [`Exec::ProgramMissing`]、
-/// 非ゼロ終了は stderr 付きでエラー（apply を止める）、正常終了は [`Exec::Ran`]。
+/// argv を実行する。spawn が `NotFound` のとき、`argv[0]` が **bare コマンド名**なら未インストール
+/// とみなし [`Exec::ProgramMissing`]（skip）、**絶対パス／区切り付き相対パス**なら同梱物の不在として
+/// エラー（apply を止める, §13.1）。非ゼロ終了も stderr 付きでエラー、正常終了は [`Exec::Ran`]。
 ///
 /// stdout/stderr は捨て、失敗時のみ stderr を添える（フックの進捗ノイズを apply 出力に混ぜない）。
-/// 「未インストールは skip・実行して失敗はエラー」の区別が、chezmoi の `if command -v …` ガードを
-/// ツール名を持たずに汎用再現する。なお `NotFound` 判定は `argv[0]` のみが対象で、`["sh", "-c", …]`
-/// の内側コマンドは含まれない（内側依存は `when.deps` で gate する, §13.1）。
+/// 「bare 名の未インストールは skip・実行して失敗はエラー」の区別が、chezmoi の `if command -v …`
+/// ガードをツール名を持たずに汎用再現する。なお `NotFound` 判定は `argv[0]` のみが対象で、
+/// `["sh", "-c", …]` の内側コマンドは含まれない（内側依存は `when.deps` で gate する, §13.1）。
 ///
 /// `current_dir` をユニットの `manifest.toml` ディレクトリ（`unit_dir`）に固定する（設計書 §13.3）。
 /// これにより相対パス引数とフック自身の実行時 CWD がそのディレクトリ基準になる。プログラムパス
@@ -99,18 +100,35 @@ enum Exec {
 /// 先に `unit_dir` を**絶対パス化**してから program/`current_dir` の双方に使う。相対のまま
 /// program を join すると `current_dir`（chdir）と二重適用され（chdir 後の CWD から更に `unit_dir`
 /// を辿ってしまう）解決が壊れるため。絶対化は [`std::path::absolute`]（symlink は辿らず字句的に
-/// プロセス CWD を前置するだけ）で行い、manifest dir の見た目を保つ。フックスクリプトは manifest と
-/// 同じ `configs/<unit>/` に置く想定。PATH 解決される bare コマンド名（`bat` 等）・絶対パスはこの基準の
-/// 影響を受けない（PATH 探索・絶対参照は CWD に依らないため素通しする）。
+/// プロセス CWD を前置するだけ）で行い、manifest dir の見た目を保つ（失敗時は握りつぶさず伝播）。
+/// フックスクリプトは manifest と同じ `configs/<unit>/` に置く想定。PATH 解決される bare コマンド名
+/// （`bat` 等）・絶対パスはこの基準の影響を受けない（PATH 探索・絶対参照は CWD に依らないため素通しする）。
 fn exec(argv: &[String], unit_dir: &Path) -> Result<Exec, String> {
-    let dir = std::path::absolute(unit_dir).unwrap_or_else(|_| unit_dir.to_path_buf());
-    let output = match Command::new(program_path(&argv[0], &dir))
+    // unit_dir を絶対化してから program/current_dir の双方に使う（二重適用回避・§13.3）。絶対化が
+    // 失敗するのは getcwd 不能等のみで、その状況は CWD 相対の `configs` ソース自体が解決不能＝apply
+    // 不成立なので、握りつぶさずエラーを伝播する。
+    let dir = std::path::absolute(unit_dir)
+        .map_err(|e| format!("{}: hook 実行ディレクトリの絶対パス化に失敗: {e}", argv[0]))?;
+    let program = program_path(&argv[0], &dir);
+    let output = match Command::new(&program)
         .args(&argv[1..])
         .current_dir(&dir)
         .output()
     {
         Ok(o) => o,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Exec::ProgramMissing),
+        // bare コマンド名（PATH 探索）の `NotFound` だけ「未インストール → skip」。絶対パス／区切り付き
+        // 相対パスの `NotFound` はユニット同梱物（`configs/<unit>/…`）の不在＝typo / コミット漏れなので
+        // エラーで止める（空 argv を load 時に弾くのと同じ「実体化できない typo を黙殺しない」方針, §13.1）。
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound && is_bare_command(&argv[0]) => {
+            return Ok(Exec::ProgramMissing);
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return Err(format!(
+                "hook プログラムが見つかりません: {} （解決先: {}）",
+                argv[0],
+                program.display()
+            ));
+        }
         Err(e) => return Err(format!("{}: 実行失敗: {e}", argv[0])),
     };
     if output.status.success() {
@@ -124,15 +142,22 @@ fn exec(argv: &[String], unit_dir: &Path) -> Result<Exec, String> {
     }
 }
 
+/// `argv[0]` が PATH 探索される **bare コマンド名**か（区切りを含まない＝絶対でなくコンポーネント
+/// 1 個）。`bat` は true、`./x`（`CurDir`＋`Normal`＝2）/ `dir/x`（`Normal`×2）/ `../x`
+/// （`ParentDir`＋`Normal`）/ 絶対パスは false。`NotFound` 時の扱い（bare＝skip / それ以外＝エラー）と
+/// [`program_path`] の解決基準（区切り付き相対だけ join）が、ともにこの区別を使う。
+fn is_bare_command(arg0: &str) -> bool {
+    let p = Path::new(arg0);
+    !p.is_absolute() && p.components().count() <= 1
+}
+
 /// hook プログラム（`argv[0]`）の実行パスを決める（§13.3）。**区切りを含む相対パス**（`./script.sh`・
-/// `dir/script.sh`・`../x`）だけを `unit_dir`（呼び出し側で絶対化済み）に join して解決する。
-/// **bare コマンド名**（`bat` のように区切りを含まない＝コンポーネント 1 個）は PATH 探索に委ねるため
-/// 素通しし、**絶対パス**もそのまま使う。`components().count() > 1` が「区切りを含む相対パス」の判定
-/// （`./x`＝`CurDir`＋`Normal`、`dir/x`＝`Normal`×2、`../x`＝`ParentDir`＋`Normal` はいずれも 2 以上。
-/// bare 名は 1）。
+/// `dir/script.sh`・`../x` ＝ 絶対でも bare でもないもの）だけを `unit_dir`（呼び出し側で絶対化済み）に
+/// join して解決する。**bare コマンド名**（`bat` 等）は PATH 探索に委ねるため、**絶対パス**はそのまま
+/// 使うため、いずれも素通しする。
 fn program_path(arg0: &str, unit_dir: &Path) -> PathBuf {
     let p = Path::new(arg0);
-    if !p.is_absolute() && p.components().count() > 1 {
+    if !p.is_absolute() && !is_bare_command(arg0) {
         unit_dir.join(p)
     } else {
         p.to_path_buf()
@@ -163,6 +188,17 @@ mod tests {
         let unit = Path::new(UNIT);
         assert_eq!(program_path("bat", unit), PathBuf::from("bat"));
         assert_eq!(program_path("faketool", unit), PathBuf::from("faketool"));
+    }
+
+    /// `is_bare_command`: bare 名のみ true。区切り付き相対・絶対は false（＝NotFound でエラー側）。
+    #[test]
+    fn is_bare_command_only_for_separatorless_names() {
+        assert!(is_bare_command("bat"));
+        assert!(is_bare_command("faketool"));
+        assert!(!is_bare_command("./hook.sh"));
+        assert!(!is_bare_command("bin/hook.sh"));
+        assert!(!is_bare_command("../shared/hook.sh"));
+        assert!(!is_bare_command("/usr/bin/bat"));
     }
 
     /// 絶対パスはそのまま（CWD 非依存）。

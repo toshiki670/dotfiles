@@ -4,7 +4,7 @@
 //! ①onchange skip/run（ソースハッシュ・条件④）②when.os ユニット gate が hooks を覆う（条件③）
 //! ③未インストール（PATH 不在）は中断せず skip ④実行して非ゼロ終了は apply エラー
 //! ⑤空コマンドの load 時拒否 ⑥list の hooks 表示 ⑦区切り付き相対パス hook は manifest dir 基準で
-//! 解決・実行（§13.3 / #498）。
+//! 解決・実行（§13.3 / #498）⑧区切り付き相対 hook のスクリプト不在はエラー（bare 名の skip と区別, #498）。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
@@ -214,6 +214,34 @@ fn relative_path_hook_resolves_against_manifest_dir() {
         fs::canonicalize(&unit).unwrap(),
         "相対 hook の実行時 CWD は manifest ディレクトリであるべき",
     );
+}
+
+/// §13.1 / #498: 区切り付き相対パスの hook が指すスクリプトが不在（typo / コミット漏れ）の場合は、
+/// bare 名の「未インストール → skip」とは区別し、エラーで apply を止める（実体化できないものを黙殺しない）。
+#[cfg(unix)]
+#[test]
+fn missing_relative_path_hook_fails_apply() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo\"\nhooks = [[\"./missing.sh\"]]\n",
+    )
+    .unwrap();
+    fs::write(unit.join("data.txt"), "v1").unwrap();
+    // ./missing.sh は意図的に置かない（同梱物の不在）。
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("見つかりません"))
+        .stderr(predicate::str::contains("./missing.sh"));
 }
 
 /// 空のコマンド（argv）を持つ hook は load 時に弾く（apply 失敗）。実体化できない typo を黙殺しない。
