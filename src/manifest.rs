@@ -87,10 +87,8 @@ pub struct Manifest {
 }
 
 /// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
-///
-/// 表示名（apply のラベル・list の属性）は変種名を唯一の出所として導出する: `Display`
-/// （strum `serialize_all`）と serde `rename_all` が同じ `lowercase` 規則で変換するため、
-/// 変種を足すと両方へ同時に反映される。両規則が揃っていることは tests の round-trip が保証する。
+/// 表示名（`Display`）と受理する TOML トークン（serde）を一致させるため `serialize_all` と
+/// `rename_all` は同じ規則で揃える（ズレは tests の round-trip が検出する）。
 #[derive(Debug, Deserialize, Default, PartialEq, Eq, Display)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
@@ -101,9 +99,7 @@ pub enum Kind {
 }
 
 /// 合成戦略（複数断片を1 dst=ファイルへ重ねる方法, §5.5）。
-///
-/// 表示名（apply のラベル・list の属性・validate のエラー文）は [`Kind`] と同様、変種名を唯一の
-/// 出所として `Display`（strum `serialize_all`）と serde `rename_all` が同じ `kebab-case` 規則で導出する。
+/// 表示名と TOML トークンを揃える規則は [`Kind`] と同じ（`serialize_all` / `rename_all` を `kebab-case` に）。
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display)]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
