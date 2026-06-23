@@ -25,12 +25,17 @@ fn configs_root() -> PathBuf {
 
 /// `configs/` 配下を走査し、設定単位（`manifest.toml` を持つディレクトリ）の source 相対名
 /// （`/` 区切り。`dotfiles list` / `apply` の表示名と一致）を集める。バイナリ側 discover とは
-/// 独立に歩く（テストはエンジン内部に依存せず、ソースツリーだけを真理とする）。
+/// 独立に歩く（テストはエンジン内部に依存せず、ソースツリーだけを真理とする）。走査が必ず
+/// 1 件以上返る不変条件はここで一度だけ担保する（空＝走査の不具合）。
 fn discover_unit_names() -> Vec<String> {
     let root = configs_root();
     let mut names = Vec::new();
     walk(&root, &root, &mut names);
     names.sort();
+    assert!(
+        !names.is_empty(),
+        "configs/ にユニットが無い（走査の不具合）"
+    );
     names
 }
 
@@ -48,22 +53,19 @@ fn walk(dir: &Path, root: &Path, out: &mut Vec<String>) {
     }
 }
 
-/// apply の 1 行出力 `apply: {name} → {dst} ({label})` から dst（`~/...` 生表記）を取り出す。
-fn parse_dst(line: &str) -> &str {
-    let after = line.split(" → ").nth(1).expect("apply 行に → が無い");
-    match after.rfind(" (") {
-        Some(i) => &after[..i], // 末尾の " (label)" を除く。
-        None => after,
-    }
-}
-
-/// dst の `~` / `~/...` を `home` へ展開する（apply の expand_home と同じ規則）。
-fn expand_home(dst: &str, home: &Path) -> PathBuf {
-    match dst.strip_prefix("~/") {
-        Some(rest) => home.join(rest),
-        None if dst == "~" => home.to_path_buf(),
-        None => PathBuf::from(dst),
-    }
+/// apply が 1 行（`apply: {name} → {dst} ({label})`）で報告した配置先を、test の HOME 上の
+/// 実パスへ写す。実 configs の dst は全て `~/…`（HOME 配下）なので先頭 `~/` を temp HOME へ
+/// 読み替える。形式・前提を外れたら expect で fail loud（エンジンの展開規則は複製しない）。
+fn placed_path(line: &str, home: &Path) -> PathBuf {
+    let dst = line
+        .split(" → ")
+        .nth(1)
+        .and_then(|after| after.rsplit_once(" (").map(|(dst, _label)| dst))
+        .expect("apply 行が `→ dst (label)` 形式でない");
+    let rel = dst
+        .strip_prefix("~/")
+        .expect("実 configs の dst は ~/ 始まり（HOME 配下）前提");
+    home.join(rel)
 }
 
 /// 全 manifest が load でき、apply が全ユニットを報告し、gate を通ったユニットは dst を生成する。
@@ -73,10 +75,6 @@ fn expand_home(dst: &str, home: &Path) -> PathBuf {
 #[test]
 fn real_configs_all_load_and_placed_units_create_dst() {
     let names = discover_unit_names();
-    assert!(
-        !names.is_empty(),
-        "configs/ にユニットが無い（走査の不具合）"
-    );
 
     let home = tempfile::tempdir().unwrap();
     let empty_path = tempfile::tempdir().unwrap(); // PATH を空にし dep gate を決定的に外す。
@@ -114,7 +112,7 @@ fn real_configs_all_load_and_placed_units_create_dst() {
         if line.contains("→ skip") {
             continue; // dep/os gate で skip されたユニット（dst を触らないのが正しい挙動）。
         }
-        let path = expand_home(parse_dst(line), home.path());
+        let path = placed_path(line, home.path());
         assert!(
             path.exists(),
             "配置されたユニット {name} の dst が生成されていない: {path:?}\n行: {line}",
@@ -131,10 +129,6 @@ fn real_configs_all_load_and_placed_units_create_dst() {
 #[test]
 fn real_configs_listed_by_unit_name() {
     let names = discover_unit_names();
-    assert!(
-        !names.is_empty(),
-        "configs/ にユニットが無い（走査の不具合）"
-    );
 
     let out = dotfiles()
         .arg("list")

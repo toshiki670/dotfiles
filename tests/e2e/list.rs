@@ -1,7 +1,4 @@
-//! `dotfiles list` の E2E — 名前順・属性ラベル・ソース欠落を hermetic fixture で検証する。
-//!
-//! 出荷する実 configs の集約（全ユニットが名前で出る）は [`crate::real_configs`] が
-//! data-driven に確かめる（特定ツールを名指ししない / #488）。
+//! `dotfiles list` の E2E — 名前順・属性ラベル・ソース欠落を検証する。
 
 use crate::dotfiles;
 use predicates::prelude::*;

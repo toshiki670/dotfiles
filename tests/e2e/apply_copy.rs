@@ -1,8 +1,7 @@
 //! `dotfiles apply` の copy 層（S0/S1）の E2E。
 //!
 //! kind 省略時の copy 既定と `~` 展開・サブディレクトリ再帰と入れ子 manifest の委譲・
-//! パーミッション属性の合成を、架空 fixture の hermetic 群で検証する（特定ツールを名指ししない）。
-//! 出荷する実 configs が copy で配置されることは [`crate::real_configs`] が data-driven に確かめる。
+//! パーミッション属性の合成を検証する。
 
 use crate::dotfiles;
 use predicates::prelude::*;
