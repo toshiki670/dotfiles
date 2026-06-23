@@ -28,12 +28,14 @@
 //! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群（契約）
 //! - [`secrets`]: マシンローカル値（S4/#458）— secret set / 注入 / doctor（契約）
 //! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証（契約）
+//! - [`color`]: `color sample`（S6/#460）— ANSI 確認表の見出し・エスケープシーケンス（契約）
 //! - [`real_configs`]: 出荷 configs の妥当性（実 configs 層）— 全ユニット走査で load/apply/list
 
 use assert_cmd::Command;
 
 mod apply_copy;
 mod cli;
+mod color;
 mod generate;
 mod hooks;
 mod list;
