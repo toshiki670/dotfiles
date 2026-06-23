@@ -1,18 +1,20 @@
-//! 出荷する実 configs（`configs/`）の data-driven E2E（#488）。
+//! 出荷 configs（`configs/`）の妥当性を data-driven に確かめる E2E（実 configs 層 / 設計書 §15.2）。
 //!
-//! 個々のツール（bat / claude / git / zellij …）は一時データであり、いつか入れ替わる。
-//! エンジンとそのテストはツール群より長生きするので、ここでは **特定ツールを名指しせず**、
-//! `configs/` 配下の全ユニットを実行時に走査して次を検証する:
+//! `configs/` 配下を実行時に走査し、得た各ユニットについて次を検証する:
 //!
-//! - 全 manifest が load/validate を通る（apply はユニット gate より先に load するため、
-//!   gate で skip されるユニットも含め全件が報告される ＝ §5.5・[`apply`](crate) 評価順）
-//! - gate を通って配置されたユニットは dst を実体化する
-//! - `dotfiles list` が全ユニットを名前で集約する
+//! - 全 manifest が load/validate を通る（apply はユニット gate より先に load するため、gate で
+//!   skip される単位も含め全件が apply 行で報告される ＝ §5.5 評価順）
+//! - gate を通って配置された単位は dst（ルート）を実体化する
+//! - `dotfiles list` が全単位を名前で集約する
 //!
-//! ツールが増減・改名しても本ファイルは無変更で追従する。ツール固有の合成・注入・再帰の
-//! 規則は架空 fixture の hermetic 群（[`crate::overlay`] / [`crate::secrets`] /
-//! [`crate::apply_copy`]）が網羅する。ここは「実 configs がエンジンの契約を満たす実体である」
-//! ことだけを確かめる結線テスト。
+//! 走査はエンジンの discover とは独立に行う（テストがエンジン内部の正しさを前提にしない oracle）。
+//! 配置内容の一致・サブツリー再帰・合成/注入の規則そのものは契約テストが担保し、ここは「実 configs が
+//! エンジンの契約を満たす実体である」結線（load＋ルート配置＋list）だけを見る。
+//!
+//! 前提: dep gate を空 PATH で外せるのは configs の dep が全て bare 名だから（`/` 区切りの絶対/相対
+//! dep は `gate::which` が PATH 非探索なので外れない）。実 apply のため un-gate な単位の onchange
+//! hooks も走り得るが、現状そのような単位は無く、bare hook は未インストール→skip で安全。前提が崩れる
+//! 単位が入ったら、ここではなく当該 manifest 側か別テストで扱う。
 
 use crate::dotfiles;
 use std::fs;

@@ -6,23 +6,29 @@
 //! 各テストファイルから `crate::` で使い、各ファイル固有の fixture ビルダーは
 //! その消費ファイル内に置く（`support.rs` は作らない）。
 //!
+//! # テスト方針（設計書 §15 / D9 を参照）
+//!
+//! 全テストは「エンジン/テストはツールのライフサイクルから独立」（D9・設計書 §15）に従う。
+//! 原則の本文・判定基準・2層構造は §15 が**唯一の出所**なので、ここでは再記述しない（§15.3）。
+//! 本スイートでの層の割り当てだけ示す:
+//!
+//! - **契約テスト**（§15.2）: hermetic な架空 fixture（`foo` / `faketool` / `demo` / `app` /
+//!   中立な argv）で書く下記の大半。実 configs を名指ししない。
+//! - **実 configs の妥当性確認**（§15.2）: [`real_configs`] **1 ファイル**が `configs/` を走査し
+//!   data-driven に確かめる（ツール名をハードコードしない）。
+//!
 //! # 検証内容（ファイル別）
 //!
-//! エンジンの契約テストは全て **架空 fixture の hermetic 群**（`foo` / `faketool` / `demo` /
-//! 中立な argv）で書き、`configs/` の実体に手を伸ばさない・特定ツールを名指ししない（#488）。
-//! 「出荷する実 configs が妥当に load/apply/list するか」は [`real_configs`] が **data-driven**
-//! （`configs/` 配下の全ユニットを実行時走査）に確かめる。ツールが増減・改名しても両者は無変更で
-//! 生き残る（エンジンとテストはツールのライフサイクルから独立）。
+//! 各ファイルの doc はその**ローカルな検証意図だけ**を述べる。
 //!
-//! - [`cli`]: `--help` / `--version` / 引数なし
-//! - [`apply_copy`]: copy 層（S0/S1）— kind 既定・tilde 展開・再帰委譲・パーミッション（hermetic）
-//! - [`list`]: 分散 manifest の名前順・属性ラベル・ソース欠落（hermetic）
-//! - [`generate`]: generate 層（S2/#456）— cmd 実行・when.deps gate・sibling 連結・list 表示
-//! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群
-//! - [`secrets`]: マシンローカル値（S4/#458）— secret set / 注入 / doctor（hermetic）
-//! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証
-//!   （ソースハッシュ skip/run・when.os gate・未インストール skip・非ゼロ終了エラー）
-//! - [`real_configs`]: 出荷する実 configs の data-driven 検証 — 全ユニット走査で load/apply/list
+//! - [`cli`]: `--help` / `--version` / 引数なし（契約）
+//! - [`apply_copy`]: copy 層（S0/S1）— kind 既定・tilde 展開・再帰委譲・パーミッション（契約）
+//! - [`list`]: 分散 manifest の名前順・属性ラベル・ソース欠落（契約）
+//! - [`generate`]: generate 層（S2/#456）— cmd 実行・when.deps gate・sibling 連結・list 表示（契約）
+//! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群（契約）
+//! - [`secrets`]: マシンローカル値（S4/#458）— secret set / 注入 / doctor（契約）
+//! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証（契約）
+//! - [`real_configs`]: 出荷 configs の妥当性（実 configs 層）— 全ユニット走査で load/apply/list
 
 use assert_cmd::Command;
 
