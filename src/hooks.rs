@@ -86,7 +86,12 @@ enum Exec {
 ///
 /// stdout/stderr は捨て、失敗時のみ stderr を添える（フックの進捗ノイズを apply 出力に混ぜない）。
 /// 「未インストールは skip・実行して失敗はエラー」の区別が、chezmoi の `if command -v …` ガードを
-/// ツール名を持たずに汎用再現する。
+/// ツール名を持たずに汎用再現する。なお `NotFound` 判定は `argv[0]` のみが対象で、`["sh", "-c", …]`
+/// の内側コマンドは含まれない（内側依存は `when.deps` で gate する, §13.1）。
+///
+/// `current_dir` は未設定 ＝ プロセス CWD を継承する。設計書 §13.3 の確定仕様（相対パス hook は
+/// ユニットの `manifest.toml` ディレクトリ基準）とは差分があり、追従は #498。現状の hooks は絶対
+/// パス / `$HOME` / PATH 解決で CWD 非依存なので顕在化しない。
 fn exec(argv: &[String]) -> Result<Exec, String> {
     let output = match Command::new(&argv[0]).args(&argv[1..]).output() {
         Ok(o) => o,
