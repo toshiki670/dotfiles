@@ -10,7 +10,7 @@ edition     = { workspace = true }
 license     = { workspace = true }
 name        = "dotfiles"
 repository  = { workspace = true }
-version     = "0.69.5"
+version     = "0.69.6"
 
 [dependencies]
 clap       = { workspace = true }
