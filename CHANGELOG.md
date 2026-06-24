@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.69.6] - 2026-06-24
+### Features
+- 相対パス hook を manifest.toml ディレクトリ基準で実行する [#498] ([#499](https://github.com/toshiki670/dotfiles/pull/499)) ([`99762c3`](https://github.com/toshiki670/dotfiles/commit/99762c35e8ee9e563d2dd4cbfad915a0113b11ea))
+- AI 普遍設計信条 design-creed をグローバル rule に追加（6 + 1 / Stable core, humble edges）[#490] ([#501](https://github.com/toshiki670/dotfiles/pull/501)) ([`f759d19`](https://github.com/toshiki670/dotfiles/commit/f759d19adfc13f6b605754ce7536d201f8c0add6))
+- Color sample を dotfiles へ吸収し旧 color クレートを掃除 [#460] ([#502](https://github.com/toshiki670/dotfiles/pull/502)) ([`1870fe2`](https://github.com/toshiki670/dotfiles/commit/1870fe24808192c6f5e96a677b6e0f680ff82157))
+- Home/dot_claude の rules / skills / statusline を native configs へ移行 [#505] ([`c8e2542`](https://github.com/toshiki670/dotfiles/commit/c8e25420ca0ef48813b1a53b2efde87a9acdca28))
+### Refactor
+- Kind / Strategy の表示文字列を Display に集約し複製を解消 [#506] ([`3c88a7f`](https://github.com/toshiki670/dotfiles/commit/3c88a7f31ffa7b8494ead0623efaa216954d9228))
+- Kind / Strategy の Display を strum derive へ（変種名を唯一の出所に）[#506] ([`b8238c9`](https://github.com/toshiki670/dotfiles/commit/b8238c9941eaad7bb0e297dbaa957b4d74edf371))
+
+
 ## [0.69.5] - 2026-06-22
 ### Features
 - Apply 最小骨格（固定ソース configs/・copy のみ）[S0 #454] ([#464](https://github.com/toshiki670/dotfiles/pull/464)) ([`336bed3`](https://github.com/toshiki670/dotfiles/commit/336bed33d37c434e1bf7ee41d8f089b514508497))
