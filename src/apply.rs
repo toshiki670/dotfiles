@@ -11,8 +11,10 @@
 //! ときは配置前に短絡 return するため、その hooks も走らない（＝ `when.os` でフックを分岐できる）。
 //! 本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
-// 配置エンジンの子モジュール。strategy は apply 内部専用なので private、それ以外は他ドメインの
-// rustdoc リンク（source / hooks / manifest / discover 等）から横断参照されるため pub(crate)。
+// 配置エンジンの子モジュール。可視性基準は locals.rs（SSOT）に従う。strategy は apply ツリー内から
+// のみ参照されるので private。copy / compose / generate / gate もコード結合は apply ツリー内に閉じる
+// が、各層が他ドメインの rustdoc から概念として深く参照され（copy_tree / gate 評価規則 / generate の
+// cmd ― crate::apply ルートへ寄せると anchor 精度が落ちる）、deny 下で解決させるため pub(crate)。
 pub(crate) mod compose;
 pub(crate) mod copy;
 pub(crate) mod gate;
