@@ -4,7 +4,8 @@
 //! `--version` / `--help` はバージョンの source of truth（タグ `v{version}`）を担う。
 //!
 //! `apply` / `list` サブコマンドは dotfiles ネイティブ化（Epic #453）の一部：
-//! 固定ソース `configs/` を走査し、`manifest.toml` に従って配置する。配置は **2軸**
+//! ソース（`configs/` の実体）を二段構えで解決し（作業ツリー検出 → 埋め込み・[`source`]、§8）、
+//! `manifest.toml` に従って配置する。配置は **2軸**
 //! （生成方式 `kind`=copy/generate × 合成 `strategy`=concat/json-shallow）＋条件付き overlay
 //! （`when` gate）で捉える（設計書 §5 / §5.5）。copy はツリー配置、generate / overlay 明示は
 //! ファイル合成（[`compose`]）を通り、トップレベル `when`（`deps` / `os`）はユニット単位 gate（[`gate`]）。配置の直前に
@@ -15,7 +16,7 @@
 
 use clap::{Parser, Subcommand};
 use std::ffi::OsString;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 mod apply;
 mod color;
@@ -33,6 +34,7 @@ mod onchange;
 mod prompt;
 mod resolve;
 mod secret;
+mod source;
 mod store;
 mod strategy;
 
@@ -47,11 +49,17 @@ mod strategy;
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
+
+    /// ソースルートを明示指定する（§8 の上級オプション。通常は作業ツリー検出 → 埋め込みで自動解決）。
+    ///
+    /// apply / list / doctor 横断で効く（`global`）。前面に出さない（`hide`）。
+    #[arg(long, global = true, hide = true, value_name = "DIR")]
+    source: Option<PathBuf>,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    /// 固定ソース `configs/` を走査し、copy / generate / overlay 合成で設定を配置する。
+    /// ソース（作業ツリー / 埋め込み・§8）を走査し、copy / generate / overlay 合成で設定を配置する。
     Apply,
     /// configs の manifest を集約し、配置先一覧を表示する。
     List,
@@ -85,9 +93,10 @@ enum SecretAction {
 
 fn main() {
     let cli = Cli::parse();
+    let source = cli.source.as_deref();
     let result = match cli.command {
-        Some(Commands::Apply) => run_apply(),
-        Some(Commands::List) => list::run(Path::new("configs")),
+        Some(Commands::Apply) => run_apply(source),
+        Some(Commands::List) => run_list(source),
         Some(Commands::Secret {
             action: SecretAction::Set { name, value },
         }) => run_secret_set(&name, &value),
@@ -97,7 +106,7 @@ fn main() {
             color::sample();
             Ok(())
         }
-        Some(Commands::Doctor) => run_doctor(),
+        Some(Commands::Doctor) => run_doctor(source),
         // サブコマンドなし: 従来どおりバージョンを表示する。
         None => {
             println!("dotfiles {}", env!("CARGO_PKG_VERSION"));
@@ -110,10 +119,19 @@ fn main() {
     }
 }
 
-/// `dotfiles apply`：CWD 相対の固定ソース `configs/` を、HOME を基点に配置する。
-fn run_apply() -> Result<(), String> {
+/// `dotfiles apply`：ソースを二段構えで解決し（§8）、HOME を基点に配置する。
+/// 解決元（作業ツリー / 埋め込み / `--source`）を 1 行目に示す。
+fn run_apply(source: Option<&Path>) -> Result<(), String> {
     let home = home_dir()?;
-    apply::run(Path::new("configs"), Path::new(&home))
+    let resolved = source::resolve(source)?;
+    println!("apply: source = {}", resolved.origin());
+    apply::run(resolved.root(), Path::new(&home))
+}
+
+/// `dotfiles list`：ソースを二段構えで解決し、配置先一覧を解決元の表示付きで出す。
+fn run_list(source: Option<&Path>) -> Result<(), String> {
+    let resolved = source::resolve(source)?;
+    list::run(resolved.root(), &resolved.origin().to_string())
 }
 
 /// `dotfiles secret set <name> <value>`：named value をストアへ保存する。
@@ -122,10 +140,11 @@ fn run_secret_set(name: &str, value: &str) -> Result<(), String> {
     secret::set(Path::new(&home), name, value)
 }
 
-/// `dotfiles doctor`：`configs/` の `locals` 宣言とストアを突き合わせ未設定を報告する。
-fn run_doctor() -> Result<(), String> {
+/// `dotfiles doctor`：ソースの `locals` 宣言とストアを突き合わせ未設定を報告する。
+fn run_doctor(source: Option<&Path>) -> Result<(), String> {
     let home = home_dir()?;
-    doctor::run(Path::new("configs"), Path::new(&home))
+    let resolved = source::resolve(source)?;
+    doctor::run(resolved.root(), Path::new(&home))
 }
 
 /// HOME を取得する（dst の `~` 展開・ストアパスの基点）。

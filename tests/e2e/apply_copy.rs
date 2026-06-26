@@ -4,7 +4,6 @@
 //! パーミッション属性の合成を検証する。
 
 use crate::dotfiles;
-use predicates::prelude::*;
 use rstest::rstest;
 use std::fs;
 
@@ -38,22 +37,9 @@ fn apply_defaults_to_copy_and_expands_tilde() {
     );
 }
 
-/// `configs/` が無い場所で apply するとエラー終了することを検証する。
-#[test]
-fn apply_errors_when_source_missing() {
-    let work = tempfile::tempdir().unwrap();
-    let home = tempfile::tempdir().unwrap();
-
-    dotfiles()
-        .arg("apply")
-        .current_dir(work.path())
-        .env("HOME", home.path())
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains("が見つかりません"))
-        .stderr(predicate::str::contains("探索先:"))
-        .stderr(predicate::str::contains("リポジトリのルート"));
-}
+// 「`configs/` が無い場所で apply → エラー」は S8（#462）で挙動が変わった: 作業ツリーが
+// 無ければ埋め込みフォールバックで解決するため、もうエラーにならない。解決の二段切替は
+// [`crate::source`] が検証する（ソース欠落の旧契約はそこへ移った）。
 
 /// S1 受け入れ条件: サブディレクトリ再帰・複数ファイル・manifest の再帰委譲。
 /// 親単位は配下を再帰コピーするが、自前 manifest を持つサブツリー（child）は
