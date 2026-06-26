@@ -1,7 +1,6 @@
-//! `dotfiles list` の E2E — 名前順・属性ラベル・ソース欠落を検証する。
+//! `dotfiles list` の E2E — 名前順・属性ラベルを検証する。
 
 use crate::dotfiles;
-use predicates::prelude::*;
 use std::fs;
 
 /// `dotfiles list` が単位を名前順に並べ、dst と属性ラベルを表示することを検証する。
@@ -50,15 +49,6 @@ fn list_shows_units_sorted_with_attrs() {
     );
 }
 
-/// `configs/` が無い場所で list するとエラー終了することを検証する。
-#[test]
-fn list_errors_when_source_missing() {
-    let work = tempfile::tempdir().unwrap();
-
-    dotfiles()
-        .arg("list")
-        .current_dir(work.path())
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains("が見つかりません"));
-}
+// 「`configs/` が無い場所で list → エラー」は S8（#462）で挙動が変わった: 作業ツリーが
+// 無ければ埋め込みフォールバックで解決し、出荷 configs を一覧する。解決の二段切替は
+// [`crate::source`] が検証する。

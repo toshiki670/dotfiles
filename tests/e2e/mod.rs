@@ -23,12 +23,13 @@
 //!
 //! - [`cli`]: `--help` / `--version` / 引数なし（契約）
 //! - [`apply_copy`]: copy 層（S0/S1）— kind 既定・tilde 展開・再帰委譲・パーミッション（契約）
-//! - [`list`]: 分散 manifest の名前順・属性ラベル・ソース欠落（契約）
+//! - [`list`]: 分散 manifest の名前順・属性ラベル（契約）
 //! - [`generate`]: generate 層（S2/#456）— cmd 実行・when.deps gate・sibling 連結・list 表示（契約）
 //! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群（契約）
 //! - [`secrets`]: マシンローカル値（S4/#458）— secret set / 注入 / doctor（契約）
 //! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証（契約）
 //! - [`color`]: `color sample`（S6/#460）— ANSI 確認表の見出し・エスケープシーケンス（契約）
+//! - [`source`]: ソース二段構え（S8/#462）— 作業ツリー検出 / 埋め込み / `--source` の解決切替（契約＋実 configs）
 //! - [`real_configs`]: 出荷 configs の妥当性（実 configs 層）— 全ユニット走査で load/apply/list
 
 use assert_cmd::Command;
@@ -42,6 +43,7 @@ mod list;
 mod overlay;
 mod real_configs;
 mod secrets;
+mod source;
 
 /// 実バイナリ `dotfiles` を起動する Command を返す（全テスト共通）。
 pub(crate) fn dotfiles() -> Command {
