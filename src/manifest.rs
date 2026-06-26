@@ -8,18 +8,19 @@
 //!   として組む。各 overlay は `src`（copy 断片）/ `cmd`（generate 断片）のどちらか ＋
 //!   `when`（`deps` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
 //!
-//! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ）に一本化する。**書く位置でスコープが
-//! 決まる**: トップレベルの `when` はユニット全体 gate（false なら dst も `hooks` も触らず skip ＝
-//! all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否（§5.5）。両者は同じ評価規則を
-//! [`crate::gate`] で共有する。
+//! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ / `theme` スカラ）に一本化する。**書く位置で
+//! スコープが決まる**: トップレベルの `when` はユニット全体 gate（false なら dst も `hooks` も触らず
+//! skip ＝ all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否（§5.5）。両者は同じ評価
+//! 規則を [`crate::gate`] で共有する。
 //! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は onchange
 //! フック（§13, S5）の**コマンド（argv）**宣言で、各 argv が非空であることを load 時に検証する
 //! （実行は [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
-//! theme は後続（color）スライスで追加する。
+//! `theme` 属性（[`ThemeRole`]）と `when.theme`（[`Theme`]）は color スライス（§10, S7）で追加した。
+//! 前者はツールのテーマ対応方式（source/follower/self）の宣言、後者はテーマ状態で gate する語彙。
 
 use serde::Deserialize;
 use std::path::Path;
-use strum::Display;
+use strum::{Display, EnumString};
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
 ///
@@ -54,6 +55,12 @@ pub struct Manifest {
     /// 標準出力を断片とする。copy では未使用。
     #[serde(default)]
     pub cmd: Vec<String>,
+    /// テーマ対応方式（§7・§10.2.1）。`source`（Ghostty: 端末背景＋ANSI を決める起点。
+    /// `dotfiles color` が build-time 固定し reload する）/ `follower`（fish 変数追従）/
+    /// `self`（各自が背景検出）。本スライス（S7）で behavior を持つのは `source` だけで、
+    /// follower / self は役割宣言（§7 の SSOT）。省略時は theme 非対応ツール。
+    #[serde(default)]
+    pub theme: Option<ThemeRole>,
     /// ユニット全体 gate（§5.5・§7）。トップレベルに書いた `when` はユニットスコープで、
     /// 満たさなければユニット全体を skip する（dst も `hooks` も触らない ＝ all-or-nothing）。
     /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致した時だけ真。
@@ -110,6 +117,37 @@ pub enum Strategy {
     JsonShallow,
 }
 
+/// テーマ状態（§10）。`when.theme` の gate 値であり、状態ファイル（`~/.config/dotfiles/theme`、
+/// §10.2）に書く語彙の SSOT。`auto` は OS 外観追従（現状の挙動・§10.1。状態ファイル無し/不正も
+/// これ）、`dark`/`light` は手動固定。表示名（`Display`）と TOML トークン（serde）を揃える規則は
+/// [`Kind`] と同じ。状態ファイルの読み戻し（[`crate::theme`]）で文字列パースするため
+/// `EnumString`（`FromStr`）も導出し、Display と同じ `serialize_all` 規則で SSOT を共有する。
+#[derive(Debug, Deserialize, Default, Clone, Copy, PartialEq, Eq, Display, EnumString)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
+pub enum Theme {
+    /// OS 外観に追従（現状の挙動・§10.1）。状態ファイル無し/不正もこれに倒す。
+    #[default]
+    Auto,
+    Dark,
+    Light,
+}
+
+/// テーマ対応方式（§7・§10.2.1）。[`Manifest::theme`] の値。`source` は起点（Ghostty）で
+/// `dotfiles color` の reload 駆動対象、`follower` は fish 変数追従（eza/delta）、`self` は各自が
+/// 背景検出（bat/nvim/fzf）。`self` は Rust の予約語なのでバリアント名は `SelfDetect` とし、
+/// serde / Display では `"self"` へ rename する（TOML トークンと表示名は §7 どおり `self`）。
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
+pub enum ThemeRole {
+    Source,
+    Follower,
+    #[serde(rename = "self")]
+    #[strum(serialize = "self")]
+    SelfDetect,
+}
+
 /// 1 つの overlay（条件付き断片, §5.5）。`when` を満たす時だけ合成に参加する。
 /// 断片の実体化方法は `src`（copy）/ `cmd`（generate）の択一。既存 dst の温存は overlay では
 /// なくユニット属性 [`Manifest::preserve`]。
@@ -122,7 +160,7 @@ pub struct Overlay {
     /// generate 断片: 実行する argv。標準出力を断片にする。
     #[serde(default)]
     pub cmd: Vec<String>,
-    /// 採用条件（省略 = 常時採用）。この断片スコープで `when`（`deps` / `os`）を AND 評価する。
+    /// 採用条件（省略 = 常時採用）。この断片スコープで `when`（`deps` / `os` / `theme`）を AND 評価する。
     #[serde(default)]
     pub when: Option<When>,
 }
@@ -139,6 +177,11 @@ pub struct When {
     /// OS（スカラ）。現在 OS と一致時だけ採用（旧 `{{ if eq .chezmoi.os … }}`）。chezmoi 互換表記。
     #[serde(default)]
     pub os: Option<String>,
+    /// テーマ状態（スカラ）。現在のテーマ状態（状態ファイル `~/.config/dotfiles/theme`）と一致時
+    /// だけ採用（§10）。テーマ別断片の build-time 切替に使う（ghostty の theme 行など）。状態の
+    /// 供給元は ambient な PATH/OS と違い状態ファイルなので、評価時に値を引数で受ける（[`crate::gate`]）。
+    #[serde(default)]
+    pub theme: Option<Theme>,
 }
 
 impl When {
@@ -146,9 +189,9 @@ impl When {
     ///
     /// 空テーブル `when = {}` や `when = { deps = [] }` は常時採用の silent no-op になり、
     /// 「gate を書いたのに効かない」typo（編集で内部キーだけ消えた等）を黙って通す。これを
-    /// load 時に弾くため [`Manifest::validate`] が使う。`theme` 等のキー追加時はここに足す。
+    /// load 時に弾くため [`Manifest::validate`] が使う。実効キーを足したらここにも足す。
     fn has_no_effective_key(&self) -> bool {
-        self.deps.is_empty() && self.os.is_none()
+        self.deps.is_empty() && self.os.is_none() && self.theme.is_none()
     }
 }
 
@@ -296,6 +339,60 @@ mod tests {
                 "Display と serde 表現がズレている: {strategy}"
             );
         }
+    }
+
+    #[test]
+    fn theme_display_round_trips_through_serde() {
+        // Theme（状態ファイル語彙・when.theme の gate 値）の Display と serde 表現を固定する。
+        for theme in [Theme::Auto, Theme::Dark, Theme::Light] {
+            let parsed = parse(&format!(
+                "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = {{ theme = \"{theme}\" }}\n"
+            ))
+            .unwrap();
+            assert_eq!(
+                parsed.overlay[0].when.as_ref().unwrap().theme,
+                Some(theme),
+                "Display と serde 表現がズレている: {theme}"
+            );
+        }
+    }
+
+    #[test]
+    fn theme_role_display_round_trips_through_serde() {
+        // ThemeRole（§7 の theme 属性）。`self` は予約語回避の rename が serde/Display 双方で効くこと。
+        for role in [
+            ThemeRole::Source,
+            ThemeRole::Follower,
+            ThemeRole::SelfDetect,
+        ] {
+            let parsed = parse(&format!("dst = \"~/x\"\ntheme = \"{role}\"\n")).unwrap();
+            assert_eq!(
+                parsed.theme,
+                Some(role),
+                "Display と serde 表現がズレている: {role}"
+            );
+        }
+    }
+
+    #[test]
+    fn parse_rejects_unknown_theme_value() {
+        // 不正なテーマ値は serde が load 時に弾く（fail loud。typo 断片が常時不採用になる事故を防ぐ）。
+        assert!(toml::from_str::<Manifest>("dst = \"~/x\"\ntheme = \"darkk\"\n").is_err());
+        assert!(
+            toml::from_str::<Manifest>(
+                "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = { theme = \"nope\" }\n",
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn parse_accepts_when_theme_as_effective_key() {
+        // when.theme だけでも実効キー（空 when の silent no-op 弾きに巻き込まれない）。
+        assert!(
+            parse("dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = { theme = \"dark\" }\n")
+                .is_ok()
+        );
     }
 
     #[test]

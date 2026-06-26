@@ -37,6 +37,36 @@ pub fn run_unit_hooks(
     Ok(())
 }
 
+/// ユニットの全 hooks を **onchange gate を通さず無条件に**実行する（[`crate::color`] が
+/// テーマ切替後の reload に使う）。
+///
+/// `dotfiles color` はテーマ**状態**だけを変えユニットのソースは変えないため source ハッシュは
+/// 不変で、通常の onchange gate（[`run_unit_hooks`]）では reload hook が「ソース不変」で skip される。
+/// そこで `theme = "source"` のユニットに限り、その hooks（reload など）をここで強制発火させる。
+/// 状態（`hooks.toml`）には依存も記録もしない ― force は「冪等な onchange hook を明示的に再走させる」
+/// だけで、再走しても安全であることは onchange hook の冪等性契約（§13）が担保する。実体化の解決
+/// （bare 名の未インストール skip / 区切り付きパスの不在エラー）は通常実行と同じ [`exec`] を共有する。
+pub fn run_unit_hooks_forced(
+    unit_dir: &Path,
+    unit_rel: &str,
+    hooks: &[Vec<String>],
+) -> Result<(), String> {
+    for argv in hooks {
+        let Some(program) = argv.first() else {
+            // manifest 検証で非空を保証済みだが防御的に弾く（[`run_one`] と同方針）。
+            return Err(format!("{unit_rel}: hook コマンドが空です"));
+        };
+        let label = argv.join(" ");
+        match exec(argv, unit_dir)? {
+            Exec::Ran => println!("hook: {label} ({unit_rel}) → ran (forced)"),
+            Exec::ProgramMissing => {
+                println!("hook: {label} ({unit_rel}) → skip ({program} が PATH にない)");
+            }
+        }
+    }
+    Ok(())
+}
+
 /// 1 フック（argv）を onchange gate を通して実行する。
 ///
 /// 状態キーは `<unit>::<コマンドの短ハッシュ>`。コマンド内容をキーに織り込むことで、manifest 上で

@@ -12,6 +12,10 @@
 # 実行し、カスタムテーマ ayu-dark を bat/delta に登録し直す（onchange, §13）。フックは
 # 「実行するコマンド（argv）」をデータとして宣言する（binary はツール名を持たず実行するだけ）。
 # 旧 chezmoi run_onchange_after_build-bat-cache の移植。
+#
+# theme = "self"（§7・§10.2.1）: bat は自前で端末背景を検出する（config の --theme=auto が OSC11 で
+#   light/dark を選ぶ）。Ghostty を起点に固定すれば背景が変わり bat も自然に追従する ― 役割宣言のみ。
 dst   = "~/.config/bat"
 hooks = [ [ "bat", "cache", "--build" ] ]
+theme = "self"
 when  = { deps = [ "bat" ] }

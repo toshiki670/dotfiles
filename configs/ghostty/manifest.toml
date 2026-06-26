@@ -1,29 +1,56 @@
-# ghostty の設定（config）を配置し、macOS 参照先への symlink を張る。
-# 設計: docs/dotfiles-native-design.md §6.1（ghostty 例）・§13
+# ghostty の設定（config）を配置し、macOS 参照先への symlink を張り、テーマ切替時に reload する。
+# 設計: docs/dotfiles-native-design.md §6.1（ghostty 例）・§10（color）・§13（hooks）
 #
-# kind は省略時 "copy"（config をそのまま ~/.config/ghostty へ配置）。
+# theme = "source": ghostty はテーマの起点（端末背景＋ANSI パレットを決める）。`dotfiles color` は
+#   この属性を見て、切替後にこのユニットの hooks を強制発火し reload する（§10.2.1）。
+#
+# 合成（§5.5）: dst=ファイル（~/.config/ghostty/config）へ base（config）＋テーマ別断片を concat で
+#   重ねる。base は theme 行を持たず、when.theme overlay（theme-auto / theme-dark / theme-light）の
+#   いずれか 1 つだけが現在のテーマ状態（~/.config/dotfiles/theme, §10.2）に一致して末尾へ付く。
+#   3 断片を全て when.theme で gate するので theme 行は常にちょうど 1 本に確定する。
 #
 # when = { deps = ["ghostty"], os = "darwin" }: トップレベル when はユニットスコープ gate（§5.5・§7）。
-#   when.deps = ["ghostty"]: ghostty が PATH に無い環境ではユニットごと skip（配置も symlink も走ら
-#     ない）。ghostty が無ければ config 配置も macOS 参照先への symlink も無意味なので gate する。
+#   when.deps = ["ghostty"]: ghostty が PATH に無い環境ではユニットごと skip（配置も hooks も走らない）。
 #     （ghostty CLI は /Applications/Ghostty.app/Contents/MacOS/ghostty で PATH 解決される。）
-#   when.os = "darwin": ghostty の symlink フックは macOS 専用なので darwin gate する（§6.1 の例に準拠）。
-#     darwin 以外では配置も hooks も skip される（ユニット gate が hooks を覆う）。フックが macOS 専用で
+#   when.os = "darwin": symlink / reload フックは macOS 前提なので darwin gate する（§6.1 の例に準拠）。
+#     darwin 以外では配置も hooks も skip される（ユニット gate が hooks を覆う）。フックが macOS 前提で
 #     ある知識はこの manifest（when.os ＋下記コマンド）が持ち、binary は関知しない。
 #
-# hooks: 配置後、~/Library/Application Support/com.mitchellh.ghostty/config → ~/.config/ghostty/config
-#   の symlink を冪等に張る（onchange, §13）。フックは実行するコマンド（argv）をデータとして宣言する。
-#   `ln -sf` は既存リンク/ファイルを置き換えるので冪等（旧 chezmoi run_after_setup-ghostty-macos-symlink
-#   の `rm -f`＋`ln -sf` を 1 コマンドに畳んだ移植）。
-#
-# 注: テーマ（config 内の theme 行）の light/dark 切替は color スライスの担当。`theme` 属性は
-#   そのスライスで付与する（S5 では付けない）。
-dst = "~/.config/ghostty"
+# hooks（onchange, §13。ソースが前回適用時から変われば実行。`dotfiles color` は theme 状態だけ変え
+#   ソース不変なので、color 経路では theme="source" ユニットの hooks を強制発火させる ― §10.2.1）:
+#   1. symlink: ~/Library/Application Support/com.mitchellh.ghostty/config → ~/.config/ghostty/config
+#      を冪等に張る（`ln -sf` は既存を置換。旧 chezmoi run_after_setup-ghostty-macos-symlink の移植）。
+#   2. reload: Ghostty へ SIGUSR2 を送り config を再読込（Ghostty 1.2+ の公式機能）。基底プロセス名は
+#      `ghostty`（macOS の p_comm）。起動していなければ `|| true` で非エラー（次回起動時に反映）。
+#      reload コマンドはデータとして宣言し、エンジンは ghostty/pkill を一切持たない（D9・§13）。
+dst = "~/.config/ghostty/config"
 hooks = [
   [
     "sh",
     "-c",
     "mkdir -p \"$HOME/Library/Application Support/com.mitchellh.ghostty\" && ln -sf \"$HOME/.config/ghostty/config\" \"$HOME/Library/Application Support/com.mitchellh.ghostty/config\"",
   ],
+  [
+    "sh",
+    "-c",
+    "pkill -SIGUSR2 ghostty 2>/dev/null || true",
+  ],
 ]
+strategy = "concat"
+theme = "source"
 when = { deps = [ "ghostty" ], os = "darwin" }
+
+[[overlay]]
+src = "config" # base（theme 行を持たない全設定。常時採用）
+
+[[overlay]]
+src  = "theme-auto"       # OS 外観追従（§10.1 の現状挙動）
+when = { theme = "auto" }
+
+[[overlay]]
+src  = "theme-dark"       # dark 手動固定
+when = { theme = "dark" }
+
+[[overlay]]
+src  = "theme-light"       # light 手動固定
+when = { theme = "light" }

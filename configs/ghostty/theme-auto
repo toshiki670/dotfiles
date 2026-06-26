@@ -1,0 +1,2 @@
+# theme = "auto"（OS 外観追従・§10.1 の現状挙動）: light/dark を OS に委ねる。
+theme = light:One Half Light,dark:Ayu

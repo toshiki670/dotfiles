@@ -12,10 +12,10 @@
 //! 本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
 use crate::discover::{self, MANIFEST, Unit};
-use crate::manifest::{Kind, Manifest};
+use crate::manifest::{Kind, Manifest, Theme};
 use crate::onchange::State as HookState;
 use crate::store::Store;
-use crate::{compose, copy, gate, hooks, prompt, resolve};
+use crate::{compose, copy, gate, hooks, prompt, resolve, theme};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -32,10 +32,13 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
         return Ok(());
     }
 
+    // テーマ状態は状態ファイル（§10）由来で `when.theme` gate に効く。開始時に 1 回読み、
+    // 全ユニットへ同じ値を渡す（apply 1 回の中で状態は一定）。無し/不正は Auto（OS 追従）。
+    let theme = theme::current(home);
     let mut store = Store::load(home)?;
     let mut hook_state = HookState::load(home);
     for unit in &units {
-        apply_unit(unit, home, &mut store, &mut hook_state)?;
+        apply_unit(unit, home, theme, &mut store, &mut hook_state)?;
     }
     Ok(())
 }
@@ -45,6 +48,7 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
 fn apply_unit(
     unit: &Unit,
     home: &Path,
+    theme: Theme,
     store: &mut Store,
     hook_state: &mut HookState,
 ) -> Result<(), String> {
@@ -53,7 +57,7 @@ fn apply_unit(
     let name = unit.rel.to_string_lossy();
 
     // ①トップレベル when（ユニット gate）を最初に評価し、満たさなければユニット全体を skip（dst も hooks も触らない）。
-    if let Some(reason) = gate::unit_skip_reason(&manifest) {
+    if let Some(reason) = gate::unit_skip_reason(&manifest, theme) {
         println!("apply: {name} → skip ({reason})");
         return Ok(());
     }
@@ -68,7 +72,7 @@ fn apply_unit(
 
     let label = placement_label(&manifest);
     if uses_compose(&manifest) {
-        compose::place(&unit.dir, &dst, &manifest, &locals)?;
+        compose::place(&unit.dir, &dst, &manifest, theme, &locals)?;
     } else {
         copy::place(&unit.dir, &dst, &manifest, &locals)?;
     }

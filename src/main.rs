@@ -35,6 +35,7 @@ mod resolve;
 mod secret;
 mod store;
 mod strategy;
+mod theme;
 
 /// toshiki670/dotfiles 本体（core）。
 #[derive(Parser)]
@@ -60,7 +61,7 @@ enum Commands {
         #[command(subcommand)]
         action: SecretAction,
     },
-    /// テーマ／カラー関連（§10）。現状は確認表出力の `sample` のみ。
+    /// テーマ／カラー関連（§10）。手動固定（dark/light）／追従（auto）の切替と確認表（sample）。
     Color {
         #[command(subcommand)]
         action: ColorAction,
@@ -69,9 +70,15 @@ enum Commands {
     Doctor,
 }
 
-/// `color` のサブコマンド。テーマ手動固定（dark/light/auto）は後続スライスで追加予定（§10.2）。
+/// `color` のサブコマンド（§10.2）。テーマ手動固定（dark/light）／OS 追従（auto）と確認表（sample）。
 #[derive(Subcommand)]
 enum ColorAction {
+    /// テーマを dark に手動固定する。
+    Dark,
+    /// テーマを light に手動固定する。
+    Light,
+    /// OS 外観追従（現状の挙動）に戻す。
+    Auto,
     /// ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
     Sample,
 }
@@ -91,12 +98,7 @@ fn main() {
         Some(Commands::Secret {
             action: SecretAction::Set { name, value },
         }) => run_secret_set(&name, &value),
-        Some(Commands::Color {
-            action: ColorAction::Sample,
-        }) => {
-            color::sample();
-            Ok(())
-        }
+        Some(Commands::Color { action }) => run_color(action),
         Some(Commands::Doctor) => run_doctor(),
         // サブコマンドなし: 従来どおりバージョンを表示する。
         None => {
@@ -114,6 +116,22 @@ fn main() {
 fn run_apply() -> Result<(), String> {
     let home = home_dir()?;
     apply::run(Path::new("configs"), Path::new(&home))
+}
+
+/// `dotfiles color <action>`：dark/light/auto はテーマ切替（状態書込＋apply＋source reload）、
+/// sample は ANSI 確認表（home 不要）。切替の source は apply と同じ cwd 相対 `configs/`（S8 で汎用化）。
+fn run_color(action: ColorAction) -> Result<(), String> {
+    let theme = match action {
+        ColorAction::Dark => manifest::Theme::Dark,
+        ColorAction::Light => manifest::Theme::Light,
+        ColorAction::Auto => manifest::Theme::Auto,
+        ColorAction::Sample => {
+            color::sample();
+            return Ok(());
+        }
+    };
+    let home = home_dir()?;
+    color::set(Path::new("configs"), Path::new(&home), theme)
 }
 
 /// `dotfiles secret set <name> <value>`：named value をストアへ保存する。

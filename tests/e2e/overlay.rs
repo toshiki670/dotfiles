@@ -490,3 +490,92 @@ fn apply_errors_when_preserve_without_compose_routing() {
         .failure()
         .stderr(predicate::str::contains("preserve"));
 }
+
+/// `when.theme` は状態ファイル（`~/.config/dotfiles/theme`, §10）の値で断片を選ぶ。`color` を介さず
+/// `apply` 単体でも、状態ファイルを直接置けばテーマ別 overlay が gate される（deps / os と同じ仕組み）。
+#[test]
+fn apply_overlay_selects_fragment_by_theme_state() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let empty_path = tempfile::tempdir().unwrap(); // deps 無しだが PATH を決定的にする。
+
+    let unit = work.path().join("configs/themed");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/themed/out.txt\"\n\
+         strategy = \"concat\"\n\
+         [[overlay]]\n\
+         src = \"base.txt\"\n\
+         [[overlay]]\n\
+         src = \"dark.txt\"\n\
+         when = { theme = \"dark\" }\n\
+         [[overlay]]\n\
+         src = \"light.txt\"\n\
+         when = { theme = \"light\" }\n",
+    )
+    .unwrap();
+    fs::write(unit.join("base.txt"), "BASE\n").unwrap();
+    fs::write(unit.join("dark.txt"), "DARK\n").unwrap();
+    fs::write(unit.join("light.txt"), "LIGHT\n").unwrap();
+
+    // 状態ファイルに light を書いてから apply → light 断片だけが gate を通る。
+    let state = home.path().join(".config/dotfiles/theme");
+    fs::create_dir_all(state.parent().unwrap()).unwrap();
+    fs::write(&state, "light\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .env("PATH", empty_path.path())
+        .assert()
+        .success();
+
+    let out = fs::read_to_string(home.path().join(".config/themed/out.txt")).unwrap();
+    assert!(
+        out.contains("BASE") && out.contains("LIGHT") && !out.contains("DARK"),
+        "theme=light で light 断片だけが採用されていない: {out}",
+    );
+}
+
+/// 状態ファイルが無いとき `when.theme` は auto に倒れる（既定）。auto gate の断片だけ採用され、
+/// dark/light 断片は外れる。
+#[test]
+fn apply_overlay_theme_defaults_to_auto_without_state_file() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let empty_path = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/themed");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/themed/out.txt\"\n\
+         strategy = \"concat\"\n\
+         [[overlay]]\n\
+         src = \"auto.txt\"\n\
+         when = { theme = \"auto\" }\n\
+         [[overlay]]\n\
+         src = \"dark.txt\"\n\
+         when = { theme = \"dark\" }\n",
+    )
+    .unwrap();
+    fs::write(unit.join("auto.txt"), "AUTO\n").unwrap();
+    fs::write(unit.join("dark.txt"), "DARK\n").unwrap();
+
+    // 状態ファイルを置かない → 既定 auto。
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .env("PATH", empty_path.path())
+        .assert()
+        .success();
+
+    let out = fs::read_to_string(home.path().join(".config/themed/out.txt")).unwrap();
+    assert!(
+        out.contains("AUTO") && !out.contains("DARK"),
+        "状態ファイル無しで auto 断片だけが採用されていない: {out}",
+    );
+}

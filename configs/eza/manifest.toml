@@ -3,5 +3,9 @@
 #
 # dst は fish の conf.d（複数ツールが断片を持ち寄る合流点）。`~` は HOME に展開。
 # kind は省略時 "copy"。ファイル名の番号 prefix (40-) が読み込み順を表す（§6.3 ルール4）。
-# テーマ追従（theme = "follower"）は color スライスで属性化する。
-dst = "~/.config/fish/conf.d"
+#
+# theme = "follower"（§7・§10.2.1）: eza は fish 変数 $fish_terminal_color_theme（OSC11 由来の端末背景）に
+#   --on-variable で追従する（40-eza.fish 内）。本スライス（S7）では Ghostty を起点に固定するため
+#   follower はコード無改修で自然に追従する ― この属性は役割宣言（behavior は source だけが持つ）。
+dst   = "~/.config/fish/conf.d"
+theme = "follower"

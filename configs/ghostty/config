@@ -9,7 +9,8 @@ window-padding-x = 4
 window-padding-y = 4
 window-padding-balance = true
 background-blur = 20
-theme = light:One Half Light,dark:Ayu
+# theme 行はテーマ状態（dark/light/auto）で切り替わるため、ここには持たず
+# manifest の when.theme overlay（theme-auto / theme-dark / theme-light）が末尾へ付与する。
 font-size = 16
 font-thicken = true
 font-family = "JetBrains Mono Light"
