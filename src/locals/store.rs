@@ -1,7 +1,7 @@
 //! named value ストア（§9.1）: マシンローカル値の単一ストア `~/.config/dotfiles/local.toml`。
 //!
 //! 名前→値を全ツール横断で集約する **dotfiles 非管理**ファイル（repo には値を一切置かない）。
-//! `locals` を宣言した単位の placeholder（`@@name@@`）注入（[`crate::resolve`]）と doctor 診断
+//! `locals` を宣言した単位の placeholder（`@@name@@`）注入（[`crate::locals::resolve`]）と doctor 診断
 //! （[`crate::doctor`]）がここを参照する。秘匿値を含むためファイルは 0600 で書き、ドット入り
 //! キー（`git.email`）は toml が自動でクォートするので round-trip する（フラットな名前→値マップ）。
 

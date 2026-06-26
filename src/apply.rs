@@ -1,21 +1,28 @@
 //! `dotfiles apply`：固定ソース `configs/` を走査し配置を実行する。
 //!
 //! 走査（manifest 発見・再帰委譲）は [`crate::discover`]。各単位は §5.5 の評価順に従う:
-//! ①**トップレベル `when`（ユニット gate）を最初に評価し false なら短絡**（[`crate::gate`]、dst を
+//! ①**トップレベル `when`（ユニット gate）を最初に評価し false なら短絡**（[`crate::apply::gate`]、dst を
 //! 一切触らず skip）。生き残った単位は dst 種別で配置経路が分かれる ―
-//! dst=ディレクトリの copy は [`crate::copy`]（ツリー配置）、dst=ファイルの generate /
-//! overlay 明示は [`crate::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。
-//! 配置の直前に `locals`（named value）を解決し（[`crate::resolve`]）、配置ファイルの `@@name@@` を
+//! dst=ディレクトリの copy は [`crate::apply::copy`]（ツリー配置）、dst=ファイルの generate /
+//! overlay 明示は [`crate::apply::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。
+//! 配置の直前に `locals`（named value）を解決し（[`crate::locals::resolve`]）、配置ファイルの `@@name@@` を
 //! 注入する（§9）。配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時
 //! から変わっていれば実行する（[`crate::hooks`] / [`crate::onchange`]、§13）。ユニット gate が false の
 //! ときは配置前に短絡 return するため、その hooks も走らない（＝ `when.os` でフックを分岐できる）。
 //! 本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
+pub(crate) mod compose;
+pub(crate) mod copy;
+pub(crate) mod gate;
+pub(crate) mod generate;
+mod strategy;
+
 use crate::discover::{self, MANIFEST, Unit};
+use crate::hooks;
+use crate::locals::store::Store;
+use crate::locals::{prompt, resolve};
 use crate::manifest::{Kind, Manifest};
 use crate::onchange::State as HookState;
-use crate::store::Store;
-use crate::{compose, copy, gate, hooks, prompt, resolve};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -79,7 +86,7 @@ fn apply_unit(
     Ok(())
 }
 
-/// ファイル合成経路（[`crate::compose`]）を通すか。overlay 明示、または dst=ファイルの
+/// ファイル合成経路（[`crate::apply::compose`]）を通すか。overlay 明示、または dst=ファイルの
 /// generate はファイル合成。それ以外（overlay 無しの copy）は copy ツリー配置。
 fn uses_compose(manifest: &Manifest) -> bool {
     !manifest.overlay.is_empty() || manifest.kind == Kind::Generate
@@ -98,9 +105,9 @@ fn placement_label(manifest: &Manifest) -> String {
 }
 
 /// 配置済みファイルへ manifest のパーミッションを適用する（Unix のみ）。
-/// copy / compose 両経路が共有する。
+/// copy / compose 両経路（子モジュール）が `super::set_mode` で共有する。
 #[cfg(unix)]
-pub fn set_mode(dst: &Path, manifest: &Manifest) -> Result<(), String> {
+fn set_mode(dst: &Path, manifest: &Manifest) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
     std::fs::set_permissions(dst, std::fs::Permissions::from_mode(manifest.mode()))
         .map_err(|e| format!("{}: パーミッション設定失敗: {e}", dst.display()))
@@ -108,7 +115,7 @@ pub fn set_mode(dst: &Path, manifest: &Manifest) -> Result<(), String> {
 
 /// 非 Unix では no-op（パーミッションモデルが異なるため）。
 #[cfg(not(unix))]
-pub fn set_mode(_dst: &Path, _manifest: &Manifest) -> Result<(), String> {
+fn set_mode(_dst: &Path, _manifest: &Manifest) -> Result<(), String> {
     Ok(())
 }
 

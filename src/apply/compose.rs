@@ -6,9 +6,10 @@
 //! `locals` の `@@name@@` 注入を通す（§9。空マップなら素通り）。
 //! 不変条件①（ユニット gate 先・false で短絡）は [`crate::apply`] が前段で担う。
 
-use crate::apply::set_mode;
+use super::set_mode;
+use super::{gate, generate, strategy};
+use crate::locals::resolve;
 use crate::manifest::{Manifest, Overlay, Strategy};
-use crate::{gate, generate, resolve, strategy};
 use std::collections::BTreeMap;
 use std::path::Path;
 

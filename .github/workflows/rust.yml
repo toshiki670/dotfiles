@@ -34,6 +34,11 @@ jobs:
       - name: Test
         run: cargo test --workspace --locked
 
+      # intra-doc リンク腐敗の恒久ガード（main.rs の #![deny(rustdoc::broken_intra_doc_links)]）。
+      # rustdoc lint は cargo doc 実行時のみ効くため、CI でリンク切れを検出する。
+      - name: Doc check (broken intra-doc links)
+        run: cargo doc -p dotfiles --no-deps --locked
+
   apply-test:
     name: chezmoi apply (fresh machine bootstrap)
     runs-on: ubuntu-latest

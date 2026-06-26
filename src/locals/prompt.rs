@@ -1,6 +1,6 @@
 //! 対話入力（§9.3 取得）: TTY 判定と1行入力。sensitive な値は端末エコーを落として読む。
 //!
-//! apply はローカル値の取得経路を **TTY=対話 / 非TTY=警告のみ**に分ける（[`crate::resolve`]）。
+//! apply はローカル値の取得経路を **TTY=対話 / 非TTY=警告のみ**に分ける（[`crate::locals::resolve`]）。
 //! 本モジュールはその TTY 側を担う。プロンプトは stdout を汚さないよう stderr へ出す。非エコーは
 //! termios の `ECHO` を一時的に落とし、RAII ガードで必ず復元する（Unix。非 Unix は通常入力）。
 
