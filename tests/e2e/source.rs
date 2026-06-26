@@ -44,7 +44,7 @@ fn detects_working_tree_from_subdir() {
         .assert()
         .success()
         // 解決元が作業ツリーであることを 1 行目で示す。
-        .stdout(predicate::str::contains("source = 作業ツリー"));
+        .stdout(predicate::str::contains("source = working tree"));
 
     // 検出した作業ツリーの fixture（埋め込みでない）が配置された証跡。
     assert!(
@@ -96,7 +96,7 @@ fn falls_back_to_embedded_without_working_tree() {
         .assert()
         .success()
         // 解決元が埋め込みであることを 1 行目で示す。
-        .stdout(predicate::str::contains("source = 埋め込み"))
+        .stdout(predicate::str::contains("source = embedded"))
         .get_output()
         .stdout
         .clone();

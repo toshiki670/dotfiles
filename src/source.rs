@@ -21,6 +21,9 @@ use tempfile::TempDir;
 static EMBEDDED: Dir = include_dir!("$CARGO_MANIFEST_DIR/configs");
 
 /// 解決元（どの段で解決したか）。ユーザー向け表示（apply ヘッダ / list）に使う。
+///
+/// 表示ラベルは英語にする ― 周囲の技術ラベル（`copy` / `generate` / `overlay` 等）が英語で、
+/// そこへ日本語語句を混ぜると不揃いになるため（出力の体裁を 1 系統に揃える）。
 pub enum Origin {
     /// `--source` 明示（上級オプション）。
     Explicit(PathBuf),
@@ -34,8 +37,8 @@ impl fmt::Display for Origin {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Origin::Explicit(p) => write!(f, "--source ({})", p.display()),
-            Origin::WorkingTree(p) => write!(f, "作業ツリー ({})", p.display()),
-            Origin::Embedded => write!(f, "埋め込み"),
+            Origin::WorkingTree(p) => write!(f, "working tree ({})", p.display()),
+            Origin::Embedded => write!(f, "embedded"),
         }
     }
 }
