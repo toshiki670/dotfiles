@@ -9,11 +9,13 @@
 //! - [`inject`] — 解決済み値での `@@name@@` placeholder 置換。
 //! - [`prompt`] — TTY 対話入力（sensitive は非エコー）。
 //!
-//! いずれも他ドメイン（apply / secret / doctor）や crate ルートの rustdoc リンクから横断参照される
-//! ため `pub(crate)`（外部 API は持たない＝binary 内に閉じる）。再エクスポートは設けず、呼び出し側は
-//! `crate::locals::resolve` 等を直接参照する（不要な集約点を増やさない）。
+//! 可視性は「親ツリー外（コード or rustdoc）から参照されるか」で決める（apply 側と同じ基準）。
+//! `store` / `resolve` / `prompt` は他ドメイン（apply / secret / doctor）が横断利用するため
+//! `pub(crate)`（外部 API は持たない＝binary 内に閉じる）。`inject` は `resolve` 内部からのみ使う
+//! 実装詳細なので private に絞る（`apply::strategy` と同じ立ち位置）。再エクスポートは設けず、
+//! 呼び出し側は `crate::locals::resolve` 等を直接参照する（不要な集約点を増やさない）。
 
-pub(crate) mod inject;
+mod inject;
 pub(crate) mod prompt;
 pub(crate) mod resolve;
 pub(crate) mod store;
