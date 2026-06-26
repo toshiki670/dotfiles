@@ -11,7 +11,7 @@
 //! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ）に一本化する。**書く位置でスコープが
 //! 決まる**: トップレベルの `when` はユニット全体 gate（false なら dst も `hooks` も触らず skip ＝
 //! all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否（§5.5）。両者は同じ評価規則を
-//! [`crate::gate`] で共有する。
+//! [`crate::apply::gate`] で共有する。
 //! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は onchange
 //! フック（§13, S5）の**コマンド（argv）**宣言で、各 argv が非空であることを load 時に検証する
 //! （実行は [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
@@ -78,7 +78,7 @@ pub struct Manifest {
     /// onchange フック（§13, S5）。このユニットの配置後（after フェーズ）に、ユニットのソースが
     /// 前回適用時から変わっていれば実行する**コマンド（argv）の配列**（例
     /// `hooks = [["bat", "cache", "--build"]]`）。ツール固有ロジックは binary に持たず、実行する
-    /// コマンドをデータとして宣言する（[`crate::generate`] の `cmd` と同思想）→ 新ツールのフック
+    /// コマンドをデータとして宣言する（[`crate::apply::generate`] の `cmd` と同思想）→ 新ツールのフック
     /// 追加に binary 変更は不要・configs と疎結合。各 argv が非空であることを load 時に検証する。
     /// トップレベル `when`（ユニット gate）が false のユニットは配置ごと skip されるため hooks も
     /// 走らない（＝ `when.os` でフックを分岐できる, §5.5 不変条件①）。

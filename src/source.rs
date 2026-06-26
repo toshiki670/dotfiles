@@ -5,9 +5,9 @@
 //! - **作業ツリー直読み**（dev / 移行期の主役）: 設定を編集して即 apply で検証できる。CWD から
 //!   上へ辿り、ユニット（`manifest.toml`）を持つ最初の `configs/` を使う。
 //! - **埋め込み**（配布の完成形）: `cargo install dotfiles` だけ（clone 無し）で自己完結させるため、
-//!   コンパイル時に `configs/` をバイナリへ焼き込み（[`include_dir`]）、解決時に temp dir へ展開する。
+//!   コンパイル時に `configs/` をバイナリへ焼き込み（[`mod@include_dir`]）、解決時に temp dir へ展開する。
 //!
-//! 配置エンジン（[`crate::discover`] / [`crate::copy`] / [`crate::compose`] / [`crate::generate`] /
+//! 配置エンジン（[`crate::discover`] / [`crate::apply::copy`] / [`crate::apply::compose`] / [`crate::apply::generate`] /
 //! [`crate::hooks`]）は全て実 path で `std::fs` を読む。埋め込みを temp dir へ実体化して**実 path**を
 //! 渡すことで、エンジンは「ソースが埋め込みか実 FS か」を知らずに済む（安定な core を揮発に依存させない）。
 

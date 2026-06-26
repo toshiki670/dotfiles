@@ -3,7 +3,7 @@
 //!
 //! ツール固有のロジックは binary に一切持たない。フックは manifest の `hooks` 属性が
 //! argv（コマンド列）を**データ**として宣言し、本モジュールはそれを実行するだけ ―
-//! [`crate::generate`] の `cmd`（manifest のコマンドをデータとして実行）と同じ思想で、
+//! [`crate::apply::generate`] の `cmd`（manifest のコマンドをデータとして実行）と同じ思想で、
 //! 新ツールのフック追加に binary 変更・再コンパイルは要らない（configs と疎結合・スケールする）。
 //! どのフックが macOS 専用か等の知識は manifest 側（ghostty の `os = "darwin"` ＋ コマンド本体）が
 //! 持ち、エンジンは関知しない。

@@ -61,7 +61,7 @@ fn walk(dir: &Path, source: &Path, out: &mut Vec<Unit>) -> Result<(), String> {
 /// 1 単位（`dir`）の **デプロイ対象ファイル**を相対構造を保って収集し、パスでソートして返す。
 ///
 /// §6.3 の委譲規則を 1 か所に集約する: `manifest.toml` 自体と、別の `manifest.toml` を持つ
-/// サブツリー（委譲先の別単位）は除外する（[`crate::copy`] の `copy_tree` と同じ範囲）。onchange
+/// サブツリー（委譲先の別単位）は除外する（[`crate::apply::copy`] の `copy_tree` と同じ範囲）。onchange
 /// ハッシュ（[`crate::onchange::hash_dir`]）が「この単位のソースが変わったか」を判定する材料に使う。
 pub fn unit_files(dir: &Path) -> Result<Vec<PathBuf>, String> {
     let mut files = Vec::new();

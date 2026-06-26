@@ -6,10 +6,10 @@
 //! `private` / `executable` 属性に従う（§7、適用は [`crate::apply::set_mode`]）。
 //! `locals`（named value）が解決されている単位では、各ファイルへ `@@name@@` 注入を通す（§9）。
 
-use crate::apply::set_mode;
+use super::set_mode;
 use crate::discover::{self, MANIFEST};
+use crate::locals::resolve;
 use crate::manifest::Manifest;
-use crate::resolve;
 use std::collections::BTreeMap;
 use std::path::Path;
 

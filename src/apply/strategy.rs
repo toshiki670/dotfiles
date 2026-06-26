@@ -7,7 +7,7 @@
 //!   上書きする。dotfiles が定義しない非管理キーは土台のまま全保持される（旧 `modify_` の
 //!   `jq '$local + $forced'` と同値。deep merge はしない）。
 //!
-//! どちらも副作用のない純関数で、配置（書き込み）は [`crate::compose`] が行う。
+//! どちらも副作用のない純関数で、配置（書き込み）は [`crate::apply::compose`] が行う。
 
 use serde_json::{Map, Value};
 
