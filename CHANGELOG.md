@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.69.7] - 2026-06-27
+### Features
+- ソース解決の二段構え（埋め込みフォールバック）[#462] ([#514](https://github.com/toshiki670/dotfiles/pull/514)) ([`7df9c52`](https://github.com/toshiki670/dotfiles/commit/7df9c52b9d209f3fd4134ef321a7554973279ac5))
+### Refactor
+- Src/ をドメイン責務でディレクトリ化（純移動のみ）[#515] ([`3fdbf6e`](https://github.com/toshiki670/dotfiles/commit/3fdbf6ea0782792b01b9a0e5fad40d69724ea6e1))
+- Src/ をドメイン責務で配線（mod パス・doc リンク）[#515] ([`0353f80`](https://github.com/toshiki670/dotfiles/commit/0353f804784056e519d7bab9707c22d98f062f65))
+- Locals::inject を private へ戻す（可視性基準を統一）[#515] ([`7a13f96`](https://github.com/toshiki670/dotfiles/commit/7a13f96ed3bd7ad875e13e074d1e3f6f7ccaeb20))
+
+
 ## [0.69.6] - 2026-06-24
 ### Features
 - 相対パス hook を manifest.toml ディレクトリ基準で実行する [#498] ([#499](https://github.com/toshiki670/dotfiles/pull/499)) ([`99762c3`](https://github.com/toshiki670/dotfiles/commit/99762c35e8ee9e563d2dd4cbfad915a0113b11ea))
