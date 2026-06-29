@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.69.8] - 2026-06-29
+### Features
+- Machine-specific 設定を profile gate で配置（yt 集約・mise copy 移行）[#467] ([#520](https://github.com/toshiki670/dotfiles/pull/520)) ([`d187e58`](https://github.com/toshiki670/dotfiles/commit/d187e58bd45e2933e6e8e73d4c518f15bb26a8ed))
+- Completions を top-level --completions フラグ化し Tab 候補から隠す [#526] ([#527](https://github.com/toshiki670/dotfiles/pull/527)) ([`38820b9`](https://github.com/toshiki670/dotfiles/commit/38820b9b4c46060575f27554dc27bf467bce5f1a))
+### Refactor
+- 配布物を root dotfiles 1パッケージ（複数 bin）へ統合 [#485] ([#523](https://github.com/toshiki670/dotfiles/pull/523)) ([`001fa2a`](https://github.com/toshiki670/dotfiles/commit/001fa2a2155db795fc24a9309ce733772e34603e))
+- サブコマンドを secret set → local set へ改名 [#522] ([#525](https://github.com/toshiki670/dotfiles/pull/525)) ([`e2cb0c2`](https://github.com/toshiki670/dotfiles/commit/e2cb0c2c3d1ab67d63e585470c1ea01ec801d0ba))
+- SHA-256 を std の非暗号学的指紋へ置換し strum を 0.28 へ [#524] ([#528](https://github.com/toshiki670/dotfiles/pull/528)) ([`a57bb09`](https://github.com/toshiki670/dotfiles/commit/a57bb091d60e798cd36025398b4f89a692ca068e))
+
+
 ## [0.69.7] - 2026-06-27
 ### Features
 - ソース解決の二段構え（埋め込みフォールバック）[#462] ([#514](https://github.com/toshiki670/dotfiles/pull/514)) ([`7df9c52`](https://github.com/toshiki670/dotfiles/commit/7df9c52b9d209f3fd4134ef321a7554973279ac5))

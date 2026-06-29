@@ -199,7 +199,7 @@ checksum = "6184e33543162437515c2e2b48714794e37845ec9851711914eec9d308f6ebe8"
 
 [[package]]
 name = "dotfiles"
-version = "0.69.7"
+version = "0.69.8"
 dependencies = [
  "assert_cmd",
  "clap",
