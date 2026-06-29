@@ -1,6 +1,6 @@
 //! マシンローカル値（named value）機構の E2E（S4 / #458）。
 //!
-//! `dotfiles secret set` でストアへ設定 →`apply` で `@@name@@` 注入、未設定時の非 TTY 警告と
+//! `dotfiles local set` でストアへ設定 →`apply` で `@@name@@` 注入、未設定時の非 TTY 警告と
 //! placeholder 残し、`doctor` の未設定警告を架空 fixture（`demo` 単位）で検証する。
 //! sensitive の非エコー対話（TTY）は pty 依存で自動化困難なため手動検証（PR 説明参照）。
 //!
@@ -11,9 +11,9 @@ use crate::dotfiles;
 use predicates::prelude::*;
 use std::fs;
 
-/// locals を宣言した単位へ、事前 `secret set` した値が apply で `@@name@@` 置換されることを検証。
+/// locals を宣言した単位へ、事前 `local set` した値が apply で `@@name@@` 置換されることを検証。
 #[test]
-fn secret_set_then_apply_injects_local_value() {
+fn local_set_then_apply_injects_local_value() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
 
@@ -26,9 +26,9 @@ fn secret_set_then_apply_injects_local_value() {
     .unwrap();
     fs::write(unit.join("conf"), "token = @@demo.token@@\n").unwrap();
 
-    // 同じ HOME（= 同じストア）で secret set → apply。
+    // 同じ HOME（= 同じストア）で local set → apply。
     dotfiles()
-        .args(["secret", "set", "demo.token", "s3cr3t"])
+        .args(["local", "set", "demo.token", "s3cr3t"])
         .env("HOME", home.path())
         .assert()
         .success();
@@ -79,15 +79,15 @@ fn apply_without_value_warns_and_leaves_placeholder() {
     );
 }
 
-/// `secret set` がストアを 0600 で作り、値を保持することを検証。
+/// `local set` がストアを 0600 で作り、値を保持することを検証。
 #[cfg(unix)]
 #[test]
-fn secret_set_writes_owner_only_store() {
+fn local_set_writes_owner_only_store() {
     use std::os::unix::fs::PermissionsExt;
 
     let home = tempfile::tempdir().unwrap();
     dotfiles()
-        .args(["secret", "set", "demo.token", "val"])
+        .args(["local", "set", "demo.token", "val"])
         .env("HOME", home.path())
         .assert()
         .success();
@@ -101,7 +101,7 @@ fn secret_set_writes_owner_only_store() {
     );
 }
 
-/// `doctor` が未設定 locals を警告し、`secret set` 後は「設定済み」になることを検証。
+/// `doctor` が未設定 locals を警告し、`local set` 後は「設定済み」になることを検証。
 #[test]
 fn doctor_warns_unset_then_clears_after_set() {
     let work = tempfile::tempdir().unwrap();
@@ -126,7 +126,7 @@ fn doctor_warns_unset_then_clears_after_set() {
 
     // 設定後 → 全て設定済み。
     dotfiles()
-        .args(["secret", "set", "demo.token", "v"])
+        .args(["local", "set", "demo.token", "v"])
         .env("HOME", home.path())
         .assert()
         .success();
