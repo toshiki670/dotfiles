@@ -30,14 +30,13 @@ fn write_gated_unit(work: &Path, body: &str) {
 fn profile_set_then_show_reports_current() {
     let home = tempfile::tempdir().unwrap();
 
-    // 未設定: 既定（not-private）を表示。
+    // 未設定: 既定（どの profile gate 付き設定も未配置）を、特定 profile 名に依らず表示。
     dotfiles()
         .arg("profile")
         .env("HOME", home.path())
         .assert()
         .success()
-        .stdout(predicate::str::contains("未設定"))
-        .stdout(predicate::str::contains("not-private"));
+        .stdout(predicate::str::contains("未設定"));
 
     // 設定 → 状態ファイルが書かれる。
     dotfiles()

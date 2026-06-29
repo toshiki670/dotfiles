@@ -18,11 +18,12 @@ pub fn set(home: &Path, name: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// 現在の profile を表示する。未設定なら既定（not-private）を示す。
+/// 現在の profile を表示する。未設定では、どの `when.profile` 値とも一致しない（＝ profile gate を
+/// 持つ設定はどれも配置されない）旨を、特定 profile 名に依らない表現で示す（D9）。
 pub fn show(home: &Path) -> Result<(), String> {
     match state::read(home, state::PROFILE)? {
         Some(name) => println!("profile: {name}"),
-        None => println!("profile: 未設定（既定 = not-private）"),
+        None => println!("profile: 未設定（profile gate 付きの設定は配置されない）"),
     }
     Ok(())
 }

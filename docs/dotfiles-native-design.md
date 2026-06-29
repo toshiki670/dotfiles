@@ -149,6 +149,11 @@ when = { deps = ["rtk"] }            # rtk が PATH にある時だけ重ねる
 
 **「false の意味」が階層で異なる**点が要：ユニット gate=false は **dst ごと無し**（all-or-nothing）、overlay `when`=false は **その断片だけ脱落**（dst は残りの overlay で生成される）。前者は「`gh` が無ければ補完を作らない」、後者は「rtk が無くても settings.json は既存温存＋base で書かれる」を表す。
 
+**gate=false は「配置しない」であって「撤去する」ではない。** エンジンは prune しない（§12.1）ので、gate が false へ**転じても**配置済みの実体は自動では消えない。効き方は階層で分かれる:
+
+- **ユニット gate が false へ転じた場合**: そのユニットは丸ごと skip されるため、以前 true だった時に置いた dst（copy ツリー）は**そのまま残る**（撤去は手動か、別途 prune を入れる将来課題）。例: `dotfiles profile private` で `30-yt.fish` を置いたマシンを後で `dotfiles profile work` に付け替えても、`30-yt.fish` は残る。これは安全側の既定（未設定/新規マシンへ private 設定が**漏れない**）とは別問題で、private→他へ**再分類**したマシンでだけ起きる取り残し。現状は手動削除前提とする。
+- **overlay `when` が false へ転じた場合**: その dst は毎 apply で**再合成**されるため、脱落した断片は次の apply で**結果から消える**（ファイルが書き直されるので取り残しは生じない）。`theme` の build-time overlay（§10.2.1）はこちらなので、テーマ切替で stale な断片は残らない。`theme` を**ユニット gate**として使う場合は前者の論点が同じく当てはまる。
+
 **バリデーション（typo を黙殺しない）**：`preserve = true` は `strategy = "json-shallow"` 専用。`strategy` 省略や `concat` 等と併記したら **load 時エラー**にする（既存の「overlay 明示時は `strategy` 必須」「overlay は `src` / `cmd` のどちらか 1 つ」と同じ方針＝静かに無視せず配置前に弾く）。
 
 #### 留保（実装スライスで詰める）

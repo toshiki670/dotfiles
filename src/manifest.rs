@@ -56,8 +56,9 @@ pub struct Manifest {
     pub cmd: Vec<String>,
     /// ユニット全体 gate（§5.5・§7）。トップレベルに書いた `when` はユニットスコープで、
     /// 満たさなければユニット全体を skip する（dst も `hooks` も触らない ＝ all-or-nothing）。
-    /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致した時だけ真。
-    /// 省略時は常時採用。同じ語彙を `[[overlay]]` の `when` がその断片スコープで再利用する。
+    /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致し、
+    /// `when.profile`（スカラ・状態）が現在の profile 状態と一致した時だけ真。省略時は常時採用。
+    /// 同じ語彙を `[[overlay]]` の `when` がその断片スコープで再利用する。
     #[serde(default)]
     pub when: Option<When>,
     /// 合成 overlay（条件付き断片の配列, §5.5）。空 = 生成方式の既定挙動。
@@ -122,7 +123,7 @@ pub struct Overlay {
     /// generate 断片: 実行する argv。標準出力を断片にする。
     #[serde(default)]
     pub cmd: Vec<String>,
-    /// 採用条件（省略 = 常時採用）。この断片スコープで `when`（`deps` / `os`）を AND 評価する。
+    /// 採用条件（省略 = 常時採用）。この断片スコープで `when`（`deps` / `os` / `profile`）を AND 評価する。
     #[serde(default)]
     pub when: Option<When>,
 }
@@ -236,7 +237,7 @@ impl Manifest {
             && when.has_no_effective_key()
         {
             return Err(
-                "when は実効キー（deps / os）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+                "when は実効キー（deps / os / profile）を 1 つ以上持つ必要があります（空の when は silent no-op）"
                     .to_string(),
             );
         }
@@ -246,7 +247,7 @@ impl Manifest {
             .position(|ov| ov.when.as_ref().is_some_and(When::has_no_effective_key))
         {
             return Err(format!(
-                "overlay[{i}] の when は実効キー（deps / os）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+                "overlay[{i}] の when は実効キー（deps / os / profile）を 1 つ以上持つ必要があります（空の when は silent no-op）"
             ));
         }
         Ok(())
