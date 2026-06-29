@@ -1,11 +1,12 @@
-# root package = `dotfiles` コマンド（= dotfiles 本体 / core）。
-# いまは chezmoi と各コマンドに委譲しているが、将来それらを取り込む器。
-# version は SoT（タグ `v{version}`）。当面は clap で `dotfiles --version` が取れれば十分。
+# root package = `dotfiles`。配布コマンド群を 1 パッケージの複数 bin として束ねる
+# （core ＋ clip / gcm / gh-clone / git-upstream / fzf-picker 系 / env-tools 系 / workers）。
+# `cargo install --git <repo>` 一発で全 bin が `~/.cargo/bin` に入る。
+# version は SoT（タグ `v{version}`）＝唯一の配布版。
 # publish はあえて false にしない: release-plz は Cargo.toml が publish=false の package を
 # release 対象から除外しタグを作らない（再追加すると release が "nothing to release" になる）。
 # crates.io への publish 抑止は release-plz config の publish=false + git_only に一本化。
 [package]
-description = "toshiki670/dotfiles 本体（core）コマンド"
+description = "toshiki670/dotfiles の配布コマンド群（core ＋ clip / gcm / fzf-picker / env-tools ほか）"
 edition     = { workspace = true }
 license     = { workspace = true }
 name        = "dotfiles"
@@ -13,15 +14,16 @@ repository  = { workspace = true }
 version     = "0.69.7"
 
 [dependencies]
-clap        = { workspace = true }
-include_dir = { workspace = true }
-libc        = { workspace = true }
-serde       = { workspace = true }
-serde_json  = { workspace = true }
-sha2        = { workspace = true }
-strum       = { workspace = true }
-tempfile    = { workspace = true }
-toml        = { workspace = true }
+clap          = { workspace = true }
+clap_complete = { workspace = true }
+include_dir   = { workspace = true }
+libc          = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }
+sha2          = { workspace = true }
+strum         = { workspace = true }
+tempfile      = { workspace = true }
+toml          = { workspace = true }
 
 [lints]
 workspace = true
@@ -31,15 +33,45 @@ assert_cmd = { workspace = true }
 predicates = { workspace = true }
 rstest     = { workspace = true }
 
+# E2E（バイナリの振る舞い）は family ごとに 1 テストターゲットへ分割し参照性を保つ。
+# 内部ロジックのユニットテストは各モジュールの `#[cfg(test)]` 側に同居する。
 [[test]]
 name = "e2e"
 path = "tests/e2e/mod.rs"
 
+[[test]]
+name = "clip"
+path = "tests/clip/mod.rs"
+
+[[test]]
+name = "gcm"
+path = "tests/gcm/mod.rs"
+
+[[test]]
+name = "gh-clone"
+path = "tests/gh_clone/mod.rs"
+
+[[test]]
+name = "git-upstream"
+path = "tests/git_upstream/mod.rs"
+
+[[test]]
+name = "fzf-picker"
+path = "tests/fzf_picker/mod.rs"
+
+[[test]]
+name = "env-tools"
+path = "tests/env_tools/mod.rs"
+
+[[test]]
+name = "workers"
+path = "tests/workers/mod.rs"
+
 # --- Cargo workspace（root package + members） -----------------------------
-# 各コマンドは crates/<name>/、配布物は版を振り release-plz で個別タグ。
-# 開発専用ツール（lint）は tools/ 配下に置き、版を振らず install もしない。
+# 配布物は root `dotfiles` パッケージ 1 つに統合。workspace member は開発・保守ツールの
+# みで、いずれも版を振らず install もしない（release-plz 対象外）。
 [workspace]
-members  = [ "crates/*", "tools/dotfiles-lint" ]
+members  = [ "tools/dotfiles-lint", "tools/v-sync" ]
 resolver = "3"
 
 # 全 member 共通のパッケージメタ（各 Cargo.toml から `xxx.workspace = true` で参照）。
