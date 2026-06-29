@@ -1,0 +1,11 @@
+# mise 自身の managed 設定を dotfiles ネイティブで配置する（設計書 §9.2・§9.3・§14）。
+#
+# 旧 chezmoi の create_config.toml（初回生成・以後温存）の置き換え。create-only が必要だったのは
+# machine-specific な穴（YT_BROWSER / 仕事用 git identity）を同居させていたためだが、それらは
+# yt（profile gate ＋ drop-in）と git（locals）へ分離した。残るのは mise 自身の managed 設定
+# （[settings] / [tools]）だけなので、素朴な copy で配置できる。
+#
+# dst は ~/.config/mise（ディレクトリ）。配下の config.toml だけを管理する。copy は dst を prune
+# しないため、user 所有の ~/.config/mise/conf.d/*.toml（マシン固有の任意設定）には一切干渉しない。
+# kind は省略時 "copy"。
+dst = "~/.config/mise"

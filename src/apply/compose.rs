@@ -6,6 +6,7 @@
 //! `locals` の `@@name@@` 注入を通す（§9。空マップなら素通り）。
 //! 不変条件①（ユニット gate 先・false で短絡）は [`crate::apply`] が前段で担う。
 
+use super::gate::GateState;
 use super::set_mode;
 use super::{gate, generate, strategy};
 use crate::locals::resolve;
@@ -15,13 +16,15 @@ use std::path::Path;
 
 /// 1 単位（`dir`）を overlay 合成で `dst`（ファイル）へ生成・配置する。
 /// 合成結果へ解決済み `locals` を注入してから書き出す（空なら注入なし）。
+/// `state` は overlay の `when`（状態 gate）評価に使う現在状態スナップショット。
 pub fn place(
     dir: &Path,
     dst: &Path,
     manifest: &Manifest,
     locals: &BTreeMap<String, String>,
+    state: &GateState,
 ) -> Result<(), String> {
-    let frags = resolve_fragments(dir, manifest)?;
+    let frags = resolve_fragments(dir, manifest, state)?;
     let bytes = combine(manifest, dst, &frags)?;
     let bytes = resolve::inject(&bytes, locals);
 
@@ -38,7 +41,11 @@ pub fn place(
 ///
 /// overlay 未記述時は生成方式の既定挙動（compose に来るのは generate のみ ＝ cmd 出力＋sibling）。
 /// overlay 明示時は宣言順に `when` 評価し、満たす断片だけを採用する。
-fn resolve_fragments(dir: &Path, manifest: &Manifest) -> Result<Vec<Vec<u8>>, String> {
+fn resolve_fragments(
+    dir: &Path,
+    manifest: &Manifest,
+    state: &GateState,
+) -> Result<Vec<Vec<u8>>, String> {
     if manifest.overlay.is_empty() {
         return generate::default_fragments(dir, manifest);
     }
@@ -46,7 +53,7 @@ fn resolve_fragments(dir: &Path, manifest: &Manifest) -> Result<Vec<Vec<u8>>, St
     // ②宣言順に when を評価し、満たす断片だけ採用。
     let mut frags = Vec::new();
     for ov in &manifest.overlay {
-        if gate::when_satisfied(&ov.when) {
+        if gate::when_satisfied(&ov.when, state) {
             frags.push(materialize(dir, ov)?);
         }
     }

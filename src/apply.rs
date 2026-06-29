@@ -41,8 +41,10 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
 
     let mut store = Store::load(home)?;
     let mut hook_state = HookState::load(home);
+    // 状態駆動 gate（profile）の現在状態は開始時に 1 回だけ解決し、全ユニット・全 overlay で共有する。
+    let gate_state = gate::GateState::load(home)?;
     for unit in &units {
-        apply_unit(unit, home, &mut store, &mut hook_state)?;
+        apply_unit(unit, home, &mut store, &mut hook_state, &gate_state)?;
     }
     Ok(())
 }
@@ -54,13 +56,14 @@ fn apply_unit(
     home: &Path,
     store: &mut Store,
     hook_state: &mut HookState,
+    gate_state: &gate::GateState,
 ) -> Result<(), String> {
     let manifest = Manifest::load(&unit.dir.join(MANIFEST))?;
     let dst = expand_home(&manifest.dst, home);
     let name = unit.rel.to_string_lossy();
 
     // ①トップレベル when（ユニット gate）を最初に評価し、満たさなければユニット全体を skip（dst も hooks も触らない）。
-    if let Some(reason) = gate::unit_skip_reason(&manifest) {
+    if let Some(reason) = gate::unit_skip_reason(&manifest, gate_state) {
         println!("apply: {name} → skip ({reason})");
         return Ok(());
     }
@@ -75,7 +78,7 @@ fn apply_unit(
 
     let label = placement_label(&manifest);
     if uses_compose(&manifest) {
-        compose::place(&unit.dir, &dst, &manifest, &locals)?;
+        compose::place(&unit.dir, &dst, &manifest, &locals, gate_state)?;
     } else {
         copy::place(&unit.dir, &dst, &manifest, &locals)?;
     }

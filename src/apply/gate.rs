@@ -1,14 +1,45 @@
 //! gate の評価: トップレベル `when`（ユニットスコープ）と `[[overlay]]` の `when`（断片スコープ）。
 //!
 //! 設計書 §5.5「評価順と不変条件」の gate 語彙を 1 か所に集約する。gate 語彙は `when`
-//! （`deps` 配列・AND / `os` スカラ）に一本化されており、**書く位置でスコープが決まる**:
-//! トップレベルの `when` はユニット全体 gate（満たさなければユニットごと skip）、overlay の
+//! （`deps` 配列・AND / `os` スカラ / `profile` スカラ）に一本化されており、**書く位置でスコープが
+//! 決まる**: トップレベルの `when` はユニット全体 gate（満たさなければユニットごと skip）、overlay の
 //! `when` はその断片だけの採否。両者は **同じ評価規則**（[`when_unsatisfied_reason`]: PATH 探索・
-//! OS 正規化・複数キー AND）を共有する。ここはその共有ロジックと、PATH 上の実行ファイル探索
-//! （`which`）を持つ。
+//! OS 正規化・profile 状態一致・複数キー AND）を共有する。ここはその共有ロジックと、PATH 上の
+//! 実行ファイル探索（`which`）を持つ。
+//!
+//! `deps`/`os` は環境（PATH・OS）からその場で判る ambient な条件だが、`profile` は user が選んで
+//! おく状態（[`crate::state`]）を読む。状態は apply 開始時に 1 回 [`GateState`] へ解決し、全ユニット
+//! ・全 overlay の評価で共有する（評価ごとにファイルを読み直さない）。`theme`（color スライス）も
+//! 同じ snapshot にフィールドを足して相乗りする想定（§10・状態駆動 gate 族）。
 
 use crate::manifest::{Manifest, When};
+use crate::state;
 use std::path::{Path, PathBuf};
+
+/// apply 開始時に 1 回解決した、状態駆動 gate（`profile` / 将来の `theme`）の現在状態スナップショット。
+///
+/// `profile` は現状唯一の状態 gate。`None` ＝ 未設定で、profile gate は「private ではない」既定として
+/// 解釈する（安全側 opt-in）。`deps`/`os` は環境から都度判るため snapshot に持たない。
+pub struct GateState {
+    profile: Option<String>,
+}
+
+impl GateState {
+    /// 状態ファイル（[`crate::state`]）から現在状態を読む。apply で 1 回だけ呼ぶ。
+    pub fn load(home: &Path) -> Result<Self, String> {
+        Ok(Self {
+            profile: state::read(home, state::PROFILE)?,
+        })
+    }
+
+    /// テスト用に状態を直接組み立てる（profile のみ）。
+    #[cfg(test)]
+    fn with_profile(profile: Option<&str>) -> Self {
+        Self {
+            profile: profile.map(str::to_string),
+        }
+    }
+}
 
 /// 現在の OS を chezmoi 互換表記で返す（macOS は `darwin`）。
 ///
@@ -26,24 +57,30 @@ pub fn current_os() -> &'static str {
 ///
 /// 不変条件①（§5.5）の短絡判定に使う。`when` 省略のユニットは常時採用（None）。判定は
 /// overlay と共有の [`when_unsatisfied_reason`] に委譲する。
-pub fn unit_skip_reason(manifest: &Manifest) -> Option<String> {
-    manifest.when.as_ref().and_then(when_unsatisfied_reason)
+pub fn unit_skip_reason(manifest: &Manifest, state: &GateState) -> Option<String> {
+    manifest
+        .when
+        .as_ref()
+        .and_then(|when| when_unsatisfied_reason(when, state))
 }
 
 /// overlay の `when`（断片スコープ gate）を満たすか（省略は真）。
 ///
 /// ユニット gate と同じ [`when_unsatisfied_reason`] を共有し、理由が無い（None）＝満たす。
-pub fn when_satisfied(when: &Option<When>) -> bool {
+pub fn when_satisfied(when: &Option<When>, state: &GateState) -> bool {
     when.as_ref()
-        .is_none_or(|when| when_unsatisfied_reason(when).is_none())
+        .is_none_or(|when| when_unsatisfied_reason(when, state).is_none())
 }
 
-/// `when`（`deps` 配列・AND / `os` スカラ）を評価し、満たさないとき理由を返す（満たせば None）。
+/// `when`（`deps` 配列・AND / `os` スカラ / `profile` スカラ）を評価し、満たさないとき理由を返す
+/// （満たせば None）。
 ///
 /// ユニットスコープ（[`unit_skip_reason`]）と断片スコープ（[`when_satisfied`]）が共有する
 /// 唯一の評価本体。`deps` は 1 つでも PATH に無ければ不成立、`os` は指定があり現在 OS と
-/// 一致しなければ不成立。複数キーは AND（どれか 1 つでも欠ければ不成立）。
-fn when_unsatisfied_reason(when: &When) -> Option<String> {
+/// 一致しなければ不成立、`profile` は指定があり現在の profile 状態（`state`）と一致しなければ
+/// 不成立（未設定 ＝ not-private 既定なので指定があれば不成立）。複数キーは AND（どれか 1 つでも
+/// 欠ければ不成立）。
+fn when_unsatisfied_reason(when: &When, state: &GateState) -> Option<String> {
     if let Some(missing) = first_missing_dep(&when.deps) {
         return Some(format!("依存 `{missing}` が PATH にない"));
     }
@@ -51,6 +88,12 @@ fn when_unsatisfied_reason(when: &When) -> Option<String> {
         && want != current_os()
     {
         return Some(format!("OS `{want}` 不一致（現在 {}）", current_os()));
+    }
+    if let Some(want) = &when.profile
+        && state.profile.as_deref() != Some(want.as_str())
+    {
+        let current = state.profile.as_deref().unwrap_or("未設定");
+        return Some(format!("profile `{want}` 不一致（現在 {current}）"));
     }
     None
 }
@@ -105,9 +148,14 @@ mod tests {
         assert_eq!(current_os(), expected);
     }
 
+    /// profile 状態を持たない既定スナップショット（deps/os テストは profile に無依存）。
+    fn no_profile() -> GateState {
+        GateState::with_profile(None)
+    }
+
     #[test]
     fn when_none_is_always_satisfied() {
-        assert!(when_satisfied(&None));
+        assert!(when_satisfied(&None, &no_profile()));
     }
 
     #[test]
@@ -115,14 +163,48 @@ mod tests {
         let hit = When {
             deps: vec![],
             os: Some(current_os().to_string()),
+            profile: None,
         };
-        assert!(when_satisfied(&Some(hit)));
+        assert!(when_satisfied(&Some(hit), &no_profile()));
 
         let miss = When {
             deps: vec![],
             os: Some("nonsuch-os".to_string()),
+            profile: None,
         };
-        assert!(!when_satisfied(&Some(miss)));
+        assert!(!when_satisfied(&Some(miss), &no_profile()));
+    }
+
+    #[test]
+    fn when_profile_matches_current_state_only() {
+        let private_gate = || {
+            Some(When {
+                deps: vec![],
+                os: None,
+                profile: Some("private".to_string()),
+            })
+        };
+        // 現在 profile = private → 採用。
+        assert!(when_satisfied(
+            &private_gate(),
+            &GateState::with_profile(Some("private"))
+        ));
+        // 現在 profile = work（不一致）→ 不採用。
+        assert!(!when_satisfied(
+            &private_gate(),
+            &GateState::with_profile(Some("work"))
+        ));
+    }
+
+    #[test]
+    fn when_profile_unset_defaults_to_not_private() {
+        // profile 未設定（未 opt-in）では profile gate 付き断片は不採用 ＝ 安全側の既定。
+        let want = When {
+            deps: vec![],
+            os: None,
+            profile: Some("private".to_string()),
+        };
+        assert!(!when_satisfied(&Some(want), &no_profile()));
     }
 
     #[cfg(unix)]
@@ -132,14 +214,16 @@ mod tests {
         let present = When {
             deps: vec!["/bin/sh".to_string()],
             os: None,
+            profile: None,
         };
-        assert!(when_satisfied(&Some(present)));
+        assert!(when_satisfied(&Some(present), &no_profile()));
 
         let absent = When {
             deps: vec!["/nonexistent/itic-bin".to_string()],
             os: None,
+            profile: None,
         };
-        assert!(!when_satisfied(&Some(absent)));
+        assert!(!when_satisfied(&Some(absent), &no_profile()));
     }
 
     #[cfg(unix)]
@@ -149,18 +233,29 @@ mod tests {
         let mixed = When {
             deps: vec!["/bin/sh".to_string(), "/nonexistent/itic-bin".to_string()],
             os: None,
+            profile: None,
         };
-        assert!(!when_satisfied(&Some(mixed)));
+        assert!(!when_satisfied(&Some(mixed), &no_profile()));
     }
 
     #[cfg(unix)]
     #[test]
     fn when_is_and_of_keys() {
-        // deps は満たすが os が外れる → 全体は false（AND）。
+        // deps・os は満たすが profile が外れる → 全体は false（AND）。
         let mixed = When {
             deps: vec!["/bin/sh".to_string()],
-            os: Some("nonsuch-os".to_string()),
+            os: Some(current_os().to_string()),
+            profile: Some("private".to_string()),
         };
-        assert!(!when_satisfied(&Some(mixed)));
+        assert!(!when_satisfied(&Some(mixed), &no_profile()));
+        // 全キー一致なら採用。
+        assert!(when_satisfied(
+            &Some(When {
+                deps: vec!["/bin/sh".to_string()],
+                os: Some(current_os().to_string()),
+                profile: Some("private".to_string()),
+            }),
+            &GateState::with_profile(Some("private")),
+        ));
     }
 }
