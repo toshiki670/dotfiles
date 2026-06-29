@@ -31,3 +31,14 @@ fn no_args_prints_version() {
         .stdout(predicate::str::contains("dotfiles"))
         .stdout(predicate::str::contains(env!("CARGO_PKG_VERSION")));
 }
+
+#[test]
+fn completions_fish_prints_script() {
+    // `--completions <shell>` は top-level option（サブコマンドではない）。補完スクリプトを出力する。
+    dotfiles()
+        .args(["--completions", "fish"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("complete"))
+        .stdout(predicate::str::contains("dotfiles"));
+}

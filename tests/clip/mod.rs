@@ -5,8 +5,8 @@
 //!
 //! # 検証内容（対象別ファイル）
 //!
-//! - `cli`:  `--help`/`--version`、サブコマンド無し/未知サブコマンド/ファイル引数欠落で
-//!   exit code 2、`completions fish` が補完スクリプトを出力（OS 非依存）
+//! - `cli`:  `--help`/`--version`、未知サブコマンド/ファイル引数欠落で exit code 2、
+//!   サブコマンド無しは help 表示、`--completions fish` が補完スクリプトを出力（OS 非依存）
 //! - `obj`:  macOS で osascript を `set the clipboard to POSIX file …` で呼ぶ／非 macOS で失敗
 //! - `text`: macOS で pbcopy にファイルの中身をそのまま渡す／非 macOS で失敗
 //! - `path`: macOS で絶対パスを pbcopy へ渡し stdout にも出力する／非 macOS で失敗

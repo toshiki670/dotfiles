@@ -25,12 +25,12 @@ fn version_flag_prints_name_and_version(#[case] flag: &str) {
 }
 
 #[test]
-fn no_subcommand_fails_with_usage() {
+fn no_subcommand_prints_help() {
+    // command が Option になり、サブコマンド無しは help を表示して正常終了する。
     clip()
         .assert()
-        .failure()
-        .code(2)
-        .stderr(predicate::str::contains("Usage").or(predicate::str::contains("subcommand")));
+        .success()
+        .stdout(predicate::str::contains("Usage"));
 }
 
 #[test]
@@ -54,7 +54,7 @@ fn subcommand_without_file_fails(#[case] sub: &str) {
 #[test]
 fn completions_fish_prints_script() {
     clip()
-        .args(["completions", "fish"])
+        .args(["--completions", "fish"])
         .assert()
         .success()
         .stdout(predicate::str::contains("complete"))
