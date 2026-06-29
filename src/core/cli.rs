@@ -3,8 +3,10 @@
 //! [`run`] が `src/bin/dotfiles.rs` の数行シムから呼ばれる入口。各サブコマンドの実体は
 //! core 配下の対応モジュール（[`super::apply`] / [`super::list`] / [`super::local`] …）にある。
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::{Shell, generate};
 use std::ffi::OsString;
+use std::io;
 use std::path::{Path, PathBuf};
 
 use super::{apply, color, doctor, list, local, profile, source};
@@ -18,6 +20,13 @@ use super::{apply, color, doctor, list, local, profile, source};
     long_about = "toshiki670/dotfiles 本体（core）。設定の管理・配置を担う。\nサブコマンドを指定しない場合はバージョンを表示する。"
 )]
 struct Cli {
+    /// Print a shell completion script to stdout and exit.
+    ///
+    /// top-level option にすることで `dotfiles <Tab>` の候補に出さない（fish は `-` 始まりのみ
+    /// option を候補にする）。`global` は付けない（サブコマンドへ伝播させない）。
+    #[arg(long, value_name = "SHELL")]
+    completions: Option<Shell>,
+
     #[command(subcommand)]
     command: Option<Commands>,
 
@@ -74,6 +83,13 @@ enum LocalAction {
 /// `dotfiles` の入口。引数を解釈し、サブコマンドへディスパッチする。
 pub fn run() {
     let cli = Cli::parse();
+
+    // `--completions <shell>`: 補完スクリプトを stdout へ出して終了する。
+    if let Some(shell) = cli.completions {
+        generate(shell, &mut Cli::command(), "dotfiles", &mut io::stdout());
+        return;
+    }
+
     let source = cli.source.as_deref();
     let result = match cli.command {
         Some(Commands::Apply) => run_apply(source),

@@ -1,0 +1,9 @@
+# dotfiles core（src/core）の fish 補完を生成・配置する（generate 層 / 設計書 §5・§7）。
+# `dotfiles --completions fish` の出力を dst のファイルへ書き出す（completions は top-level option。
+# サブコマンドにしないことで `dotfiles <Tab>` の候補に出さない）。
+# when.deps = dotfiles が PATH に無ければ生成をスキップ（ユニット gate, §5.5）。chezmoi apply 初回など
+# dotfiles 未 install の段階では生成されない。
+cmd  = [ "dotfiles", "--completions", "fish" ]
+dst  = "~/.config/fish/completions/dotfiles.fish"
+kind = "generate"
+when = { deps = [ "dotfiles" ] }

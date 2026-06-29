@@ -16,8 +16,12 @@ use super::{obj, path, text};
     about = "Copy a file to the clipboard (obj / text / path; macOS)"
 )]
 struct Cli {
+    /// Print a shell completion script to stdout and exit.
+    #[arg(long, value_name = "SHELL")]
+    completions: Option<Shell>,
+
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -37,23 +41,26 @@ enum Commands {
         /// コピー対象のファイル。
         file: String,
     },
-    /// Print a shell completion script to stdout.
-    Completions {
-        /// 対象シェル（bash / fish / zsh / …）。
-        shell: Shell,
-    },
 }
 
 /// CLI を解析し、サブコマンドへディスパッチする。
 pub fn run() -> ExitCode {
     let cli = Cli::parse();
+
+    // `--completions <shell>`: 補完スクリプトを stdout へ出して終了する。サブコマンドではなく
+    // top-level option にすることで `clip <Tab>` の候補に出さない（fish は `-` 始まりのみ option を出す）。
+    if let Some(shell) = cli.completions {
+        let mut cmd = Cli::command();
+        clap_complete::generate(shell, &mut cmd, "clip", &mut io::stdout());
+        return ExitCode::SUCCESS;
+    }
+
     match cli.command {
-        Commands::Obj { file } => obj::run(&file),
-        Commands::Text { file } => text::run(&file),
-        Commands::Path { file } => path::run(&file),
-        Commands::Completions { shell } => {
-            let mut cmd = Cli::command();
-            clap_complete::generate(shell, &mut cmd, "clip", &mut io::stdout());
+        Some(Commands::Obj { file }) => obj::run(&file),
+        Some(Commands::Text { file }) => text::run(&file),
+        Some(Commands::Path { file }) => path::run(&file),
+        None => {
+            let _ = Cli::command().print_help();
             ExitCode::SUCCESS
         }
     }
