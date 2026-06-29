@@ -13,7 +13,7 @@ pub fn is_tty() -> bool {
 
 /// `label`（値の名前）を提示して1行入力を受け取る。`sensitive` のときは端末エコーを抑制する。
 /// プロンプトは stderr へ出し、**末尾の行終端（`\n` / `\r\n`）のみ除去**して返す。前後の空白は
-/// 保持する（値は verbatim ＝ `secret set <name> <value>` と同じ扱い）。full trim をしないのは、
+/// 保持する（値は verbatim ＝ `local set <name> <value>` と同じ扱い）。full trim をしないのは、
 /// 前後空白が有意な sensitive 値（パスフレーズ等）を黙って壊さないため。
 pub fn ask(label: &str, sensitive: bool) -> Result<String, String> {
     let mut err = io::stderr();
@@ -116,7 +116,7 @@ mod tests {
         // 末尾の改行のみ除去（LF / CRLF）。
         assert_eq!(strip_line_ending("value\n".to_string()), "value");
         assert_eq!(strip_line_ending("value\r\n".to_string()), "value");
-        // 前後の空白・内部空白は保持（verbatim ＝ secret set と同じ）。
+        // 前後の空白・内部空白は保持（verbatim ＝ local set と同じ）。
         assert_eq!(strip_line_ending("  pa ss  \n".to_string()), "  pa ss  ");
         // 改行が無ければそのまま（EOF で終端されたケース）。
         assert_eq!(strip_line_ending("value".to_string()), "value");

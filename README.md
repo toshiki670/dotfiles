@@ -163,7 +163,7 @@ All distributable commands live in the single root `dotfiles` package as multipl
 
 | Command | Description |
 | --- | --- |
-| `dotfiles` | dotfiles core; version entry point (`dotfiles --version`) plus `apply` (place `configs/` via per-directory `manifest.toml`; resolves & injects machine-local `locals` values), `list` (overview of every config's destination), `secret set <name> <value>` (store a machine-local value in `~/.config/dotfiles/local.toml`), `color sample` (print an ANSI color table — 16 + 256 colors), and `doctor` (report unset `locals`) |
+| `dotfiles` | dotfiles core; version entry point (`dotfiles --version`) plus `apply` (place `configs/` via per-directory `manifest.toml`; resolves & injects machine-local `locals` values), `list` (overview of every config's destination), `local set <name> <value>` (store a machine-local value in `~/.config/dotfiles/local.toml`), `color sample` (print an ANSI color table — 16 + 256 colors), and `doctor` (report unset `locals`) |
 | `git-upstream` | Merge `upstream/master` / initialize the upstream remote |
 | `gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
 | `clip` | Copy a file to the clipboard — `obj` (Finder object) / `text` (contents) / `path` (absolute path); macOS |

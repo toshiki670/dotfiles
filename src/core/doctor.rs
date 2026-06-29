@@ -31,7 +31,7 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     }
     eprintln!("doctor: 未設定の locals が {} 件あります:", missing.len());
     for (unit, name) in &missing {
-        eprintln!("  - {name}（{unit}）: `dotfiles secret set {name} <value>` で設定");
+        eprintln!("  - {name}（{unit}）: `dotfiles local set {name} <value>` で設定");
     }
     Ok(())
 }

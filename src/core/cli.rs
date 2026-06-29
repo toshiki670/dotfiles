@@ -1,13 +1,13 @@
 //! `dotfiles`（core）の CLI 定義とサブコマンドのディスパッチ。
 //!
 //! [`run`] が `src/bin/dotfiles.rs` の数行シムから呼ばれる入口。各サブコマンドの実体は
-//! core 配下の対応モジュール（[`super::apply`] / [`super::list`] / [`super::secret`] …）にある。
+//! core 配下の対応モジュール（[`super::apply`] / [`super::list`] / [`super::local`] …）にある。
 
 use clap::{Parser, Subcommand};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
-use super::{apply, color, doctor, list, profile, secret, source};
+use super::{apply, color, doctor, list, local, profile, source};
 
 /// toshiki670/dotfiles 本体（core）。
 #[derive(Parser)]
@@ -35,9 +35,9 @@ enum Commands {
     /// configs の manifest を集約し、配置先一覧を表示する。
     List,
     /// マシンローカル値（named value）をストアへ設定する（§9）。
-    Secret {
+    Local {
         #[command(subcommand)]
-        action: SecretAction,
+        action: LocalAction,
     },
     /// マシンクラス（`profile`）の状態 gate を設定／表示する（§10）。
     ///
@@ -64,9 +64,9 @@ enum ColorAction {
     Sample,
 }
 
-/// `secret` のサブコマンド。コマンド名 `secret` は仮称（非秘匿値も扱う。§16 で最終命名）。
+/// `local` のサブコマンド。将来 `get` / `list` / `unset` を足す余地を見越し `local <action>` 形を保つ。
 #[derive(Subcommand)]
-enum SecretAction {
+enum LocalAction {
     /// 名前→値をストア（`~/.config/dotfiles/local.toml`）へ設定する。
     Set { name: String, value: String },
 }
@@ -78,9 +78,9 @@ pub fn run() {
     let result = match cli.command {
         Some(Commands::Apply) => run_apply(source),
         Some(Commands::List) => run_list(source),
-        Some(Commands::Secret {
-            action: SecretAction::Set { name, value },
-        }) => run_secret_set(&name, &value),
+        Some(Commands::Local {
+            action: LocalAction::Set { name, value },
+        }) => run_local_set(&name, &value),
         Some(Commands::Profile { name }) => run_profile(name.as_deref()),
         Some(Commands::Color {
             action: ColorAction::Sample,
@@ -116,10 +116,10 @@ fn run_list(source: Option<&Path>) -> Result<(), String> {
     list::run(resolved.root(), &resolved.origin().to_string())
 }
 
-/// `dotfiles secret set <name> <value>`：named value をストアへ保存する。
-fn run_secret_set(name: &str, value: &str) -> Result<(), String> {
+/// `dotfiles local set <name> <value>`：named value をストアへ保存する。
+fn run_local_set(name: &str, value: &str) -> Result<(), String> {
     let home = home_dir()?;
-    secret::set(Path::new(&home), name, value)
+    local::set(Path::new(&home), name, value)
 }
 
 /// `dotfiles profile [<name>]`：`<name>` 指定で profile 状態を設定、省略で現在値を表示する。

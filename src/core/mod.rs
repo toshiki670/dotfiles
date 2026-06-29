@@ -10,7 +10,7 @@
 //! ファイル合成（[`crate::core::apply::compose`]）を通り、トップレベル `when`（`deps` / `os`）はユニット単位 gate（[`crate::core::apply::gate`]）。配置の直前に
 //! `locals`（named value）を解決・注入する（解決＋注入の窓口 [`crate::core::locals::resolve`] / ストア [`crate::core::locals::store`] / 対話入力 [`crate::core::locals::prompt`]、§9）。
 //! 配置後は `hooks`（onchange フック）をユニットのソースハッシュ変化時だけ実行する
-//! （[`hooks`] / [`onchange`]、§13）。`apply` は配置＋フック、`list` は配置先一覧、`secret set` は
+//! （[`hooks`] / [`onchange`]、§13）。`apply` は配置＋フック、`list` は配置先一覧、`local set` は
 //! named value 設定、`profile` はマシンクラスの状態 gate 設定／表示（[`state`]、§10）、`color sample` は
 //! ANSI 確認表（旧 `crates/color` を吸収、§10）、`doctor` は診断（雛形）。
 
@@ -34,8 +34,8 @@ mod onchange;
 mod color;
 mod doctor;
 mod list;
+mod local;
 mod profile;
-mod secret;
 
 // CLI 定義とディスパッチ。`src/bin/dotfiles.rs` の数行シムから [`cli::run`] が呼ばれる。
 pub mod cli;

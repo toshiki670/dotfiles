@@ -35,7 +35,7 @@ pub fn fill(
             resolved.insert(name.clone(), value);
         } else {
             eprintln!(
-                "apply: locals `{name}` 未設定（`dotfiles secret set {name} <value>` で設定）"
+                "apply: locals `{name}` 未設定（`dotfiles local set {name} <value>` で設定）"
             );
         }
     }
