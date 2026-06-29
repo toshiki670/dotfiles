@@ -1,0 +1,7 @@
+[settings]
+install_before = "1d"
+
+[tools]
+node   = "latest"
+python = "latest"
+rust   = "latest"

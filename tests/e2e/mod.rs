@@ -27,6 +27,7 @@
 //! - [`generate`]: generate 層（S2/#456）— cmd 実行・when.deps gate・sibling 連結・list 表示（契約）
 //! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群（契約）
 //! - [`secrets`]: マシンローカル値（S4/#458）— secret set / 注入 / doctor（契約）
+//! - [`profile`]: マシンクラス状態 gate（#467）— profile set/show・`when.profile` の配置/skip・冪等（契約）
 //! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証（契約）
 //! - [`color`]: `color sample`（S6/#460）— ANSI 確認表の見出し・エスケープシーケンス（契約）
 //! - [`source`]: ソース二段構え（S8/#462）— 作業ツリー検出 / 埋め込み / `--source` の解決切替（契約＋実 configs）
@@ -41,6 +42,7 @@ mod generate;
 mod hooks;
 mod list;
 mod overlay;
+mod profile;
 mod real_configs;
 mod secrets;
 mod source;

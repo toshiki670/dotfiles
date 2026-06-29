@@ -12,7 +12,8 @@
 //! `locals`（named value）を解決・注入する（解決＋注入の窓口 [`crate::locals::resolve`] / ストア [`crate::locals::store`] / 対話入力 [`crate::locals::prompt`]、§9）。
 //! 配置後は `hooks`（onchange フック）をユニットのソースハッシュ変化時だけ実行する
 //! （[`hooks`] / [`onchange`]、§13）。`apply` は配置＋フック、`list` は配置先一覧、`secret set` は
-//! named value 設定、`color sample` は ANSI 確認表（旧 `crates/color` を吸収、§10）、`doctor` は診断（雛形）。
+//! named value 設定、`profile` はマシンクラスの状態 gate 設定／表示（[`state`]、§10）、`color sample` は
+//! ANSI 確認表（旧 `crates/color` を吸収、§10）、`doctor` は診断（雛形）。
 
 #![deny(rustdoc::broken_intra_doc_links)]
 
@@ -24,6 +25,7 @@ use std::path::{Path, PathBuf};
 mod discover; // §6.3 走査（apply / list / doctor 共有）
 mod manifest; // §6 manifest.toml スキーマ
 mod source; // §8 ソース二段構え
+mod state; // §10 状態駆動 gate のスカラ状態ファイル（profile / 将来の theme）
 
 // 配置エンジン（§5 / §5.5）。子モジュール（copy / compose / generate / strategy / gate）は apply.rs が束ねる。
 mod apply;
@@ -39,6 +41,7 @@ mod onchange;
 mod color;
 mod doctor;
 mod list;
+mod profile;
 mod secret;
 
 /// toshiki670/dotfiles 本体（core）。
@@ -70,6 +73,15 @@ enum Commands {
     Secret {
         #[command(subcommand)]
         action: SecretAction,
+    },
+    /// マシンクラス（`profile`）の状態 gate を設定／表示する（§10）。
+    ///
+    /// 引数 `<name>`（例 `private`）を渡すと状態ファイルへ書き、`when = { profile = … }` の
+    /// 断片が採否される。引数なしは現在の profile を表示する。未設定の既定は not-private
+    /// （新規・仕事マシンへ private 設定が漏れないよう明示 opt-in）。
+    Profile {
+        /// 設定する profile 名（省略時は現在値を表示）。
+        name: Option<String>,
     },
     /// テーマ／カラー関連（§10）。現状は確認表出力の `sample` のみ。
     Color {
@@ -103,6 +115,7 @@ fn main() {
         Some(Commands::Secret {
             action: SecretAction::Set { name, value },
         }) => run_secret_set(&name, &value),
+        Some(Commands::Profile { name }) => run_profile(name.as_deref()),
         Some(Commands::Color {
             action: ColorAction::Sample,
         }) => {
@@ -141,6 +154,15 @@ fn run_list(source: Option<&Path>) -> Result<(), String> {
 fn run_secret_set(name: &str, value: &str) -> Result<(), String> {
     let home = home_dir()?;
     secret::set(Path::new(&home), name, value)
+}
+
+/// `dotfiles profile [<name>]`：`<name>` 指定で profile 状態を設定、省略で現在値を表示する。
+fn run_profile(name: Option<&str>) -> Result<(), String> {
+    let home = home_dir()?;
+    match name {
+        Some(name) => profile::set(Path::new(&home), name),
+        None => profile::show(Path::new(&home)),
+    }
 }
 
 /// `dotfiles doctor`：ソースの `locals` 宣言とストアを突き合わせ未設定を報告する。

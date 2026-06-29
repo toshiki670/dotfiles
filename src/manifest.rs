@@ -8,14 +8,14 @@
 //!   として組む。各 overlay は `src`（copy 断片）/ `cmd`（generate 断片）のどちらか ＋
 //!   `when`（`deps` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
 //!
-//! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ）に一本化する。**書く位置でスコープが
-//! 決まる**: トップレベルの `when` はユニット全体 gate（false なら dst も `hooks` も触らず skip ＝
-//! all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否（§5.5）。両者は同じ評価規則を
-//! [`crate::apply::gate`] で共有する。
+//! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ / `profile` スカラ）に一本化する。**書く位置で
+//! スコープが決まる**: トップレベルの `when` はユニット全体 gate（false なら dst も `hooks` も触らず
+//! skip ＝ all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否（§5.5）。両者は同じ評価規則を
+//! [`crate::apply::gate`] で共有する。`profile` は環境検出（`deps`/`os`）と違い user が選んでおく
+//! 状態（[`crate::state`]）を読む状態 gate で、`theme`（color スライスまで未配線）と同族（§10）。
 //! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は onchange
 //! フック（§13, S5）の**コマンド（argv）**宣言で、各 argv が非空であることを load 時に検証する
 //! （実行は [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
-//! theme は後続（color）スライスで追加する。
 
 use serde::Deserialize;
 use std::path::Path;
@@ -56,8 +56,9 @@ pub struct Manifest {
     pub cmd: Vec<String>,
     /// ユニット全体 gate（§5.5・§7）。トップレベルに書いた `when` はユニットスコープで、
     /// 満たさなければユニット全体を skip する（dst も `hooks` も触らない ＝ all-or-nothing）。
-    /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致した時だけ真。
-    /// 省略時は常時採用。同じ語彙を `[[overlay]]` の `when` がその断片スコープで再利用する。
+    /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致し、
+    /// `when.profile`（スカラ・状態）が現在の profile 状態と一致した時だけ真。省略時は常時採用。
+    /// 同じ語彙を `[[overlay]]` の `when` がその断片スコープで再利用する。
     #[serde(default)]
     pub when: Option<When>,
     /// 合成 overlay（条件付き断片の配列, §5.5）。空 = 生成方式の既定挙動。
@@ -122,7 +123,7 @@ pub struct Overlay {
     /// generate 断片: 実行する argv。標準出力を断片にする。
     #[serde(default)]
     pub cmd: Vec<String>,
-    /// 採用条件（省略 = 常時採用）。この断片スコープで `when`（`deps` / `os`）を AND 評価する。
+    /// 採用条件（省略 = 常時採用）。この断片スコープで `when`（`deps` / `os` / `profile`）を AND 評価する。
     #[serde(default)]
     pub when: Option<When>,
 }
@@ -139,6 +140,12 @@ pub struct When {
     /// OS（スカラ）。現在 OS と一致時だけ採用（旧 `{{ if eq .chezmoi.os … }}`）。chezmoi 互換表記。
     #[serde(default)]
     pub os: Option<String>,
+    /// マシンクラス（スカラ・状態 gate）。`dotfiles profile <name>` が書いた現在の profile 状態
+    /// （[`crate::state`]）と一致するときだけ採用する。`deps`（環境検出）・`os`（環境検出）と違い
+    /// **user が選んでおく状態**を読む点が族として `theme`（color スライス）と同じ。未設定の既定は
+    /// not-private（新規・仕事マシンへ private 設定が漏れないよう明示 opt-in）。
+    #[serde(default)]
+    pub profile: Option<String>,
 }
 
 impl When {
@@ -148,7 +155,7 @@ impl When {
     /// 「gate を書いたのに効かない」typo（編集で内部キーだけ消えた等）を黙って通す。これを
     /// load 時に弾くため [`Manifest::validate`] が使う。`theme` 等のキー追加時はここに足す。
     fn has_no_effective_key(&self) -> bool {
-        self.deps.is_empty() && self.os.is_none()
+        self.deps.is_empty() && self.os.is_none() && self.profile.is_none()
     }
 }
 
@@ -230,7 +237,7 @@ impl Manifest {
             && when.has_no_effective_key()
         {
             return Err(
-                "when は実効キー（deps / os）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+                "when は実効キー（deps / os / profile）を 1 つ以上持つ必要があります（空の when は silent no-op）"
                     .to_string(),
             );
         }
@@ -240,7 +247,7 @@ impl Manifest {
             .position(|ov| ov.when.as_ref().is_some_and(When::has_no_effective_key))
         {
             return Err(format!(
-                "overlay[{i}] の when は実効キー（deps / os）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+                "overlay[{i}] の when は実効キー（deps / os / profile）を 1 つ以上持つ必要があります（空の when は silent no-op）"
             ));
         }
         Ok(())
@@ -444,6 +451,15 @@ mod tests {
     fn parse_accepts_top_level_when() {
         // トップレベル when（ユニットスコープ gate）= deps 配列 ＋ os スカラ。
         assert!(parse("dst = \"~/x\"\nwhen = { deps = [\"ghostty\"], os = \"darwin\" }\n").is_ok());
+    }
+
+    #[test]
+    fn parse_accepts_profile_gate() {
+        // profile（状態 gate）は実効キーとして受理する（単独・他キーとの併記とも）。
+        assert!(parse("dst = \"~/x\"\nwhen = { profile = \"private\" }\n").is_ok());
+        assert!(
+            parse("dst = \"~/x\"\nwhen = { profile = \"private\", os = \"darwin\" }\n").is_ok()
+        );
     }
 
     #[test]

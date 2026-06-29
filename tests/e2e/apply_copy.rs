@@ -90,6 +90,45 @@ fn apply_recurses_subdirs_and_delegates_nested_manifests() {
     );
 }
 
+/// copy は dst を prune しない: dotfiles が書かないファイル（dst 配下の user 所有ファイル）は
+/// apply で消えず無傷で残る。単一ファイルを管理する copy ユニットの傍らに、user の任意設定
+/// （ツールが総読みする drop-in 等）を共存させられる土台（設計書 §9.3）。
+#[test]
+fn apply_copy_preserves_unmanaged_files_in_dst() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    // managed は config.toml の 1 ファイルだけ（dst=ディレクトリへ copy）。
+    let unit = work.path().join("configs/app");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(unit.join("manifest.toml"), "dst = \"~/.config/app\"\n").unwrap();
+    fs::write(unit.join("config.toml"), "managed = true\n").unwrap();
+
+    // dst 配下に user 所有のファイル（dotfiles 非管理。サブディレクトリの drop-in を模す）を先置き。
+    let user_file = home.path().join(".config/app/conf.d/local.toml");
+    fs::create_dir_all(user_file.parent().unwrap()).unwrap();
+    fs::write(&user_file, "user = \"own\"\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    // managed ファイルは配置され、
+    assert_eq!(
+        fs::read_to_string(home.path().join(".config/app/config.toml")).unwrap(),
+        "managed = true\n",
+    );
+    // user 所有ファイルは prune されず無傷で残る。
+    assert_eq!(
+        fs::read_to_string(&user_file).unwrap(),
+        "user = \"own\"\n",
+        "copy が dst 配下の非管理ファイルを消した（prune してはいけない）",
+    );
+}
+
 /// S1 受け入れ条件: パーミッション属性（private=0600 / executable）。
 /// base 0644 を起点に private で 0600、executable で read 桁へ exec を合成する
 /// （0644→0755 / 0600→0700）。chezmoi の private_ / executable_ と同じ合成規則。

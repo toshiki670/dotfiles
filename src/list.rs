@@ -42,7 +42,7 @@ pub fn run(source: &Path, origin: &str) -> Result<(), String> {
 }
 
 /// 1 単位の属性ラベル（2軸モデル, §7）。
-/// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ when.deps / when.os ＋ hooks。
+/// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ when.deps / when.os / when.profile ＋ hooks。
 fn attrs(manifest: &Manifest) -> String {
     // 表示名は Kind / Strategy の Display に集約する（apply のラベルと同じ出所）。
     let mut parts = vec![manifest.kind.to_string()];
@@ -67,6 +67,9 @@ fn attrs(manifest: &Manifest) -> String {
         }
         if let Some(os) = &when.os {
             parts.push(format!("when.os={os}"));
+        }
+        if let Some(profile) = &when.profile {
+            parts.push(format!("when.profile={profile}"));
         }
     }
     if !manifest.hooks.is_empty() {
