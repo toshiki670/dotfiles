@@ -59,11 +59,14 @@ jobs:
 
       - name: Verify distributable Rust commands were installed to ~/.cargo/bin
         run: |
+          # 配布物は root dotfiles パッケージ 1 つに統合済み。一度の cargo install で全 bin が入る。
           # root dotfiles（core）
           test -x "$HOME/.cargo/bin/dotfiles"
           "$HOME/.cargo/bin/dotfiles" --version
-          # 各コマンド（存在のみ確認。外部ツール依存のものは実行しない）
-          for bin in clip v-sync gh-clone gcm git-upstream; do
+          # 各コマンド + fzf-picker / env-tools の各 bin（存在のみ確認。外部ツール依存のものは実行しない）
+          for bin in clip gcm gh-clone git-upstream \
+                     cdabbr fzf-gh fzf-ghq-cd fzf-worktree-remove \
+                     cleanup-env upgrade-env; do
             test -x "$HOME/.cargo/bin/$bin"
           done
           # バックグラウンド worker
@@ -73,10 +76,11 @@ jobs:
           "$HOME/.cargo/bin/dotfiles" color sample | head -1
           "$HOME/.cargo/bin/git-upstream" --help
 
-      - name: Verify dev-only tools were NOT installed
+      - name: Verify dev/maintenance-only tools were NOT installed
         run: |
-          # dotfiles-lint は repo 内部の開発専用ツール（非 install）。~/.cargo/bin に入らない。
-          for bin in dotfiles-lint; do
+          # tools/ 配下は repo 内部の開発・保守ツール（非 install）。~/.cargo/bin に入らない。
+          # v-sync は #485 で配布終了（保守ツール化）。removed_crates が旧バイナリも掃除する。
+          for bin in dotfiles-lint v-sync; do
             if [ -e "$HOME/.cargo/bin/$bin" ]; then
               echo "error: $bin must not be installed to ~/.cargo/bin" >&2
               exit 1

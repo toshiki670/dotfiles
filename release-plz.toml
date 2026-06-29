@@ -1,19 +1,19 @@
 # release-plz: https://release-plz.dev/
-# Cargo workspace モード。配布物（root dotfiles + 各コマンド + workers）と support lib は
-# 独立版を振り、per-package で git タグ + GitHub Release + CHANGELOG を生成する。
-# crates.io へは publish しない。
+# 配布物は root `dotfiles` パッケージ 1 つに統合済み。リリースするのはこの 1 パッケージ
+# だけで、単一版（タグ `v{version}`・0.68.0 からの連続）を振る。tools/* は保守ツールで
+# release=false。crates.io へは publish しない。
 #
 # `git_only = true`: 最新リリース版の判定を「git タグ」から行う（crates.io を参照しない）。
-# これが本リポジトリの設計（per-package タグ = 版の SoT）。単に `publish = false` だけ
-# だと release-plz は最新版判定に依然 crates.io を参照し、未公開クレートでは版の基準を
-# 確立できず Release PR が空になる（{"prs":[]}）ため、git_only が必須。
+# これが本リポジトリの設計（タグ = 版の SoT）。単に `publish = false` だけだと release-plz
+# は最新版判定に依然 crates.io を参照し、未公開クレートでは版の基準を確立できず Release PR
+# が空になる（{"prs":[]}）ため、git_only が必須。
 #
 # `publish = false`（workspace）: ① cargo publish を止める（crates.io へは出さない）。
 # ② release-plz は member ごとに「config の publish」と「Cargo.toml の publish」を
-# 突き合わせ、不一致だと `release` がエラーで停止する（Package ... has publish = false
-# in the Cargo.toml, but it has publish = true in the release-plz configuration）。全
-# member の Cargo.toml が publish=false なので config 側も false に揃える。git_only は
-# publish を false にしない（独立フィールド）ため、ここで明示する。
+# 突き合わせ、Cargo.toml=false × config=true だと `release` がエラーで停止する。dotfiles の
+# Cargo.toml は publishable（publish 未指定）のままなので、config=false との組み合わせは整合
+# （Cargo.toml=true × config=false が crates.io 非公開の正しい組）。git_only は publish を
+# false にしない（独立フィールド）ため、ここで明示する。
 [workspace]
 changelog_config   = "cliff.toml"
 changelog_update   = true
@@ -21,31 +21,23 @@ git_only           = true
 git_release_draft  = false
 git_release_enable = true
 publish            = false
-# member の既定タグ。複数パッケージ workspace の既定値を明示しておく。
-git_tag_name     = "{{ package }}-v{{ version }}"
-pr_branch_prefix = "release-"
-# リリース対象とするコミットを限定する。これに「マッチするコミットが 1 つも無い」
-# パッケージは bump しない。狙いは Cargo.lock の transitive 依存更新（例: clip 追加で
-# syn が 2.0.117→2.0.118）だけで、ソース無変更のクレートまで一斉に patch bump される
-# 事故（#441）の抑止。正規表現は cliff.toml の commit_parsers（feat/fix/perf/refactor/
-# revert を採用、他は skip）と揃える。
-release_commits = "^(feat|fix|perf|refactor|revert)"
-
-# root package = `dotfiles` 本体（core）。タグは従来どおり `v{version}` を維持する
-# （0.68.0 からの連続。`git_tag_name` を root だけ上書き）。
-# `git_release_name` も上書き: 既定は多パッケージ workspace で `{{ package }}-v{{ version }}`
-# となり Release 名が `dotfiles-v0.69.1` になる。タグ（v0.69.1）と揃えて `v{version}` にする。
-# `publish = false` を明示（workspace 値の継承に依存せず整合性チェックを確実に通す）。
-[[package]]
+# 単一版。タグ・Release 名ともに `v{version}`（0.68.0 からの連続）。
 git_release_name = "v{{ version }}"
 git_tag_name     = "v{{ version }}"
-name             = "dotfiles"
-publish          = false
+pr_branch_prefix = "release-"
+# リリース対象とするコミットを限定する（マッチが 1 つも無ければ bump しない）。Cargo.lock
+# の transitive 依存更新だけでソース無変更の patch bump が出る事故（#441）の抑止。正規表現は
+# cliff.toml の commit_parsers（feat/fix/perf/refactor/revert を採用、他は skip）と揃える。
+release_commits = "^(feat|fix|perf|refactor|revert)"
 
-# dotfiles-lint は repo 内部の開発専用ツール（xtask 定石）。版を振らず、リリース
-# もしない。`release = false` で release-plz の処理対象から完全に除外する。
-# `publish = false` も明示（workspace 値の継承に依存せず整合性チェックを確実に通す）。
+# 保守ツール（repo 内部のみ）。版を振らず、リリースもしない。`release = false` で release-plz
+# の処理対象から完全に除外する。`publish = false` も明示（workspace 継承に依存しない）。
 [[package]]
 name    = "dotfiles-lint"
+publish = false
+release = false
+
+[[package]]
+name    = "v-sync"
 publish = false
 release = false

@@ -7,7 +7,7 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
-This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`color`, `git-upstream`, `gcm`, `clip`, `v-sync`, …) built from the repository-root crate and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
+This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`dotfiles`, `git-upstream`, `gcm`, `clip`, …) built as bins of the repository-root `dotfiles` package and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
 
 # Prerequisites
 
@@ -159,30 +159,30 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 
 # Rust commands
 
-The CLI commands form a **Cargo workspace** at the repository root. The root package is `dotfiles` itself (core), and each individual command is an independent crate under `crates/*`. On `chezmoi apply`, a hook (`run_onchange_after_cargo-install`) installs the *distributable* crates into `~/.cargo/bin` via `cargo install` (the support library and the lint tool are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
+All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). On `chezmoi apply`, a hook (`run_onchange_before_cargo-install`) installs them into `~/.cargo/bin` with one `cargo install --path .` (the tools under `tools/` are not installed). Off a clone you can do the same in one shot: `cargo install --git https://github.com/toshiki670/dotfiles`. The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
 
-| Command | Crate | Description |
-| --- | --- | --- |
-| `dotfiles` | (root) | dotfiles core; version entry point (`dotfiles --version`) plus `apply` (place `configs/` via per-directory `manifest.toml`; resolves & injects machine-local `locals` values), `list` (overview of every config's destination), `secret set <name> <value>` (store a machine-local value in `~/.config/dotfiles/local.toml`), `color sample` (print an ANSI color table — 16 + 256 colors), and `doctor` (report unset `locals`) |
-| `git-upstream` | `crates/git-upstream` | Merge `upstream/master` / initialize the upstream remote |
-| `gcm` | `crates/gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
-| `clip` | `crates/clip` | Copy a file to the clipboard — `obj` (Finder object) / `text` (contents) / `path` (absolute path); macOS |
-| `v-sync` | `crates/v-sync` | Sync Neovim plugins and re-add `lazy-lock.json` into chezmoi |
-| `gh-clone` | `crates/gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
-| `fzf-ghq-cd` | `crates/fzf-picker` | Pick a ghq repo / linked worktree with fzf, printing the selected path (Fish shim cds) |
-| `fzf-worktree-remove` | `crates/fzf-picker` | Pick a linked git worktree with fzf and remove it (Fish shim cds out if needed) |
-| `cdabbr` | `crates/fzf-picker` | Expand a prompt_pwd-style abbreviated path and pick a directory with fzf (Fish shim cds) |
-| `cleanup-env` | `crates/env-tools` | Prompt-then-cleanup caches / unused versions for brew / mise / cargo (`-n/--dry-run`) |
-| `upgrade-env` | `crates/env-tools` | Upgrade all installed package managers (brew / mise / cargo) |
-| `daily-check-worker`, `git-background-fetch-worker` | `crates/dotfiles-workers` | Background workers started from Fish `conf.d` hooks |
+| Command | Description |
+| --- | --- |
+| `dotfiles` | dotfiles core; version entry point (`dotfiles --version`) plus `apply` (place `configs/` via per-directory `manifest.toml`; resolves & injects machine-local `locals` values), `list` (overview of every config's destination), `secret set <name> <value>` (store a machine-local value in `~/.config/dotfiles/local.toml`), `color sample` (print an ANSI color table — 16 + 256 colors), and `doctor` (report unset `locals`) |
+| `git-upstream` | Merge `upstream/master` / initialize the upstream remote |
+| `gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
+| `clip` | Copy a file to the clipboard — `obj` (Finder object) / `text` (contents) / `path` (absolute path); macOS |
+| `gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
+| `fzf-ghq-cd` | Pick a ghq repo / linked worktree with fzf, printing the selected path (Fish shim cds) |
+| `fzf-worktree-remove` | Pick a linked git worktree with fzf and remove it (Fish shim cds out if needed) |
+| `cdabbr` | Expand a prompt_pwd-style abbreviated path and pick a directory with fzf (Fish shim cds) |
+| `cleanup-env` | Prompt-then-cleanup caches / unused versions for brew / mise / cargo (`-n/--dry-run`) |
+| `upgrade-env` | Upgrade all installed package managers (brew / mise / cargo) |
+| `daily-check-worker`, `git-background-fetch-worker` | Background workers started from Fish `conf.d` hooks |
 
-Every command binary supports `--help` / `--version`, except the env-driven background workers. `gh-clone` and the `fzf-picker` binaries (e.g. `fzf-ghq-cd`) keep a thin Fish shim for the part that must change the parent shell (`cd`), with the logic in the Rust binary.
+Every command binary supports `--help` / `--version`, except the env-driven background workers. `gh-clone` and the fzf-picker binaries (e.g. `fzf-ghq-cd`) keep a thin Fish shim for the part that must change the parent shell (`cd`), with the logic in the Rust binary.
 
-Not installed (development only):
+Not installed (development / maintenance only, under `tools/`):
 
-- `tools/dotfiles-lint` — lint/format orchestrator, run via `mise run lint` / `mise run check`.
+- `dotfiles-lint` — lint/format orchestrator, run via `mise run lint` / `mise run check`.
+- `v-sync` — sync Neovim plugins and re-add `lazy-lock.json` into the dotfiles source, run via `mise run v-sync`.
 
-Each distributable crate is versioned independently via release-plz: per-package tags `<crate>-v<version>`, while the root `dotfiles` keeps `v<version>`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
+The root `dotfiles` package is the single distributable, versioned via release-plz with tags `v<version>`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 
 # Development
 

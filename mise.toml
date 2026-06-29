@@ -22,6 +22,10 @@ run         = "cargo run --quiet -p dotfiles-lint -- fix"
 description = "Run linter check only"
 run         = "cargo run --quiet -p dotfiles-lint -- check"
 
+[tasks.v-sync]
+description = "Sync Neovim plugins and re-add lazy-lock.json into the dotfiles source"
+run         = "cargo run -p v-sync --"
+
 [tasks.release-prepare]
 description = "Trigger the Release Prepare workflow (release-plz creates a Release PR)"
 run = """
