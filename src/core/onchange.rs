@@ -1,18 +1,20 @@
 //! onchange 検知（§13, S5）: フックを「ユニットのソースが前回適用時から変わったか」で gate する。
 //!
 //! 2 つの責務を持つ:
-//! - **ソースハッシュ計算**（[`hash_dir`]）: ユニットのデプロイ対象ファイル（[`crate::core::discover::unit_files`]）
-//!   を相対パス＋内容で SHA-256 に畳む。設計書 §13.1（hooks 仕様）どおり、mtime ではなくソース
-//!   ハッシュを採る（mtime は touch/clone で揺れるため内容ハッシュ）。chezmoi の
-//!   `run_onchange_*` が埋め込みソースの `sha256sum` を比較していたのと同じ役割。
-//! - **状態の永続化**（[`State`]）: フックごとの前回ハッシュを `~/.config/dotfiles/hooks.toml` に
+//! - **ソース指紋の計算**（[`hash_dir`]）: ユニットのデプロイ対象ファイル（[`crate::core::discover::unit_files`]）
+//!   を相対パス＋内容で畳んだ指紋。設計書 §13.1（hooks 仕様）どおり、mtime ではなくソース
+//!   内容を見る（mtime は touch/clone で揺れるため）。chezmoi の `run_onchange_*` が埋め込みソースを
+//!   比較していたのと同じ役割。**用途は前回値との等値比較だけ**なので暗号学的ハッシュは要らず、
+//!   `std::hash`（非暗号学的）で `u64` 指紋を取り 16 進文字列にする ― これで sha2 等の依存も hex 化の
+//!   小細工も不要。指紋ロジック変更時は全フックが一度再実行されるが、再実行は冪等なので無害。
+//! - **状態の永続化**（[`State`]）: フックごとの前回指紋を `~/.config/dotfiles/hooks.toml` に
 //!   持つ。秘匿値ではない（[`crate::core::locals::store`] と違い 0600 不要）ため平文で書き、破損時は warn して
 //!   空（全フック再実行）扱いにする ― 再実行は冪等なので、致命的エラーで apply を止めるより
 //!   作り直す方が安全（disposable な状態）。
 
 use crate::core::discover;
-use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
+use std::hash::{DefaultHasher, Hasher};
 use std::path::{Path, PathBuf};
 
 /// `~/.config/dotfiles/hooks.toml` の「フックキー → 前回適用ハッシュ」マップ。
@@ -75,39 +77,39 @@ impl State {
     }
 }
 
-/// 1 単位（`dir`）のソースツリーを SHA-256 で畳んで 16 進文字列にする。
+/// 1 単位（`dir`）のソースツリーを畳んだ 16 進指紋（`u64` を `{:016x}`）。
 ///
 /// [`discover::unit_files`] が返すデプロイ対象ファイルを（既にソート済み）順に、
 /// **`dir` からの相対パス → 内容**の順で hasher に与える。相対パスも混ぜることで、
 /// ファイルの追加・改名・移動も検知する（内容だけの concat より厳密）。
 ///
-/// **`manifest.toml` 自体はハッシュ対象外**（`unit_files` が除外）。これは意図的で、ハッシュは
+/// **`manifest.toml` 自体は指紋対象外**（`unit_files` が除外）。これは意図的で、指紋は
 /// 「フックが消費するデプロイ内容（例: bat の theme・ghostty の config）が変わったか」を測るもの
 /// だから ― `dst` 変更やパーミッション属性の変更は配置先を変えるだけでフックの入力には影響しない。
-/// なお **hook の追加・コマンド変更**は取りこぼさない: onchange 状態は `<unit>::<コマンド短ハッシュ>`
+/// なお **hook の追加・コマンド変更**は取りこぼさない: onchange 状態は `<unit>::<コマンド短指紋>`
 /// キーで持つので（[`crate::core::hooks`]）、新しい/変更後のコマンドは未記録（`None`）= 初回として必ず走る
-/// （manifest がハッシュ対象外でも、キー側にコマンド内容が入るため）。
+/// （manifest が指紋対象外でも、キー側にコマンド内容が入るため）。
 pub fn hash_dir(dir: &Path) -> Result<String, String> {
-    let mut hasher = Sha256::new();
+    let mut hasher = DefaultHasher::new();
     for file in discover::unit_files(dir)? {
         let rel = file.strip_prefix(dir).unwrap_or(&file);
-        hasher.update(rel.to_string_lossy().as_bytes());
-        hasher.update([0u8]); // パス↔内容の境界（"a"+"bc" と "ab"+"c" を区別する）。
+        hasher.write(rel.to_string_lossy().as_bytes());
+        hasher.write_u8(0); // パス↔内容の境界（"a"+"bc" と "ab"+"c" を区別する）。
         let bytes =
             std::fs::read(&file).map_err(|e| format!("{}: 読み込み失敗: {e}", file.display()))?;
-        hasher.update(&bytes);
-        hasher.update([0u8]);
+        hasher.write(&bytes);
+        hasher.write_u8(0);
     }
-    Ok(format!("{:x}", hasher.finalize()))
+    Ok(format!("{:016x}", hasher.finish()))
 }
 
-/// 文字列を SHA-256 で畳んだ先頭 16 桁の安定ハッシュ。フックの状態キー suffix（コマンド内容の
+/// 文字列を畳んだ 16 桁（`u64` を `{:016x}`）の安定指紋。フックの状態キー suffix（コマンド内容の
 /// 同一性判定）に使う ― 生のコマンド文字列をキーにすると空白/クォートで toml キーが壊れうるため、
-/// 短い 16 進へ畳む。64bit 相当で、1 ユニット内の数個のコマンド間の衝突は無視できる。
+/// 短い 16 進へ畳む。64bit なので、1 ユニット内の数個のコマンド間の衝突は無視できる。
 pub fn short_hash(data: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(data.as_bytes());
-    format!("{:x}", hasher.finalize())[..16].to_string()
+    let mut hasher = DefaultHasher::new();
+    hasher.write(data.as_bytes());
+    format!("{:016x}", hasher.finish())
 }
 
 #[cfg(test)]

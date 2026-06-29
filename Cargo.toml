@@ -20,7 +20,6 @@ include_dir   = { workspace = true }
 libc          = { workspace = true }
 serde         = { workspace = true }
 serde_json    = { workspace = true }
-sha2          = { workspace = true }
 strum         = { workspace = true }
 tempfile      = { workspace = true }
 toml          = { workspace = true }
@@ -89,8 +88,7 @@ include_dir   = "0.7"
 libc          = "0.2"
 serde         = { version = "1", features = [ "derive" ] }
 serde_json    = "1"
-sha2          = "0.10"
-strum         = { version = "0.27", features = [ "derive" ] }
+strum         = { version = "0.28", features = [ "derive" ] }
 tempfile      = "3"
 toml          = "0.8"
 # E2E（dev-dependencies）
