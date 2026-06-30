@@ -1,0 +1,264 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+[aws]
+format = '[$symbol($profile )(\($region\) )(\[$duration\] )]($style)'
+symbol = " "
+
+[buf]
+format = '[$symbol($version )]($style)'
+symbol = " "
+
+[bun]
+symbol = " "
+
+[c]
+symbol = " "
+
+[cpp]
+symbol = " "
+
+[cmake]
+symbol = " "
+
+[cmd_duration]
+format = '[ $duration]($style) '
+
+[conda]
+symbol = " "
+
+[crystal]
+symbol = " "
+
+[dart]
+symbol = " "
+
+[deno]
+symbol = " "
+
+[directory]
+read_only         = " 󰌾"
+repo_root_format  = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+repo_root_style   = 'bold blue'
+style             = 'bold cyan'
+truncate_to_repo  = true
+truncation_length = 0
+
+[docker_context]
+format = '[$symbol$context ]($style)'
+symbol = " "
+
+[elixir]
+symbol = " "
+
+[elm]
+symbol = " "
+
+[fennel]
+symbol = " "
+
+[fortran]
+symbol = " "
+
+[fossil_branch]
+symbol = " "
+
+[gcloud]
+format = '[$symbol$account(@$domain)(\($region\))]($style) '
+symbol = " "
+
+[git_branch]
+format = '[$symbol$branch(:$remote_branch) ]($style)'
+symbol = " "
+
+[git_commit]
+tag_symbol = '  '
+
+[git_state]
+am           = "am"
+am_or_rebase = "am/rebase"
+bisect       = "bisect"
+cherry_pick  = "cherry-pick"
+merge        = "merge"
+rebase       = "rebase"
+revert       = "revert"
+
+[git_metrics]
+disabled = false
+
+[git_status]
+ahead    = '[⇡${count}](green)'
+behind   = '⇣${count}'
+diverged = '⇡${ahead_count}⇣${behind_count}'
+format   = '([$all_status$ahead_behind ]($style))'
+modified = '!${count}'
+stashed  = ''
+
+[golang]
+format = '[$symbol($version )]($style)'
+symbol = " "
+
+[gradle]
+format = '[$symbol($version )]($style)'
+symbol = " "
+
+[guix_shell]
+symbol = " "
+
+[haskell]
+symbol = " "
+
+[haxe]
+symbol = " "
+
+[hg_branch]
+symbol = " "
+
+[hostname]
+ssh_symbol = " "
+
+[java]
+format = '[${symbol}(${version} )]($style)'
+symbol = " "
+
+[julia]
+symbol = " "
+
+[kotlin]
+format = '[$symbol($version )]($style)'
+symbol = " "
+
+[lua]
+symbol = " "
+
+[memory_usage]
+disabled  = false
+format    = '[$symbol${ram_pct}( | ${swap_pct}) ]($style)'
+symbol    = "󰍛 "
+threshold = 75
+
+[meson]
+symbol = "󰔷 "
+
+[mise]
+# disabled         = false
+format           = '[$symbol($health )]($style)'
+healthy_symbol   = ''
+symbol           = "󰭼 "
+unhealthy_symbol = 'bad'
+
+[nim]
+symbol = "󰆥 "
+
+[nix_shell]
+symbol = " "
+
+[nodejs]
+format = '[$symbol($version) ]($style)'
+symbol = "󰎙 "
+
+[ocaml]
+symbol = " "
+
+[os.symbols]
+AOSC             = " "
+AlmaLinux        = " "
+Alpaquita        = " "
+Alpine           = " "
+Amazon           = " "
+Android          = " "
+Arch             = " "
+Artix            = " "
+CachyOS          = " "
+CentOS           = " "
+Debian           = " "
+DragonFly        = " "
+Elementary       = " "
+Emscripten       = " "
+EndeavourOS      = " "
+Fedora           = " "
+FreeBSD          = " "
+Garuda           = "󰛓 "
+Gentoo           = " "
+HardenedBSD      = "󰞌 "
+Illumos          = "󰈸 "
+Ios              = "󰀷 "
+Kali             = " "
+Linux            = " "
+Mabox            = " "
+Macos            = " "
+Manjaro          = " "
+Mariner          = " "
+MidnightBSD      = " "
+Mint             = " "
+NetBSD           = " "
+NixOS            = " "
+Nobara           = " "
+OpenBSD          = "󰈺 "
+OracleLinux      = "󰌷 "
+Pop              = " "
+Raspbian         = " "
+RedHatEnterprise = " "
+Redhat           = " "
+Redox            = "󰀘 "
+RockyLinux       = " "
+SUSE             = " "
+Solus            = "󰠳 "
+Ubuntu           = " "
+Unknown          = " "
+Void             = " "
+Windows          = "󰍲 "
+Zorin            = " "
+openSUSE         = " "
+
+[package]
+format = '[$symbol$version ]($style)'
+symbol = "󰏗 "
+
+[perl]
+symbol = " "
+
+[php]
+symbol = " "
+
+[pijul_channel]
+symbol = " "
+
+[pixi]
+symbol = "󰏗 "
+
+[python]
+format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+symbol = " "
+
+[rlang]
+symbol = "󰟔 "
+
+[ruby]
+format = '[$symbol($version )]($style)'
+symbol = " "
+
+[rust]
+format = '[$symbol($version )]($style)'
+symbol = "󱘗 "
+
+[scala]
+symbol = " "
+
+[status]
+symbol = " "
+
+[swift]
+symbol = " "
+
+[xmake]
+symbol = " "
+
+[zig]
+symbol = " "
+
+[custom.merge_ready]
+command      = "merge-ready-prompt"
+format       = "($output )"
+require_repo = true
+shell        = [ "/bin/zsh" ]
+when         = "command -v merge-ready-prompt"
