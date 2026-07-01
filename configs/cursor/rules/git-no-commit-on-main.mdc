@@ -1,0 +1,22 @@
+---
+description: Never commit on main; use a feature branch first (enforced for all git work)
+alwaysApply: true
+---
+
+# Git — do not commit on `main`
+
+`main`（およびリポジトリの default ブランチ）に**直接コミットしない**。ローカルだけでも禁止。後からブランチに移すのは手戻りであり、手順として認めない。
+
+## 必須フロー
+
+1. 変更の前またはコミットの直前に `git branch --show-current` で現在ブランチを確認する。
+2. いま `main`（または `master`、リモートの default と同一名）なら、**先に**作業ブランチを切る: `git checkout -b <type>/<short-description>`。
+3. そのブランチ上でだけ `git add` / `git commit` / `git push` を行う。PR が必要ならそのブランチから出す。
+
+## 例外
+
+ユーザーが**明示的に**「このコミットは main に直接」「hotfix を main に」などと指示した場合のみ、main へのコミットを許可する。黙示・省略は例外にしない。
+
+## エージェント向け
+
+`git commit` を実行する前に必ず上記を満たしていること。満たしていない場合はコミットせず、ブランチ作成から行う。
