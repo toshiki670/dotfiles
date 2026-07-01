@@ -5,7 +5,7 @@
 //! 抜けるため）。それ以外の出力（プロンプト・結果メッセージ・git の出力）は stderr に
 //! 出し、stdout の cd チャネルを汚さない。
 
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Read, Write};
 use std::path::Path;
 use std::process::{Command, ExitCode, Stdio};
 
@@ -123,14 +123,92 @@ fn worktree_remove(wpath: &str, force: bool) -> bool {
     }
 }
 
-/// `[y/N]` プロンプトを stderr に出し、端末（stdin）から 1 行読んで `y`/`Y` 始まりかを
-/// 返す（旧 fish の `read -P` + `string match -qri '^y'` 相当）。EOF は no 扱い。
+/// `[y/N]` プロンプトを stderr に出し、回答が yes（`y`/`Y`）かを返す。
+/// EOF・その他は no（旧 fish の `read -P` + `string match -qri '^y'` 相当）。
 fn confirm(prompt: &str) -> bool {
     eprint!("{prompt}");
     let _ = io::stderr().flush();
+    asked_yes()
+}
+
+/// 端末なら cbreak で **1 キー確定**（Enter 不要）、非端末（テストのパイプ等）なら 1 行読む。
+///
+/// fish のキーバインド経由で呼ばれると、fzf 終了後の端末は fish の行編集が使う raw モードの
+/// まま戻ってくる。raw では Enter が `\n` に変換されず echo も無いため、canonical 前提の
+/// `read_line` は入力を受け付けられない（[y/N] が無反応になる）。cbreak（非 canonical + echo）で
+/// 1 バイトだけ読めばこれを回避できる。余分な打鍵（`yes` と続けた等）は `CbreakGuard` の Drop
+/// が TCSAFLUSH で捨てるので fish の行編集に漏れない。
+#[cfg(unix)]
+fn asked_yes() -> bool {
+    use std::os::unix::io::AsRawFd;
+
+    let stdin = io::stdin();
+    if !stdin.is_terminal() {
+        return line_is_yes();
+    }
+    // 端末なのに cbreak にできないときは、raw のまま read_line に落とすと再びハングし得る。
+    // 破壊的操作なので安全側に倒して No 扱い（＝削除しない）にする。
+    let Some(_guard) = CbreakGuard::enable(stdin.as_raw_fd()) else {
+        eprintln!("端末設定に失敗したため中止します");
+        return false;
+    };
+    let mut buf = [0u8; 1];
+    let read = stdin.lock().read(&mut buf).unwrap_or(0);
+    let _ = writeln!(io::stderr()); // cbreak は Enter を伴わないので押下キーの後に改行を補う。
+    read > 0 && matches!(buf[0], b'y' | b'Y')
+}
+
+#[cfg(not(unix))]
+fn asked_yes() -> bool {
+    line_is_yes()
+}
+
+/// 非端末（テストのパイプ等）: stdin から 1 行読み、先頭の非空白が `y`/`Y` かを返す。EOF は no。
+fn line_is_yes() -> bool {
     let mut line = String::new();
     if io::stdin().read_line(&mut line).unwrap_or(0) == 0 {
         return false;
     }
-    line.trim().starts_with(['y', 'Y'])
+    matches!(line.trim_start().as_bytes().first(), Some(b'y' | b'Y'))
+}
+
+/// 端末を cbreak（非 canonical・echo あり・1 バイト単位）にし、`Drop` で元へ戻す RAII ガード。
+/// raw モードのままでも Enter を待たず 1 キーで確定でき、エラーで早期 return しても復元される。
+#[cfg(unix)]
+struct CbreakGuard {
+    fd: i32,
+    original: libc::termios,
+}
+
+#[cfg(unix)]
+impl CbreakGuard {
+    /// `fd`（端末）の現在属性を保存し、cbreak にした属性を設定する。触れなければ `None`。
+    fn enable(fd: i32) -> Option<Self> {
+        // SAFETY: term は tcgetattr で完全に初期化してから使う。fd は stdin（端末）。
+        unsafe {
+            let mut term: libc::termios = std::mem::zeroed();
+            if libc::tcgetattr(fd, &mut term) != 0 {
+                return None;
+            }
+            let original = term; // libc::termios は Copy。復元用に保存。
+            term.c_lflag &= !libc::ICANON; // 行バッファリングを止め 1 バイトずつ届かせる
+            term.c_lflag |= libc::ECHO; // 押下キーは見せる
+            term.c_cc[libc::VMIN] = 1; // 最低 1 バイト届くまでブロック
+            term.c_cc[libc::VTIME] = 0; // タイムアウト無し
+            if libc::tcsetattr(fd, libc::TCSAFLUSH, &term) != 0 {
+                return None;
+            }
+            Some(Self { fd, original })
+        }
+    }
+}
+
+#[cfg(unix)]
+impl Drop for CbreakGuard {
+    fn drop(&mut self) {
+        // SAFETY: 取得済みの original を書き戻すのみ。失敗時も他に取れる手当ては無い。
+        unsafe {
+            libc::tcsetattr(self.fd, libc::TCSAFLUSH, &self.original);
+        }
+    }
 }
