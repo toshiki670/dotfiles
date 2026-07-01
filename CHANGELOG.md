@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.69.9] - 2026-07-01
+### Features
+- Starship 設定を configs/ へ移行し $schema を網参照化 [#532] ([#536](https://github.com/toshiki670/dotfiles/pull/536)) ([`a6a11b1`](https://github.com/toshiki670/dotfiles/commit/a6a11b1a6c378e62d5b36189a6f2b118608a8c65))
+- Bash profiles を configs/ へ移行し native source で合成 [#534] ([#538](https://github.com/toshiki670/dotfiles/pull/538)) ([`ece0303`](https://github.com/toshiki670/dotfiles/commit/ece0303c1a690c022def1fc355e51652772bb794))
+- Cursor のルールを configs/ へ移行する ([#540](https://github.com/toshiki670/dotfiles/pull/540)) ([`6bf38c6`](https://github.com/toshiki670/dotfiles/commit/6bf38c61b17b743aecd8d85b179054dae751c18f))
+- Git の hooks と ignore を configs/ へ移行する（§16 配置方式の決定を含む） ([#541](https://github.com/toshiki670/dotfiles/pull/541)) ([`ce4a745`](https://github.com/toshiki670/dotfiles/commit/ce4a745423d1f283b537816c0ab8d0f57cd65c25))
+- _fzf_file / _fzf_history を configs/fish へ移行する ([#542](https://github.com/toshiki670/dotfiles/pull/542)) ([`0693fee`](https://github.com/toshiki670/dotfiles/commit/0693feedcef64b78bc387bc4b1cd5cc284e3b9d1))
+### Fixes
+- Worktree-remove の [y/N] を raw tty 経由で読めるよう cbreak 化 ([#537](https://github.com/toshiki670/dotfiles/pull/537)) ([`03c039d`](https://github.com/toshiki670/dotfiles/commit/03c039da26458267df235f352d2d6d9d1ea60e5a))
+
+
 ## [0.69.8] - 2026-06-29
 ### Features
 - Machine-specific 設定を profile gate で配置（yt 集約・mise copy 移行）[#467] ([#520](https://github.com/toshiki670/dotfiles/pull/520)) ([`d187e58`](https://github.com/toshiki670/dotfiles/commit/d187e58bd45e2933e6e8e73d4c518f15bb26a8ed))
