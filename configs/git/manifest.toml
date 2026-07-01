@@ -9,7 +9,7 @@
 # "DOTFILES_GIT_EMAIL/NAME" 注入＋user.tmpl の if 分岐を廃し、宣言的な locals に一本化する。
 # email/name は commit に載るため非 sensitive（sensitive は宣言しない）。
 #
-# 注: git hooks（旧 symlink_ 13本）と ignore は本スライス対象外（hooks は §16 で配置方式を保留）。
-# copy は dst を prune しないため、chezmoi が配置する ~/.config/git/{hooks,ignore} は無傷で残る。
+# hooks（configs/git/hooks）と ignore（configs/git/ignore）はそれぞれ別 manifest を持つ別単位
+# （dst が ~/.config/git/hooks・~/.config/git/ignore で本単位の dst=~/.config/git と異なるため）。
 dst    = "~/.config/git"
 locals = [ "git.email", "git.name" ]
