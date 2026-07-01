@@ -161,6 +161,8 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 
 All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). On `chezmoi apply`, a hook (`run_onchange_before_cargo-install`) installs them into `~/.cargo/bin` with one `cargo install --path .` (the tools under `tools/` are not installed). Off a clone you can do the same in one shot: `cargo install --git https://github.com/toshiki670/dotfiles`. The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
 
+📖 [Rustdoc](https://toshiki670.github.io/dotfiles/) — API docs for every crate, rebuilt on every push to `main`.
+
 | Command | Description |
 | --- | --- |
 | `dotfiles` | dotfiles core; version entry point (`dotfiles --version`) plus `apply` (place `configs/` via per-directory `manifest.toml`; resolves & injects machine-local `locals` values), `list` (overview of every config's destination), `local set <name> <value>` (store a machine-local value in `~/.config/dotfiles/local.toml`), `color sample` (print an ANSI color table — 16 + 256 colors), and `doctor` (report unset `locals`) |

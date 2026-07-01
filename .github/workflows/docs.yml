@@ -1,0 +1,74 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Pages へのデプロイは同時実行させない（進行中のデプロイを打ち切らず、次の push は待たせる）。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: cargo doc (workspace)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build rustdoc
+        run: cargo doc --workspace --no-deps --locked
+
+      # target/doc/ に集約クレートごとの index.html はできるがトップレベルの index.html はない。
+      # root package `dotfiles`（lib.rs のクレート doc から全 family module へ辿れる）を
+      # ランディングにリダイレクトする。
+      - name: Add landing page redirect
+        run: |
+          cat > target/doc/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0; url=dotfiles/index.html">
+              <link rel="canonical" href="dotfiles/index.html">
+              <title>dotfiles docs</title>
+            </head>
+            <body>
+              <p>Redirecting to <a href="dotfiles/index.html">dotfiles docs</a>…</p>
+            </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
