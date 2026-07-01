@@ -123,51 +123,53 @@ fn worktree_remove(wpath: &str, force: bool) -> bool {
     }
 }
 
-/// `[y/N]` プロンプトを stderr に出し、端末から回答を読んで `y`/`Y` かを返す
-/// （旧 fish の `read -P` + `string match -qri '^y'` 相当）。EOF・その他は no 扱い。
-///
-/// fish のキーバインド経由で呼ばれると、fzf 終了後の端末は fish の行編集が使う raw モードの
-/// まま戻ってくる。raw では Enter が `\n` に変換されず echo も無いため、canonical 前提の
-/// `read_line` は入力を受け付けられない（[y/N] が無反応になる）。そこで端末のときだけ cbreak
-/// （非 canonical + echo）にして 1 キーだけ読み、RAII で必ず元の属性へ戻す。非端末（テストの
-/// パイプ等）は従来どおり 1 行読む。
+/// `[y/N]` プロンプトを stderr に出し、回答が yes（`y`/`Y`）かを返す。
+/// EOF・その他は no（旧 fish の `read -P` + `string match -qri '^y'` 相当）。
 fn confirm(prompt: &str) -> bool {
     eprint!("{prompt}");
     let _ = io::stderr().flush();
-    matches!(read_answer(), Some('y' | 'Y'))
+    asked_yes()
 }
 
-/// 回答（先頭 1 文字）を読む。端末なら cbreak で 1 キー、非端末なら 1 行読みへ。
+/// 端末なら cbreak で **1 キー確定**（Enter 不要）、非端末（テストのパイプ等）なら 1 行読む。
+///
+/// fish のキーバインド経由で呼ばれると、fzf 終了後の端末は fish の行編集が使う raw モードの
+/// まま戻ってくる。raw では Enter が `\n` に変換されず echo も無いため、canonical 前提の
+/// `read_line` は入力を受け付けられない（[y/N] が無反応になる）。cbreak（非 canonical + echo）で
+/// 1 バイトだけ読めばこれを回避できる。余分な打鍵（`yes` と続けた等）は `CbreakGuard` の Drop
+/// が TCSAFLUSH で捨てるので fish の行編集に漏れない。
 #[cfg(unix)]
-fn read_answer() -> Option<char> {
+fn asked_yes() -> bool {
     use std::os::unix::io::AsRawFd;
 
     let stdin = io::stdin();
     if !stdin.is_terminal() {
-        return read_line_answer();
+        return line_is_yes();
     }
-    // 端末属性を触れないときは 1 行読みへフォールバックする。
+    // 端末なのに cbreak にできないときは、raw のまま read_line に落とすと再びハングし得る。
+    // 破壊的操作なので安全側に倒して No 扱い（＝削除しない）にする。
     let Some(_guard) = CbreakGuard::enable(stdin.as_raw_fd()) else {
-        return read_line_answer();
+        eprintln!("端末設定に失敗したため中止します");
+        return false;
     };
     let mut buf = [0u8; 1];
     let read = stdin.lock().read(&mut buf).unwrap_or(0);
     let _ = writeln!(io::stderr()); // cbreak は Enter を伴わないので押下キーの後に改行を補う。
-    (read > 0).then(|| buf[0] as char)
+    read > 0 && matches!(buf[0], b'y' | b'Y')
 }
 
 #[cfg(not(unix))]
-fn read_answer() -> Option<char> {
-    read_line_answer()
+fn asked_yes() -> bool {
+    line_is_yes()
 }
 
-/// 非端末（テストのパイプ等）: stdin から 1 行読み、先頭の非空白文字を返す。EOF は `None`。
-fn read_line_answer() -> Option<char> {
+/// 非端末（テストのパイプ等）: stdin から 1 行読み、先頭の非空白が `y`/`Y` かを返す。EOF は no。
+fn line_is_yes() -> bool {
     let mut line = String::new();
     if io::stdin().read_line(&mut line).unwrap_or(0) == 0 {
-        return None;
+        return false;
     }
-    line.trim().chars().next()
+    matches!(line.trim_start().as_bytes().first(), Some(b'y' | b'Y'))
 }
 
 /// 端末を cbreak（非 canonical・echo あり・1 バイト単位）にし、`Drop` で元へ戻す RAII ガード。
