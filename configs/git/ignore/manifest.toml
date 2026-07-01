@@ -1,0 +1,17 @@
+# git のグローバル ignore（~/.config/git/ignore）を concat 合成で配置する（設計書 §5.5・§16）。
+#
+# 旧 chezmoi（home/dot_config/git/ignore.tmpl ＋ ignores/{gitignore.io,custom}）の置き換え。
+# テンプレート変数・条件分岐は無い単純連結だったため、overlay ＋ strategy="concat" で表現する
+# （gitignore.io 生成分 → custom の順。旧テンプレートの連結順を踏襲）。
+# core.excludesFile は未設定（git既定の $XDG_CONFIG_HOME/git/ignore を使う）。
+#
+# 各断片は自己記述（gitignore.io は toptal の生成ヘッダ、custom は自前のヘッダ/フッタ行）を
+# 既に持つため、旧テンプレートの外側バナー（"### Git Ignore Rules ###" 等）は付けない。
+dst      = "~/.config/git/ignore"
+strategy = "concat"
+
+[[overlay]]
+src = "gitignore.io"
+
+[[overlay]]
+src = "custom"
