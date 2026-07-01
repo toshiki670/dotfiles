@@ -1,0 +1,4 @@
+# bash 断片（common/interactive/login/nonlogin）を配置する（copy 層）。
+# ~/.bash_profile 等（configs/bash/manifest.toml）が起動時に source する実体。
+# 旧 bash/*.sh（chezmoi include の連結元）をそのまま移設。
+dst = "~/.config/bash"
