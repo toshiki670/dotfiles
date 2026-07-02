@@ -77,6 +77,9 @@ fn materialize(dir: &Path, ov: &Overlay) -> Result<Vec<u8>, String> {
 /// overlay 明示時は `strategy` を load 時に必須化済み（[`Manifest::validate`]）なので、`unwrap_or`
 /// の暗黙 `concat` は overlay 未記述の generate 既定挙動だけに効く。`json-shallow` ＋ `preserve`
 /// のときだけ既存 dst を読み、最下層の土台として断片の下に敷く（既存が無ければ土台なし）。
+/// `preserve = true` は `strategy = "json-shallow"` 専用（[`Manifest::validate`] が load 時に強制）
+/// なので、`plist-shallow` の土台は常に overlay 側（例: `defaults export <domain> -` の cmd 断片）が
+/// 担う ― `plist-shallow` は `preserve` を読まない（#531）。
 fn combine(manifest: &Manifest, dst: &Path, frags: &[Vec<u8>]) -> Result<Vec<u8>, String> {
     match manifest.strategy.unwrap_or(Strategy::Concat) {
         Strategy::Concat => Ok(strategy::concat(frags)),
@@ -88,5 +91,6 @@ fn combine(manifest: &Manifest, dst: &Path, frags: &[Vec<u8>]) -> Result<Vec<u8>
             };
             strategy::json_shallow(frags, base.as_deref())
         }
+        Strategy::PlistShallow => strategy::plist_shallow(frags, None),
     }
 }

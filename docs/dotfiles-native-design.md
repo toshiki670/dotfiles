@@ -81,15 +81,15 @@
 | 軸 | 問い | 値 |
 | --- | --- | --- |
 | **生成方式（kind）** | 1つの断片を**どう実体化するか** | `copy`（ソース実ファイルをそのまま）/ `generate`（`cmd` 実行の stdout を採用） |
-| **合成（strategy）** | 複数の条件付き断片を**どう1つの dst へ重ねるか** | 単一 = そのまま書く / `concat`（テキスト連結）/ `json-shallow`（JSON のトップレベル shallow merge） |
+| **合成（strategy）** | 複数の条件付き断片を**どう1つの dst へ重ねるか** | 単一 = そのまま書く / `concat`（テキスト連結）/ `json-shallow`（JSON のトップレベル shallow merge）/ `plist-shallow`（plist のトップレベル shallow merge） |
 
-`merge` は「3つ目の kind」ではなく、**合成軸の JSON 戦略**である（既存ファイルの温存も合成戦略で表現する＝`json-shallow` ＋ `preserve = true` で既存 dst を最下層の土台に重ねる。§5.5）。生成方式と合成は直交する：例えば「`generate` した断片に、テーマ別の `copy` 断片を `concat` で重ねる」も表現できる。
+`merge` は「3つ目の kind」ではなく、**合成軸の戦略**（内容型ごとに JSON 版・plist 版がある）である（既存ファイルの温存も合成戦略で表現する＝`json-shallow` ＋ `preserve = true` で既存 dst を最下層の土台に重ねる。§5.5）。生成方式と合成は直交する：例えば「`generate` した断片に、テーマ別の `copy` 断片を `concat` で重ねる」も表現できる。
 
-| 生成方式＼合成 | 単一（合成なし） | concat | json-shallow |
-| --- | --- | --- | --- |
-| **copy** | 大多数。**dst=ディレクトリへツリー配置**（nvim・bat・zellij、fish conf.d の断片群も各ファイルとして個別配置） | （将来）テーマ別断片を1ファイルへ連結 | — |
-| **generate** | — | 補完5本（生成物＋独自ブロック連結。dst=ファイル） | — |
-| **compose** | — | — | `~/.claude/settings.json`（既存温存＝土台＋base＋rtk 断片。dst=ファイル） |
+| 生成方式＼合成 | 単一（合成なし） | concat | json-shallow | plist-shallow |
+| --- | --- | --- | --- | --- |
+| **copy** | 大多数。**dst=ディレクトリへツリー配置**（nvim・bat・zellij、fish conf.d の断片群も各ファイルとして個別配置） | （将来）テーマ別断片を1ファイルへ連結 | — | — |
+| **generate** | — | 補完5本（生成物＋独自ブロック連結。dst=ファイル） | — | — |
+| **compose** | — | — | `~/.claude/settings.json`（既存温存＝土台＋base＋rtk 断片。dst=ファイル） | `~/.cache/dotfiles/eu.exelban.Stats.plist`（生きたドメインの export を土台＋dotfiles 管理サブセット。dst=ファイル。#531） |
 
 **集約は copy で自然に解ける。** `~/.config/fish/conf.d/` などの合流点は「ディレクトリに置けば全部読まれる」設計なので、複数ツールの断片をその dst（ディレクトリ）へ各ファイルとして copy で書き出すだけでよい（**連結ではなくツリー配置**）。**本当に1ファイルへ合成が要るのは 補完5本＋settings.json＋（将来）テーマ別断片**だけで、これらが合成軸（concat / json-shallow ＋ overlay）の対象になる。
 
@@ -138,6 +138,34 @@ when = { deps = ["rtk"] }            # rtk が PATH にある時だけ重ねる
 ```
 
 合成は `既存 dst → base → rtk` の順（後勝ち）。`model` / `effortLevel` など **dotfiles が定義しないローカルキーは土台のまま残り**、`language` / `hooks` など **dotfiles が所有する共有キーだけが上書きされる**。rtk の有無で hook の有無が決まり、テンプレートも「rtk 不在で毎回 command-not-found」も無い。
+
+#### 例：Stats.plist（生きたドメインの export を土台 ＋ dotfiles 管理サブセット）／`plist-shallow`（#531）
+
+macOS ネイティブアプリの preference plist（`~/Library/Preferences/`、cfprefsd 管轄）を dotfiles で扱う例。settings.json（`preserve = true` で既存 dst を土台にする）と違い、**土台は dst ファイルではなく生きたドメイン**なので、`preserve` ではなく base overlay の `cmd` で土台を取得する。
+
+**plist と XML の関係**: plist は Apple のデータモデル（`dict`/`array`/`string`/`integer`/`real`/`boolean`/`data`/`date`/`uid`）で、XML・binary・ASCII のいずれでも直列化できる（`defaults export <domain> <file>` は binary、`-`（標準出力）指定時は XML で書く）。XML 自体は plist 専用ではない汎用構文（RSS・SVG など任意の語彙を表現できる）なので、`json-shallow` と対にした戦略名は `xml-shallow` ではなく **`plist-shallow`**（データモデル名）にした ― shallow merge が要る「トップレベルの key-value 構造」を保証するのは plist の dict モデルであって、XML という構文そのものではない。実装（`plist::Value::from_reader`）は XML/binary/ASCII のどれでも入力として自動判別し、出力は差分可読性のため XML に固定する。
+
+dst の置き場所にも注意が要る：この dst はライブドメインが真実のソースであるための**使い捨ての下書き**（次の apply で再計算され、消えても実害が無い）で、`~/.claude/settings.json` のように別ツールが直接読む「実体」ではない。よって永続状態（named value・hooks 実行済みハッシュ等）を置く `~/.config/dotfiles/` とは分け、使い捨てデータの置き場（他 config も使う `~/.cache/dotfiles/`。例: `configs/claude/statusline-command.py` の `~/.cache/claude/`）に置く。cfprefsd 管轄外・XML＝差分可読という #465 の決定はそのまま引き継ぐ。
+
+```toml
+dst      = "~/.cache/dotfiles/eu.exelban.Stats.plist"
+strategy = "plist-shallow"
+when     = { deps = ["defaults"], os = "darwin" }
+
+# 実行順（① overlay を合成 → ② hooks で反映）に合わせ、overlay を先・hooks を後に書く。
+overlay = [
+  { cmd = ["defaults", "export", "eu.exelban.Stats", "-"] },  # base（常時。生きたドメイン全体）
+  { src = "Stats.plist" },                                    # dotfiles 管理サブセット（上書き）
+]
+
+[[hooks]]
+cmd       = ["sh", "-c", "defaults import eu.exelban.Stats \"$HOME/.cache/dotfiles/eu.exelban.Stats.plist\""]
+frequency = "always"  # 反映対象（ライブドメイン）は dotfiles 管理外で変化しうるため（§13.0）
+```
+
+合成は `base（export）→ 管理サブセット` の順（後勝ち）。Window Frame・メニューバー位置などローカル状態は base のまま残り、dotfiles が管理するキーだけ上書きされる。マージ済み dst を書き出したあと、`hooks` の `defaults import` がライブドメインへ反映する ― マージを事前に確定させるため、`defaults import` 自体がマージ／全置換のどちらでも結果が変わらない（正しさが未文書化の OS 挙動に依存しない）。ドメイン未作成（対象アプリ未起動）でも `defaults export <domain> -` は空 dict を返す（exit 0）ので、初回 apply でも base なしと同じに安全に扱える。
+
+**overlay の書き方（inline array）**: TOML は `[[overlay]]`（table header）の後に**素の `key = value` を root へ戻せない**（`hooks = […]` を後ろに書くと直前の overlay のフィールドとして誤読される）。`hooks` を「最後に実行される」という実態どおりファイル末尾に置くため、ここでは `overlay = [ { … }, { … } ]`（inline table の配列。`[[overlay]]` と意味は同一）で書き、overlay → hooks を実行順のまま並べている。`[[overlay]]` header 形式は hooks を伴わない場合（settings.json 等）に使う。
 
 #### 評価順と不変条件（先に固定）
 
@@ -268,7 +296,7 @@ when = { deps = ["gh"], os = "darwin" }
 | --- | --- | --- | --- |
 | `dst` | 配置先 | ✅ | 全ツール |
 | `kind` | 生成方式（既定 copy）。copy / generate | 任意 | 補完=generate |
-| `strategy` | 合成戦略（dst=ファイルへ複数断片を束ねる時）。concat / json-shallow | 任意 | claude=json-shallow / gh 補完=concat（生成物＋独自ブロック） |
+| `strategy` | 合成戦略（dst=ファイルへ複数断片を束ねる時）。concat / json-shallow / plist-shallow | 任意 | claude=json-shallow / gh 補完=concat（生成物＋独自ブロック）/ stats=plist-shallow（#531） |
 | `cmd` | 生成コマンド（generate 時） | generate 必須 | `gh completion fish` 等 |
 | `private` | 所有者のみ（0600 起点。chezmoi `private_`） | 任意 | 秘匿系（locals ストア・ssh 鍵 等） |
 | `executable` | 実行ビット付与（0644→0755 / 0600→0700。chezmoi `executable_`） | 任意 | スクリプト/フック |
@@ -445,14 +473,16 @@ cmd       = ["bat", "cache", "--build"]
 | `frequency` | 意味 | 旧 chezmoi | 用途の例 |
 | --- | --- | --- | --- |
 | `onchange`（既定） | ユニットのソースが前回 apply 時から変わっていれば実行（§13.1） | `run_onchange_` | bat cache 再構築・ghostty/git hooks の symlink 生成（ソース変化に反応） |
-| `always` | onchange gate を通さず毎 apply 無条件に実行。onchange 状態は読み書きしない | `run_` | 反映対象が dotfiles 管理外で変化しうる外部システムへ、ソース不変でも継続的に反映したい用途 |
+| `always` | onchange gate を通さず毎 apply 無条件に実行。onchange 状態は読み書きしない | `run_` | Stats.plist（#531）の `defaults import`。反映対象が dotfiles 管理外で変化しうるため、ソース不変でも継続的に反映したい |
 
-**`always` の前提＝冪等性**: 毎 apply 無条件に実行されるため、hook のコマンドは**冪等**（同じ入力なら同じ結果・副作用を積み増さない）であることが前提。
+**背景（#531 で発覚した不整合）**: Stats.plist の反映 hook（`defaults import`）を既定の `onchange` のまま使うと、配置（`compose`。overlay の `defaults export` 断片は毎 apply 無条件に実行される）は常に正しく再計算されるのに、反映（hook）はソース（`configs/stats/Stats.plist`）が無変更の限り skip され続け、GUI 操作等によるライブドメインのドリフトが apply しても補正されなかった（実機で確認）。配置は「常時」・反映は「onchange 限定」という頻度の食い違いが原因で、`frequency = "always"` を新設し全段を「毎 apply 無条件」に揃えて解消した。
+
+**`always` の前提＝冪等性**: 毎 apply 無条件に実行されるため、hook のコマンドは**冪等**（同じ入力なら同じ結果・副作用を積み増さない）であることが前提。`defaults import` は同一内容の再書き込みが安全なのでこの前提を満たす。
 
 **見送った軸**（#546 で意図的に見送り。将来必要になったら別途検討）:
 
 - **一度きり**（旧 chezmoi `run_once_` 相当）: 現状ユースケースが無い。`Frequency` に値を足すだけで拡張できるよう名前は空けてある。
-- **実行タイミング**（配置前 / 配置後）: 現状は「配置後（after フェーズ）」の一択。頻度（`frequency`）とタイミングは直交する別軸なので、将来タイミング軸を足すときは `frequency` と組み合わせ可能な別キー（例 `phase`）として追加し、頻度側の命名・スキーマは変えない（フィールド名の組合せ爆発を避ける）。
+- **実行タイミング**（配置前 / 配置後）: 現状は「配置後（after フェーズ）」の一択。Stats を含む全 hook が「配置済みの dst を消費して反映する」形なので配置前のユースケースが無い。頻度（`frequency`）とタイミングは直交する別軸なので、将来タイミング軸を足すときは `frequency` と組み合わせ可能な別キー（例 `phase`）として追加し、頻度側の命名・スキーマは変えない（フィールド名の組合せ爆発を避ける）。
 
 ### 13.1 onchange gate（再実行の条件）
 
@@ -493,7 +523,7 @@ cmd       = ["bat", "cache", "--build"]
 | **テンプレート条件**（`{{ if lookPath … }}` / 部分的な if） | **`when` gate**（`deps` / `os` / `profile` / `theme`）。テンプレートエンジンは持たず宣言的 gate で表現（§5.5） |
 | シークレット注入（env） | `locals` 属性＋ named value ストア＋ apply 取得（TTY 対話 / `local set`）。env 注入と git native include は不採用（§9） |
 | `run_onchange_` フック（bat cache/ghostty/git hooks） | hooks 属性・`frequency = "onchange"`（既定）。前回適用ソースのハッシュを状態に保存して比較 |
-| `run_` フック（毎回実行） | hooks 属性・`frequency = "always"`（#546）。onchange gate を通さず毎 apply 無条件に実行 |
+| `run_` フック（毎回実行。#531 の Stats.plist 反映で実例化） | hooks 属性・`frequency = "always"`（#546）。onchange gate を通さず毎 apply 無条件に実行 |
 | `run_once_` フック | 未対応（#546。現状ユースケース無し。`Frequency` に値を足すだけで拡張できるよう名前は空けてある） |
 | `.chezmoiignore` | 「configs に置かない」＝管理対象外。明示除外が要れば manifest で表現 |
 | `.chezmoiroot` | 不要（configs がソースルート） |
@@ -542,7 +572,7 @@ cmd       = ["bat", "cache", "--build"]
 - [ ] **② 任意ローカル設定の拡張口**（§9.3）= 宣言しないマシン固有設定（社内 credential helper・signingkey・ローカル alias 等）を user が自由に足す開いた上書き口。drop-in / include / overlay 合成の3層で受け、apply の prune 対象外を決める。S4（① named value）の後・近時期に別 issue で設計。S4 必須ではない
 - [x] git hooks（symlink_ 13本）の配置方式（copy か、配置後にリンク生成か）→ **配置後にリンク生成で確定**（#535）。全 hook 種別は同じ内容（`dispatch`）を起動名で分岐するだけなので、`dispatch` 1 本だけを copy し（`configs/git/hooks`, `executable = true`）、hook 名 13 本は配置後の onchange フックで `dispatch` への symlink として生成する（ghostty の symlink フックと同じパターン、§13）。dispatch を 13 回複製 copy しない
 - [x] hooks の onchange 検知方式（ソースハッシュ vs mtime）→ **ソースハッシュで確定**（§13.1・S5 #486）。mtime は touch/clone で揺れるため内容ハッシュを採る
-- [x] **hooks の実行頻度**（onchange 限定で表現できないユースケースの有無）→ **`frequency` 属性で確定**（§13.0・#546）。`onchange`（既定）／`always`（毎 apply 無条件）の2値。タイミング軸（配置前/後）と `once` は現状ユースケース無しとして意図的に見送り
+- [x] **hooks の実行頻度**（onchange 限定で表現できないユースケースの有無）→ **`frequency` 属性で確定**（§13.0・#546）。`onchange`（既定）／`always`（毎 apply 無条件）の2値。#531 の Stats.plist 反映（配置は常時・反映は onchange 限定という食い違いで drift 補正が効かなかった）が動機。タイミング軸（配置前/後）と `once` は現状ユースケース無しとして意図的に見送り
 - [ ] **locals 依存 hook** を許可する場合の仕様（注入値が変わったら再実行したい用途）。現状は onchange ハッシュが locals 注入値を含まない＝意図どおり（§13.2）。許可するなら状態キー/ハッシュへ解決後 locals を織り込む等を確定する
 - [x] **相対パス hook**（`hooks = [{ cmd = ["./script.sh"] }]`）の実行基準 → **ユニットの `manifest.toml` ディレクトリ基準で確定・実装済み**（§13.3・#498）。`hooks::exec` が manifest dir を `current_dir` に設定し、区切り付き相対 `argv[0]` を同ディレクトリへ明示解決する（bare 名は PATH 探索・絶対パスは素通し）
 - [ ] color 手動固定時の Ghostty 起点の扱い（§10.3）
@@ -555,7 +585,7 @@ cmd       = ["bat", "cache", "--build"]
 ## 付録：合意済みの設計決定（サマリ）
 
 1. 第一級エンティティは**ツール**。ソースは中身の帰属で並べ、配置先は属性。
-2. 配置は **2軸 ＝ 生成方式（copy / generate）× 合成（単一 / concat / json-shallow）**。`merge` は独立 kind ではなく合成の JSON 戦略。symlink は不採用（cargo install 配布と非互換）。
+2. 配置は **2軸 ＝ 生成方式（copy / generate）× 合成（単一 / concat / json-shallow / plist-shallow）**。`merge` は独立 kind ではなく合成の戦略（内容型ごとに JSON 版・plist 版）。symlink は不採用（cargo install 配布と非互換）。
 3. dst は **条件付き overlay の合成**として組む。各 overlay は断片＋ `when`（`deps` / `os` / `theme`）gate を持ち、rtk・OS・テーマ分岐を1機構へ統合（chezmoi テンプレート不要）。gate 語彙は `when` 一本で、スコープは書く位置で表す（トップレベル＝ユニット全体 gate / overlay 内＝断片 gate）。`preserve = true` は既存 dst を最下層の土台に温存（dotfiles 所有キーのみ上書き＝旧 `$local + $forced`）。
 4. データ構造は **`configs/` 階層 ＋ 各設定単位の `manifest.toml`（placement 明示）**。属性が分岐するときはディレクトリ分割、内容だけが条件で変わるなら `when` 付き overlay。
 5. ソースは **埋め込み（本番）＋作業ツリー直読み（dev/移行期）** の二段構え。
