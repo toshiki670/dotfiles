@@ -8,7 +8,7 @@
 //! 埋め込み時の `source` は temp dir で、実 path を生で見せても俯瞰の役に立たないため（§8）。
 
 use crate::core::discover::{self, MANIFEST};
-use crate::core::manifest::Manifest;
+use crate::core::manifest::{Frequency, Manifest};
 use std::path::Path;
 
 /// `source` 配下の設定単位を一覧表示する。`origin` は見出しに出す解決元ラベル（§8）。
@@ -74,7 +74,18 @@ fn attrs(manifest: &Manifest) -> String {
     }
     if !manifest.hooks.is_empty() {
         // フックはコマンド（argv）なので、一覧では件数だけ示す（詳細は manifest を見る）。
-        parts.push(format!("hooks={}", manifest.hooks.len()));
+        // always 頻度（§13.0）が混じるときはその内訳を添える ― onchange と実行モデルが違うため
+        // （毎 apply 無条件）、一覧でも区別が付くようにする。
+        let always = manifest
+            .hooks
+            .iter()
+            .filter(|h| h.frequency == Frequency::Always)
+            .count();
+        if always > 0 {
+            parts.push(format!("hooks={} (always={always})", manifest.hooks.len()));
+        } else {
+            parts.push(format!("hooks={}", manifest.hooks.len()));
+        }
     }
     parts.join(", ")
 }
