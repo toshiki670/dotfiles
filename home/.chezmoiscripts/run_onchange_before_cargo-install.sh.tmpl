@@ -16,9 +16,7 @@
 #
 # `--force` is required on existing hosts: binaries such as `clip` were previously
 # owned by their own per-crate packages in ~/.cargo/.crates.toml; --force overwrites
-# them and transfers ownership to the root `dotfiles` package (binary names are kept,
-# so no removed_crates cleanup is needed for them — only for v-sync, whose binary is
-# no longer installed; see removed_crates below).
+# them and transfers ownership to the root `dotfiles` package.
 #
 # This is a run_*before* hook (not after) on purpose: fish completion templates
 # such as dot_config/fish/completions/clip.fish.tmpl gate generation on
@@ -60,18 +58,6 @@ else
   echo "cargo-install: neither mise nor cargo found; skipping (run 'mise install' then re-apply)." >&2
   exit 0
 fi
-
-# 配布をやめた／改名した旧コマンドを cargo uninstall で掃除する。バイナリを直接削除
-# すると cargo の登録簿（~/.cargo/.crates.toml）と不整合になるため、必ず cargo
-# uninstall を使う。未登録（既に掃除済み / 未インストール）なら黙って無視する。
-# 撤去（全ホスト浸透後にエントリを外す）の追跡は #503。
-removed_crates=(
-  "color"  # crates/color → dotfiles color sample に統合 (#460)
-  "v-sync" # crates/v-sync → tools/v-sync（保守ツール化・配布終了） (#485)
-)
-for crate in "${removed_crates[@]}"; do
-  run_cargo uninstall "$crate" &>/dev/null || true
-done
 
 echo "cargo-install: installing distributable dotfiles commands from $repo_root"
 run_cargo install --path "$repo_root" --target-dir "$target_dir" --locked --force
