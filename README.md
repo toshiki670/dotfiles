@@ -140,7 +140,7 @@ Bypass everything for a single commit with `git commit --no-verify`.
 
 ## Claude Code
 
-`~/.claude/settings.json` is managed by a chezmoi `modify_` script (`home/dot_claude/modify_settings.json.tmpl`). It merges the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced. The `rtk` token-proxy hook is included only when `rtk` is on `PATH`.
+`~/.claude/settings.json` is placed by `dotfiles apply` (`configs/claude/settings/`: base `settings.json` plus a conditional `rtk.json` overlay when `rtk` is on `PATH`, `strategy = "json-shallow"` with `preserve = true`). It merges the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced. A chezmoi `modify_` script (`home/dot_claude/modify_settings.json.tmpl`) still manages the same file during the chezmoi→dotfiles migration (`chezmoi apply` runs first, `dotfiles apply` runs after and wins); it is removed once the migration finishes (#463). **Until then, any hooks change must be ported to both `configs/claude/settings/{settings,rtk}.json` and `home/dot_claude/modify_settings.json.tmpl`** — porting only one side lets a guard silently vanish on the other (#549).
 
 `PreToolUse` / `Bash` hooks provide two safety rails:
 
