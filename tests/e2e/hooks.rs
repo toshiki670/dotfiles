@@ -1,10 +1,11 @@
-//! `dotfiles apply` の onchange フック（S5 / #459）の E2E。
+//! `dotfiles apply` の hooks（S5 / #459・#546）の E2E。
 //!
 //! 架空のフックコマンド `faketool`（PATH 先頭スタブ）と temp HOME で、エンジンの契約を検証する:
 //! ①onchange skip/run（ソースハッシュ・条件④）②when.os ユニット gate が hooks を覆う（条件③）
 //! ③未インストール（PATH 不在）は中断せず skip ④実行して非ゼロ終了は apply エラー
 //! ⑤空コマンドの load 時拒否 ⑥list の hooks 表示 ⑦区切り付き相対パス hook は manifest dir 基準で
-//! 解決・実行（§13.3 / #498）⑧区切り付き相対 hook のスクリプト不在はエラー（bare 名の skip と区別, #498）。
+//! 解決・実行（§13.3 / #498）⑧区切り付き相対 hook のスクリプト不在はエラー（bare 名の skip と区別, #498）
+//! ⑨`frequency = "always"` は onchange gate を通さず毎 apply 無条件に実行する（#546）。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
@@ -32,7 +33,7 @@ fn write_hook_unit(work: &Path, source_body: &str) {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nhooks = [[\"faketool\"]]\n",
+        "dst = \"~/.config/demo\"\nhooks = [{ cmd = [\"faketool\"] }]\n",
     )
     .unwrap();
     fs::write(unit.join("data.txt"), source_body).unwrap();
@@ -90,6 +91,47 @@ fn hook_runs_on_first_apply_skips_when_unchanged_reruns_on_change() {
     );
 }
 
+/// #546: `frequency = "always"` は onchange gate を通さず毎 apply 無条件に実行する（ソース不変でも
+/// skip されない）。#531 の Stats.plist で「配置は毎回正しいのに反映だけ onchange で skip される」
+/// バグが発覚したことの直接の回帰防止（`hook_runs_on_first_apply_skips_when_unchanged_reruns_on_change`
+/// の onchange 版と対で読む）。
+#[cfg(unix)]
+#[test]
+fn always_frequency_runs_every_apply_even_when_source_unchanged() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+
+    write_faketool(bin.path());
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.config/demo\"\n[[hooks]]\ncmd = [\"faketool\"]\nfrequency = \"always\"\n",
+    )
+    .unwrap();
+    fs::write(unit.join("data.txt"), "v1").unwrap();
+
+    apply(work.path(), home.path(), bin.path())
+        .success()
+        .stdout(predicate::str::contains("ran (always)"));
+    assert_eq!(marker_lines(home.path()), 1, "初回は実行されるべき");
+
+    // ソース不変の 2 回目 apply。onchange（既定）なら skip するはずだが、always なので実行される。
+    apply(work.path(), home.path(), bin.path())
+        .success()
+        .stdout(predicate::str::contains("ran (always)"));
+    assert_eq!(
+        marker_lines(home.path()),
+        2,
+        "frequency=always はソース不変でも毎 apply 実行されるべき（#531/#546 の回帰防止）",
+    );
+
+    // 3 回目も同様（何度でも無条件に実行される）。
+    apply(work.path(), home.path(), bin.path()).success();
+    assert_eq!(marker_lines(home.path()), 3);
+}
+
 /// 条件③: when.os ユニット gate が false のユニットは配置ごと skip され、その hooks も走らない。
 /// `faketool` は PATH にあるが、os 不一致でユニットが skip されるためマーカーは作られない。
 #[cfg(unix)]
@@ -104,7 +146,7 @@ fn os_gate_skips_unit_hooks() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nwhen = { os = \"nonsuch-os\" }\nhooks = [[\"faketool\"]]\n",
+        "dst = \"~/.config/demo\"\nwhen = { os = \"nonsuch-os\" }\nhooks = [{ cmd = [\"faketool\"] }]\n",
     )
     .unwrap();
     fs::write(unit.join("data.txt"), "v1").unwrap();
@@ -186,7 +228,7 @@ fn relative_path_hook_resolves_against_manifest_dir() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nhooks = [[\"./hook.sh\"]]\n",
+        "dst = \"~/.config/demo\"\nhooks = [{ cmd = [\"./hook.sh\"] }]\n",
     )
     .unwrap();
     fs::write(unit.join("data.txt"), "v1").unwrap();
@@ -228,7 +270,7 @@ fn missing_relative_path_hook_fails_apply() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nhooks = [[\"./missing.sh\"]]\n",
+        "dst = \"~/.config/demo\"\nhooks = [{ cmd = [\"./missing.sh\"] }]\n",
     )
     .unwrap();
     fs::write(unit.join("data.txt"), "v1").unwrap();
@@ -254,7 +296,7 @@ fn empty_hook_command_fails_at_load() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nhooks = [[]]\n",
+        "dst = \"~/.config/demo\"\nhooks = [{ cmd = [] }]\n",
     )
     .unwrap();
     fs::write(unit.join("f.txt"), "x\n").unwrap();
@@ -278,7 +320,7 @@ fn list_shows_hooks_attr() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nhooks = [[\"faketool\"]]\n",
+        "dst = \"~/.config/demo\"\nhooks = [{ cmd = [\"faketool\"] }]\n",
     )
     .unwrap();
 

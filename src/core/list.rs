@@ -74,7 +74,17 @@ fn attrs(manifest: &Manifest) -> String {
     }
     if !manifest.hooks.is_empty() {
         // フックはコマンド（argv）なので、一覧では件数だけ示す（詳細は manifest を見る）。
-        parts.push(format!("hooks={}", manifest.hooks.len()));
+        // always 頻度（#546）が混じる場合だけ内訳を付す（onchange のみなら黙示の既定のまま）。
+        let always = manifest
+            .hooks
+            .iter()
+            .filter(|h| h.frequency == crate::core::manifest::Frequency::Always)
+            .count();
+        if always > 0 {
+            parts.push(format!("hooks={} (always={always})", manifest.hooks.len()));
+        } else {
+            parts.push(format!("hooks={}", manifest.hooks.len()));
+        }
     }
     parts.join(", ")
 }

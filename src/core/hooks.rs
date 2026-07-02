@@ -1,5 +1,5 @@
-//! onchange フック（§13, S5）: ユニット配置後（after フェーズ）に、manifest が宣言した
-//! **コマンド（argv）**を onchange gate を通して実行する**汎用エンジン**。
+//! hooks（§13, S5・#546）: ユニット配置後（after フェーズ）に、manifest が宣言した
+//! **コマンド（[`Hook::cmd`]）**を**宣言順**に実行する**汎用エンジン**。
 //!
 //! ツール固有のロジックは binary に一切持たない。フックは manifest の `hooks` 属性が
 //! argv（コマンド列）を**データ**として宣言し、本モジュールはそれを実行するだけ ―
@@ -8,41 +8,59 @@
 //! どのフックが macOS 専用か等の知識は manifest 側（ghostty の `os = "darwin"` ＋ コマンド本体）が
 //! 持ち、エンジンは関知しない。
 //!
-//! 実行は onchange gate（[`crate::core::onchange`]）を通す: ユニットのソースハッシュ＋コマンド内容が
-//! 前回適用時と同じならスキップ、変化（初回・**コマンド変更**を含む）なら実行する。プログラムが
-//! PATH に無い（未インストール）ときは skip してハッシュを保存せず、後で入れたら再実行されるように
-//! する（chezmoi の `command -v` ガード相当を、ツール名を持たずに汎用化）。トップレベル `when`
-//! （ユニット gate, `deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない
-//! （＝ `when.os` でフックを分岐できる）。
+//! 各エントリの実行可否は [`Frequency`] が決める（#546）:
+//! - `onchange`（既定）: ユニットのソースハッシュ＋コマンド内容が前回適用時と同じならスキップ、
+//!   変化（初回・**コマンド変更**を含む）なら実行する（[`crate::core::onchange`] gate）。
+//! - `always`: onchange gate を通さず毎 apply 無条件に実行する。onchange 状態は読み書きしない。
+//!
+//! 頻度によらず、プログラムが PATH に無い（未インストール）ときは skip する（onchange 頻度は
+//! ハッシュも保存しない。chezmoi の `command -v` ガード相当を、ツール名を持たずに汎用化）。
+//! トップレベル `when`（ユニット gate, `deps` / `os`）が false のユニットは配置ごと skip されるため
+//! hooks も走らない（＝ `when.os` でフックを分岐できる）。
 
+use crate::core::manifest::{Frequency, Hook};
 use crate::core::onchange::{self, State};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// ユニットが宣言した全 hooks を onchange gate を通して順に実行する（[`crate::core::apply`] が配置後に呼ぶ）。
-/// `hooks` は argv（コマンド列）の配列。ソースハッシュは 1 回だけ計算して各フックで使い回す。
+/// ユニットが宣言した全 hooks を**宣言順**に実行する（[`crate::core::apply`] が配置後に呼ぶ）。
+/// ソースハッシュは `onchange` 頻度のフックが 1 つ以上あるときだけ計算し、各フックで使い回す
+/// （`always` のみのユニットで無駄なソース走査をしない）。
 pub fn run_unit_hooks(
     unit_dir: &Path,
     unit_rel: &str,
-    hooks: &[Vec<String>],
+    hooks: &[Hook],
     state: &mut State,
 ) -> Result<(), String> {
     if hooks.is_empty() {
         return Ok(());
     }
-    let source_hash = onchange::hash_dir(unit_dir)?;
-    for argv in hooks {
-        run_one(argv, unit_dir, unit_rel, &source_hash, state)?;
+    let source_hash = hooks
+        .iter()
+        .any(|h| h.frequency == Frequency::Onchange)
+        .then(|| onchange::hash_dir(unit_dir))
+        .transpose()?;
+
+    for hook in hooks {
+        match hook.frequency {
+            Frequency::Onchange => {
+                let source_hash = source_hash
+                    .as_deref()
+                    .expect("onchange 頻度が1つ以上あればソースハッシュは計算済み");
+                run_onchange(&hook.cmd, unit_dir, unit_rel, source_hash, state)?;
+            }
+            Frequency::Always => run_always(&hook.cmd, unit_dir, unit_rel)?,
+        }
     }
     Ok(())
 }
 
-/// 1 フック（argv）を onchange gate を通して実行する。
+/// 頻度 `onchange`（§13.1）のフックを実行する。
 ///
 /// 状態キーは `<unit>::<コマンドの短ハッシュ>`。コマンド内容をキーに織り込むことで、manifest 上で
 /// **コマンドを変えた場合も新しいキー＝再実行**になる（`manifest.toml` はソースハッシュ対象外なので、
 /// これが無いとコマンド変更を取りこぼす）。値はユニットの**ソース**ハッシュ（中身の変化で再実行）。
-fn run_one(
+fn run_onchange(
     argv: &[String],
     unit_dir: &Path,
     unit_rel: &str,
@@ -70,6 +88,25 @@ fn run_one(
         }
         Exec::ProgramMissing => {
             // 未インストール → ハッシュ未保存（入れたら次回 apply で再実行）。
+            println!("hook: {label} ({unit_rel}) → skip ({program} が PATH にない)");
+        }
+    }
+    Ok(())
+}
+
+/// 頻度 `always`（§13, #546）のフックを onchange gate を通さず実行する。実行対象が dotfiles 管理外の
+/// 外部システムで、ソース変化に関わらず継続的に反映したい用途（macOS の `defaults` ドメイン等）。
+/// **冪等なコマンドであることが前提**（毎 apply 無条件に実行されるため）。onchange 状態は
+/// 読み書きしない。
+fn run_always(argv: &[String], unit_dir: &Path, unit_rel: &str) -> Result<(), String> {
+    let Some(program) = argv.first() else {
+        // manifest 検証で非空を保証済みだが防御的に弾く。
+        return Err(format!("{unit_rel}: hook コマンドが空です"));
+    };
+    let label = argv.join(" ");
+    match exec(argv, unit_dir)? {
+        Exec::Ran => println!("hook: {label} ({unit_rel}) → ran (always)"),
+        Exec::ProgramMissing => {
             println!("hook: {label} ({unit_rel}) → skip ({program} が PATH にない)");
         }
     }
