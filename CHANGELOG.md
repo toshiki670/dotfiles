@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.69.10] - 2026-07-02
+### Features
+- Hook の実行頻度 frequency を追加(onchange/always) ([#555](https://github.com/toshiki670/dotfiles/pull/555)) ([`7a4b357`](https://github.com/toshiki670/dotfiles/commit/7a4b35705d45e5fbdd7bd4120ead76f89bb8a979))
+### Fixes
+- Force-push guard を native settings へ移植する ([#553](https://github.com/toshiki670/dotfiles/pull/553)) ([`2874c56`](https://github.com/toshiki670/dotfiles/commit/2874c56c20b85a61412de1411c0ac90b0edb7523))
+
+
 ## [0.69.9] - 2026-07-01
 ### Features
 - Starship 設定を configs/ へ移行し $schema を網参照化 [#532] ([#536](https://github.com/toshiki670/dotfiles/pull/536)) ([`a6a11b1`](https://github.com/toshiki670/dotfiles/commit/a6a11b1a6c378e62d5b36189a6f2b118608a8c65))
