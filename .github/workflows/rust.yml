@@ -79,7 +79,7 @@ jobs:
       - name: Verify dev/maintenance-only tools were NOT installed
         run: |
           # tools/ 配下は repo 内部の開発・保守ツール（非 install）。~/.cargo/bin に入らない。
-          # v-sync は #485 で配布終了（保守ツール化）。removed_crates が旧バイナリも掃除する。
+          # v-sync は #485 で配布終了（保守ツール化）。
           for bin in dotfiles-lint v-sync; do
             if [ -e "$HOME/.cargo/bin/$bin" ]; then
               echo "error: $bin must not be installed to ~/.cargo/bin" >&2
