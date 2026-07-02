@@ -341,7 +341,11 @@ mod tests {
 
     #[test]
     fn strategy_display_round_trips_through_serde() {
-        for strategy in [Strategy::Concat, Strategy::JsonShallow, Strategy::PlistShallow] {
+        for strategy in [
+            Strategy::Concat,
+            Strategy::JsonShallow,
+            Strategy::PlistShallow,
+        ] {
             let parsed = parse(&format!("dst = \"~/x\"\nstrategy = \"{strategy}\"\n")).unwrap();
             assert_eq!(
                 parsed.strategy,

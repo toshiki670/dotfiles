@@ -504,7 +504,9 @@ fn apply_plist_shallow_overlay_cmd_base_reflects_via_hook() {
 
     let dst = home.path().join(".cache/demo/pref.plist");
     let merged = plist::Value::from_file(&dst).expect("dst が有効な plist であるべき");
-    let dict = merged.as_dictionary().expect("dst のトップレベルは dict であるべき");
+    let dict = merged
+        .as_dictionary()
+        .expect("dst のトップレベルは dict であるべき");
     assert_eq!(
         dict["WindowFrame"].as_string(),
         Some("0 0 100 200"),
