@@ -18,12 +18,12 @@
 #
 # 注: テーマ（config 内の theme 行）の light/dark 切替は color スライスの担当。`theme` 属性は
 #   そのスライスで付与する（S5 では付けない）。
-dst = "~/.config/ghostty"
-hooks = [
-  [
-    "sh",
-    "-c",
-    "mkdir -p \"$HOME/Library/Application Support/com.mitchellh.ghostty\" && ln -sf \"$HOME/.config/ghostty/config\" \"$HOME/Library/Application Support/com.mitchellh.ghostty/config\"",
-  ],
-]
+dst  = "~/.config/ghostty"
 when = { deps = [ "ghostty" ], os = "darwin" }
+
+[[hooks]]
+cmd = [
+  "sh",
+  "-c",
+  "mkdir -p \"$HOME/Library/Application Support/com.mitchellh.ghostty\" && ln -sf \"$HOME/.config/ghostty/config\" \"$HOME/Library/Application Support/com.mitchellh.ghostty/config\"",
+]

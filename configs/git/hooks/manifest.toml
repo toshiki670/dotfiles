@@ -7,12 +7,12 @@
 # パターン。`ln -sf` は冪等）。
 #
 # core.hooksPath はここではなく configs/git/configs/core が ~/.config/git/hooks を指す（移行済み）。
-dst = "~/.config/git/hooks"
+dst        = "~/.config/git/hooks"
 executable = true
-hooks = [
-  [
-    "sh",
-    "-c",
-    "cd \"$HOME/.config/git/hooks\" && for h in applypatch-msg commit-msg post-applypatch post-checkout post-commit post-merge post-rewrite pre-applypatch pre-commit pre-merge-commit pre-push pre-rebase prepare-commit-msg; do ln -sf dispatch \"$h\"; done",
-  ],
+
+[[hooks]]
+cmd = [
+  "sh",
+  "-c",
+  "cd \"$HOME/.config/git/hooks\" && for h in applypatch-msg commit-msg post-applypatch post-checkout post-commit post-merge post-rewrite pre-applypatch pre-commit pre-merge-commit pre-push pre-rebase prepare-commit-msg; do ln -sf dispatch \"$h\"; done",
 ]

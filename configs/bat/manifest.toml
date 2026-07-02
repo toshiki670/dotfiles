@@ -12,6 +12,8 @@
 # 実行し、カスタムテーマ ayu-dark を bat/delta に登録し直す（onchange, §13）。フックは
 # 「実行するコマンド（argv）」をデータとして宣言する（binary はツール名を持たず実行するだけ）。
 # 旧 chezmoi run_onchange_after_build-bat-cache の移植。
-dst   = "~/.config/bat"
-hooks = [ [ "bat", "cache", "--build" ] ]
-when  = { deps = [ "bat" ] }
+dst  = "~/.config/bat"
+when = { deps = [ "bat" ] }
+
+[[hooks]]
+cmd = [ "bat", "cache", "--build" ]

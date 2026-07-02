@@ -13,9 +13,10 @@
 //! skip ＝ all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否（§5.5）。両者は同じ評価規則を
 //! [`crate::core::apply::gate`] で共有する。`profile` は環境検出（`deps`/`os`）と違い user が選んでおく
 //! 状態（[`crate::core::state`]）を読む状態 gate で、`theme`（color スライスまで未配線）と同族（§10）。
-//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は onchange
-//! フック（§13, S5）の**コマンド（argv）**宣言で、各 argv が非空であることを load 時に検証する
-//! （実行は [`crate::core::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
+//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は配置後フック
+//! （§13, S5）の宣言で、各エントリが実行する `cmd`（argv）と実行頻度 `frequency`（§13.0・省略時
+//! `onchange`, #546）を持ち、各 `cmd` が非空であることを load 時に検証する（実行は
+//! [`crate::core::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
 
 use serde::Deserialize;
 use std::path::Path;
@@ -76,15 +77,17 @@ pub struct Manifest {
     /// `locals` とズレると非エコー抑制が黙って効かず秘匿値が漏れる footgun を防ぐ。
     #[serde(default)]
     pub sensitive: Vec<String>,
-    /// onchange フック（§13, S5）。このユニットの配置後（after フェーズ）に、ユニットのソースが
-    /// 前回適用時から変わっていれば実行する**コマンド（argv）の配列**（例
-    /// `hooks = [["bat", "cache", "--build"]]`）。ツール固有ロジックは binary に持たず、実行する
-    /// コマンドをデータとして宣言する（[`crate::core::apply::generate`] の `cmd` と同思想）→ 新ツールのフック
-    /// 追加に binary 変更は不要・configs と疎結合。各 argv が非空であることを load 時に検証する。
-    /// トップレベル `when`（ユニット gate）が false のユニットは配置ごと skip されるため hooks も
-    /// 走らない（＝ `when.os` でフックを分岐できる, §5.5 不変条件①）。
+    /// 配置後フック（§13, S5 / #546）。このユニットの配置後（after フェーズ）に**宣言順**で実行する
+    /// エントリの配列（例 `[[hooks]]` ＋ `cmd = ["bat", "cache", "--build"]`）。各エントリは実行する
+    /// [`Hook::cmd`]（argv）と実行頻度 [`Hook::frequency`]（onchange / always・省略時 onchange）を持つ。
+    /// ツール固有ロジックは binary に持たず、実行するコマンドをデータとして宣言する
+    /// （[`crate::core::apply::generate`] の `cmd` と同思想）→ 新ツールのフック追加に binary 変更は不要・
+    /// configs と疎結合。各 `cmd` が非空であることを load 時に検証する。頻度による実行モデルの分岐
+    /// （onchange gate / 無条件実行）は [`crate::core::hooks`] が担う。トップレベル `when`（ユニット
+    /// gate）が false のユニットは配置ごと skip されるため hooks も走らない（＝ `when.os` でフックを
+    /// 分岐できる, §5.5 不変条件①）。
     #[serde(default)]
-    pub hooks: Vec<Vec<String>>,
+    pub hooks: Vec<Hook>,
 }
 
 /// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
@@ -109,6 +112,33 @@ pub enum Strategy {
     Concat,
     /// JSON のトップレベル shallow merge（後勝ち）。deep merge はしない。
     JsonShallow,
+}
+
+/// フックの実行頻度（§13.0 / #546）。頻度は per-hook の実行モードで、別リスト（`always_hooks` 等）に
+/// 分けず既存 `hooks` エントリの属性として持つ（分けると validation・表示が二重化する）。
+/// 表示名（`Display`）と受理する TOML トークン（serde）を揃える規則は [`Kind`] / [`Strategy`] と同じ。
+#[derive(Debug, Deserialize, Default, PartialEq, Eq, Display)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
+pub enum Frequency {
+    /// ユニットのソースが前回適用時から変わった時だけ実行する（onchange gate, §13.1）。省略時の既定。
+    #[default]
+    Onchange,
+    /// 毎 apply 無条件に実行する（gate を通さず状態も読み書きしない, §13.0）。反映対象が dotfiles
+    /// 管理外で随時変わる用途向け。コマンドが冪等であること（何度走らせても同じ結果）を前提とする。
+    Always,
+}
+
+/// 1 つの配置後フック（§13 / #546）。ユニット配置後に実行する `cmd`（argv）と実行頻度 `frequency`。
+/// `deny_unknown_fields` でキーの typo（`frequancy` 等）を load 時に弾く（黙って無視しない）。
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Hook {
+    /// 実行するコマンド（argv）。先頭が実行ファイル名、以降が引数。非空を load 時に検証する。
+    pub cmd: Vec<String>,
+    /// 実行頻度（省略時 onchange）。onchange = ソース変化時のみ / always = 毎 apply 無条件（§13.0）。
+    #[serde(default)]
+    pub frequency: Frequency,
 }
 
 /// 1 つの overlay（条件付き断片, §5.5）。`when` を満たす時だけ合成に参加する。
@@ -189,7 +219,7 @@ impl Manifest {
     /// - **`sensitive ⊆ locals`**（§9.1）。`sensitive` に `locals` 未宣言の名前があると、その名は
     ///   非エコー/ログ抑制の対象にならず（resolve は `locals` を走査するため）秘匿値が黙って漏れる。
     ///   typo を配置前に弾く。
-    /// - **`hooks` の各コマンド（argv）は非空**（§13, S5）。空の argv は実体化できないコマンドで、
+    /// - **`hooks` の各コマンド（`cmd`）は非空**（§13, S5）。空の `cmd` は実体化できないコマンドで、
     ///   apply で黙って無視/panic されると事故になるため load 時に弾く（他の検証群と同じ
     ///   「静かに無視しない」方針）。フック名のレジストリ検証は持たない ― フックはツール名でなく
     ///   コマンドそのものをデータとして宣言する（binary は実行するだけ）。
@@ -230,8 +260,8 @@ impl Manifest {
                 "sensitive `{orphan}` が locals に宣言されていません（sensitive ⊆ locals）"
             ));
         }
-        if self.hooks.iter().any(|argv| argv.is_empty()) {
-            return Err("hooks の各要素は非空のコマンド（argv）である必要があります".to_string());
+        if self.hooks.iter().any(|h| h.cmd.is_empty()) {
+            return Err("hooks の各要素は非空のコマンド（cmd）である必要があります".to_string());
         }
         if let Some(when) = &self.when
             && when.has_no_effective_key()
@@ -419,18 +449,59 @@ mod tests {
     }
 
     #[test]
+    fn frequency_display_round_trips_through_serde() {
+        // Display（表示名の出所）が serde の受理トークンと一致することを固定する（Kind/Strategy と同じ）。
+        // ズレると list の hooks 内訳表示が manifest に書ける値からズレる。
+        for frequency in [Frequency::Onchange, Frequency::Always] {
+            let parsed = parse(&format!(
+                "dst = \"~/x\"\n[[hooks]]\ncmd = [\"faketool\"]\nfrequency = \"{frequency}\"\n"
+            ))
+            .unwrap();
+            assert_eq!(
+                parsed.hooks[0].frequency, frequency,
+                "Display と serde 表現がズレている: {frequency}"
+            );
+        }
+    }
+
+    #[test]
     fn validate_accepts_command_hook() {
-        // 非空の argv は受理（エンジンは中身を解釈しない, §13）。
-        assert!(parse("dst = \"~/x\"\nhooks = [[\"cmd\", \"sub\", \"--flag\"]]\n").is_ok());
+        // 非空の cmd を持つ structured hook は受理（エンジンは中身を解釈しない, §13）。frequency 省略時 onchange。
+        let parsed =
+            parse("dst = \"~/x\"\nhooks = [{ cmd = [\"cmd\", \"sub\", \"--flag\"] }]\n").unwrap();
+        assert_eq!(
+            parsed.hooks[0].frequency,
+            Frequency::Onchange,
+            "frequency 省略時は onchange であるべき"
+        );
     }
 
     #[test]
     fn validate_rejects_empty_hook() {
-        // 空の argv は実体化できないコマンド。load 時に弾く（黙って無視/panic しない）。
-        let err = parse("dst = \"~/x\"\nhooks = [[]]\n").unwrap_err();
+        // 空の cmd は実体化できないコマンド。load 時に弾く（黙って無視/panic しない）。
+        let err = parse("dst = \"~/x\"\nhooks = [{ cmd = [] }]\n").unwrap_err();
         assert!(
             err.contains("hooks") && err.contains("非空"),
             "空コマンドが弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn parse_rejects_legacy_bare_array_hook() {
+        // 旧 bare-array 構文 `hooks = [["cmd"]]` は廃止（#546）。frequency を持たせるため構造体化し、
+        // 後方互換は取らない。Vec<Hook>（cmd を持つ table を期待）と配列-of-配列の型不一致で parse
+        // 時に弾く＝黙って誤解釈しない。
+        assert!(toml::from_str::<Manifest>("dst = \"~/x\"\nhooks = [[\"faketool\"]]\n").is_err());
+    }
+
+    #[test]
+    fn parse_rejects_hook_unknown_field() {
+        // Hook の deny_unknown_fields: frequency の typo（frequancy）は load 時エラー（黙って無視しない）。
+        assert!(
+            toml::from_str::<Manifest>(
+                "dst = \"~/x\"\n[[hooks]]\ncmd = [\"faketool\"]\nfrequancy = \"always\"\n"
+            )
+            .is_err()
         );
     }
 

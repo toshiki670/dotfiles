@@ -7,7 +7,7 @@
 //! overlay 明示は [`crate::core::apply::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。
 //! 配置の直前に `locals`（named value）を解決し（[`crate::core::locals::resolve`]）、配置ファイルの `@@name@@` を
 //! 注入する（§9）。配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時
-//! から変わっていれば実行する（[`crate::core::hooks`] / [`crate::core::onchange`]、§13）。ユニット gate が false の
+//! から変わっていれば実行する（[`crate::core::hooks`] / [`crate::core::hooks::onchange`]、§13）。ユニット gate が false の
 //! ときは配置前に短絡 return するため、その hooks も走らない（＝ `when.os` でフックを分岐できる）。
 //! 本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
 
@@ -19,10 +19,10 @@ mod strategy;
 
 use crate::core::discover::{self, MANIFEST, Unit};
 use crate::core::hooks;
+use crate::core::hooks::onchange::State as HookState;
 use crate::core::locals::store::Store;
 use crate::core::locals::{prompt, resolve};
 use crate::core::manifest::{Kind, Manifest};
-use crate::core::onchange::State as HookState;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
