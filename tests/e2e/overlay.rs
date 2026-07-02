@@ -5,6 +5,10 @@
 //! when.deps（配列・AND）は PATH 先頭スタブ（[`crate::write_stub`]）の有無で、when.os は現在 OS
 //! （chezmoi 互換表記）で gate する。トップレベル when はユニットスコープ、`[[overlay]]` の when は
 //! 断片スコープ（同じ語彙）。末尾は overlay/strategy/preserve の不正な組合せを load 時に弾く検証群。
+//!
+//! plist-shallow（#531）は、overlay の `cmd` 断片（外部コマンドの標準出力）を土台にする運用
+//! （`configs/stats` の実例）を架空ツール `prefctl` で検証する。実 configs を名指ししない契約
+//! テストなので `when` は `deps` のみ（`os` gate は付けない＝ Linux CI でも実行される）。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
@@ -383,6 +387,157 @@ fn list_shows_overlay_strategy_and_os_attrs() {
         .stdout(predicate::str::contains("overlay=2"))
         .stdout(predicate::str::contains("preserve"))
         .stdout(predicate::str::contains("when.os=darwin"));
+}
+
+/// plist-shallow 単位（`configs/demo`）を書き出す。base overlay は架空ツール `prefctl` の
+/// `cmd`（外部コマンド実行。標準出力を土台にする）、2 つ目の overlay は dotfiles 管理サブセット
+/// （`managed.plist`）。hooks は `prefctl import` で合成済み dst を反映する（`configs/stats` の
+/// `defaults export`/`defaults import` と同型。#531）。`frequency = "always"`（#546）: 反映対象
+/// （ライブなドメイン）は dotfiles 管理外で変化しうるため、onchange（既定）ではなく毎 apply
+/// 無条件に反映する。`when` は `deps` のみで `os` は付けない（実 configs の stats 自体は darwin
+/// 限定だが、エンジンの契約は OS 非依存に保つ）。
+fn write_plist_shallow_overlay_unit(work: &Path) {
+    let unit = work.join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "dst = \"~/.cache/demo/pref.plist\"\n\
+         strategy = \"plist-shallow\"\n\
+         when = { deps = [\"prefctl\"] }\n\
+         [[overlay]]\n\
+         cmd = [\"prefctl\", \"export\", \"-\"]\n\
+         [[overlay]]\n\
+         src = \"managed.plist\"\n\
+         [[hooks]]\n\
+         cmd = [\"sh\", \"-c\", \"prefctl import \\\"$HOME/.cache/demo/pref.plist\\\"\"]\n\
+         frequency = \"always\"\n",
+    )
+    .unwrap();
+    // dotfiles 管理サブセット: Owned キーを true で上書きする（base は false）。
+    fs::write(
+        unit.join("managed.plist"),
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+         <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n\
+         <plist version=\"1.0\"><dict><key>Owned</key><true/></dict></plist>\n",
+    )
+    .unwrap();
+}
+
+/// `prefctl` スタブ: `export -` で「生きたドメイン」相当の XML plist（非管理キー `WindowFrame` ＋
+/// owned キーの旧値 `Owned=false`）を標準出力へ、`import <file>` で `$HOME/imported.plist` へ
+/// コピーし `$HOME/import-count` へ 1 行追記する（反映の観測点・呼び出し回数の計測点）。
+#[cfg(unix)]
+fn write_prefctl_stub(bin: &Path) {
+    write_stub(
+        bin,
+        "prefctl",
+        r#"if [ "$1" = "export" ]; then
+  cat <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>WindowFrame</key>
+	<string>0 0 100 200</string>
+	<key>Owned</key>
+	<false/>
+</dict>
+</plist>
+PLIST
+  exit 0
+elif [ "$1" = "import" ]; then
+  cp "$2" "$HOME/imported.plist"
+  printf 'x\n' >> "$HOME/import-count"
+  exit 0
+fi
+exit 1
+"#,
+    );
+}
+
+/// `import-count` マーカーの行数（＝ prefctl import の呼び出し回数）。未作成なら 0。
+fn import_count(home: &Path) -> usize {
+    fs::read_to_string(home.join("import-count"))
+        .map(|s| s.lines().count())
+        .unwrap_or(0)
+}
+
+/// overlay の `cmd` 断片（外部コマンドの標準出力を土台にする）＋ plist-shallow 合成 ＋
+/// `frequency = "always"` hooks 反映が一気通貫で動くことを検証する（#531 の Stats.plist 実装が
+/// 拠って立つ経路。テスト品質レビュー指摘の Gap A: 実 configs の `real_configs` は `when.deps`
+/// gate で `stats` を skip するため、この経路自体は他のどのテストも通っていなかった）。
+///
+/// 検証すること: ① base（`prefctl export` の標準出力）の非管理キーが dst に保持される、
+/// ② dotfiles 管理サブセットの所有キーが base を上書きする（宣言順・後勝ち）、③ hooks が
+/// 合成済み dst をそのまま反映する（reflect が composed output に結線されている）、
+/// ④ **ソース（`managed.plist`）不変のまま 2 回目 apply しても hooks が skip されず再度反映される**
+/// （#531 で発覚したバグ「配置は毎回正しいが反映は onchange で skip される」の直接の回帰防止。
+/// `frequency = "always"` を使わず既定の onchange のままだったら、この assertion は失敗する）。
+#[cfg(unix)]
+#[test]
+fn apply_plist_shallow_overlay_cmd_base_reflects_via_hook() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+
+    write_prefctl_stub(bin.path());
+    write_plist_shallow_overlay_unit(work.path());
+
+    // stub 自身が sh 組み込みでない cat/cp を使うため、PATH は stub dir 専有ではなく
+    // /bin:/usr/bin も残す（when.deps gate の対象は prefctl だけなので、実システムの
+    // cat/cp/sh が resolve できても gate の意味は変わらない）。
+    let path = format!("{}:/bin:/usr/bin", bin.path().display());
+    let apply = || {
+        dotfiles()
+            .arg("apply")
+            .current_dir(work.path())
+            .env("HOME", home.path())
+            .env("PATH", &path)
+            .assert()
+    };
+
+    apply()
+        .success()
+        .stdout(predicate::str::contains("overlay/plist-shallow"))
+        .stdout(predicate::str::contains("hook:"))
+        .stdout(predicate::str::contains("ran (always)"));
+
+    let dst = home.path().join(".cache/demo/pref.plist");
+    let merged = plist::Value::from_file(&dst).expect("dst が有効な plist であるべき");
+    let dict = merged.as_dictionary().expect("dst のトップレベルは dict であるべき");
+    assert_eq!(
+        dict["WindowFrame"].as_string(),
+        Some("0 0 100 200"),
+        "base（cmd 断片）の非管理キーが保持されるべき: {dict:?}",
+    );
+    assert_eq!(
+        dict["Owned"].as_boolean(),
+        Some(true),
+        "dotfiles 管理サブセットが base を上書きするべき（後勝ち）: {dict:?}",
+    );
+
+    let imported = home.path().join("imported.plist");
+    assert!(
+        imported.exists(),
+        "hooks の prefctl import が呼ばれていない（反映されていない）",
+    );
+    assert_eq!(
+        fs::read(&dst).unwrap(),
+        fs::read(&imported).unwrap(),
+        "hooks は合成済み dst をそのまま反映するべき（別内容を渡していない）",
+    );
+    assert_eq!(import_count(home.path()), 1, "初回は反映されるべき");
+
+    // ソース（managed.plist）不変のまま 2 回目 apply。onchange（既定）なら skip されるはずだが、
+    // frequency=always なので再度反映される（#531/#546 の回帰防止）。
+    apply()
+        .success()
+        .stdout(predicate::str::contains("ran (always)"));
+    assert_eq!(
+        import_count(home.path()),
+        2,
+        "frequency=always はソース不変でも2回目 apply で再反映されるべき",
+    );
 }
 
 /// overlay を明示しながら strategy を省略すると load 時にエラー（暗黙 concat を許さない）。
