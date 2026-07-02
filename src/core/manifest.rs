@@ -459,7 +459,8 @@ mod tests {
     #[test]
     fn validate_accepts_command_hook() {
         // 非空の cmd は受理（エンジンは中身を解釈しない, §13）。frequency 省略 = onchange。
-        let m = parse("dst = \"~/x\"\nhooks = [{ cmd = [\"cmd\", \"sub\", \"--flag\"] }]\n").unwrap();
+        let m =
+            parse("dst = \"~/x\"\nhooks = [{ cmd = [\"cmd\", \"sub\", \"--flag\"] }]\n").unwrap();
         assert_eq!(m.hooks[0].frequency, Frequency::Onchange);
     }
 
