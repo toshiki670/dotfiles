@@ -15,6 +15,11 @@
 # 注: json-shallow は `hooks` を object ごと差し替えるため、rtk.json は rm→trash ガードを含む
 # hooks 全体を持つ（base と一部重複する）。これは「rtk hook だけ条件付き」を deep merge 無しで
 # 表現する設計上のコスト。rm ガードを変えるときは settings.json と rtk.json の両方を直すこと。
+#
+# 移行期限定の注意（S9 #463 完了まで）: `home/dot_claude/modify_settings.json.tmpl` が同じ
+# ~/.claude/settings.json を chezmoi 側からも管理している（併存は設計上の不変条件・§12.1、
+# `home/` は個別削除しない）。hooks の追加・変更はこの native 側だけでなく modify_settings.json.tmpl
+# にも移植すること。片方だけ直すと、移植し忘れた側でガードが消える（#549 で実際に発生）。
 dst      = "~/.claude/settings.json"
 strategy = "json-shallow"
 # 既存 dst を土台に温存（旧 modify_ の `$local + $forced`）。非管理キーは全保持。
