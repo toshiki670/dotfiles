@@ -38,7 +38,7 @@
 | 配置先（OS物理位置） | そこに集まる「中身の帰属（ツール）」 |
 | --- | --- |
 | `~/.config/fish/conf.d/` | fish, **fzf, eza, delta, zoxide, starship, claude, browser-use, git-worker, 環境(PATH/EDITOR)** の断片が混在 |
-| `~/.config/fish/functions/` | fish(cdabbr, ps-grep), **fzf**(`_fzf_*`), **gh**(gh-clone) |
+| `~/.config/fish/functions/` | fish(`_fzf_file`/`_fzf_history`), **fzf-picker**(`_fzf_gh`/`_fzf_ghq_cd`/`_fzf_worktree_remove`/`cdabbr`/preview 2本), **gh-clone**(gh-clone), **ps-grep**（単独帰属） |
 | `~/.config/fish/completions/` | **bat, clip, docker, gh, merge-ready**（各バイナリから生成） |
 | `~/.config/git/config` | git の8部品を合成（うち delta は色設定も持つ） |
 | `~/.config/bat/` | bat 本体 + ayu-dark テーマ（**delta が共有**） |

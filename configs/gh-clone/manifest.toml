@@ -1,0 +1,9 @@
+# gh-clone バイナリ（~/.cargo/bin）の fish 側 shim を fish の functions 合流点へ copy する。
+# 設計: docs/dotfiles-native-design.md §5・§6（合流点への copy 集約）/ Issue #558・#567
+#
+# dst は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
+# 中身は gh-clone に帰属するため、D1（ソースは configs/<tool>/ に中身の帰属で並べる。§4）に
+# 従い fish 本体（configs/fish）ではなく独立したツールディレクトリとしてここに置く。
+# 別プロセスは親シェルの cd を変えられないため、バイナリが出力した移設先パスへ cd するだけの
+# 薄いラッパー（バイナリ側に shim 生成サブコマンドは無く fish 側定義が必須）。kind は省略時 "copy"。
+dst = "~/.config/fish/functions"
