@@ -7,10 +7,11 @@
 #      全体。Window Frame・メニューバー位置などローカル状態を含む）。ドメイン未作成（Stats 未起動の
 #      初回 apply）でも `defaults export` は空 dict を返す（exit 0）ので土台なしと同じに扱える。
 #   2. dotfiles 管理サブセット（Stats.plist, 常時）= ノイズキー除去済み。AppKit の UI 状態
-#      （Window Frame 等）に加え、Stats 自身が内部で自動更新するブックキーピング（`version` /
-#      `support_ts`）も除去済み ― これらは dotfiles 管理サブセットに含めて固定すると、apply の
-#      たびに Stats の実バージョン情報をスナップショット時点の古い値へ巻き戻してしまう（ユーザー
-#      設定ではなく Stats 自身が書く値なので、base（生きたドメイン）にそのまま委ねる）。
+#      （Window Frame・`NSToolbar Configuration …` 等）に加え、Stats 自身が内部で自動更新する
+#      ブックキーピング／実測値（`version` / `support_ts` / `updater_check_ts` / `updater_install_ts` /
+#      `fan_0_speed` 等）も除去済み ― これらは dotfiles 管理サブセットに含めて固定すると、apply の
+#      たびに Stats の実バージョン情報や実測値をスナップショット時点の古い値へ巻き戻してしまう
+#      （ユーザー設定ではなく Stats 自身が書く値なので、base（生きたドメイン）にそのまま委ねる）。
 #      base の上に重なり、dotfiles 所有キーだけを上書きする（plist-shallow・トップレベル粒度）。
 #
 # 合成は plist-shallow（plist トップレベル shallow merge・後勝ち。deep merge はしない。命名の

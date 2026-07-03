@@ -166,17 +166,6 @@
 	<string>bar_chart</string>
 	<key>LaunchAtLoginNext</key>
 	<true/>
-	<key>NSToolbar Configuration eu.exelban.Stats.Settings.Toolbar</key>
-	<dict>
-		<key>TB Display Mode</key>
-		<integer>1</integer>
-		<key>TB Icon Size Mode</key>
-		<integer>1</integer>
-		<key>TB Is Shown</key>
-		<true/>
-		<key>TB Size Mode</key>
-		<integer>1</integer>
-	</dict>
 	<key>Network_base</key>
 	<string>byte</string>
 	<key>Network_chartFixedScale</key>
@@ -325,8 +314,6 @@
 	<string>mini</string>
 	<key>fan_0_mode</key>
 	<integer>0</integer>
-	<key>fan_0_speed</key>
-	<integer>4039</integer>
 	<key>pause</key>
 	<false/>
 	<key>remote_tokens_migrated_to_keychain</key>
@@ -367,9 +354,5 @@
 	<true/>
 	<key>update-interval</key>
 	<string>Once per day</string>
-	<key>updater_check_ts</key>
-	<integer>1781883898</integer>
-	<key>updater_install_ts</key>
-	<integer>1781619658</integer>
 </dict>
 </plist>
