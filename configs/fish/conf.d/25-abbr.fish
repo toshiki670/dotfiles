@@ -1,4 +1,4 @@
-# Abbreviations (shell, docker, git, bat, claude, nvim)
+# Abbreviations (shell, docker, git, bat, claude, nvim, yt-dlp)
 
 # ========== shell / misc ==========
 abbr --add reload 'exec fish -l'
@@ -90,4 +90,9 @@ if command -q zoxide
     abbr --add zp 'z -'
 
     abbr --add zgit 'z (git rev-parse --show-toplevel)'
+end
+
+# ========== yt-dlp (only when YT_BROWSER is set) ==========
+if set -q YT_BROWSER
+    abbr --add yt 'yt-dlp --cookies-from-browser $YT_BROWSER'
 end
