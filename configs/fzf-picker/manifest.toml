@@ -1,0 +1,11 @@
+# fzf-picker 系バイナリ（fzf-gh / fzf-ghq-cd / fzf-worktree-remove / cdabbr、いずれも ~/.cargo/bin）
+# の fish 側 shim を fish の functions 合流点へ copy する。
+# 設計: docs/dotfiles-native-design.md §5・§6（合流点への copy 集約）/ Issue #558・#567
+#
+# dst は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
+# 中身は fzf-picker に帰属するため fish 本体（configs/fish）ではなくここに置く（§6.3 ルール1）。
+# shim 本体はいずれもバイナリを `command <bin>` で呼び、選択結果を cd / commandline へ渡すだけの
+# 薄いラッパー（別プロセスは親シェルの cd を変えられないため。バイナリ側に shim 生成サブコマンドは
+# 無く fish 側定義が必須）。20-fzf-bindings.fish の bind・30-cdabbr.fish の `ca` abbr・
+# ピッカーの preview から参照される。kind は省略時 "copy"。
+dst = "~/.config/fish/functions"
