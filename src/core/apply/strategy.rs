@@ -294,7 +294,7 @@ mod tests {
     #[test]
     fn plist_shallow_rejects_non_dict_fragment_or_base() {
         let array = b"<?xml version=\"1.0\"?><plist version=\"1.0\"><array/></plist>".to_vec();
-        assert!(plist_shallow(&[array.clone()], None).is_err());
+        assert!(plist_shallow(std::slice::from_ref(&array), None).is_err());
         let bad_base = array;
         assert!(plist_shallow(&[plist_dict("")], Some(&bad_base)).is_err());
     }
