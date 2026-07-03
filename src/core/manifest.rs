@@ -3,7 +3,8 @@
 //! 設計書（docs/dotfiles-native-design.md §5 / §5.5 / §6.2 / §7）の **2軸モデル**を解釈する:
 //! - **生成方式 `kind`**（断片をどう実体化するか）= `copy` / `generate`（省略時 copy）。
 //! - **合成 `strategy`**（複数の条件付き断片を1 dst=ファイルへどう重ねるか）= `concat` /
-//!   `json-shallow`。`merge` は独立 kind ではなく合成軸の JSON 戦略（§5.5）。
+//!   `json-shallow` / `plist-shallow`（JSON 版の plist 版。命名の理由は設計書§5.5）。`merge` は
+//!   独立 kind ではなく合成軸の戦略（§5.5）。
 //! - **条件付き overlay**（`[[overlay]]` ＋ `when`）= dst を「base ＋ gate された断片」の合成
 //!   として組む。各 overlay は `src`（copy 断片）/ `cmd`（generate 断片）のどちらか ＋
 //!   `when`（`deps` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
@@ -20,7 +21,7 @@
 
 use serde::Deserialize;
 use std::path::Path;
-use strum::Display;
+use strum::{Display, EnumIter, IntoEnumIterator};
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
 ///
@@ -104,7 +105,9 @@ pub enum Kind {
 
 /// 合成戦略（複数断片を1 dst=ファイルへ重ねる方法, §5.5）。
 /// 表示名と TOML トークンを揃える規則は [`Kind`] と同じ（`serialize_all` / `rename_all` を `kebab-case` に）。
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display)]
+/// `EnumIter` は [`Manifest::validate`] のエラーメッセージが有効な戦略を列挙するのに使う（手書き列挙だと
+/// variant 追加時に更新漏れが起きるため、enum 自体を出所にする）。
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display, EnumIter)]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
 pub enum Strategy {
@@ -112,6 +115,9 @@ pub enum Strategy {
     Concat,
     /// JSON のトップレベル shallow merge（後勝ち）。deep merge はしない。
     JsonShallow,
+    /// plist のトップレベル shallow merge（後勝ち）。deep merge はしない。`json-shallow` の plist 版
+    /// （命名の理由・用例は設計書§5.5「例：Stats.plist」参照）。
+    PlistShallow,
 }
 
 /// フックの実行頻度（§13.0 / #546）。頻度は per-hook の実行モードで、別リスト（`always_hooks` 等）に
@@ -225,10 +231,12 @@ impl Manifest {
     ///   コマンドそのものをデータとして宣言する（binary は実行するだけ）。
     fn validate(&self) -> Result<(), String> {
         if !self.overlay.is_empty() && self.strategy.is_none() {
+            let options = Strategy::iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>()
+                .join(" / ");
             return Err(format!(
-                "overlay を明示する場合は strategy（{} / {}）が必要です",
-                Strategy::Concat,
-                Strategy::JsonShallow,
+                "overlay を明示する場合は strategy（{options}）が必要です"
             ));
         }
         if self.preserve && self.strategy != Some(Strategy::JsonShallow) {
@@ -325,7 +333,11 @@ mod tests {
 
     #[test]
     fn strategy_display_round_trips_through_serde() {
-        for strategy in [Strategy::Concat, Strategy::JsonShallow] {
+        for strategy in [
+            Strategy::Concat,
+            Strategy::JsonShallow,
+            Strategy::PlistShallow,
+        ] {
             let parsed = parse(&format!("dst = \"~/x\"\nstrategy = \"{strategy}\"\n")).unwrap();
             assert_eq!(
                 parsed.strategy,
@@ -373,6 +385,15 @@ mod tests {
         assert!(
             err.contains("preserve") && err.contains("json-shallow"),
             "preserve × 非 json-shallow が弾かれていない: {err}"
+        );
+        // plist-shallow との併記も同様にエラー（土台は overlay 側の cmd 断片が担う。§5.5・#531）。
+        let err = parse(
+            "dst = \"~/x\"\nstrategy = \"plist-shallow\"\npreserve = true\n[[overlay]]\nsrc = \"a\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("preserve") && err.contains("json-shallow"),
+            "preserve × plist-shallow が弾かれていない: {err}"
         );
         // strategy 省略との併記も同様にエラー。
         assert!(parse("dst = \"~/x\"\npreserve = true\n").is_err());

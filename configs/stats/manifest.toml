@@ -1,0 +1,63 @@
+# Stats（メニューバー型システムモニタアプリ）の preference plist を plist-shallow 合成で配置し、
+# defaults import で cfprefsd 管轄のライブドメインへ反映する。macOS ネイティブアプリの
+# preference plist を一級扱いする最初の実例（#531。決定経緯は #453#issuecomment-4756549971 / #465）。
+# dst を「生きたドメインの export を土台にした overlay の合成」として組む:
+#
+#   1. base（cmd, 常時）= `defaults export eu.exelban.Stats -` の標準出力（plist。生きたドメイン
+#      全体。Window Frame・メニューバー位置などローカル状態を含む）。ドメイン未作成（Stats 未起動の
+#      初回 apply）でも `defaults export` は空 dict を返す（exit 0）ので土台なしと同じに扱える。
+#   2. dotfiles 管理サブセット（Stats.plist, 常時）= ノイズキー除去済み。AppKit の UI 状態
+#      （Window Frame・`NSToolbar Configuration …` 等）に加え、Stats 自身が内部で自動更新する
+#      ブックキーピング／実測値（`version` / `support_ts` / `updater_check_ts` / `updater_install_ts` /
+#      `fan_0_speed` 等）も除去済み ― これらは dotfiles 管理サブセットに含めて固定すると、apply の
+#      たびに Stats の実バージョン情報や実測値をスナップショット時点の古い値へ巻き戻してしまう
+#      （ユーザー設定ではなく Stats 自身が書く値なので、base（生きたドメイン）にそのまま委ねる）。
+#      base の上に重なり、dotfiles 所有キーだけを上書きする（plist-shallow・トップレベル粒度）。
+#
+# 合成は plist-shallow（plist トップレベル shallow merge・後勝ち。deep merge はしない。命名の
+# 理由は設計書§5.5「例：Stats.plist」参照）。
+#
+# dst の置き場所: ライブドメインが真実のソースで、dst は defaults import へ渡すためだけに都度
+# 書き出す使い捨ての下書き（次の apply で再計算され、消えても実害が無い）。よって永続状態
+# （named value・hooks 実行済みハッシュ等）を置く ~/.config/dotfiles/ とは分け、他 config も使い捨て
+# データに使っている ~/.cache/dotfiles/（例: configs/claude/statusline-command.py の
+# ~/.cache/claude/）に置く。cfprefsd 管轄外・XML＝差分可読という #465 の決定はそのまま引き継ぐ。
+#
+# when.deps=["defaults"]: base overlay が `defaults` を呼ぶため、無い環境（テスト等）ではユニット
+# ごと skip する（①ユニット gate が overlay 評価より先に効くため、defaults 不在でも apply は落ちない。
+# 既存 E2E の空 PATH 下でも安全に skip される）。when.os="darwin": Stats は macOS 専用アプリ。
+dst      = "~/.cache/dotfiles/eu.exelban.Stats.plist"
+strategy = "plist-shallow"
+when     = { deps = [ "defaults" ], os = "darwin" }
+
+# 実行順（① overlay を合成して dst へ書き出す → ② hooks で反映する）に合わせ、overlay を先・
+# hooks を後に書く（他の compose ユニットと同じ [[overlay]] header 形式。settings.json 等参照）。
+
+# base: 生きたドメイン全体（ローカル状態を含む）。
+[[overlay]]
+cmd = [ "defaults", "export", "eu.exelban.Stats", "-" ]
+
+# dotfiles 管理サブセット: base の上に重ね、dotfiles 所有キーだけを上書きする。
+[[overlay]]
+src = "Stats.plist"
+
+# hooks: 配置後、合成済み dst をライブドメインへ反映する（§13）。dst は「生きたドメイン全体 ＋
+# dotfiles 管理サブセット」を合成済みなので、defaults import 自体がマージ／全置換のどちらであっても
+# 結果は一致する（正しさが import の未文書化の挙動に依存しない設計。使い捨てドメインでの実機検証
+# ではトップレベルキー単位のマージだったことを確認済み。#531 コメント参照）。
+# 注: Stats 自身の GUI Import は setPersistentDomain によるドメイン全置換で、これとは別物。
+#
+# frequency = "always"（#546）: base overlay（`defaults export`）は毎 apply 無条件に実行され、
+# dst は常に「今の生きたドメイン＋dotfiles 管理サブセット」の正しいマージ結果になる。既定の
+# onchange（Stats.plist というソースの変化にだけ反応）で反映すると、GUI 操作等でライブドメインが
+# ドリフトしてもソース無変更の限り import が skip され、配置（常時）と反映（onchange 限定）が
+# 食い違って #531 の動機（cfprefsd による drift の是正）を満たせなかった（実機で確認・#546）。
+# always にすることで配置から反映まで全段が「毎 apply 無条件」で揃う。`defaults import` は同一
+# 内容の再書き込みが安全（冪等）なので always の前提を満たす。
+[[hooks]]
+cmd = [
+  "sh",
+  "-c",
+  "defaults import eu.exelban.Stats \"$HOME/.cache/dotfiles/eu.exelban.Stats.plist\"",
+]
+frequency = "always"
