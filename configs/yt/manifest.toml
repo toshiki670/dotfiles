@@ -13,6 +13,9 @@
 #
 # dst は fish の conf.d（複数ツールが断片を持ち寄る合流点）。ファイル名の番号 prefix (30-) が
 # 読み込み順を表す（§6.3 ルール4）。kind は省略時 "copy"。
+#
+# bin/（~/.local/bin へ yt-retry を配置する別単位。旧 `bin/yt-retry` の移設先、Issue #558）は
+# サブ manifest を持つので、この copy からは委譲され除外される（§6.3 ルール1）。
 dst    = "~/.config/fish/conf.d"
 locals = [ "yt.browser" ]
 when   = { profile = "private" }

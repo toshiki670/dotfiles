@@ -7,7 +7,7 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
-This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`dotfiles`, `git-upstream`, `gcm`, `clip`, …) built as bins of the repository-root `dotfiles` package and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
+This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, and small **Rust** CLI commands (`dotfiles`, `git-upstream`, `gcm`, `clip`, …) built as bins of the repository-root `dotfiles` package and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
 
 # Prerequisites
 
@@ -154,7 +154,7 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 ### macOS
 
 - Homebrew configurations will be applied automatically
-- Scripts under `bin/` (`$DOTFILES/bin`) and Rust commands (`~/.cargo/bin`) are added to PATH
+- Rust commands (`~/.cargo/bin`) and user-local scripts (`~/.local/bin`) are added to PATH
 - Ghostty config symlink is set up as described above
 
 # Rust commands
