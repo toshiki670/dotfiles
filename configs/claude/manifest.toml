@@ -8,8 +8,9 @@
 # kind は省略時 "copy"。いずれも 0644（statusline-command.py は python3 経由で起動されるため
 # 実行ビット不要 ＝ executable は付けない）。
 #
-# settings/（json-shallow 合成で settings.json を組む別単位）はサブ manifest を持つので、
-# この copy からは委譲され除外される（§6.3 ルール1。bat/completion と同じ親子関係）。
+# settings/（json-shallow 合成で settings.json を組む別単位）・fish/（conf.d 合流点へ環境変数
+# 断片を置く別単位）はサブ manifest を持つので、この copy からは委譲され除外される
+# （§6.3 ルール1。bat/completion と同じ親子関係）。
 #
 # 依存の結線: settings/settings.json は statusLine に `python3 ~/.claude/statusline-command.py`
 # を指す。そのスクリプト実体をこの単位が配置することで、両単位が揃って初めて statusLine が成立する。

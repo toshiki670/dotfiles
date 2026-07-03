@@ -1,13 +1,17 @@
-# fish の自前 fzf 関数（native bin を持たないもの）を ~/.config/fish へ copy する。
-# 設計: docs/dotfiles-native-design.md §5・§6 / 決定経緯: Issue #530
+# fish 本体（config.fish・conf.d・functions・themes）を ~/.config/fish へ copy する。
+# 設計: docs/dotfiles-native-design.md §5・§6 / 決定経緯: Issue #530・#558
 #
 # dst=~/.config/fish のディレクトリ単位 copy。配下は相対構造を保って再帰配置される:
-#   functions/_fzf_file.fish     → ~/.config/fish/functions/_fzf_file.fish
-#   functions/_fzf_history.fish  → ~/.config/fish/functions/_fzf_history.fish
-# kind は省略時 "copy"。いずれも 0644（fish が autoload で source するだけで実行ビット不要）。
+#   config.fish                   → ~/.config/fish/config.fish
+#   conf.d/*.fish, README.md      → ~/.config/fish/conf.d/*
+#   functions/_fzf_file.fish      → ~/.config/fish/functions/_fzf_file.fish
+#   functions/_fzf_history.fish   → ~/.config/fish/functions/_fzf_history.fish
+#   themes/OneHalfLight-Ayu.theme → ~/.config/fish/themes/OneHalfLight-Ayu.theme
+# kind は省略時 "copy"。いずれも 0644（fish が autoload/source するだけで実行ビット不要）。
 #
 # `_fzf_gh` / `_fzf_ghq_cd` / `_fzf_worktree_remove` は各ツール（fzf-picker）側へ帰属するため
-# ここには含めない。config.fish・conf.d/・themes/ は別スライス「fish 本体移行」の対象で、
-# 現時点では home/dot_config/fish 側（chezmoi）が配置を担い、この単位と併存する
-# （apply 未接続。#505 の home/dot_claude と同じ移行期方針）。
+# ここには含めない。conf.d は複数ツールが断片を持ち寄る合流点でもあり（eza の 40-eza.fish 等、
+# 番号帯が重ならない限り併存可）、claude（08-claude.fish）・workers（60-daily-check.fish・
+# 70-git-background-fetch.fish）・starship（95-starship-prompt.fish）は各ツール側の manifest
+# （configs/claude/fish, configs/workers, configs/starship/fish）が持つためここには含めない。
 dst = "~/.config/fish"
