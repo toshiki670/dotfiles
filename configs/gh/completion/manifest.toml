@@ -1,9 +1,9 @@
-# gh の fish 補完を生成・配置する（generate 層 / 設計書 §5・§7）。
+# gh の fish 補完を生成・配置する（generate 層）。
 # `gh completion --shell fish` の出力に、同ディレクトリの custom.fish（ID 補完の独自
 # ブロック）を連結して dst へ書き出す（生成物の後ろへ sibling を追記する generate の規則）。
 # fish は補完をコマンド名のファイル（gh.fish）でのみ autoload するため、独自補完も
 # 同じ gh.fish へ同梱する必要がある。
-# when.deps = gh が PATH に無ければ生成をスキップ（ユニット gate, §5.5）。
+# when.deps = gh が PATH に無ければ生成をスキップ（ユニット gate）。
 cmd  = [ "gh", "completion", "--shell", "fish" ]
 dst  = "~/.config/fish/completions/gh.fish"
 kind = "generate"

@@ -1,5 +1,5 @@
 # fish 本体（config.fish・conf.d・functions・themes）を ~/.config/fish へ copy する。
-# 設計: docs/dotfiles-native-design.md §5・§6 / 決定経緯: Issue #530・#558
+# 決定経緯: Issue #530・#558
 #
 # dst=~/.config/fish のディレクトリ単位 copy。配下は相対構造を保って再帰配置される:
 #   config.fish                   → ~/.config/fish/config.fish
@@ -7,13 +7,13 @@
 #   functions/_fzf_file.fish      → ~/.config/fish/functions/_fzf_file.fish
 #   functions/_fzf_history.fish   → ~/.config/fish/functions/_fzf_history.fish
 #   themes/OneHalfLight-Ayu.theme → ~/.config/fish/themes/OneHalfLight-Ayu.theme
-# kind は省略時 "copy"。いずれも 0644（fish が autoload/source するだけで実行ビット不要）。
+# いずれも 0644（fish が autoload/source するだけで実行ビット不要）。
 #
 # functions/ の `_fzf_gh` / `_fzf_ghq_cd` / `_fzf_worktree_remove` / `__fzf_picker_preview` /
 # `__fzf_ghq_readme_preview` / `cdabbr` は fzf-picker、`gh-clone` は gh-clone、`ps-grep` は
-# ps-grep 自身へ帰属するため、D1（ソースは configs/<tool>/ に中身の帰属で並べる。§4）に従い
-# それぞれ独立したツールディレクトリ（configs/fzf-picker, configs/gh-clone, configs/ps-grep）
-# が持つ。ここには含めない（Issue #567）。conf.d は複数ツールが断片を持ち寄る合流点でもあり
+# ps-grep 自身へ帰属するため、それぞれ独立したツールディレクトリ（configs/fzf-picker,
+# configs/gh-clone, configs/ps-grep）が持つ。ここには含めない（Issue #567）。
+# conf.d は複数ツールが断片を持ち寄る合流点でもあり
 # （eza の 40-eza.fish 等、番号帯が重ならない限り併存可）、claude（08-claude.fish）・workers
 # （60-daily-check.fish・70-git-background-fetch.fish）・starship（95-starship-prompt.fish）は
 # 各ツール側の manifest（configs/claude/fish, configs/workers, configs/starship/fish）が持つ

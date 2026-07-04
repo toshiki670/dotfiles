@@ -1,18 +1,18 @@
-# yt-dlp の fish 連携を 1 か所へ集約する（設計書 §9.2・§10）。
+# yt-dlp の fish 連携を 1 か所へ集約する。
 #
 # 旧構成は出所が 2 箇所に散在していた: mise の `[env] YT_BROWSER` と fish
 # `conf.d/25-abbr.fish` の実行時 `if set -q YT_BROWSER` gate。中身は yt-dlp に帰属するので
 # configs/yt/ に集めて fish 単一 drop-in に畳む。
 #
-# when.profile（状態 gate, §5.5）: yt-dlp はプライベート環境でだけ使う。`dotfiles profile private`
+# when.profile（状態 gate）: yt-dlp はプライベート環境でだけ使う。`dotfiles profile private`
 # で opt-in したマシンにだけ 30-yt.fish を配置し、仕事・新規マシンではファイルごと未配置にする
 # （unit スコープの when ＝ all-or-nothing）。実行時 `if set -q` チェックは不要（存在＝gate の結果）。
 #
-# locals（named value, §9）: ブラウザ選択はマシン固有値なので `@@yt.browser@@` をストア
+# locals（named value）: ブラウザ選択はマシン固有値なので `@@yt.browser@@` をストア
 # （~/.config/dotfiles/local.toml）から注入する。commit に載らないが秘匿でもないため非 sensitive。
 #
 # dst は fish の conf.d（複数ツールが断片を持ち寄る合流点）。ファイル名の番号 prefix (30-) が
-# 読み込み順を表す（§6.3 ルール4）。kind は省略時 "copy"。
+# 読み込み順を表す。
 dst    = "~/.config/fish/conf.d"
 locals = [ "yt.browser" ]
 when   = { profile = "private" }

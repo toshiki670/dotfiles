@@ -1,23 +1,20 @@
-# ghostty の設定（config）を配置し、macOS 参照先への symlink を張る。
-# 設計: docs/dotfiles-native-design.md §6.1（ghostty 例）・§13
+# ghostty の設定（config）を ~/.config/ghostty へ配置し、macOS 参照先への symlink を張る。
 #
-# kind は省略時 "copy"（config をそのまま ~/.config/ghostty へ配置）。
-#
-# when = { deps = ["ghostty"], os = "darwin" }: トップレベル when はユニットスコープ gate（§5.5・§7）。
+# when = { deps = ["ghostty"], os = "darwin" }: トップレベル when はユニットスコープ gate。
 #   when.deps = ["ghostty"]: ghostty が PATH に無い環境ではユニットごと skip（配置も symlink も走ら
 #     ない）。ghostty が無ければ config 配置も macOS 参照先への symlink も無意味なので gate する。
 #     （ghostty CLI は /Applications/Ghostty.app/Contents/MacOS/ghostty で PATH 解決される。）
-#   when.os = "darwin": ghostty の symlink フックは macOS 専用なので darwin gate する（§6.1 の例に準拠）。
+#   when.os = "darwin": ghostty の symlink フックは macOS 専用なので darwin gate する。
 #     darwin 以外では配置も hooks も skip される（ユニット gate が hooks を覆う）。フックが macOS 専用で
 #     ある知識はこの manifest（when.os ＋下記コマンド）が持ち、binary は関知しない。
 #
 # hooks: 配置後、~/Library/Application Support/com.mitchellh.ghostty/config → ~/.config/ghostty/config
-#   の symlink を冪等に張る（onchange, §13）。フックは実行するコマンド（argv）をデータとして宣言する。
+#   の symlink を冪等に張る（onchange）。フックは実行するコマンド（argv）をデータとして宣言する。
 #   `ln -sf` は既存リンク/ファイルを置き換えるので冪等（以前の `rm -f`＋`ln -sf` を
 #   1 コマンドに畳んだ）。
 #
 # 注: テーマ（config 内の theme 行）の light/dark 切替は color スライスの担当。`theme` 属性は
-#   そのスライスで付与する（S5 では付けない）。
+#   そのスライスで付与する。
 dst  = "~/.config/ghostty"
 when = { deps = [ "ghostty" ], os = "darwin" }
 

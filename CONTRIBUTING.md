@@ -89,6 +89,17 @@ cargo test --workspace
   実行します。
 - 詳細ログが必要な場合は `cargo run -p dotfiles-lint -- check --summary --json` を使ってください。
 
+### テスト方針（エンジンはツールのライフサイクルから独立）
+
+`dotfiles` バイナリは汎用エンジンで、`configs/` の個々のツール（claude / bat / ghostty …）はいつか消えるデータ。テストは「configs から特定ツールを削除・改名しても壊れない」ことを原則とする（壊れるなら defect として直す）。2 層で書く:
+
+| 層 | 目的 | 入力 |
+| --- | --- | --- |
+| 契約テスト | エンジンの挙動（生成方式 × 合成 × `when` gate …）を固定する | hermetic な架空 fixture（`faketool` 等）。実 configs を名指ししない |
+| 実 configs の妥当性確認 | 実際の `configs/` が manifest スキーマ・不変条件を満たすか | `configs/` の全ユニットを data-driven に走査する（ツール名をハードコードしない） |
+
+原則はここに一度だけ明文化する。テストコード側は本節を参照し、再記述しない。
+
 ## コードスタイル
 
 `mise run lint` で適用される linter / formatter に従う。

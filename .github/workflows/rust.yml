@@ -37,7 +37,7 @@ jobs:
       # intra-doc リンク腐敗の恒久ガード（main.rs の #![deny(rustdoc::broken_intra_doc_links)]）。
       # rustdoc lint は cargo doc 実行時のみ効くため、CI でリンク切れを検出する。
       - name: Doc check (broken intra-doc links)
-        run: cargo doc -p dotfiles --no-deps --locked
+        run: cargo doc -p dotfiles --no-deps --locked --document-private-items
 
   apply-test:
     name: dotfiles apply (fresh machine bootstrap)
@@ -57,7 +57,7 @@ jobs:
 
       - name: dotfiles apply (embedded configs, no working tree)
         run: |
-          # clone 無しの配布経路: CWD が作業ツリー外なら埋め込み configs を使う（§8）。
+          # clone 無しの配布経路: CWD が作業ツリー外なら埋め込み configs を使う。
           cd "$HOME"
           dotfiles local set git.email ci@example.com
           dotfiles local set git.name "CI"

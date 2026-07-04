@@ -1,6 +1,2 @@
-# zellij の設定配置（S0: copy-only の最小骨格）。
-# 設計: docs/dotfiles-native-design.md §6
-#
-# dst は配置先（必須）。`~` は HOME に展開される。
-# kind は省略時 "copy"。S0 は copy のみ対応。
+# zellij の設定を ~/.config/zellij へ copy する。
 dst = "~/.config/zellij"

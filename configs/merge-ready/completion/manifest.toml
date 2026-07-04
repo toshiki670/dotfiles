@@ -1,6 +1,6 @@
-# merge-ready（外部ツール）の fish 補完を生成・配置する（generate 層 / 設計書 §5・§7）。
+# merge-ready（外部ツール）の fish 補完を生成・配置する（generate 層）。
 # `merge-ready completions fish` の出力を dst のファイルへ書き出す。
-# when.deps = merge-ready が PATH に無ければ生成をスキップ（ユニット gate, §5.5）。
+# when.deps = merge-ready が PATH に無ければ生成をスキップ（ユニット gate）。
 cmd  = [ "merge-ready", "completions", "fish" ]
 dst  = "~/.config/fish/completions/merge-ready.fish"
 kind = "generate"

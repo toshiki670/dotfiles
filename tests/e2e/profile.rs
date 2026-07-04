@@ -2,7 +2,7 @@
 //!
 //! `dotfiles profile` の設定／表示と、`when = { profile = … }` を持つ架空ユニットが現在の profile
 //! 状態で配置／skip されること（既定 not-private）・冪等性を検証する。実 yt/mise は名指ししない
-//! （架空 fixture `demo` で書く・設計書 §15.2）。
+//! （架空 fixture `demo` で書く）。
 //!
 //! 注: `assert_cmd` の `.assert()` は非 TTY なので、profile gate を通った locals 宣言付きユニットは
 //! 警告のみで継続する（本ファイルの gate fixture は locals を持たないので注入経路には入らない）。

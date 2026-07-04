@@ -1,6 +1,6 @@
 //! upstream リモートを追従するマージヘルパー。
 //!
-//! 旧 `bin/git-upstream`（Python）の移植。`git upstream` サブコマンドとして、
+//! `git upstream` サブコマンドとして、
 //! `upstream/master` を fetch してマージする。`-i <remote_url>` で upstream
 //! リモートを初期化する。
 //!

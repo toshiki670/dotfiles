@@ -1,6 +1,6 @@
 //! `dotfiles apply` の合成軸（overlay / strategy / when）の E2E（S3 enabler / #471）。
 //!
-//! dst=ファイルへ条件付き断片（overlay）を strategy で重ねる挙動と、§5.5 の評価順
+//! dst=ファイルへ条件付き断片（overlay）を strategy で重ねる挙動と、評価順
 //! 不変条件（①ユニット gate 短絡 / ②宣言順 / ③preserve 最後）を hermetic fixture で検証する。
 //! when.deps（配列・AND）は PATH 先頭スタブ（[`crate::write_stub`]）の有無で、when.os は現在 OS
 //! （`darwin`/`linux` 表記）で gate する。トップレベル when はユニットスコープ、`[[overlay]]` の when は

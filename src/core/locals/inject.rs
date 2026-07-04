@@ -1,9 +1,9 @@
-//! placeholder 置換（§9.1-4）: 配置ファイル中の `@@name@@` を named value で埋める。
+//! placeholder 置換: 配置ファイル中の `@@name@@` を named value で埋める。
 //!
 //! `locals` を宣言した単位の materialize 後バイト列に対し、**解決済みの名前→値**だけを置換する
 //! （生成方式 copy / generate を問わず形式非依存）。条件分岐・関数を持つ汎用テンプレートは導入
 //! しない（named placeholder の単純置換のみ）。未解決名（ストアに値が無い）は `values` に入らない
-//! ため `@@name@@` が literal のまま残り、doctor が検出・再 apply で解消する（§9.1 非 TTY 劣化）。
+//! ため `@@name@@` が literal のまま残り、doctor が検出・再 apply で解消する（非 TTY 劣化）。
 
 use std::collections::BTreeMap;
 

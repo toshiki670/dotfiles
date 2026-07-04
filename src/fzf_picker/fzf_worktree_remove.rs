@@ -1,4 +1,4 @@
-//! 旧 `_fzf_worktree_remove`: リンク worktree を fzf で選び、確認のうえ削除する。
+//! リンク worktree を fzf で選び、確認のうえ削除する。
 //!
 //! 削除対象 worktree の **内側にいた場合だけ**、退避先（メイン worktree）の絶対パスを
 //! stdout に出力する。fish shim はそのパスへ `cd` する（自分が消えるディレクトリから
@@ -61,7 +61,7 @@ pub fn run() -> ExitCode {
 
     // 現在地が削除対象 worktree の内側なら、削除前に自プロセスを退避（git は現在の
     // worktree を消せない）し、親シェル用に退避先パスを stdout へ出す。削除の成否に
-    // 関わらず（内側にいた以上）親シェルも退避させる（旧 fish と同じ）。
+    // 関わらず（内側にいた以上）親シェルも退避させる。
     let mut cd_target: Option<String> = None;
     if let Some(main) = &main_path
         && is_inside(&wpath)
@@ -94,7 +94,7 @@ fn inside_work_tree() -> bool {
 }
 
 /// 現在地（cwd）が `wpath` と同じか、その配下にあるか。シンボリックリンクは
-/// 解決して比較する（旧 fish の `path resolve` 相当）。
+/// 解決して比較する。
 fn is_inside(wpath: &str) -> bool {
     let cur = std::env::current_dir()
         .ok()
@@ -124,7 +124,7 @@ fn worktree_remove(wpath: &str, force: bool) -> bool {
 }
 
 /// `[y/N]` プロンプトを stderr に出し、回答が yes（`y`/`Y`）かを返す。
-/// EOF・その他は no（旧 fish の `read -P` + `string match -qri '^y'` 相当）。
+/// EOF・その他は no。
 fn confirm(prompt: &str) -> bool {
     eprint!("{prompt}");
     let _ = io::stderr().flush();

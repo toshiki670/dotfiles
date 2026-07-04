@@ -1,3 +1,5 @@
+//! シェルファイルの lint 規則（shfmt でフォーマット、shellcheck で静的解析）。
+
 use super::super::{FileContext, Orchestrator};
 use crate::lint::exec::abs;
 

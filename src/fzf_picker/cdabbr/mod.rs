@@ -1,9 +1,9 @@
-//! 旧 `cdabbr`: prompt_pwd 風の省略パス（`~` / `/` 始まり）を、各セグメントの前方
-//! 一致でサブディレクトリへ再帰展開し、候補を fzf で選んで選択先を stdout に出力する。
+//! prompt_pwd 風の省略パス（`~` / `/` 始まり）を、各セグメントの前方一致でサブディレクトリへ
+//! 再帰展開し、候補を fzf で選んで選択先を stdout に出力する。
 //!
 //! 親シェルの cd は別プロセスから行えないため、選択パスを stdout に出し、薄い fish
 //! shim（`cdabbr.fish`）が `cd` する。fzf 不在時は候補が 1 つなら自動選択、複数なら
-//! 一覧を stderr に出して失敗する（旧 `_cdabbr_select_without_fzf` と同じ）。
+//! 一覧を stderr に出して失敗する。
 
 use std::path::PathBuf;
 use std::process::ExitCode;

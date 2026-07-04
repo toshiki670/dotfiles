@@ -32,7 +32,7 @@ impl Pending {
 /// `git worktree list --porcelain` の出力をパースする純関数。
 ///
 /// 最初のエントリを `is_main = true`、以降のリンク worktree を `is_main = false` と
-/// して返す（旧 awk `__fzf_worktree_list` の `idx == 0` 判定と同じ）。
+/// して返す。
 pub fn parse_worktrees(porcelain: &str) -> Vec<Worktree> {
     let mut out = Vec::new();
     let mut current: Option<Pending> = None;
@@ -78,8 +78,7 @@ pub enum AbbrBase {
 }
 
 /// prompt_pwd 風の省略パスを `(ベース種別, 空でないセグメント列)` に分解する純関数。
-/// `~` / `/` 始まりでなければ `None`（呼び出し側がエラーにする）。旧 `cdabbr` の
-/// 先頭判定 + `string split '/'` + 先頭要素除去 + 空要素除去に対応する。
+/// `~` / `/` 始まりでなければ `None`（呼び出し側がエラーにする）。
 pub fn parse_abbr_path(abbr: &str) -> Option<(AbbrBase, Vec<String>)> {
     let mut parts = abbr.split('/');
     let first = parts.next()?;

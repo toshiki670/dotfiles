@@ -1,4 +1,4 @@
-//! 状態駆動 gate（§10）が参照する、`~/.config/dotfiles/` 配下のスカラ状態ファイル。
+//! 状態駆動 gate が参照する、`~/.config/dotfiles/` 配下のスカラ状態ファイル。
 //!
 //! `profile`（マシンクラス）・`theme`（color スライス）のような **user が一度選んでおく状態**を、
 //! キー名ごとに 1 ファイル＝1 スカラ値で持つ。`when`（[`crate::core::manifest::When`]）の状態 gate は
@@ -8,7 +8,7 @@
 //!
 //! 未設定（ファイル無し / 空）は `None` を返す。profile はこれを「private ではない」既定として
 //! 解釈し、新規・仕事マシンへ private 設定が漏れないようにする（明示 opt-in）。`theme` も同じ
-//! read/write を後で相乗りする想定で、キー名でだけ分ける（機構を二重実装しない）。
+//! read/write を後で同じ機構を使い回す想定で、キー名でだけ分ける（機構を二重実装しない）。
 
 use std::path::{Path, PathBuf};
 

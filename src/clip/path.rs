@@ -1,6 +1,5 @@
 //! `clip path <file>`: ファイルの絶対パスをクリップボードへコピーし、確認のため
-//! stdout にも出力する（macOS 専用、pbcopy 経由。旧 abbr `c-path`
-//! （`path resolve | pbcopy; echo (pbpaste)`）相当）。
+//! stdout にも出力する（macOS 専用、pbcopy 経由）。
 
 use std::process::ExitCode;
 

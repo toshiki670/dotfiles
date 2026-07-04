@@ -1,4 +1,4 @@
-//! `dotfiles local set`（§9・§11）: named value（マシンローカル値）をストアへ設定する明示経路。
+//! `dotfiles local set`: named value（マシンローカル値）をストアへ設定する明示経路。
 //!
 //! ストアの読み書きは [`crate::core::locals::store`]。値は argv に載るためシェル履歴/ps に残る点は呼び出し側
 //! の選択であり、対話取得の非エコー（[`crate::core::locals::prompt`]）は apply の TTY 経路が担う別物。

@@ -1,6 +1,6 @@
 //! fish の conf.d フックからバックグラウンドで起動される worker 群。
 //!
-//! 引数は取らず環境変数で駆動する（clap は持たない）。各 worker は `run()` を公開し、
+//! 引数を受け取らず、環境変数で駆動する。各 worker は `run()` を公開し、
 //! `src/bin/<name>-worker.rs` の数行シムから呼ばれる。
 //!
 //! - [`daily_check`] — 1 日 1 回 brew/mise の outdated を集計して結果ファイルへ書く

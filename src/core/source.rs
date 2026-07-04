@@ -1,6 +1,6 @@
-//! ソースの二段構え（§8）: 配置エンジンが読む `configs/` の実体をどこから得るかを解決する。
+//! ソースの二段構え: 配置エンジンが読む `configs/` の実体をどこから得るかを解決する。
 //!
-//! 解決優先順位（§8）は **`--source` 明示 ＞ 作業ツリー検出 ＞ 埋め込みフォールバック**。
+//! 解決優先順位は **`--source` 明示 ＞ 作業ツリー検出 ＞ 埋め込みフォールバック**。
 //!
 //! - **作業ツリー直読み**（dev / 移行期の主役）: 設定を編集して即 apply で検証できる。CWD から
 //!   上へ辿り、ユニット（`manifest.toml`）を持つ最初の `configs/` を使う。
@@ -9,7 +9,7 @@
 //!
 //! 配置エンジン（[`crate::core::discover`] / [`crate::core::apply::copy`] / [`crate::core::apply::compose`] / [`crate::core::apply::generate`] /
 //! [`crate::core::hooks`]）は全て実 path で `std::fs` を読む。埋め込みを temp dir へ実体化して**実 path**を
-//! 渡すことで、エンジンは「ソースが埋め込みか実 FS か」を知らずに済む（安定な core を揮発に依存させない）。
+//! 渡すことで、エンジンは「ソースが埋め込みか実 FS か」を知らずに済む。
 
 use crate::core::discover;
 use include_dir::{Dir, include_dir};
@@ -65,7 +65,7 @@ impl Resolved {
     }
 }
 
-/// ソースを二段構えで解決する（§8 の優先順位）。
+/// ソースを二段構えで解決する（上記の優先順位）。
 ///
 /// 1. `explicit`（`--source`）あり → そのまま使う（dir でなければエラー）。
 /// 2. なし → 作業ツリー検出（[`detect_working_tree`]）。

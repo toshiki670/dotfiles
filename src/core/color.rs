@@ -1,6 +1,5 @@
-//! `dotfiles color sample`（§10.2 / §11）: ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
+//! `dotfiles color sample`: ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
 //!
-//! 旧 `crates/color`（さらに遡れば `bin/color`（Python））の責務を dotfiles へ吸収したもの。
 //! 出力は端末で色を確認するための表で、入力は取らない。
 //!
 //! 参考:

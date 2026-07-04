@@ -30,7 +30,7 @@ struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
 
-    /// ソースルートを明示指定する（§8 の上級オプション。通常は作業ツリー検出 → 埋め込みで自動解決）。
+    /// ソースルートを明示指定する（上級オプション。通常は作業ツリー検出 → 埋め込みで自動解決）。
     ///
     /// apply / list / doctor 横断で効く（`global`）。前面に出さない（`hide`）。
     #[arg(long, global = true, hide = true, value_name = "DIR")]
@@ -39,16 +39,16 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// ソース（作業ツリー / 埋め込み・§8）を走査し、copy / generate / overlay 合成で設定を配置する。
+    /// 設定をホームディレクトリへ配置する（配置先・方法は各 manifest.toml の宣言に従う）。
     Apply,
-    /// configs の manifest を集約し、配置先一覧を表示する。
+    /// 配置の一覧（各ユニットの配置先と方式）を表示する。
     List,
-    /// マシンローカル値（named value）をストアへ設定する（§9）。
+    /// マシン固有の値（git の email 等）をストアへ保存する。
     Local {
         #[command(subcommand)]
         action: LocalAction,
     },
-    /// マシンクラス（`profile`）の状態 gate を設定／表示する（§10）。
+    /// マシンクラス（profile）を設定・表示する。private 向け設定を採るかどうかの切替。
     ///
     /// 引数 `<name>`（例 `private`）を渡すと状態ファイルへ書き、`when = { profile = … }` の
     /// 断片が採否される。引数なしは現在の profile を表示する。未設定の既定は not-private
@@ -57,16 +57,16 @@ enum Commands {
         /// 設定する profile 名（省略時は現在値を表示）。
         name: Option<String>,
     },
-    /// テーマ／カラー関連（§10）。現状は確認表出力の `sample` のみ。
+    /// ANSI カラー確認表を表示する（テーマ切替は #513 で追加予定）。
     Color {
         #[command(subcommand)]
         action: ColorAction,
     },
-    /// 依存・`locals` 未設定などを診断する（雛形・§9）。
+    /// 未設定のマシンローカル値を報告する。
     Doctor,
 }
 
-/// `color` のサブコマンド。テーマ手動固定（dark/light/auto）は後続スライスで追加予定（§10.2）。
+/// `color` のサブコマンド。テーマ手動固定（dark/light/auto）は #513 で追加予定。
 #[derive(Subcommand)]
 enum ColorAction {
     /// ANSI カラーコード（16 色 + 256 色）の確認表を出力する。
@@ -117,7 +117,7 @@ pub fn run() {
     }
 }
 
-/// `dotfiles apply`：ソースを二段構えで解決し（§8）、HOME を基点に配置する。
+/// `dotfiles apply`：ソースを二段構えで解決し、HOME を基点に配置する。
 /// 解決元（作業ツリー / 埋め込み / `--source`）を 1 行目に示す。
 fn run_apply(source: Option<&Path>) -> Result<(), String> {
     let home = home_dir()?;

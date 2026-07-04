@@ -1,5 +1,5 @@
 //! `clip text <file>`: ファイルの中身をクリップボードへコピーする（macOS 専用、
-//! pbcopy 経由。旧 abbr `c-file`（`pbcopy < file`）相当）。
+//! pbcopy 経由）。
 
 use std::process::ExitCode;
 

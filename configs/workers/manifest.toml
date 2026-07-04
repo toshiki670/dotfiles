@@ -1,7 +1,7 @@
 # バックグラウンド worker（daily-check-worker・git-background-fetch-worker、src/workers）を
-# 起動する fish の conf.d 断片を配置する。設計: docs/dotfiles-native-design.md §5・§6 / Issue #558
+# 起動する fish の conf.d 断片を配置する。Issue #558
 #
 # dst は fish の conf.d（複数ツールが断片を持ち寄る合流点。eza の 40-eza.fish 等と同じ場所）。
 # 中身は各 worker バイナリの呼び出しグルーコードで fish 本体（configs/fish）ではなくここに置く。
-# kind は省略時 "copy"。ファイル名の番号 prefix (60-/70-) が読み込み順を表す（§6.3 ルール4）。
+# ファイル名の番号 prefix (60-/70-) が読み込み順を表す。
 dst = "~/.config/fish/conf.d"

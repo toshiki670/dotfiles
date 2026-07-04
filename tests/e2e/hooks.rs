@@ -4,8 +4,8 @@
 //! ①onchange skip/run（ソースハッシュ・条件④）②when.os ユニット gate が hooks を覆う（条件③）
 //! ③未インストール（PATH 不在）は中断せず skip ④実行して非ゼロ終了は apply エラー
 //! ⑤空コマンドの load 時拒否 ⑥list の hooks 表示 ⑦区切り付き相対パス hook は manifest dir 基準で
-//! 解決・実行（§13.3 / #498）⑧区切り付き相対 hook のスクリプト不在はエラー（bare 名の skip と区別, #498）
-//! ⑨`frequency = "always"` は onchange gate を通さず毎 apply 実行（§13.0 / #546）。
+//! 解決・実行（#498）⑧区切り付き相対 hook のスクリプト不在はエラー（bare 名の skip と区別, #498）
+//! ⑨`frequency = "always"` は onchange gate を通さず毎 apply 実行（#546）。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
@@ -91,7 +91,7 @@ fn hook_runs_on_first_apply_skips_when_unchanged_reruns_on_change() {
     );
 }
 
-/// 条件⑨ / §13.0 / #546: `frequency = "always"` は onchange gate を通さず毎 apply 無条件に実行する。
+/// 条件⑨ / #546: `frequency = "always"` は onchange gate を通さず毎 apply 無条件に実行する。
 /// ソース不変で 3 回 apply しても毎回走る（マーカー 3 行）＝ onchange の skip（不変なら 1 行）と対比。
 /// `[[hooks]]` array-of-tables ＋ `frequency` キーの構文も併せて exercise する。
 #[cfg(unix)]
@@ -205,7 +205,7 @@ fn nonzero_exit_fails_apply() {
         .stderr(predicate::str::contains("異常終了"));
 }
 
-/// §13.3 / #498: 区切り付き相対パスの hook（`["./hook.sh"]`）はユニットの `manifest.toml`
+/// #498: 区切り付き相対パスの hook（`["./hook.sh"]`）はユニットの `manifest.toml`
 /// ディレクトリ基準で解決・実行される。apply のプロセス CWD は `work` ルート（unit dir ではない）に
 /// 固定するので、もし旧挙動（CWD 継承）なら `work/./hook.sh` は不在で skip されマーカーが残らない。
 /// マーカーが作られ、かつ hook の実行時 CWD がユニットディレクトリであることが manifest dir 基準解決の証拠。
@@ -250,7 +250,7 @@ fn relative_path_hook_resolves_against_manifest_dir() {
     );
 }
 
-/// §13.1 / #498: 区切り付き相対パスの hook が指すスクリプトが不在（typo / コミット漏れ）の場合は、
+/// #498: 区切り付き相対パスの hook が指すスクリプトが不在（typo / コミット漏れ）の場合は、
 /// bare 名の「未インストール → skip」とは区別し、エラーで apply を止める（実体化できないものを黙殺しない）。
 #[cfg(unix)]
 #[test]

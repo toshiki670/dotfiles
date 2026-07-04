@@ -1,11 +1,11 @@
-# git config を dotfiles ネイティブで配置する（copy 層 ＋ named value 注入。設計書 §9・§14）。
+# git config を dotfiles ネイティブで配置する（copy 層 ＋ named value 注入）。
 #
 # git 設定一式を dst 配下へツリーのまま copy する:
-#   config            … git native [include] で配下 configs/<part> を束ねる薄い親（§14）
+#   config            … git native [include] で配下 configs/<part> を束ねる薄い親
 #   configs/<part>    … alias / core / delta / fast_forward / ghq / push / user / vimdiff
 #
 # user 部品は email/name をマシンローカル値（named value）として持ち、配置時に `@@git.email@@` /
-# `@@git.name@@` がストア（~/.config/dotfiles/local.toml）から注入される（§9）。旧 env
+# `@@git.name@@` がストア（~/.config/dotfiles/local.toml）から注入される。旧 env
 # "DOTFILES_GIT_EMAIL/NAME" 注入＋user.tmpl の if 分岐を廃し、宣言的な locals に一本化する。
 # email/name は commit に載るため非 sensitive（sensitive は宣言しない）。
 #

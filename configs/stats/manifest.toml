@@ -14,18 +14,15 @@
 #      （ユーザー設定ではなく Stats 自身が書く値なので、base（生きたドメイン）にそのまま委ねる）。
 #      base の上に重なり、dotfiles 所有キーだけを上書きする（plist-shallow・トップレベル粒度）。
 #
-# 合成は plist-shallow（plist トップレベル shallow merge・後勝ち。deep merge はしない。命名の
-# 理由は設計書§5.5「例：Stats.plist」参照）。
-#
 # dst の置き場所: ライブドメインが真実のソースで、dst は defaults import へ渡すためだけに都度
 # 書き出す使い捨ての下書き（次の apply で再計算され、消えても実害が無い）。よって永続状態
-# （named value・hooks 実行済みハッシュ等）を置く ~/.config/dotfiles/ とは分け、他 config も使い捨て
-# データに使っている ~/.cache/dotfiles/（例: configs/claude/statusline-command.py の
-# ~/.cache/claude/）に置く。cfprefsd 管轄外・XML＝差分可読という #465 の決定はそのまま引き継ぐ。
+# （named value・hooks 実行済みハッシュ等）を置く ~/.config/dotfiles/ とは分け、cfprefsd 管轄外の
+# 使い捨てデータとして他 config も使う ~/.cache/dotfiles/（例: configs/claude/statusline-command.py
+# の ~/.cache/claude/）に置く。
 #
-# when.deps=["defaults"]: base overlay が `defaults` を呼ぶため、無い環境（テスト等）ではユニット
-# ごと skip する（①ユニット gate が overlay 評価より先に効くため、defaults 不在でも apply は落ちない。
-# 既存 E2E の空 PATH 下でも安全に skip される）。when.os="darwin": Stats は macOS 専用アプリ。
+# when.deps=["defaults"]: base overlay が `defaults` を呼ぶため、無い環境（テスト等）では
+# ユニットごと skip する（既存 E2E の空 PATH 下でも安全に skip される）。
+# when.os="darwin": Stats は macOS 専用アプリ。
 dst      = "~/.cache/dotfiles/eu.exelban.Stats.plist"
 strategy = "plist-shallow"
 when     = { deps = [ "defaults" ], os = "darwin" }
@@ -41,7 +38,7 @@ cmd = [ "defaults", "export", "eu.exelban.Stats", "-" ]
 [[overlay]]
 src = "Stats.plist"
 
-# hooks: 配置後、合成済み dst をライブドメインへ反映する（§13）。dst は「生きたドメイン全体 ＋
+# hooks: 配置後、合成済み dst をライブドメインへ反映する。dst は「生きたドメイン全体 ＋
 # dotfiles 管理サブセット」を合成済みなので、defaults import 自体がマージ／全置換のどちらであっても
 # 結果は一致する（正しさが import の未文書化の挙動に依存しない設計。使い捨てドメインでの実機検証
 # ではトップレベルキー単位のマージだったことを確認済み。#531 コメント参照）。

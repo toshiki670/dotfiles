@@ -1,3 +1,5 @@
+//! Markdown ファイルの lint 規則（rumdl check を呼ぶ）。
+
 use super::super::{FileContext, Orchestrator};
 
 impl Orchestrator {

@@ -1,8 +1,7 @@
-//! AI-powered git commit with Conventional Commits。旧 `gcm.fish` の移植。
+//! AI-powered git commit with Conventional Commits。
 //!
 //! ステージ済み diff を `claude -p` に渡して Conventional Commits の JSON 提案を
-//! 生成し、対話的に承認/修正して 1 つ以上のコミットを実行する。JSON 解析は
-//! （fish 版の jq の代わりに）serde_json で行うため jq 依存は不要。
+//! 生成し、対話的に承認/修正して 1 つ以上のコミットを実行する。
 
 mod claude;
 mod execute;
