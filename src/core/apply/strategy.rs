@@ -4,8 +4,7 @@
 //!   「cmd 出力＋sibling 連結」もこの戦略へ統一する（出力は従来と不変）。
 //! - `json_shallow` … JSON のトップレベル shallow merge（後勝ち）。`base`（既存 dst）を
 //!   与えると最下層の土台として最初に畳み、dotfiles 所有のトップレベルキーだけを断片で
-//!   上書きする。dotfiles が定義しない非管理キーは土台のまま全保持される（旧 `modify_` の
-//!   `jq '$local + $forced'` と同値。deep merge はしない）。
+//!   上書きする。dotfiles が定義しない非管理キーは土台のまま全保持される（deep merge はしない）。
 //! - `plist_shallow` … `json_shallow` の plist 版（トップレベル shallow merge・後勝ち・deep merge
 //!   しない）。shallow merge を保証するのは plist の dict モデルであって XML という構文ではない
 //!   ため、`xml_shallow` ではなく `plist_shallow` と呼ぶ。
@@ -18,8 +17,7 @@ use std::io::Cursor;
 
 /// テキスト断片を順に連結する。境目では、直前が改行で終わっていなければ改行を 1 つ補う。
 ///
-/// 空入力は空、単一断片はそのまま。generate の旧 `append_siblings`（生成物の後ろへ sibling を
-/// 行頭で接ぐ）と同じ規則で、cmd 出力を先頭断片に置けば従来出力と一致する。
+/// 空入力は空、単一断片はそのまま返す。
 pub fn concat(frags: &[Vec<u8>]) -> Vec<u8> {
     let mut out = Vec::new();
     for frag in frags {
@@ -35,7 +33,7 @@ pub fn concat(frags: &[Vec<u8>]) -> Vec<u8> {
 /// 最下層の土台として最初に畳み、その上に断片を重ねる。各断片・`base` は JSON オブジェクトを要する。
 ///
 /// `base` の意味は「dotfiles 非管理のトップレベルキーを全保持し、dotfiles 所有キー（断片が
-/// 定義するキー）だけを断片で上書きする」（旧 `$local + $forced`）。`base` が無ければ純粋に
+/// 定義するキー）だけを断片で上書きする」。`base` が無ければ純粋に
 /// 断片だけを合成する。出力は pretty JSON ＋末尾改行。
 pub fn json_shallow(frags: &[Vec<u8>], base: Option<&[u8]>) -> Result<Vec<u8>, String> {
     let mut merged = Map::new();
@@ -165,7 +163,7 @@ mod tests {
     #[test]
     fn json_shallow_base_preserves_unmanaged_and_overwrites_owned() {
         // base＝既存 dst。dotfiles 断片が定義するキー（language）は断片が勝ち、断片が
-        // 定義しない非管理キー（model / effortLevel）は土台のまま全保持される（旧 $local+$forced）。
+        // 定義しない非管理キー（model / effortLevel）は土台のまま全保持される。
         let frag = b(r#"{"language":"ja","hook":"base"}"#);
         let existing = b(r#"{"model":"local","effortLevel":"high","language":"en"}"#);
         let out = json_shallow(&[frag], Some(&existing)).unwrap();

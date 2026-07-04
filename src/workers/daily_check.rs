@@ -1,5 +1,4 @@
 //! 1 日 1 回 brew/mise の outdated を集計して結果ファイルに書き出すバックグラウンド worker。
-//! 旧 `_daily_check_worker.fish` の移植。
 //!
 //! conf.d/60-daily-check.fish から、以下の環境変数を渡してバックグラウンドで起動される:
 //!   DAILY_CHECK_TS / DAILY_CHECK_CACHE / DAILY_CHECK_RESULT

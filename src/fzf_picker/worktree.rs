@@ -21,7 +21,7 @@ pub struct Worktree {
 
 /// 指定 repo の worktree 一覧を `git -C <repo> worktree list --porcelain` から取得する。
 ///
-/// git が無い・repo でない等で失敗したら空 Vec を返す（旧 fish の `2>/dev/null` 相当）。
+/// git が無い・repo でない等で失敗したら空 Vec を返す。
 /// 取得した porcelain は [`parse_worktrees`] でパースする。
 pub fn list_worktrees(repo: &Path) -> Vec<Worktree> {
     let output = Command::new("git")

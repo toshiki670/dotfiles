@@ -1,5 +1,5 @@
 //! `gh repo clone` してから `ghq migrate` でリポジトリを移設し、移設先パスを
-//! stdout に出力する。旧 `gh-clone.fish` のロジック部分。
+//! stdout に出力する。
 //!
 //! 親シェルの cd は別プロセスから行えないため、移設先パスを stdout に出し、
 //! 薄い fish shim（gh-clone.fish）が `cd` する（shim 定石）。stdout はパスのみ、

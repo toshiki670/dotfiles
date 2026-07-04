@@ -1,10 +1,10 @@
-//! 対話 y/N 確認（旧 bash の `confirm()` 相当）。純判定と stdin の IO ラッパに分ける。
+//! 対話 y/N 確認。純判定と stdin の IO ラッパに分ける。
 
 use std::io::{self, Write};
 
 /// 応答が肯定（`y` または `Y` の 1 文字のみ）かどうか。
 ///
-/// 旧 bash の `[[ "$reply" =~ ^[Yy]$ ]]` 相当で、`yes` などは肯定としない。
+/// `yes` などは肯定として扱わない。
 pub fn is_yes(reply: &str) -> bool {
     matches!(reply.trim(), "y" | "Y")
 }

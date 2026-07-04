@@ -46,7 +46,7 @@ pub struct Manifest {
     pub strategy: Option<Strategy>,
     /// 既存 dst を `json-shallow` の最下層（土台）として温存する。`true` で dotfiles が
     /// 定義しないトップレベルキー（例 `model` / `effortLevel` や任意のローカル固有キー）を
-    /// 全保持し、dotfiles 所有キーだけ断片で上書きする（旧 `jq '$local + $forced'` と同値）。
+    /// 全保持し、dotfiles 所有キーだけ断片で上書きする。
     /// `json-shallow` 専用（他 strategy・省略との併記は load 時エラー）。省略時 false。
     #[serde(default)]
     pub preserve: bool,
@@ -175,7 +175,7 @@ pub struct Overlay {
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct When {
-    /// 依存バイナリ（配列・AND）。全て PATH にある時だけ採用（旧 `{{ if lookPath … }}`）。
+    /// 依存バイナリ（配列・AND）。全て PATH にある時だけ採用。
     /// 単数 `dep` は廃止し、複数形＝配列で統一する（語感の破綻を避ける）。
     #[serde(default)]
     pub deps: Vec<String>,

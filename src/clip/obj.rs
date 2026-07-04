@@ -1,5 +1,5 @@
 //! `clip obj <file>`: ファイルを Finder 貼り付け可能なファイルオブジェクトとして
-//! クリップボードへコピーする（macOS 専用、osascript 経由）。旧 `copy-obj` 相当。
+//! クリップボードへコピーする（macOS 専用、osascript 経由）。
 
 use std::process::ExitCode;
 

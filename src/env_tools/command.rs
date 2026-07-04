@@ -1,4 +1,4 @@
-//! 外部コマンドの存在確認とラベル付き実行（旧 bash の `command -v` / `run()` 相当）。
+//! 外部コマンドの存在確認とラベル付き実行。
 
 use std::process::Command;
 
@@ -10,8 +10,7 @@ pub fn command_exists(name: &str) -> bool {
 
 /// `=== <label> ===` を出してコマンドを実行し、終了後に空行を入れる。
 ///
-/// 旧 bash の `run()` と同じく、失敗してもパニックや異常終了はせず警告を出して続行する
-/// （`"$@" || echo "⚠️  $label failed, continuing..."` 相当）。
+/// 失敗してもパニックや異常終了はせず、警告を出して続行する。
 pub fn run(label: &str, program: &str, args: &[&str]) {
     println!("=== {label} ===");
     let ok = Command::new(program)

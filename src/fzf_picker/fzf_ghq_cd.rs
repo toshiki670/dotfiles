@@ -1,5 +1,5 @@
-//! 旧 `_fzf_ghq_cd`: `ghq list` の各 repo と、そのリンク worktree をツリー表示して
-//! fzf で選択し、選択先の絶対パスを stdout に出力する。
+//! `ghq list` の各 repo と、そのリンク worktree をツリー表示して fzf で選択し、
+//! 選択先の絶対パスを stdout に出力する。
 //!
 //! 親シェルの cd は別プロセスから行えないため、選択パスを stdout に出し、薄い fish
 //! shim（`_fzf_ghq_cd.fish`）が `cd` する（shim 定石）。fzf 本体はこのバイナリが

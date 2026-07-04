@@ -5,7 +5,7 @@
 use std::path::{Path, PathBuf};
 
 /// `base` から、各セグメントを「前方一致するサブディレクトリ名」として 1 段ずつ
-/// 下りていき、辿り着いたディレクトリ群を返す（旧 `_cdabbr_expand_recursive`）。
+/// 下りていき、辿り着いたディレクトリ群を返す。
 /// セグメントが空なら `base` 自身を返す。順序は名前順で決定的にする。
 pub(super) fn expand_abbreviated(base: &Path, segments: &[String]) -> Vec<PathBuf> {
     let Some((seg, rest)) = segments.split_first() else {
