@@ -1,7 +1,7 @@
 # Global Taplo defaults for every *.toml in this repo (auto-discovered as taplo.toml).
-# starship.toml はファイル先頭の `$schema`（→ home/dot_config/starship-config-schema.json）で
-# エディタ/taplo がスキーマ検証する。Nix 撤去で外部取得制約が無くなったため、
-# Nix 用の vendored schema rule（schemas/ + sync）は撤去した。
+# starship.toml はファイル先頭の `$schema`（https://starship.rs/config-schema.json）で
+# エディタ/taplo がスキーマ検証する。以前は同梱 schema を ~/.config へ deploy していたが、
+# ネットワーク参照に寄せた（configs/starship/manifest.toml 参照）。
 
 [formatting]
 # Stricter, more uniform layout than Taplo defaults.

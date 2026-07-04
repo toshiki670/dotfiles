@@ -10,7 +10,6 @@ impl Orchestrator {
             "fix",
             &["shfmt", "-w", "-i", "2", "-ci", &abs],
             None,
-            false,
         )
     }
 
@@ -23,12 +22,11 @@ impl Orchestrator {
             "check",
             &["shfmt", "-d", "-i", "2", "-ci", &abs],
             None,
-            false,
         ) != 0
         {
             failed = 1;
         }
-        if self.run_rule_cmd(f, "shell", "check", &["shellcheck", &abs], None, false) != 0 {
+        if self.run_rule_cmd(f, "shell", "check", &["shellcheck", &abs], None) != 0 {
             failed = 1;
         }
         failed

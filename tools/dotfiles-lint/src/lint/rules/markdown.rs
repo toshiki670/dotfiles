@@ -10,7 +10,6 @@ impl Orchestrator {
             "fix",
             &["rumdl", "check", "--fix", "--config", ".rumdl.toml", &rel],
             Some(&root),
-            false,
         )
     }
 
@@ -23,7 +22,6 @@ impl Orchestrator {
             "check",
             &["rumdl", "check", "--config", ".rumdl.toml", &rel],
             Some(&root),
-            false,
         )
     }
 }

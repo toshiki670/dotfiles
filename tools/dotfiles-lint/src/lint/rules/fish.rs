@@ -38,20 +38,11 @@ impl Orchestrator {
             "check",
             &["fish_indent", "--check", &target],
             None,
-            false,
         ) != 0
         {
             failed = 1;
         }
-        if self.run_rule_cmd(
-            f,
-            "fish",
-            "check",
-            &["fish", "--no-execute", &target],
-            None,
-            false,
-        ) != 0
-        {
+        if self.run_rule_cmd(f, "fish", "check", &["fish", "--no-execute", &target], None) != 0 {
             failed = 1;
         }
         failed
