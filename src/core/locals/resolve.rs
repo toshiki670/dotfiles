@@ -1,5 +1,5 @@
 //! apply 時のローカル値解決: 単位の `locals` をストアと突き合わせ、未設定値を
-//! TTY なら対話取得（sensitive は非エコー）、非 TTY なら警告のみで継続する（**ブロックしない**）。
+//! TTY なら対話取得（sensitive は非エコー）、非 TTY なら警告のみで継続する。
 //!
 //! ここで解決できた「名前→値」だけを [`crate::core::locals::inject`] が placeholder 置換に使う。未解決の名前は
 //! マップに入らないため、配置ファイルでは `@@name@@` が literal のまま残り doctor が検出する。

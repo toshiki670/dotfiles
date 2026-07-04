@@ -9,7 +9,7 @@
 //!
 //! 配置エンジン（[`crate::core::discover`] / [`crate::core::apply::copy`] / [`crate::core::apply::compose`] / [`crate::core::apply::generate`] /
 //! [`crate::core::hooks`]）は全て実 path で `std::fs` を読む。埋め込みを temp dir へ実体化して**実 path**を
-//! 渡すことで、エンジンは「ソースが埋め込みか実 FS か」を知らずに済む（安定な core を揮発に依存させない）。
+//! 渡すことで、エンジンは「ソースが埋め込みか実 FS か」を知らずに済む。
 
 use crate::core::discover;
 use include_dir::{Dir, include_dir};

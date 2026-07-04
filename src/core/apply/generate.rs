@@ -2,7 +2,7 @@
 //!
 //! 補完5本（gh / docker / bat / clip / merge-ready）が対象。dst=ファイルで、`cmd` の標準出力に
 //! 同ディレクトリの sibling（`manifest.toml` 以外）を連結する。連結は合成軸の `concat` 戦略へ
-//! 統一した（[`crate::core::apply::strategy::concat`]、出力は従来と不変）。`when.deps` gate は apply 前段の
+//! 統一した（[`crate::core::apply::strategy::concat`]）。`when.deps` gate は apply 前段の
 //! ユニット gate（[`crate::core::apply::gate`]）へ移し、実体の合成・書き込みは [`crate::core::apply::compose`] が担う。
 //! 本モジュールはコマンド実行（`run_cmd`）と、既定断片列（cmd 出力＋sibling）の組み立てだけを持つ。
 
