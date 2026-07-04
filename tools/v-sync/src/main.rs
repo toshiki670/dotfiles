@@ -6,7 +6,6 @@ use std::process::{Command, ExitCode};
 
 use clap::Parser;
 
-/// Neovim プラグインを同期し lazy-lock.json を configs/nvim へ書き戻す。
 #[derive(Parser)]
 #[command(
     name = "v-sync",
