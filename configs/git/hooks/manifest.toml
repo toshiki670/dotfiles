@@ -1,6 +1,5 @@
 # git hooks を配置する（copy 層 ＋ 配置後リンク生成 hook。設計書 §13・§16）。
 #
-# 旧 chezmoi（home/dot_config/git/hooks/, executable_dispatch ＋ symlink_* 13本）の置き換え。
 # 全 hook 種別は同じ内容（`dispatch`）を起動名で分岐するだけなので、13 個複製 copy せず
 # `dispatch` 1 本だけを copy し、hook 名 13 本は配置後の onchange フックで `dispatch` への
 # symlink として生成する（ghostty の symlink フック, configs/ghostty/manifest.toml と同じ

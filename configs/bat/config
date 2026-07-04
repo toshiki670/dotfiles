@@ -4,7 +4,7 @@
 # (light = One Half Light, dark = Ayu). bat detects the background color (OSC 11)
 # and picks --theme-light or --theme-dark automatically, so no shell wiring is
 # needed. The dark theme "ayu-dark" is the custom bat theme in themes/, registered
-# by `bat cache --build` (see .chezmoiscripts/run_onchange_after_build-bat-cache).
+# by `bat cache --build` (run by the hooks in this tool's manifest.toml).
 --theme="auto"
 --theme-light="OneHalfLight"
 --theme-dark="ayu-dark"

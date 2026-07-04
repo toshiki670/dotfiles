@@ -1,6 +1,6 @@
 # git config を dotfiles ネイティブで配置する（copy 層 ＋ named value 注入。設計書 §9・§14）。
 #
-# 旧 chezmoi（home/dot_config/git/）の置き換え。dst 配下へツリーをそのまま copy する:
+# git 設定一式を dst 配下へツリーのまま copy する:
 #   config            … git native [include] で配下 configs/<part> を束ねる薄い親（§14）
 #   configs/<part>    … alias / core / delta / fast_forward / ghq / push / user / vimdiff
 #

@@ -46,10 +46,10 @@ pub struct Manifest {
     /// `json-shallow` 専用（他 strategy・省略との併記は load 時エラー）。省略時 false。
     #[serde(default)]
     pub preserve: bool,
-    /// 所有者のみアクセス可（chezmoi `private_` = 0600 相当）。省略時 false。
+    /// 所有者のみアクセス可（0600 相当）。省略時 false。
     #[serde(default)]
     pub private: bool,
-    /// 実行ビットを付与（chezmoi `executable_` 相当。0644→0755 / 0600→0700）。省略時 false。
+    /// 実行ビットを付与（0644→0755 / 0600→0700）。省略時 false。
     #[serde(default)]
     pub executable: bool,
     /// generate のとき実行するコマンド（argv）。先頭が実行ファイル名、以降が引数。
@@ -173,7 +173,7 @@ pub struct When {
     /// 単数 `dep` は廃止し、複数形＝配列で統一する（語感の破綻を避ける, §5.5）。
     #[serde(default)]
     pub deps: Vec<String>,
-    /// OS（スカラ）。現在 OS と一致時だけ採用（旧 `{{ if eq .chezmoi.os … }}`）。chezmoi 互換表記。
+    /// OS（スカラ）。現在 OS と一致時だけ採用（`darwin` / `linux` 表記）。
     #[serde(default)]
     pub os: Option<String>,
     /// マシンクラス（スカラ・状態 gate）。`dotfiles profile <name>` が書いた現在の profile 状態
@@ -294,8 +294,8 @@ impl Manifest {
     /// この単位の配置ファイルへ与える Unix パーミッション（8 進）。
     ///
     /// base は `private` で決まる（0600 / 0644）。`executable` のとき、read ビットが
-    /// 立っている桁へ execute ビットを足す（0644→0755 / 0600→0700）。chezmoi の
-    /// `private_` / `executable_` 属性と同じ合成規則。
+    /// 立っている桁へ execute ビットを足す（0644→0755 / 0600→0700）。`private` /
+    /// `executable` 属性の合成規則。
     #[cfg(unix)]
     pub fn mode(&self) -> u32 {
         let base: u32 = if self.private { 0o600 } else { 0o644 };

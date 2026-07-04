@@ -7,6 +7,4 @@
 #
 # completion/（fish 補完の generate 層）はサブ manifest を持つので、この copy からは委譲され
 # 除外される（§6.3 ルール1。gh/config と gh/completion と同じ関係）。
-#
-# 旧 chezmoi（home/dot_config/merge-ready.toml）の置き換え。撤去は S9（#463）で行う。
 dst = "~/.config"

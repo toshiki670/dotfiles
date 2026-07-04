@@ -1,5 +1,5 @@
 # ~/.bash_profile / ~/.bashenv / ~/.bashrc を配置する（copy 層 / 設計書 §5・§6）。
-# 旧 chezmoi（home/dot_bash_profile.tmpl 等、`include` によるビルド時連結）の置き換え。
+# 以前 `include` でビルド時連結していた bash 設定の置き換え。
 #
 # 主シェルは fish で bash の役割は最小。共有断片（common.sh 等）は configs/bash/scripts/
 # （別 manifest, dst=~/.config/bash）に1か所だけ持ち、ここの3ファイルは合成順を宣言する
