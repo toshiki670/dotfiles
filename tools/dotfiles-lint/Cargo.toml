@@ -10,8 +10,10 @@ repository  = { workspace = true }
 version     = "0.0.0"
 
 [dependencies]
-clap     = { workspace = true }
-ignore   = { workspace = true }
+clap   = { workspace = true }
+ignore = { workspace = true }
+
+[dev-dependencies]
 tempfile = { workspace = true }
 
 [lints]

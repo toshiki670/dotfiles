@@ -1,8 +1,7 @@
 //! dotfiles の lint オーケストレータ。旧 `nix/lint`（Python）の移植。
 //!
-//! ファイルを分類し、種別ごとに外部フォーマッタ/リンタを呼ぶ。chezmoi の
-//! `*.sh.tmpl` / `*.fish.tmpl` は `chezmoi execute-template` で展開してから検査する。
-//! ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff / chezmoi / fish）は
+//! ファイルを分類し、種別ごとに外部フォーマッタ/リンタを呼ぶ。
+//! ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff / fish）は
 //! mise で供給される前提で、PATH 上の名前で実行する。
 
 mod classify;
@@ -10,7 +9,6 @@ mod collect;
 mod exec;
 mod report;
 mod rules;
-mod template;
 
 pub use collect::{collect_files, find_repo_root};
 
@@ -41,16 +39,14 @@ pub struct Failure {
 /// lint 実行の文脈と失敗記録を保持する。
 pub struct Orchestrator {
     repo_root: PathBuf,
-    tmp_dir: PathBuf,
     verbose: bool,
     pub failures: Vec<Failure>,
 }
 
 impl Orchestrator {
-    pub fn new(repo_root: PathBuf, tmp_dir: PathBuf, verbose: bool) -> Self {
+    pub fn new(repo_root: PathBuf, verbose: bool) -> Self {
         Self {
             repo_root,
-            tmp_dir,
             verbose,
             failures: Vec::new(),
         }

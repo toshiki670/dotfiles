@@ -7,7 +7,7 @@
 - Simplification of environment construction
 - Unification of environment across multiple platforms
 
-This repository is managed with [chezmoi](https://www.chezmoi.io/). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`dotfiles`, `git-upstream`, `gcm`, `clip`, …) built as bins of the repository-root `dotfiles` package and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
+This repository is deployed by its own **`dotfiles`** CLI (`dotfiles apply` places everything under `configs/`). **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small **Rust** CLI commands (`dotfiles`, `git-upstream`, `gcm`, `clip`, …) built as bins of the repository-root `dotfiles` package and installed via `cargo install` into `~/.cargo/bin` (see [Rust commands](#rust-commands)).
 
 # Prerequisites
 
@@ -60,39 +60,33 @@ rtk init -g
 
 # Installation
 
-## Using chezmoi (Recommended)
-
-### 1. Install chezmoi
+## 1. Install the `dotfiles` CLI
 
 ```bash
-brew install chezmoi
+cargo install --git https://github.com/toshiki670/dotfiles
 ```
 
-### 2. Initialize with this repository
+The `configs/` tree is embedded in the binary, so this single command is enough (a local clone's working tree is used automatically when present). The Rust toolchain is supplied by mise (`mise install`); see [Rust commands](#rust-commands).
+
+## 2. Review destinations (optional)
 
 ```bash
-chezmoi init --ssh toshiki670
+dotfiles list
 ```
 
-### 3. Preview changes (optional)
+## 3. Apply the dotfiles
 
 ```bash
-chezmoi diff
+dotfiles apply
 ```
 
-### 4. Apply the dotfiles
-
-```bash
-chezmoi apply
-```
-
-### 5. Restart Shell
+## 4. Restart Shell
 
 ```bash
 exec fish -l
 ```
 
-### 6. Set login shell (recommended for Fish)
+## 5. Set login shell (recommended for Fish)
 
 ```bash
 chsh -s "$(which fish)"
@@ -125,7 +119,7 @@ exec $SHELL -l
 
 ## Ghostty (macOS)
 
-On macOS, `chezmoi apply` runs a hook that symlinks Ghostty’s expected config path to `~/.config/ghostty/config`. If you use Ghostty, install it separately (see [Optional Tools](#optional-tools)). Ghostty works well as the terminal for a Fish-centric setup.
+On macOS, `dotfiles apply` runs a hook that symlinks Ghostty’s expected config path to `~/.config/ghostty/config`. If you use Ghostty, install it separately (see [Optional Tools](#optional-tools)). Ghostty works well as the terminal for a Fish-centric setup.
 
 ## Git hooks (gitleaks)
 
@@ -140,7 +134,7 @@ Bypass everything for a single commit with `git commit --no-verify`.
 
 ## Claude Code
 
-`~/.claude/settings.json` is placed by `dotfiles apply` (`configs/claude/settings/`: base `settings.json` plus a conditional `rtk.json` overlay when `rtk` is on `PATH`, `strategy = "json-shallow"` with `preserve = true`). It merges the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced. A chezmoi `modify_` script (`home/dot_claude/modify_settings.json.tmpl`) still manages the same file during the chezmoi→dotfiles migration (`chezmoi apply` runs first, `dotfiles apply` runs after and wins); it is removed once the migration finishes (#463). **Until then, any hooks change must be ported to both `configs/claude/settings/{settings,rtk}.json` and `home/dot_claude/modify_settings.json.tmpl`** — porting only one side lets a guard silently vanish on the other (#549).
+`~/.claude/settings.json` is placed by `dotfiles apply` (`configs/claude/settings/`: base `settings.json` plus a conditional `rtk.json` overlay when `rtk` is on `PATH`, `strategy = "json-shallow"` with `preserve = true`). It merges the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced.
 
 `PreToolUse` / `Bash` hooks provide two safety rails:
 
@@ -159,7 +153,7 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 
 # Rust commands
 
-All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). On `chezmoi apply`, a hook (`run_onchange_before_cargo-install`) installs them into `~/.cargo/bin` with one `cargo install --path .` (the tools under `tools/` are not installed). Off a clone you can do the same in one shot: `cargo install --git https://github.com/toshiki670/dotfiles`. The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `chezmoi apply` (cargo install).
+All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). Install them into `~/.cargo/bin` with one `cargo install --git https://github.com/toshiki670/dotfiles` (or `cargo install --path .` from a clone; the tools under `tools/` are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `cargo install` (commands) → `dotfiles apply` (configs).
 
 📖 [Rustdoc](https://toshiki670.github.io/dotfiles/) — API docs for every crate, rebuilt on every push to `main`.
 

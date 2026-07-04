@@ -1,11 +1,8 @@
-use super::super::{FileContext, Orchestrator, classify};
+use super::super::{FileContext, Orchestrator};
 use crate::lint::exec::{abs, capture, format_cmd};
 
 impl Orchestrator {
     pub(crate) fn fix_fish(&mut self, f: &FileContext) -> i32 {
-        if classify::is_home_chezmoi_fish_template(&f.rel_path, &self.repo_root) {
-            return 0;
-        }
         let abs = abs(f);
         let cmd = ["fish_indent", abs.as_str()];
         if self.verbose {
@@ -33,27 +30,16 @@ impl Orchestrator {
     }
 
     pub(crate) fn check_fish(&mut self, f: &FileContext) -> i32 {
-        let is_tmpl = classify::is_home_chezmoi_fish_template(&f.rel_path, &self.repo_root);
-        let target = if is_tmpl {
-            match self.render_template(&f.rel_path, ".fish") {
-                Some(p) => p.to_string_lossy().into_owned(),
-                None => return 1,
-            }
-        } else {
-            abs(f)
-        };
-
+        let target = abs(f);
         let mut failed = 0;
-        if !is_tmpl
-            && !classify::is_home_chezmoi_fish_completion_template(&f.rel_path, &self.repo_root)
-            && self.run_rule_cmd(
-                f,
-                "fish",
-                "check",
-                &["fish_indent", "--check", &target],
-                None,
-                false,
-            ) != 0
+        if self.run_rule_cmd(
+            f,
+            "fish",
+            "check",
+            &["fish_indent", "--check", &target],
+            None,
+            false,
+        ) != 0
         {
             failed = 1;
         }

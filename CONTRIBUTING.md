@@ -9,7 +9,7 @@
 brew install git gh mise fish
 ```
 
-lint/format ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff / chezmoi）と
+lint/format ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff）と
 Rust ツールチェーンは、リポジトリの `mise.toml` から `mise install` で供給されます
 （`fish` のみ brew）。
 
@@ -21,7 +21,7 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ### このリポジトリ固有の判断基準
 
-- `.claude/` 配下のスキルや `home/.chezmoiscripts/` 等、dotfiles 内部でのみ使われるツール・スクリプトの追加・変更は `chore:` を使う（`feat:` ではない）。
+- `.claude/` 配下のスキルや `tools/` 配下の開発・保守ツール等、dotfiles 内部でのみ使われるツール・スクリプトの追加・変更は `chore:` を使う（`feat:` ではない）。
   - `feat:` はホームディレクトリに展開され、ユーザー環境に影響する設定・機能の追加に使う。
 
 ## ブランチ戦略
