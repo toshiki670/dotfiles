@@ -182,7 +182,7 @@ Every command binary supports `--help` / `--version`, except the env-driven back
 Not installed (development / maintenance only, under `tools/`):
 
 - `dotfiles-lint` — lint/format orchestrator, run via `mise run lint` / `mise run check`.
-- `v-sync` — sync Neovim plugins and re-add `lazy-lock.json` into the dotfiles source, run via `mise run v-sync`.
+- `v-sync` — sync Neovim plugins and write `lazy-lock.json` back into the dotfiles source, run via `mise run v-sync`.
 
 The root `dotfiles` package is the single distributable, versioned via release-plz with tags `v<version>`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 

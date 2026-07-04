@@ -1,16 +1,16 @@
-//! nvim プラグインを同期（Lazy sync）し、lazy-lock.json を chezmoi ソースへ
-//! re-add する。旧 `v-sync.fish` の移植。
+//! nvim プラグインを同期（Lazy sync）し、lazy-lock.json を configs/nvim へ
+//! 書き戻す。旧 `v-sync.fish` の移植。
 
+use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 use clap::Parser;
 
-/// Neovim プラグインを同期し lazy-lock.json を chezmoi ソースへ re-add する。
 #[derive(Parser)]
 #[command(
     name = "v-sync",
     version,
-    about = "Sync Neovim plugins and re-add lazy-lock.json into chezmoi"
+    about = "Sync Neovim plugins and write lazy-lock.json back into configs/nvim"
 )]
 struct Cli {}
 
@@ -20,10 +20,6 @@ fn main() -> ExitCode {
 
     if !command_exists("nvim") {
         eprintln!("v-sync: nvim command not found.");
-        return ExitCode::from(127);
-    }
-    if !command_exists("chezmoi") {
-        eprintln!("v-sync: chezmoi command not found.");
         return ExitCode::from(127);
     }
 
@@ -43,12 +39,18 @@ fn main() -> ExitCode {
         }
     }
 
-    println!("v-sync: re-adding lazy-lock.json into chezmoi source...");
+    println!("v-sync: writing lazy-lock.json back into configs/nvim...");
     let home = std::env::var("HOME").unwrap_or_default();
-    let lock = format!("{home}/.config/nvim/lazy-lock.json");
-    match Command::new("chezmoi").arg("re-add").arg(lock).status() {
-        Ok(status) => ExitCode::from(status.code().unwrap_or(1) as u8),
-        Err(_) => ExitCode::FAILURE,
+    let live_lock = PathBuf::from(format!("{home}/.config/nvim/lazy-lock.json"));
+    let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let repo_lock = find_repo_root(&cwd).join("configs/nvim/lazy-lock.json");
+
+    match std::fs::copy(&live_lock, &repo_lock) {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("v-sync: failed to write {}: {e}", repo_lock.display());
+            ExitCode::FAILURE
+        }
     }
 }
 
@@ -56,4 +58,19 @@ fn main() -> ExitCode {
 fn command_exists(cmd: &str) -> bool {
     std::env::var_os("PATH")
         .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(cmd).is_file()))
+}
+
+/// `start` から祖先を上へ辿り、`Cargo.toml` を持つ最初の dir をリポジトリルートとみなす。
+fn find_repo_root(start: &Path) -> PathBuf {
+    let canonical = start.canonicalize().unwrap_or_else(|_| start.to_path_buf());
+    let mut cur = canonical.as_path();
+    loop {
+        if cur.join("Cargo.toml").is_file() {
+            return cur.to_path_buf();
+        }
+        match cur.parent() {
+            Some(parent) => cur = parent,
+            None => return canonical.clone(),
+        }
+    }
 }

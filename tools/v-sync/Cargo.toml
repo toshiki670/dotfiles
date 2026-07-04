@@ -1,9 +1,9 @@
-# nvim プラグインを同期し lazy-lock.json を chezmoi ソースへ re-add する保守ツール。
+# nvim プラグインを同期し lazy-lock.json を configs/nvim へ書き戻す保守ツール。
 # エンドユーザーの日常コマンドではなく repo ソースを更新する作業なので、dotfiles-lint と
 # 同格に tools/ へ置く。版を振らず（release-plz は release=false）、install もしない。
 # 実行は mise タスク（`mise run v-sync` ＝ `cargo run -p v-sync`）。
 [package]
-description = "Neovim プラグインを同期し lazy-lock.json を chezmoi ソースへ re-add する（保守ツール）"
+description = "Neovim プラグインを同期し lazy-lock.json を configs/nvim へ書き戻す（保守ツール）"
 edition     = { workspace = true }
 license     = { workspace = true }
 name        = "v-sync"
