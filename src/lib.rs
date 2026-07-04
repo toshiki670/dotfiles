@@ -1,14 +1,9 @@
-//! 個人用 dotfiles を管理する `dotfiles` コマンドと、日常の Git/GitHub・クリップボード操作を
-//! 担う小さな CLI 群のホーム。
+//! `dotfiles` は `configs/` に置いた設定を、各設定単位の `manifest.toml` の宣言に従って
+//! ホームディレクトリへ配置する（配置モデルは [`core`] を参照）。
 //!
-//! 中心は [`core`]（`dotfiles` コマンド本体）: リポジトリの `configs/` に置いた設定を、
-//! 各設定単位の `manifest.toml` の宣言に従ってホームディレクトリへ配置する。
-//! 配置モデルの用語と全体像は [`core`] のモジュール doc が入口。
+//! ほか、いくつかの小さな CLI も同じパッケージで配布する。
 //!
-//! 配布物は root `dotfiles` パッケージの複数 bin（`src/bin/<name>.rs`）として並ぶ。各 bin は
-//! 数行のシムで、対応する family モジュールの `run()` を呼ぶだけ。ロジックは family ごとの
-//! module（[`core`] / [`clip`] / [`gcm`] / [`gh_clone`] / [`git_upstream`] / [`fzf_picker`] /
-//! [`env_tools`] / [`workers`]）に置く。`cargo install --git <repo>` 一発で全 bin が入る。
+//! `cargo install --git <repo>` で全コマンドが入る。
 
 // `deny(broken_intra_doc_links)`: doc コメントのリンク切れを CI の `cargo doc -p dotfiles` で
 // 検出するガード。`allow(private_intra_doc_links)`: 既定では公開アイテムの doc から非公開
