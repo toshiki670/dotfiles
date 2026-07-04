@@ -40,7 +40,7 @@ jobs:
         run: cargo doc -p dotfiles --no-deps --locked
 
   apply-test:
-    name: chezmoi apply (fresh machine bootstrap)
+    name: dotfiles apply (fresh machine bootstrap)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -49,13 +49,24 @@ jobs:
       - name: Install mise (supplies rust)
         uses: jdx/mise-action@v4
 
-      - name: Install chezmoi
-        run: |
-          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
 
-      - name: chezmoi apply (runs the cargo-install hook)
-        run: chezmoi apply --source="$GITHUB_WORKSPACE" --verbose --force
+      - name: cargo install (distributable commands)
+        run: cargo install --path . --locked
+
+      - name: dotfiles apply (embedded configs, no working tree)
+        run: |
+          # clone 無しの配布経路: CWD が作業ツリー外なら埋め込み configs を使う（§8）。
+          cd "$HOME"
+          dotfiles local set git.email ci@example.com
+          dotfiles local set git.name "CI"
+          dotfiles apply
+
+      - name: Verify dotfiles apply placed configs
+        run: |
+          test -f "$HOME/.config/git/config"
+          test -d "$HOME/.config/fish/conf.d"
 
       - name: Verify distributable Rust commands were installed to ~/.cargo/bin
         run: |
