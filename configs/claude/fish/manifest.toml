@@ -4,6 +4,5 @@
 # dst は fish の conf.d（複数ツールが断片を持ち寄る合流点。eza の 40-eza.fish 等と同じ場所）。
 # 中身は claude に帰属するため fish 本体（configs/fish）ではなくここに置く。親 configs/claude/
 # の manifest（dst=~/.claude）から見るとこのディレクトリは別 manifest を持つので委譲される
-# （settings/ と同じ関係）。kind は省略時 "copy"。ファイル名の番号 prefix (08-) が
-# 読み込み順を表す。
+# （settings/ と同じ関係）。ファイル名の番号 prefix (08-) が読み込み順を表す。
 dst = "~/.config/fish/conf.d"

@@ -3,6 +3,5 @@
 #
 # dst は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
 # fzf-picker / gh-clone と違い帰属先の Rust バイナリを持たず、ps-grep 自身が独立したツールとして
-# D1（ソースは configs/<tool>/ に中身の帰属で並べる）に従い、fish 本体（configs/fish）では
-# なく独立したツールディレクトリとしてここに置く。kind は省略時 "copy"。
+# fish 本体（configs/fish）ではなく独立したツールディレクトリとしてここに置く。
 dst = "~/.config/fish/functions"

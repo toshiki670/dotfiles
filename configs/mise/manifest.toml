@@ -5,7 +5,6 @@
 # yt（profile gate ＋ drop-in）と git（locals）へ分離した。残るのは mise 自身の managed 設定
 # （[settings] / [tools]）だけなので、素朴な copy で配置できる。
 #
-# dst は ~/.config/mise（ディレクトリ）。配下の config.toml だけを管理する。copy は dst を prune
-# しないため、user 所有の ~/.config/mise/conf.d/*.toml（マシン固有の任意設定）には一切干渉しない。
-# kind は省略時 "copy"。
+# dst は ~/.config/mise（ディレクトリ）。配下の config.toml だけを管理し、user 所有の
+# ~/.config/mise/conf.d/*.toml（マシン固有の任意設定）には一切干渉しない。
 dst = "~/.config/mise"

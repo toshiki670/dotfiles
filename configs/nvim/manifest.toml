@@ -2,5 +2,4 @@
 #
 # lua/ 配下のサブディレクトリ（core, plugins）も再帰配置される（サブディレクトリ再帰）。
 # PLUGINS.md は配置対象外（configs に置かない＝管理対象外）。
-# kind は省略時 "copy"。
 dst = "~/.config/nvim"

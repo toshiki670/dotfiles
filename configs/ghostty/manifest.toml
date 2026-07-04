@@ -1,6 +1,4 @@
-# ghostty の設定（config）を配置し、macOS 参照先への symlink を張る。
-#
-# kind は省略時 "copy"（config をそのまま ~/.config/ghostty へ配置）。
+# ghostty の設定（config）を ~/.config/ghostty へ配置し、macOS 参照先への symlink を張る。
 #
 # when = { deps = ["ghostty"], os = "darwin" }: トップレベル when はユニットスコープ gate。
 #   when.deps = ["ghostty"]: ghostty が PATH に無い環境ではユニットごと skip（配置も symlink も走ら

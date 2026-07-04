@@ -4,8 +4,8 @@
 #   rules/*.md                     → ~/.claude/rules/*.md
 #   skills/memory-tidy/SKILL.md    → ~/.claude/skills/memory-tidy/SKILL.md
 #   statusline-command.py          → ~/.claude/statusline-command.py
-# kind は省略時 "copy"。いずれも 0644（statusline-command.py は python3 経由で起動されるため
-# 実行ビット不要 ＝ executable は付けない）。
+# いずれも 0644（statusline-command.py は python3 経由で起動されるため実行ビット不要
+# ＝ executable は付けない）。
 #
 # settings/（json-shallow 合成で settings.json を組む別単位）・fish/（conf.d 合流点へ環境変数
 # 断片を置く別単位）はサブ manifest を持つので、この copy からは委譲され除外される

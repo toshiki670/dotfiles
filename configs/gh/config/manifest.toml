@@ -3,5 +3,4 @@
 # git_protocol / editor / prompt / pager 等、gh 自身が読む設定一式。completion（fish 補完の generate 層）は
 # 同じ configs/gh 配下でも kind が異なる別単位（configs/gh/completion）として分離済み。
 #
-# kind は省略時 "copy"。
 dst = "~/.config/gh"
