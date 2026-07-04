@@ -1,6 +1,6 @@
 //! `dotfiles` 本体（core）。リポジトリの `configs/` に置いた設定を、各設定単位の
 //! `manifest.toml` の宣言に従ってホームディレクトリへ配置・管理する。
-//! `--version` / `--help` はバージョンの source of truth（タグ `v{version}`）を担う。
+//! バージョンの一次情報はタグ `v{version}`。`--version` / `--help` で確認できる。
 //!
 //! ソースは `configs/` に「中身の帰属」（どのツールの設定か）で並べ、配置先はツリー上の
 //! 位置でなく manifest の属性（`dst`）で宣言する。配置先が同じでも出所のツールが違えば
@@ -37,18 +37,6 @@
 //! 走査（[`discover`]）→ ユニット gate を評価（[`apply::gate`]）→ 断片を生成・合成
 //! （[`apply`] / [`apply::compose`]）→ locals を解決・注入（[`locals`]）→ 配置 → 配置後
 //! フックを実行（[`hooks`]）、の順に進む。
-//!
-//! # モジュール構成
-//!
-//! - [`discover`] — `configs/` の走査（apply / list / doctor 共有）
-//! - [`manifest`] — `manifest.toml` スキーマの解釈と検証
-//! - [`source`] — ソースの二段構え（作業ツリー直読み → 埋め込み）
-//! - [`state`] — 状態駆動 gate のスカラ状態ファイル（profile / 将来の theme）
-//! - [`apply`] — 配置エンジン（子: copy / compose / generate / strategy / gate）
-//! - [`locals`] — named value（子: store / resolve / inject / prompt）
-//! - [`hooks`] — 配置後フック（子: exec / onchange）
-//! - [`color`] / [`doctor`] / [`list`] / [`local`] / [`profile`] — 単独のビュー / コマンド
-//! - [`cli`] — CLI 定義とディスパッチ（`src/bin/dotfiles.rs` のシムが [`cli::run`] を呼ぶ）
 
 // 共有核（葉。多くの群が片方向で依存する契約・基盤）。
 mod discover;
