@@ -1,3 +1,5 @@
+//! Lua ファイルの lint 規則（stylua でフォーマット・検証）。
+
 use super::super::{FileContext, Orchestrator};
 use crate::lint::exec::abs;
 

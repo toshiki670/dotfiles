@@ -1,4 +1,4 @@
-//! generate 層（§5 generate）: コマンドを実行し、その標準出力を断片にする。
+//! generate 層: コマンドを実行し、その標準出力を断片にする。
 //!
 //! 補完5本（gh / docker / bat / clip / merge-ready）が対象。dst=ファイルで、`cmd` の標準出力に
 //! 同ディレクトリの sibling（`manifest.toml` 以外）を連結する。連結は合成軸の `concat` 戦略へ

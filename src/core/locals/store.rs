@@ -1,4 +1,4 @@
-//! named value ストア（§9.1）: マシンローカル値の単一ストア `~/.config/dotfiles/local.toml`。
+//! named value ストア: マシンローカル値の単一ストア `~/.config/dotfiles/local.toml`。
 //!
 //! 名前→値を全ツール横断で集約する **dotfiles 非管理**ファイル（repo には値を一切置かない）。
 //! `locals` を宣言した単位の placeholder（`@@name@@`）注入（[`crate::core::locals::resolve`]）と doctor 診断

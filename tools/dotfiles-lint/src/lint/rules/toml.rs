@@ -1,3 +1,5 @@
+//! TOML ファイルの lint 規則（taplo の fmt/lint を呼ぶ）。
+
 use super::super::{FileContext, Orchestrator};
 use crate::lint::exec::abs;
 

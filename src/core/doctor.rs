@@ -1,9 +1,8 @@
-//! `dotfiles doctor`（雛形・§9.5・§11）: `locals` 宣言がストアに揃っているかを診断する。
+//! `dotfiles doctor`: 全ユニットの `locals` 宣言を集め、ストアに値が無い名前を報告する。
 //!
 //! 全単位の `manifest.toml`（[`crate::core::discover`]）から `locals` を集め、ストア（[`crate::core::locals::store`]）に
-//! 値が無い名前を報告する。ツール別ロジックは持たず「宣言名がストアに在るか」を見るだけ（§9.5。
-//! git の `git config --includes` 解決スコープに依存しない）。雛形のため依存バイナリ等の他診断は
-//! 後続スライス。未設定があっても**ブロックしない**（exit 0・情報提供）。
+//! 値が無い名前を報告する。ツール別ロジックは持たず「宣言名がストアに在るか」だけを見る
+//! （診断の拡張は #576）。未設定があっても**ブロックしない**（exit 0・情報提供）。
 
 use crate::core::discover::{self, MANIFEST};
 use crate::core::locals::store::Store;

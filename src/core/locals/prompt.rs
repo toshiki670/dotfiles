@@ -1,4 +1,4 @@
-//! 対話入力（§9.3 取得）: TTY 判定と1行入力。sensitive な値は端末エコーを落として読む。
+//! 対話入力: TTY 判定と1行入力。sensitive な値は端末エコーを落として読む。
 //!
 //! apply はローカル値の取得経路を **TTY=対話 / 非TTY=警告のみ**に分ける（[`crate::core::locals::resolve`]）。
 //! 本モジュールはその TTY 側を担う。プロンプトは stdout を汚さないよう stderr へ出す。非エコーは
@@ -6,7 +6,7 @@
 
 use std::io::{self, BufRead, IsTerminal, Write};
 
-/// 標準入力が TTY か。apply の取得経路（対話 / 警告のみ）を分岐するのに使う（§9）。
+/// 標準入力が TTY か。apply の取得経路（対話 / 警告のみ）を分岐するのに使う。
 pub fn is_tty() -> bool {
     io::stdin().is_terminal()
 }

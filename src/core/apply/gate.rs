@@ -1,16 +1,16 @@
 //! gate の評価: トップレベル `when`（ユニットスコープ）と `[[overlay]]` の `when`（断片スコープ）。
 //!
-//! 設計書 §5.5「評価順と不変条件」の gate 語彙を 1 か所に集約する。gate 語彙は `when`
+//! gate 語彙を 1 か所に集約する。gate 語彙は `when`
 //! （`deps` 配列・AND / `os` スカラ / `profile` スカラ）に一本化されており、**書く位置でスコープが
 //! 決まる**: トップレベルの `when` はユニット全体 gate（満たさなければユニットごと skip）、overlay の
 //! `when` はその断片だけの採否。両者は **同じ評価規則**（[`when_unsatisfied_reason`]: PATH 探索・
 //! OS 正規化・profile 状態一致・複数キー AND）を共有する。ここはその共有ロジックと、PATH 上の
 //! 実行ファイル探索（`which`）を持つ。
 //!
-//! `deps`/`os` は環境（PATH・OS）からその場で判る ambient な条件だが、`profile` は user が選んで
+//! `deps`/`os` は環境（PATH・OS）からその場で判る条件だが、`profile` は user が選んで
 //! おく状態（[`crate::core::state`]）を読む。状態は apply 開始時に 1 回 [`GateState`] へ解決し、全ユニット
 //! ・全 overlay の評価で共有する（評価ごとにファイルを読み直さない）。`theme`（color スライス）も
-//! 同じ snapshot にフィールドを足して相乗りする想定（§10・状態駆動 gate 族）。
+//! 同じ snapshot にフィールドを足して同じ機構を使い回す想定（状態駆動 gate 族）。
 
 use crate::core::manifest::{Manifest, When};
 use crate::core::state;
@@ -55,7 +55,7 @@ pub fn current_os() -> &'static str {
 /// トップレベル `when`（ユニットスコープ gate）を評価し、満たさないとき skip 理由を返す
 /// （満たせば None）。
 ///
-/// 不変条件①（§5.5）の短絡判定に使う。`when` 省略のユニットは常時採用（None）。判定は
+/// 不変条件①の短絡判定に使う。`when` 省略のユニットは常時採用（None）。判定は
 /// overlay と共有の [`when_unsatisfied_reason`] に委譲する。
 pub fn unit_skip_reason(manifest: &Manifest, state: &GateState) -> Option<String> {
     manifest

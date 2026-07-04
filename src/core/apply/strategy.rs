@@ -1,4 +1,4 @@
-//! 合成戦略（§5.5）: 複数の断片を 1 つの dst=ファイルへ重ねる純ロジック。
+//! 合成戦略: 複数の断片を 1 つの dst=ファイルへ重ねる純ロジック。
 //!
 //! - `concat` … テキスト連結（後ろへ連結。境目に改行を 1 つ補う）。generate の
 //!   「cmd 出力＋sibling 連結」もこの戦略へ統一する（出力は従来と不変）。
@@ -7,7 +7,8 @@
 //!   上書きする。dotfiles が定義しない非管理キーは土台のまま全保持される（旧 `modify_` の
 //!   `jq '$local + $forced'` と同値。deep merge はしない）。
 //! - `plist_shallow` … `json_shallow` の plist 版（トップレベル shallow merge・後勝ち・deep merge
-//!   しない）。命名の理由・用例は設計書§5.5「例：Stats.plist」参照。
+//!   しない）。shallow merge を保証するのは plist の dict モデルであって XML という構文ではない
+//!   ため、`xml_shallow` ではなく `plist_shallow` と呼ぶ。
 //!
 //! いずれも副作用のない純関数で、配置（書き込み）は [`crate::core::apply::compose`] が行う。
 
@@ -76,8 +77,8 @@ fn parse_object(bytes: &[u8]) -> Result<Map<String, Value>, String> {
 /// XML/binary/ASCII のどの直列化でも自動判別する。出力は XML plist に固定する（差分可読性。#465）。
 ///
 /// 呼び出し側の運用（`preserve` の意味・生きたドメインをどの引数で渡すか等）は呼び出し元
-/// （[`crate::core::apply::compose`]）の責務。本関数はマージのみを純粋に担う。用例は設計書§5.5
-/// 「例：Stats.plist」参照。
+/// （[`crate::core::apply::compose`]）の責務。本関数はマージのみを純粋に担う。既存ドメインの
+/// export を土台に、リポジトリ管理の断片を dict キー単位で上書きする用途を想定する。
 pub fn plist_shallow(frags: &[Vec<u8>], base: Option<&[u8]>) -> Result<Vec<u8>, String> {
     let mut merged = Dictionary::new();
 

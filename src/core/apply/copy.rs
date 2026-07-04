@@ -1,10 +1,10 @@
 //! `dotfiles apply` の copy 層: ディレクトリ単位で実体をそのまま書き出す。
 //!
-//! 設計書 §5 の3層のうち大多数を占める層。`dst`（ディレクトリ）の下へ、単位ディレクトリ
-//! 配下の実ファイルを相対構造を保ったまま copy する。`manifest.toml` 自体と、別 manifest を
-//! 持つサブツリー（委譲先の責務）は除外する。パーミッションは manifest の
-//! `private` / `executable` 属性に従う（§7、適用は [`crate::core::apply::set_mode`]）。
-//! `locals`（named value）が解決されている単位では、各ファイルへ `@@name@@` 注入を通す（§9）。
+//! copy はユニットのソースツリーを相対構造を保ったまま `dst`（ディレクトリ）の下へ書き出す
+//! 生成方式で、overlay を持たないユニットの大多数がこの経路を通る。`manifest.toml` 自体と、
+//! 別 manifest を持つサブツリー（委譲先の責務）は除外する。パーミッションは manifest の
+//! `private` / `executable` 属性に従う（適用は [`crate::core::apply::set_mode`]）。
+//! `locals`（named value）が解決されている単位では、各ファイルへ `@@name@@` 注入を通す。
 
 use super::set_mode;
 use crate::core::discover::{self, MANIFEST};

@@ -1,9 +1,9 @@
-//! 出荷 configs（`configs/`）の妥当性を data-driven に確かめる E2E（実 configs 層 / 設計書 §15.2）。
+//! 出荷 configs（`configs/`）の妥当性を data-driven に確かめる E2E（実 configs 層）。
 //!
 //! `configs/` 配下を実行時に走査し、得た各ユニットについて次を検証する:
 //!
 //! - 全 manifest が load/validate を通る（apply はユニット gate より先に load するため、gate で
-//!   skip される単位も含め全件が apply 行で報告される ＝ §5.5 評価順）
+//!   skip される単位も含め全件が apply 行で報告される ＝ 評価順）
 //! - gate を通って配置された単位は dst（ルート）を実体化する
 //! - `dotfiles list` が全単位を名前で集約する
 //!

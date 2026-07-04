@@ -1,10 +1,9 @@
 # merge-ready 本体設定（merge-ready.toml）を ~/.config へ copy する。
-# 設計: docs/dotfiles-native-design.md §6.1（gh の想定どおりの配置）
 #
 # dst=~/.config のディレクトリ単位 copy。配下の merge-ready.toml を相対構造のまま copy し
 # ~/.config/merge-ready.toml に置く。kind は省略時 "copy"。copy は dst を prune しないので、
 # ~/.config 配下の他ツール設定には触れない。
 #
 # completion/（fish 補完の generate 層）はサブ manifest を持つので、この copy からは委譲され
-# 除外される（§6.3 ルール1。gh/config と gh/completion と同じ関係）。
+# 除外される（gh/config と gh/completion と同じ関係）。
 dst = "~/.config"

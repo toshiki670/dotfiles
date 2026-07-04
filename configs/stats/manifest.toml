@@ -14,8 +14,7 @@
 #      （ユーザー設定ではなく Stats 自身が書く値なので、base（生きたドメイン）にそのまま委ねる）。
 #      base の上に重なり、dotfiles 所有キーだけを上書きする（plist-shallow・トップレベル粒度）。
 #
-# 合成は plist-shallow（plist トップレベル shallow merge・後勝ち。deep merge はしない。命名の
-# 理由は設計書§5.5「例：Stats.plist」参照）。
+# 合成は plist-shallow（plist トップレベル shallow merge・後勝ち。deep merge はしない）。
 #
 # dst の置き場所: ライブドメインが真実のソースで、dst は defaults import へ渡すためだけに都度
 # 書き出す使い捨ての下書き（次の apply で再計算され、消えても実害が無い）。よって永続状態
@@ -41,7 +40,7 @@ cmd = [ "defaults", "export", "eu.exelban.Stats", "-" ]
 [[overlay]]
 src = "Stats.plist"
 
-# hooks: 配置後、合成済み dst をライブドメインへ反映する（§13）。dst は「生きたドメイン全体 ＋
+# hooks: 配置後、合成済み dst をライブドメインへ反映する。dst は「生きたドメイン全体 ＋
 # dotfiles 管理サブセット」を合成済みなので、defaults import 自体がマージ／全置換のどちらであっても
 # 結果は一致する（正しさが import の未文書化の挙動に依存しない設計。使い捨てドメインでの実機検証
 # ではトップレベルキー単位のマージだったことを確認済み。#531 コメント参照）。

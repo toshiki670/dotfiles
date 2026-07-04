@@ -1,22 +1,26 @@
 //! `manifest.toml` のスキーマと読み込み。
 //!
-//! 設計書（docs/dotfiles-native-design.md §5 / §5.5 / §6.2 / §7）の **2軸モデル**を解釈する:
+//! **2軸モデル**を解釈する:
 //! - **生成方式 `kind`**（断片をどう実体化するか）= `copy` / `generate`（省略時 copy）。
 //! - **合成 `strategy`**（複数の条件付き断片を1 dst=ファイルへどう重ねるか）= `concat` /
-//!   `json-shallow` / `plist-shallow`（JSON 版の plist 版。命名の理由は設計書§5.5）。`merge` は
-//!   独立 kind ではなく合成軸の戦略（§5.5）。
+//!   `json-shallow` / `plist-shallow`（JSON 版の plist 版）。`merge` は独立 kind ではなく
+//!   合成軸の戦略。
 //! - **条件付き overlay**（`[[overlay]]` ＋ `when`）= dst を「base ＋ gate された断片」の合成
 //!   として組む。各 overlay は `src`（copy 断片）/ `cmd`（generate 断片）のどちらか ＋
-//!   `when`（`deps` / `os`）。既存 dst の温存はユニット属性 `preserve = true`（§5.5）。
+//!   `when`（`deps` / `os`）。既存 dst の温存はユニット属性 `preserve = true`。
+//!
+//! 属性（`kind` / `dst` / `hooks` / `when`）が分岐するときはディレクトリ（設定単位）を分け、
+//! 内容だけが条件で変わるなら `when` 付き overlay で表す ― これが単位の粒度の指針になる。
 //!
 //! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ / `profile` スカラ）に一本化する。**書く位置で
 //! スコープが決まる**: トップレベルの `when` はユニット全体 gate（false なら dst も `hooks` も触らず
-//! skip ＝ all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否（§5.5）。両者は同じ評価規則を
-//! [`crate::core::apply::gate`] で共有する。`profile` は環境検出（`deps`/`os`）と違い user が選んでおく
-//! 状態（[`crate::core::state`]）を読む状態 gate で、`theme`（color スライスまで未配線）と同族（§10）。
-//! `locals` / `sensitive` はマシンローカル値（named value）の宣言（§9, S4）。`hooks` は配置後フック
-//! （§13, S5）の宣言で、各エントリが実行する `cmd`（argv）と実行頻度 `frequency`（§13.0・省略時
-//! `onchange`, #546）を持ち、各 `cmd` が非空であることを load 時に検証する（実行は
+//! skip ＝ all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否。両者は同じ評価規則を
+//! [`crate::core::apply::gate`] で共有する。`profile` は環境からその場で判る条件（`deps`/`os`）と違い
+//! user が選んでおく状態（[`crate::core::state`]）を読む状態 gate で、`theme`（color スライスまで
+//! 未配線）と同族。
+//! `locals` / `sensitive` はマシンローカル値（named value）の宣言。`hooks` は配置後フックの宣言で、
+//! 各エントリが実行する `cmd`（argv）と実行頻度 `frequency`（省略時 `onchange`, #546）を持ち、各
+//! `cmd` が非空であることを load 時に検証する（実行は
 //! [`crate::core::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
 
 use serde::Deserialize;
@@ -26,7 +30,7 @@ use strum::{Display, EnumIter, IntoEnumIterator};
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
 ///
 /// `deny_unknown_fields` で未知キーを load 時に弾く。旧 gate 語彙（unit 属性 `deps` / `os`）が
-/// 残った manifest はここでエラーになる（§5.5: 後方互換は持たせず、誤連想の再発を防ぐ）。
+/// 残った manifest はここでエラーになる（後方互換は持たせず、誤連想の再発を防ぐ）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
@@ -40,7 +44,7 @@ pub struct Manifest {
     /// generate の既定挙動（cmd 出力＋sibling 連結）は暗黙 `concat`。
     #[serde(default)]
     pub strategy: Option<Strategy>,
-    /// 既存 dst を `json-shallow` の最下層（土台）として温存する（§5.5）。`true` で dotfiles が
+    /// 既存 dst を `json-shallow` の最下層（土台）として温存する。`true` で dotfiles が
     /// 定義しないトップレベルキー（例 `model` / `effortLevel` や任意のローカル固有キー）を
     /// 全保持し、dotfiles 所有キーだけ断片で上書きする（旧 `jq '$local + $forced'` と同値）。
     /// `json-shallow` 専用（他 strategy・省略との併記は load 時エラー）。省略時 false。
@@ -56,29 +60,29 @@ pub struct Manifest {
     /// 標準出力を断片とする。copy では未使用。
     #[serde(default)]
     pub cmd: Vec<String>,
-    /// ユニット全体 gate（§5.5・§7）。トップレベルに書いた `when` はユニットスコープで、
+    /// ユニット全体 gate。トップレベルに書いた `when` はユニットスコープで、
     /// 満たさなければユニット全体を skip する（dst も `hooks` も触らない ＝ all-or-nothing）。
     /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致し、
     /// `when.profile`（スカラ・状態）が現在の profile 状態と一致した時だけ真。省略時は常時採用。
     /// 同じ語彙を `[[overlay]]` の `when` がその断片スコープで再利用する。
     #[serde(default)]
     pub when: Option<When>,
-    /// 合成 overlay（条件付き断片の配列, §5.5）。空 = 生成方式の既定挙動。
+    /// 合成 overlay（条件付き断片の配列）。空 = 生成方式の既定挙動。
     /// 各 overlay は `src` / `cmd` のどちらか ＋ `when?` を持つ。
     #[serde(default)]
     pub overlay: Vec<Overlay>,
-    /// マシンローカル値（named value）の宣言（§9）。ここで宣言した名前 `n` に対し、この単位の
+    /// マシンローカル値（named value）の宣言。ここで宣言した名前 `n` に対し、この単位の
     /// 配置ファイル中の `@@n@@` をストア（`~/.config/dotfiles/local.toml`）の値で置換する。
     /// 置換は `locals` を宣言した単位のファイルにだけ走る（無関係ファイルの `@@…@@` を巻き込まない）。
     /// 例: `locals = ["git.email", "git.name"]`。
     #[serde(default)]
     pub locals: Vec<String>,
     /// `locals` のうち秘匿値（対話取得時にエコー/ログを抑制する）。git の email/name は commit に
-    /// 載るため**非 sensitive**。`sensitive ⊆ locals` を load 時に検証する（§9.1）— typo で名前が
+    /// 載るため**非 sensitive**。`sensitive ⊆ locals` を load 時に検証する — typo で名前が
     /// `locals` とズレると非エコー抑制が黙って効かず秘匿値が漏れる footgun を防ぐ。
     #[serde(default)]
     pub sensitive: Vec<String>,
-    /// 配置後フック（§13, S5 / #546）。このユニットの配置後（after フェーズ）に**宣言順**で実行する
+    /// 配置後フック（#546）。このユニットの配置後（after フェーズ）に**宣言順**で実行する
     /// エントリの配列（例 `[[hooks]]` ＋ `cmd = ["bat", "cache", "--build"]`）。各エントリは実行する
     /// [`Hook::cmd`]（argv）と実行頻度 [`Hook::frequency`]（onchange / always・省略時 onchange）を持つ。
     /// ツール固有ロジックは binary に持たず、実行するコマンドをデータとして宣言する
@@ -86,12 +90,12 @@ pub struct Manifest {
     /// configs と疎結合。各 `cmd` が非空であることを load 時に検証する。頻度による実行モデルの分岐
     /// （onchange gate / 無条件実行）は [`crate::core::hooks`] が担う。トップレベル `when`（ユニット
     /// gate）が false のユニットは配置ごと skip されるため hooks も走らない（＝ `when.os` でフックを
-    /// 分岐できる, §5.5 不変条件①）。
+    /// 分岐できる）。
     #[serde(default)]
     pub hooks: Vec<Hook>,
 }
 
-/// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`（§5.5）。
+/// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`。
 /// 表示名（`Display`）と受理する TOML トークン（serde）を一致させるため `serialize_all` と
 /// `rename_all` は同じ規則で揃える（ズレは tests の round-trip が検出する）。
 #[derive(Debug, Deserialize, Default, PartialEq, Eq, Display)]
@@ -103,7 +107,7 @@ pub enum Kind {
     Generate,
 }
 
-/// 合成戦略（複数断片を1 dst=ファイルへ重ねる方法, §5.5）。
+/// 合成戦略（複数断片を1 dst=ファイルへ重ねる方法）。
 /// 表示名と TOML トークンを揃える規則は [`Kind`] と同じ（`serialize_all` / `rename_all` を `kebab-case` に）。
 /// `EnumIter` は [`Manifest::validate`] のエラーメッセージが有効な戦略を列挙するのに使う（手書き列挙だと
 /// variant 追加時に更新漏れが起きるため、enum 自体を出所にする）。
@@ -115,39 +119,41 @@ pub enum Strategy {
     Concat,
     /// JSON のトップレベル shallow merge（後勝ち）。deep merge はしない。
     JsonShallow,
-    /// plist のトップレベル shallow merge（後勝ち）。deep merge はしない。`json-shallow` の plist 版
-    /// （命名の理由・用例は設計書§5.5「例：Stats.plist」参照）。
+    /// plist のトップレベル shallow merge（後勝ち）。deep merge はしない。`json-shallow` の plist 版。
+    /// shallow merge を保証するのは plist の dict モデルであって XML という構文ではないため、
+    /// `xml-shallow` ではなく `plist-shallow` と呼ぶ。既存ドメインの export を土台に、リポジトリ
+    /// 管理の断片を dict キー単位で上書きする用途を想定する。
     PlistShallow,
 }
 
-/// フックの実行頻度（§13.0 / #546）。頻度は per-hook の実行モードで、別リスト（`always_hooks` 等）に
+/// フックの実行頻度（#546）。頻度は per-hook の実行モードで、別リスト（`always_hooks` 等）に
 /// 分けず既存 `hooks` エントリの属性として持つ（分けると validation・表示が二重化する）。
 /// 表示名（`Display`）と受理する TOML トークン（serde）を揃える規則は [`Kind`] / [`Strategy`] と同じ。
 #[derive(Debug, Deserialize, Default, PartialEq, Eq, Display)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum Frequency {
-    /// ユニットのソースが前回適用時から変わった時だけ実行する（onchange gate, §13.1）。省略時の既定。
+    /// ユニットのソースが前回適用時から変わった時だけ実行する（onchange gate）。省略時の既定。
     #[default]
     Onchange,
-    /// 毎 apply 無条件に実行する（gate を通さず状態も読み書きしない, §13.0）。反映対象が dotfiles
+    /// 毎 apply 無条件に実行する（gate を通さず状態も読み書きしない）。反映対象が dotfiles
     /// 管理外で随時変わる用途向け。コマンドが冪等であること（何度走らせても同じ結果）を前提とする。
     Always,
 }
 
-/// 1 つの配置後フック（§13 / #546）。ユニット配置後に実行する `cmd`（argv）と実行頻度 `frequency`。
+/// 1 つの配置後フック（#546）。ユニット配置後に実行する `cmd`（argv）と実行頻度 `frequency`。
 /// `deny_unknown_fields` でキーの typo（`frequancy` 等）を load 時に弾く（黙って無視しない）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Hook {
     /// 実行するコマンド（argv）。先頭が実行ファイル名、以降が引数。非空を load 時に検証する。
     pub cmd: Vec<String>,
-    /// 実行頻度（省略時 onchange）。onchange = ソース変化時のみ / always = 毎 apply 無条件（§13.0）。
+    /// 実行頻度（省略時 onchange）。onchange = ソース変化時のみ / always = 毎 apply 無条件。
     #[serde(default)]
     pub frequency: Frequency,
 }
 
-/// 1 つの overlay（条件付き断片, §5.5）。`when` を満たす時だけ合成に参加する。
+/// 1 つの overlay（条件付き断片）。`when` を満たす時だけ合成に参加する。
 /// 断片の実体化方法は `src`（copy）/ `cmd`（generate）の択一。既存 dst の温存は overlay では
 /// なくユニット属性 [`Manifest::preserve`]。
 #[derive(Debug, Deserialize)]
@@ -164,13 +170,13 @@ pub struct Overlay {
     pub when: Option<When>,
 }
 
-/// gate の採用条件（§5.5）。トップレベル（ユニットスコープ）と overlay（断片スコープ）で共有する
+/// gate の採用条件。トップレベル（ユニットスコープ）と overlay（断片スコープ）で共有する
 /// 1 つの語彙。複数キーは AND（全て満たす時だけ採用）。
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct When {
     /// 依存バイナリ（配列・AND）。全て PATH にある時だけ採用（旧 `{{ if lookPath … }}`）。
-    /// 単数 `dep` は廃止し、複数形＝配列で統一する（語感の破綻を避ける, §5.5）。
+    /// 単数 `dep` は廃止し、複数形＝配列で統一する（語感の破綻を避ける）。
     #[serde(default)]
     pub deps: Vec<String>,
     /// OS（スカラ）。現在 OS と一致時だけ採用（`darwin` / `linux` 表記）。
@@ -196,7 +202,7 @@ impl When {
 }
 
 impl Manifest {
-    /// `manifest.toml` を読み込み、パース後にセマンティックバリデーション（§5.5）を行う。
+    /// `manifest.toml` を読み込み、パース後にセマンティックバリデーションを行う。
     pub fn load(path: &Path) -> Result<Self, String> {
         let text = std::fs::read_to_string(path)
             .map_err(|e| format!("{}: 読み込み失敗: {e}", path.display()))?;
@@ -208,7 +214,7 @@ impl Manifest {
         Ok(manifest)
     }
 
-    /// パース後のセマンティック検証（§5.5）。manifest の typo を配置前に弾く。
+    /// パース後のセマンティック検証。manifest の typo を配置前に弾く。
     ///
     /// - **overlay 明示時は `strategy` 必須**。合成戦略を一意に決めるため、暗黙の `concat` は
     ///   overlay 未記述の generate 既定挙動だけに限る（overlay を書いて戦略を省くと、意図しない
@@ -222,10 +228,10 @@ impl Manifest {
     ///   構成を load 時に弾く（土台だけ再直列化する退化形に意味は無い）。
     /// - **各 overlay は `src` / `cmd` のうちちょうど 1 つ**（生成方式は択一）。2 つは一方が
     ///   黙って無視される typo、0 個は断片を実体化できない。
-    /// - **`sensitive ⊆ locals`**（§9.1）。`sensitive` に `locals` 未宣言の名前があると、その名は
+    /// - **`sensitive ⊆ locals`**。`sensitive` に `locals` 未宣言の名前があると、その名は
     ///   非エコー/ログ抑制の対象にならず（resolve は `locals` を走査するため）秘匿値が黙って漏れる。
     ///   typo を配置前に弾く。
-    /// - **`hooks` の各コマンド（`cmd`）は非空**（§13, S5）。空の `cmd` は実体化できないコマンドで、
+    /// - **`hooks` の各コマンド（`cmd`）は非空**。空の `cmd` は実体化できないコマンドで、
     ///   apply で黙って無視/panic されると事故になるため load 時に弾く（他の検証群と同じ
     ///   「静かに無視しない」方針）。フック名のレジストリ検証は持たない ― フックはツール名でなく
     ///   コマンドそのものをデータとして宣言する（binary は実行するだけ）。
@@ -386,7 +392,7 @@ mod tests {
             err.contains("preserve") && err.contains("json-shallow"),
             "preserve × 非 json-shallow が弾かれていない: {err}"
         );
-        // plist-shallow との併記も同様にエラー（土台は overlay 側の cmd 断片が担う。§5.5・#531）。
+        // plist-shallow との併記も同様にエラー（土台は overlay 側の cmd 断片が担う。#531）。
         let err = parse(
             "dst = \"~/x\"\nstrategy = \"plist-shallow\"\npreserve = true\n[[overlay]]\nsrc = \"a\"\n",
         )
@@ -446,7 +452,7 @@ mod tests {
 
     #[test]
     fn validate_accepts_sensitive_subset_of_locals() {
-        // sensitive ⊆ locals は正規形（§9.1）。email/name は非 sensitive のまま宣言できる。
+        // sensitive ⊆ locals は正規形。email/name は非 sensitive のまま宣言できる。
         assert!(
             parse(
                 "dst = \"~/x\"\nlocals = [\"git.email\", \"git.name\", \"github.token\"]\n\
@@ -487,7 +493,7 @@ mod tests {
 
     #[test]
     fn validate_accepts_command_hook() {
-        // 非空の cmd を持つ structured hook は受理（エンジンは中身を解釈しない, §13）。frequency 省略時 onchange。
+        // 非空の cmd を持つ structured hook は受理（エンジンは中身を解釈しない）。frequency 省略時 onchange。
         let parsed =
             parse("dst = \"~/x\"\nhooks = [{ cmd = [\"cmd\", \"sub\", \"--flag\"] }]\n").unwrap();
         assert_eq!(
@@ -579,7 +585,7 @@ mod tests {
 
     #[test]
     fn parse_rejects_legacy_unit_deps() {
-        // 旧 unit 属性 deps は廃止。deny_unknown_fields が load 時に弾く（後方互換なし, §5.5）。
+        // 旧 unit 属性 deps は廃止。deny_unknown_fields が load 時に弾く（後方互換なし）。
         assert!(toml::from_str::<Manifest>("dst = \"~/x\"\ndeps = [\"gh\"]\n").is_err());
     }
 

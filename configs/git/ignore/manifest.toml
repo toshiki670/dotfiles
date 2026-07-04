@@ -1,4 +1,4 @@
-# git のグローバル ignore（~/.config/git/ignore）を concat 合成で配置する（設計書 §5.5・§16）。
+# git のグローバル ignore（~/.config/git/ignore）を concat 合成で配置する。
 #
 # 以前は ignore 本体＋ignores/{gitignore.io,custom} の連結だった。
 # テンプレート変数・条件分岐は無い単純連結だったため、overlay ＋ strategy="concat" で表現する

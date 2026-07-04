@@ -1,4 +1,4 @@
-//! 配置後フック（§13, S5 / #546）: ユニット配置後（after フェーズ）に、manifest が宣言した各フックを
+//! 配置後フック（#546）: ユニット配置後（after フェーズ）に、manifest が宣言した各フックを
 //! **実行頻度（`frequency`）で分岐**して実行する**汎用エンジン**。
 //!
 //! ツール固有のロジックは binary に一切持たない。フックは manifest の `hooks` 属性が
@@ -8,7 +8,7 @@
 //! どのフックが macOS 専用か等の知識は manifest 側（ghostty の `os = "darwin"` ＋ コマンド本体）が
 //! 持ち、エンジンは関知しない。
 //!
-//! 頻度で実行モデルが分かれる（§13.0）:
+//! 頻度で実行モデルが分かれる:
 //! - **`onchange`**（既定）: onchange gate（[`crate::core::hooks::onchange`]）を通す。ユニットのソース
 //!   ハッシュ＋コマンド内容が前回適用時と同じならスキップ、変化（初回・**コマンド変更**を含む）なら実行する。
 //! - **`always`**: gate を通さず毎 apply 無条件に実行する（状態を読み書きしない）。反映対象が dotfiles
@@ -16,7 +16,7 @@
 //!
 //! いずれの頻度でも、プログラムが PATH に無い（未インストール）ときは skip してメッセージだけ出す
 //! （`command -v` ガード相当を、ツール名を持たずに汎用化）。実際の spawn と `argv[0]` 解決は
-//! [`exec`] が担う。`onchange` はさらにハッシュを保存しないので、後で入れたら再実行される。トップレベル
+//! [`mod@exec`] が担う。`onchange` はさらにハッシュを保存しないので、後で入れたら再実行される。トップレベル
 //! `when`（ユニット gate, `deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない
 //! （＝ `when.os` でフックを分岐できる）。
 
@@ -62,7 +62,7 @@ pub fn run_unit_hooks(
     Ok(())
 }
 
-/// 1 つの onchange フック（`frequency = "onchange"`）を onchange gate を通して実行する（§13.1）。
+/// 1 つの onchange フック（`frequency = "onchange"`）を onchange gate を通して実行する。
 ///
 /// 状態キーは `<unit>::<コマンドの短ハッシュ>`。コマンド内容をキーに織り込むことで、manifest 上で
 /// **コマンドを変えた場合も新しいキー＝再実行**になる（`manifest.toml` はソースハッシュ対象外なので、
@@ -101,9 +101,9 @@ fn run_onchange(
     Ok(())
 }
 
-/// 1 つの always フック（`frequency = "always"`）を毎 apply 無条件に実行する（§13.0）。
+/// 1 つの always フック（`frequency = "always"`）を毎 apply 無条件に実行する。
 ///
-/// onchange gate（[`State`] の読み書き）を通さず [`exec`] を毎回呼ぶ。反映対象が dotfiles 管理外で
+/// onchange gate（[`State`] の読み書き）を通さず [`mod@exec`] を毎回呼ぶ。反映対象が dotfiles 管理外で
 /// 随時変わる用途（copy/compose と同じ「常に再実行」）向けで、**コマンドが冪等であること**を前提とする
 /// ― 毎 apply 無条件に走るため。未インストール（[`Exec::ProgramMissing`]）は onchange と同じく skip
 /// 表示に留める（ハッシュを持たないので保存も無い）。

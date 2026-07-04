@@ -1,11 +1,11 @@
-# starship の設定（starship.toml）を ~/.config 直下へ配置する（copy 層 / 設計書 §5・§6）。
+# starship の設定（starship.toml）を ~/.config 直下へ配置する（copy 層）。
 #
 # dst=~/.config（ディレクトリ）。配下の starship.toml を相対構造のまま copy し
 # ~/.config/starship.toml に置く。kind は省略時 "copy"。copy は dst を prune しないので、
 # ~/.config 配下の他ツール設定には触れない。
 #
 # fish/（fish 起動連携 `starship init fish` を conf.d 合流点へ置く別単位）はサブ manifest を
-# 持つので、この copy からは委譲され除外される（§6.3 ルール1。claude の settings/ と同じ関係）。
+# 持つので、この copy からは委譲され除外される（claude の settings/ と同じ関係）。
 #
 # $schema: starship.toml 先頭の `$schema` は starship 公式のスキーマ URL
 # （https://starship.rs/config-schema.json）を指す。エディタ / taplo はこの URL を取得して

@@ -92,7 +92,7 @@ fn apply_recurses_subdirs_and_delegates_nested_manifests() {
 
 /// copy は dst を prune しない: dotfiles が書かないファイル（dst 配下の user 所有ファイル）は
 /// apply で消えず無傷で残る。単一ファイルを管理する copy ユニットの傍らに、user の任意設定
-/// （ツールが総読みする drop-in 等）を共存させられる土台（設計書 §9.3）。
+/// （ツールが総読みする drop-in 等）を共存させられる土台。
 #[test]
 fn apply_copy_preserves_unmanaged_files_in_dst() {
     let work = tempfile::tempdir().unwrap();

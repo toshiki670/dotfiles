@@ -1,4 +1,4 @@
-# ~/.bash_profile / ~/.bashenv / ~/.bashrc を配置する（copy 層 / 設計書 §5・§6）。
+# ~/.bash_profile / ~/.bashenv / ~/.bashrc を配置する（copy 層）。
 # 以前 `include` でビルド時連結していた bash 設定の置き換え。
 #
 # 主シェルは fish で bash の役割は最小。共有断片（common.sh 等）は configs/bash/scripts/
@@ -6,7 +6,7 @@
 # 薄い委譲層 ── git config の native [include]（configs/git/manifest.toml 参照）と同じ発想で
 # bash 自身の `source` に合成を委ねる（engine の concat overlay は使わない）。
 #
-# configs/bash/scripts/ はサブ manifest を持つため対象外（設計書 §6.3 ルール1）。
+# configs/bash/scripts/ はサブ manifest を持つため対象外。
 # ディレクトリ名は lib でなく scripts（`.gitignore` の Python テンプレート由来の非アンカー
 # `lib/` パターンと衝突し、git add で静かに無視されるため）。
 dst = "~/"

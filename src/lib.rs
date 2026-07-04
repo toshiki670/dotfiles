@@ -1,5 +1,9 @@
 //! toshiki670/dotfiles の配布コマンド群を 1 クレートに束ねる lib。
 //!
+//! 中心は [`core`]（`dotfiles` コマンド本体）: リポジトリの `configs/` に置いた設定を、
+//! 各設定単位の `manifest.toml` の宣言に従ってホームディレクトリへ配置する。
+//! 配置モデルの用語と全体像は [`core`] のモジュール doc が入口。
+//!
 //! 配布物は root `dotfiles` パッケージの複数 bin（`src/bin/<name>.rs`）として並ぶ。各 bin は
 //! 数行のシムで、対応する family モジュールの `run()` を呼ぶだけ。ロジックは family ごとの
 //! module（[`core`] / [`clip`] / [`gcm`] / [`gh_clone`] / [`git_upstream`] / [`fzf_picker`] /

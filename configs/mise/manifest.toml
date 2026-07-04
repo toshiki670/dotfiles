@@ -1,4 +1,4 @@
-# mise 自身の managed 設定を dotfiles ネイティブで配置する（設計書 §9.2・§9.3・§14）。
+# mise 自身の managed 設定を dotfiles ネイティブで配置する。
 #
 # 以前の create_config.toml（初回生成・以後温存）の置き換え。create-only が必要だったのは
 # machine-specific な穴（YT_BROWSER / 仕事用 git identity）を同居させていたためだが、それらは

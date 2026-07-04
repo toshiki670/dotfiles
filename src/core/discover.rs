@@ -1,7 +1,7 @@
 //! configs ソースツリーから設定単位（`manifest.toml` を持つディレクトリ）を発見する。
 //!
-//! `apply`（配置）と `list`（一覧）が共有する走査ロジック。設計書 §6.3 ルール1 の
-//! 「管轄の再帰委譲」をここで実装する: あるディレクトリに `manifest.toml` があれば
+//! `apply`（配置）と `list`（一覧）が共有する走査ロジック。「管轄の再帰委譲」を
+//! ここで実装する: あるディレクトリに `manifest.toml` があれば
 //! それを 1 単位とし、サブディレクトリに別の `manifest.toml` があればそこも別単位として
 //! 収集する（ツリーを manifest で分割統治する）。
 
@@ -60,7 +60,7 @@ fn walk(dir: &Path, source: &Path, out: &mut Vec<Unit>) -> Result<(), String> {
 
 /// 1 単位（`dir`）の **デプロイ対象ファイル**を相対構造を保って収集し、パスでソートして返す。
 ///
-/// §6.3 の委譲規則を 1 か所に集約する: `manifest.toml` 自体と、別の `manifest.toml` を持つ
+/// 委譲規則を 1 か所に集約する: `manifest.toml` 自体と、別の `manifest.toml` を持つ
 /// サブツリー（委譲先の別単位）は除外する（[`crate::core::apply::copy`] の `copy_tree` と同じ範囲）。onchange
 /// ハッシュ（[`crate::core::hooks::onchange::hash_dir`]）が「この単位のソースが変わったか」を判定する材料に使う。
 pub fn unit_files(dir: &Path) -> Result<Vec<PathBuf>, String> {

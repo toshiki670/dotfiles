@@ -1,5 +1,4 @@
 # Cursor のルール（rules/git-no-commit-on-main.mdc）を ~/.cursor へ copy する。
-# 設計: docs/dotfiles-native-design.md §6
 #
 # dst=~/.cursor のディレクトリ単位 copy。配下は相対構造を保って再帰配置される:
 #   rules/git-no-commit-on-main.mdc → ~/.cursor/rules/git-no-commit-on-main.mdc

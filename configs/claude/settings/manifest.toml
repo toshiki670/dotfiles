@@ -1,4 +1,4 @@
-# Claude Code の settings.json を json-shallow 合成で配置する（合成軸 / 設計書 §5.5・§7）。
+# Claude Code の settings.json を json-shallow 合成で配置する（合成軸）。
 # 旧来の `jq '$local + $forced'`（既存値に強制値を重ねる合成）の置き換え。dst を
 # 「既存 dst を土台にした順序付き overlay の合成」として組む:
 #

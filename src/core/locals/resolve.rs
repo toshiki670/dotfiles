@@ -1,8 +1,8 @@
-//! apply 時のローカル値解決（§9.3 取得）: 単位の `locals` をストアと突き合わせ、未設定値を
+//! apply 時のローカル値解決: 単位の `locals` をストアと突き合わせ、未設定値を
 //! TTY なら対話取得（sensitive は非エコー）、非 TTY なら警告のみで継続する（**ブロックしない**）。
 //!
 //! ここで解決できた「名前→値」だけを [`crate::core::locals::inject`] が placeholder 置換に使う。未解決の名前は
-//! マップに入らないため、配置ファイルでは `@@name@@` が literal のまま残り doctor が検出する（§9.1）。
+//! マップに入らないため、配置ファイルでは `@@name@@` が literal のまま残り doctor が検出する。
 
 use super::store::Store;
 use super::{inject, prompt};

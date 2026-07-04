@@ -1,6 +1,6 @@
 # For github account
 # email / name はマシンローカル値（named value）。dotfiles apply 時にストア
-# （~/.config/dotfiles/local.toml）から @@…@@ が注入される（設計書 §9・manifest の locals）。
+# （~/.config/dotfiles/local.toml）から @@…@@ が注入される（manifest の locals）。
 # 以前の環境変数（DOTFILES_GIT_EMAIL/NAME）注入＋if 分岐を置き換える。
 [user]
 	email = @@git.email@@

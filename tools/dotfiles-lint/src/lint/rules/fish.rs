@@ -1,3 +1,5 @@
+//! fish ファイルの lint 規則（fish_indent でフォーマット、fish --no-execute で構文検証）。
+
 use super::super::{FileContext, Orchestrator};
 use crate::lint::exec::{abs, capture, format_cmd};
 

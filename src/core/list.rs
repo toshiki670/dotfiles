@@ -1,17 +1,17 @@
 //! `dotfiles list`：configs の分散 manifest を集約し、配置先一覧を表示する。
 //!
-//! 設計書 §11 の「分散方式の弱点（全体一覧が横断的）を補う」俯瞰ビュー。各単位を
+//! 「分散方式の弱点（全体一覧が横断的）を補う」俯瞰ビュー。各単位を
 //! source 相対名でソートし、`名前 → dst [属性]` の形で出力する。配置は行わないため
 //! `home` は不要（dst は manifest の生表記 `~/...` をそのまま見せる方が読みやすい）。
 //!
 //! 見出しには `source` の実 path でなく解決元ラベル（`origin`・[`crate::core::source::Origin`]）を出す。
-//! 埋め込み時の `source` は temp dir で、実 path を生で見せても俯瞰の役に立たないため（§8）。
+//! 埋め込み時の `source` は temp dir で、実 path を生で見せても俯瞰の役に立たないため。
 
 use crate::core::discover::{self, MANIFEST};
 use crate::core::manifest::{Frequency, Manifest};
 use std::path::Path;
 
-/// `source` 配下の設定単位を一覧表示する。`origin` は見出しに出す解決元ラベル（§8）。
+/// `source` 配下の設定単位を一覧表示する。`origin` は見出しに出す解決元ラベル。
 pub fn run(source: &Path, origin: &str) -> Result<(), String> {
     let units = discover::collect(source)?;
     if units.is_empty() {
@@ -41,7 +41,7 @@ pub fn run(source: &Path, origin: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// 1 単位の属性ラベル（2軸モデル, §7）。
+/// 1 単位の属性ラベル（2軸モデル）。
 /// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ when.deps / when.os / when.profile ＋ hooks。
 fn attrs(manifest: &Manifest) -> String {
     // 表示名は Kind / Strategy の Display に集約する（apply のラベルと同じ出所）。
@@ -74,7 +74,7 @@ fn attrs(manifest: &Manifest) -> String {
     }
     if !manifest.hooks.is_empty() {
         // フックはコマンド（argv）なので、一覧では件数だけ示す（詳細は manifest を見る）。
-        // always 頻度（§13.0）が混じるときはその内訳を添える ― onchange と実行モデルが違うため
+        // always 頻度が混じるときはその内訳を添える ― onchange と実行モデルが違うため
         // （毎 apply 無条件）、一覧でも区別が付くようにする。
         let always = manifest
             .hooks

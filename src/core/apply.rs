@@ -1,15 +1,23 @@
 //! `dotfiles apply`：固定ソース `configs/` を走査し配置を実行する。
 //!
-//! 走査（manifest 発見・再帰委譲）は [`crate::core::discover`]。各単位は §5.5 の評価順に従う:
+//! 走査（manifest 発見・再帰委譲）は [`crate::core::discover`]。各単位は次の評価順に従う:
 //! ①**トップレベル `when`（ユニット gate）を最初に評価し false なら短絡**（[`crate::core::apply::gate`]、dst を
 //! 一切触らず skip）。生き残った単位は dst 種別で配置経路が分かれる ―
 //! dst=ディレクトリの copy は [`crate::core::apply::copy`]（ツリー配置）、dst=ファイルの generate /
 //! overlay 明示は [`crate::core::apply::compose`]（②宣言順 overlay ③preserve=既存 dst を土台に敷く合成）。
 //! 配置の直前に `locals`（named value）を解決し（[`crate::core::locals::resolve`]）、配置ファイルの `@@name@@` を
-//! 注入する（§9）。配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時
-//! から変わっていれば実行する（[`crate::core::hooks`] / [`crate::core::hooks::onchange`]、§13）。ユニット gate が false の
+//! 注入する。配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時
+//! から変わっていれば実行する（[`crate::core::hooks`] / [`crate::core::hooks::onchange`]）。ユニット gate が false の
 //! ときは配置前に短絡 return するため、その hooks も走らない（＝ `when.os` でフックを分岐できる）。
 //! 本モジュールはオーケストレーションと、両経路が共有する小道具（`~` 展開・パーミッション適用）を持つ。
+//!
+//! 配置は実体の書き出し（copy）で、symlink は採用しない。`cargo install --git` で配布された
+//! バイナリは埋め込みソースだけで配置できる必要があり、symlink はリンク先の実体（リポジトリの
+//! clone 常設）を要求するため。編集の即時反映は捨て、反映は `dotfiles apply` の再実行で行う。
+//!
+//! gate=false は「配置しない」であって「撤去する」ではない。エンジンは prune せず、ユニット
+//! gate が false へ転じても配置済みの実体は残る（撤去は手動。prune の設計は #521）。overlay の
+//! 脱落は、配置先が毎 apply 再合成されるため次の apply で結果から消える。
 
 pub(crate) mod compose;
 pub(crate) mod copy;
@@ -49,8 +57,8 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// 1 単位を評価順（§5.5）に従って配置し、結果を 1 行で表示する。配置成功後、ユニットが宣言した
-/// `hooks` を onchange gate を通して実行する（§13）。
+/// 1 単位を評価順に従って配置し、結果を 1 行で表示する。配置成功後、ユニットが宣言した
+/// `hooks` を onchange gate を通して実行する。
 fn apply_unit(
     unit: &Unit,
     home: &Path,
@@ -69,7 +77,7 @@ fn apply_unit(
     }
 
     // `locals` 宣言があれば配置前に解決する（TTY=対話 / 非TTY=警告のみ）。宣言が無ければ空マップ
-    // ＝注入経路を素通りし、無関係ファイルの `@@…@@` を巻き込まない（§9.1）。
+    // ＝注入経路を何もせず通過し、無関係ファイルの `@@…@@` を巻き込まない。
     let locals = if manifest.locals.is_empty() {
         BTreeMap::new()
     } else {
@@ -123,7 +131,7 @@ fn set_mode(_dst: &Path, _manifest: &Manifest) -> Result<(), String> {
 }
 
 /// dst の `~` / `~/...` を `home` に展開する。
-/// `$XDG_*` 等の正規化は設計書 §16 で確定。
+/// `$XDG_*` 等を含む表記の正規化ルールは未確定（#579）。
 fn expand_home(dst: &str, home: &Path) -> PathBuf {
     if let Some(rest) = dst.strip_prefix("~/") {
         home.join(rest)

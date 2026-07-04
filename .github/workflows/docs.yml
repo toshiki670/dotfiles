@@ -31,7 +31,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build rustdoc
-        run: cargo doc --workspace --no-deps --locked
+        run: cargo doc --workspace --no-deps --locked --document-private-items
 
       # target/doc/ に集約クレートごとの index.html はできるがトップレベルの index.html はない。
       # root package `dotfiles`（lib.rs のクレート doc から全 family module へ辿れる）を
