@@ -14,7 +14,7 @@
 #   1 コマンドに畳んだ）。
 #
 # 注: テーマ（config 内の theme 行）の light/dark 切替は color スライスの担当。`theme` 属性は
-#   そのスライスで付与する（S5 では付けない）。
+#   そのスライスで付与する。
 dst  = "~/.config/ghostty"
 when = { deps = [ "ghostty" ], os = "darwin" }
 
