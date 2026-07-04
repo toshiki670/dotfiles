@@ -156,7 +156,7 @@ fn os_gate_skips_unit_hooks() {
 }
 
 /// プログラム未インストール（PATH 不在）は apply を中断せず skip し、ハッシュを保存しない
-/// （chezmoi の `command -v` ガード相当）。後で入れると同じソースでも再実行されることで未保存を示す。
+/// （`command -v` ガード相当）。後で入れると同じソースでも再実行されることで未保存を示す。
 #[cfg(unix)]
 #[test]
 fn missing_program_skips_without_storing_hash() {

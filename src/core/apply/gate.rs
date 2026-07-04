@@ -41,10 +41,10 @@ impl GateState {
     }
 }
 
-/// 現在の OS を chezmoi 互換表記で返す（macOS は `darwin`）。
+/// 現在の OS を `when.os` 表記で返す（macOS は `darwin`）。
 ///
-/// manifest の `when.os` は chezmoi の `.chezmoi.os` と同じ表記（`darwin` / `linux`）で
-/// 書くため、Rust の `std::env::consts::OS`（macOS では `macos`）を `darwin` に正規化して比較する。
+/// manifest の `when.os` は `darwin` / `linux` 表記で書くため、Rust の
+/// `std::env::consts::OS`（macOS では `macos`）を `darwin` に正規化して比較する。
 pub fn current_os() -> &'static str {
     match std::env::consts::OS {
         "macos" => "darwin",
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn current_os_normalizes_macos_to_darwin() {
-        // ビルドした OS に応じて chezmoi 互換表記を返す。
+        // ビルドした OS に応じて `darwin`/`linux` 表記を返す。
         let expected = if cfg!(target_os = "macos") {
             "darwin"
         } else {

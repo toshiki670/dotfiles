@@ -1,7 +1,7 @@
 //! ファイルの分類判定。旧 `nix/lint/classify.py` の移植。
 //!
 //! 拡張子・パスベースの判定はファイル名（リポジトリ相対）に対して行い、
-//! 内容ベースの判定（chezmoi マーカー・shebang）は実ファイルを読む。
+//! 内容ベースの判定（shebang）は実ファイルを読む。
 
 use std::path::Path;
 
@@ -38,34 +38,15 @@ pub fn is_python(f: &str) -> bool {
 }
 
 pub fn is_fish(f: &str) -> bool {
-    f.ends_with(".fish") || f.ends_with(".fish.tmpl")
+    f.ends_with(".fish")
 }
 
 pub fn is_shell_ext(f: &str) -> bool {
-    f.ends_with(".sh") || f.ends_with(".sh.tmpl")
+    f.ends_with(".sh")
 }
 
 pub fn is_shell_path(f: &str) -> bool {
     f.starts_with("bin/") || f.starts_with("bash/")
-}
-
-/// ファイルに chezmoi テンプレートマーカー `{{` を含むか。
-pub fn has_chezmoi_markers(path: &Path) -> bool {
-    std::fs::read(path)
-        .map(|bytes| String::from_utf8_lossy(&bytes).contains("{{"))
-        .unwrap_or(false)
-}
-
-pub fn is_home_chezmoi_shell_template(f: &str, repo_root: &Path) -> bool {
-    f.starts_with("home/") && f.ends_with(".sh.tmpl") && has_chezmoi_markers(&repo_root.join(f))
-}
-
-pub fn is_home_chezmoi_fish_template(f: &str, repo_root: &Path) -> bool {
-    f.starts_with("home/") && f.ends_with(".fish.tmpl") && has_chezmoi_markers(&repo_root.join(f))
-}
-
-pub fn is_home_chezmoi_fish_completion_template(f: &str, repo_root: &Path) -> bool {
-    is_home_chezmoi_fish_template(f, repo_root) && f.contains("dot_config/fish/completions/")
 }
 
 /// 先頭行が python の shebang か。
@@ -101,10 +82,7 @@ mod tests {
         assert!(is_toml("Cargo.toml"));
         assert!(is_python("x.py"));
         assert!(is_fish("f.fish"));
-        assert!(is_fish("f.fish.tmpl"));
         assert!(is_shell_ext("s.sh"));
-        assert!(is_shell_ext("s.sh.tmpl"));
-        assert!(!is_toml("starship.toml.tmpl"));
     }
 
     #[test]
@@ -117,10 +95,9 @@ mod tests {
     #[test]
     fn content_predicates() {
         let dir = tempfile::tempdir().unwrap();
-        let tmpl = dir.path().join("x.sh.tmpl");
-        std::fs::write(&tmpl, "#!/bin/bash\necho {{ .chezmoi.os }}\n").unwrap();
-        assert!(has_chezmoi_markers(&tmpl));
-        assert_eq!(shell_flavor(&tmpl), "bash");
+        let sh_bash = dir.path().join("x.sh");
+        std::fs::write(&sh_bash, "#!/bin/bash\necho hi\n").unwrap();
+        assert_eq!(shell_flavor(&sh_bash), "bash");
 
         let py = dir.path().join("p");
         std::fs::write(&py, "#!/usr/bin/env python3\nprint(1)\n").unwrap();

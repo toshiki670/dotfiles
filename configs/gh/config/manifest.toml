@@ -1,8 +1,7 @@
 # gh 本体設定（config.yml）を ~/.config/gh へ copy する（設計書 §6.1 の想定どおりの配置）。
 #
-# git_protocol / editor / prompt / pager 等、gh 自身が読む設定一式。旧 chezmoi
-# （home/dot_config/gh/config.yml）の置き換え。completion（fish 補完の generate 層）は
+# git_protocol / editor / prompt / pager 等、gh 自身が読む設定一式。completion（fish 補完の generate 層）は
 # 同じ configs/gh 配下でも kind が異なる別単位（configs/gh/completion）として分離済み。
 #
-# kind は省略時 "copy"。home/dot_config/gh/config.yml の撤去は S9（#463）で行う。
+# kind は省略時 "copy"。
 dst = "~/.config/gh"

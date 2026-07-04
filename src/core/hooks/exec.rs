@@ -2,7 +2,7 @@
 //! 「PATH 探索の bare コマンド名 / `unit_dir` 基準の区切り付き相対パス / 絶対パス」で解決する。
 //!
 //! 未インストール（bare 名の `NotFound`）は [`Exec::ProgramMissing`]（skip 相当）、ユニット同梱物の
-//! 不在（区切り付き相対・絶対の `NotFound`）はエラーとして区別する ― chezmoi の `command -v` ガードを
+//! 不在（区切り付き相対・絶対の `NotFound`）はエラーとして区別する ― `command -v` ガードを
 //! ツール名を持たずに汎用再現する部分。頻度による実行モデルの分岐（onchange gate / 無条件実行）は
 //! 上位の [`crate::core::hooks`] が担い、本モジュールは「どう起動し、`argv[0]` をどう解決するか」だけを持つ。
 
@@ -20,7 +20,7 @@ pub enum Exec {
 /// エラー（apply を止める, §13.1）。非ゼロ終了も stderr 付きでエラー、正常終了は [`Exec::Ran`]。
 ///
 /// stdout/stderr は捨て、失敗時のみ stderr を添える（フックの進捗ノイズを apply 出力に混ぜない）。
-/// 「bare 名の未インストールは skip・実行して失敗はエラー」の区別が、chezmoi の `if command -v …`
+/// 「bare 名の未インストールは skip・実行して失敗はエラー」の区別が、`if command -v …`
 /// ガードをツール名を持たずに汎用再現する。なお `NotFound` 判定は `argv[0]` のみが対象で、
 /// `["sh", "-c", …]` の内側コマンドは含まれない（内側依存は `when.deps` で gate する, §13.1）。
 ///

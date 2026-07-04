@@ -56,21 +56,13 @@ fn main() -> ExitCode {
     let repo_root = find_repo_root(&cwd);
     let files = collect_files(&repo_root);
 
-    let tmp = match tempfile::tempdir() {
-        Ok(t) => t,
-        Err(e) => {
-            eprintln!("lint: failed to create temp dir: {e}");
-            return ExitCode::FAILURE;
-        }
-    };
-
     let mode = match cli.mode {
         ModeArg::Fix => Mode::Fix,
         ModeArg::Check => Mode::Check,
     };
     let check_after_fix = cli.check_after_fix == Toggle::On;
 
-    let mut orch = Orchestrator::new(repo_root, tmp.path().to_path_buf(), cli.verbose);
+    let mut orch = Orchestrator::new(repo_root, cli.verbose);
     let failed = orch.run(mode, check_after_fix, &files);
 
     if cli.summary {

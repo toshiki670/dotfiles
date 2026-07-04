@@ -131,7 +131,7 @@ fn apply_copy_preserves_unmanaged_files_in_dst() {
 
 /// S1 受け入れ条件: パーミッション属性（private=0600 / executable）。
 /// base 0644 を起点に private で 0600、executable で read 桁へ exec を合成する
-/// （0644→0755 / 0600→0700）。chezmoi の private_ / executable_ と同じ合成規則。
+/// （0644→0755 / 0600→0700）。`private` / `executable` の合成規則。
 #[cfg(unix)]
 #[rstest]
 #[case("plain", "", 0o644)]

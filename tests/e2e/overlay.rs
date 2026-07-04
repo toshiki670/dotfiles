@@ -3,7 +3,7 @@
 //! dst=ファイルへ条件付き断片（overlay）を strategy で重ねる挙動と、§5.5 の評価順
 //! 不変条件（①ユニット gate 短絡 / ②宣言順 / ③preserve 最後）を hermetic fixture で検証する。
 //! when.deps（配列・AND）は PATH 先頭スタブ（[`crate::write_stub`]）の有無で、when.os は現在 OS
-//! （chezmoi 互換表記）で gate する。トップレベル when はユニットスコープ、`[[overlay]]` の when は
+//! （`darwin`/`linux` 表記）で gate する。トップレベル when はユニットスコープ、`[[overlay]]` の when は
 //! 断片スコープ（同じ語彙）。末尾は overlay/strategy/preserve の不正な組合せを load 時に弾く検証群。
 //!
 //! plist-shallow（#531）は、overlay の `cmd` 断片（外部コマンドの標準出力）を土台にする運用
@@ -15,7 +15,7 @@ use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
 
-/// 現在の OS を chezmoi 互換表記（macOS=darwin）で返す。`when.os` fixture に埋める。
+/// 現在の OS を `when.os` 表記（macOS=darwin）で返す。`when.os` fixture に埋める。
 fn current_os() -> &'static str {
     if cfg!(target_os = "macos") {
         "darwin"

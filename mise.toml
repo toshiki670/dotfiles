@@ -1,12 +1,11 @@
 [tools]
 # クレートのビルド・配布（cargo install）に使う Rust ツールチェーン。
-# fresh machine は mise で rust を取得してから chezmoi が cargo install する。
+# fresh machine は mise で rust を取得してから cargo install する。
 rust = "latest"
 
 # lint オーケストレータが呼ぶフォーマッタ/リンタ群。
 # 再現性のため版をピンする（更新時は初回 `mise run lint` で差分を吸収）。
 # fish は brew 既存（mise では供給しない）。
-chezmoi    = "2.70.5"
 ruff       = "0.15.17"
 rumdl      = "0.2.16"
 shellcheck = "0.11.0"

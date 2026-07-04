@@ -14,7 +14,6 @@ impl Orchestrator {
         phase: &str,
         cmd: &[&str],
         cwd: Option<&Path>,
-        shellcheck_hint: bool,
     ) -> i32 {
         if self.verbose {
             let where_ = cwd
@@ -38,12 +37,6 @@ impl Orchestrator {
         };
 
         if code != 0 {
-            if shellcheck_hint {
-                eprintln!(
-                    "lint: shellcheck failed on expanded template (source: {})",
-                    f.rel_path
-                );
-            }
             self.record(f, rule, phase, cmd, code);
         }
         code
