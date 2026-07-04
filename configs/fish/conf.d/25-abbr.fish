@@ -3,9 +3,6 @@
 # ========== shell / misc ==========
 abbr --add reload 'exec fish -l'
 
-# clipboard 系は `clip` コマンド（obj / text / path サブコマンド）へ統合。
-# 補完は completions/clip.fish.tmpl（clap_complete 生成）で供給するため abbr は廃止。
-
 # ========== docker ==========
 abbr --add d docker
 abbr --add dc 'docker compose'
