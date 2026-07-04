@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.70.0] - 2026-07-04
+### Features
+- MacOS アプリの preference plist を一級扱いする(Stats.plist 移行) ([#559](https://github.com/toshiki670/dotfiles/pull/559)) ([`6940e68`](https://github.com/toshiki670/dotfiles/commit/6940e68e285fd730ed91f96bc67b9779a18a307d))
+- Fish 本体を configs/ へ移行する ([#561](https://github.com/toshiki670/dotfiles/pull/561)) ([`068cf1d`](https://github.com/toshiki670/dotfiles/commit/068cf1daf7813a28a2b8805ed469cf31f222175a))
+- Gh の config.yml を configs/ へ移行する ([#568](https://github.com/toshiki670/dotfiles/pull/568)) ([`1723b70`](https://github.com/toshiki670/dotfiles/commit/1723b70d83bdf85899a72f8e2eda9c8d8149a093))
+- Merge-ready.toml を configs/ へ移行する ([#569](https://github.com/toshiki670/dotfiles/pull/569)) ([`8d2db1b`](https://github.com/toshiki670/dotfiles/commit/8d2db1b93992d6f3d6b50e382c2e55617d723904))
+- Fish shim 8本を各ツールへ帰属させ configs/ へ移行する ([#570](https://github.com/toshiki670/dotfiles/pull/570)) ([`34a3664`](https://github.com/toshiki670/dotfiles/commit/34a366429bf5d19d4c06bba8debd800b56e23410))
+- V-sync を chezmoi 非依存化する（lazy-lock を configs へ書き戻す） ([#573](https://github.com/toshiki670/dotfiles/pull/573)) ([`039e507`](https://github.com/toshiki670/dotfiles/commit/039e5074c46675fefbd94c168e03a9b165d2cdeb))
+- [**BREAKING**] Chezmoi を撤去し dotfiles 単独運用にする ([#463](https://github.com/toshiki670/dotfiles/pull/463)) ([#575](https://github.com/toshiki670/dotfiles/pull/575)) ([`375c59a`](https://github.com/toshiki670/dotfiles/commit/375c59a26953b0aae06e1f39952e6219ac3faa2f))
+
+
 ## [0.69.10] - 2026-07-02
 ### Features
 - Hook の実行頻度 frequency を追加(onchange/always) ([#555](https://github.com/toshiki670/dotfiles/pull/555)) ([`7a4b357`](https://github.com/toshiki670/dotfiles/commit/7a4b35705d45e5fbdd7bd4120ead76f89bb8a979))
