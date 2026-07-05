@@ -185,16 +185,18 @@ All distributable commands live in the single root `dotfiles` package as multipl
 
 Design and internals (manifest schema, apply pipeline, `locals` resolution, `when` gates, …) are not documented here — they live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (the `dotfiles` crate's own module docs), rebuilt on every push to `main`. Treat it as the architecture reference.
 
+Full descriptions (subcommands, flags) live in each command's own Rustdoc page, linked below — not duplicated here.
+
 | Command | Description |
 | --- | --- |
-| `dotfiles` | dotfiles core; version entry point (`dotfiles --version`) plus `apply` (place `configs/` via per-directory `manifest.toml`; resolves & injects machine-local `locals` values), `list` (overview of every config's destination), `local set <name> <value>` (store a machine-local value in `~/.config/dotfiles/local.toml`), `profile [<name>]` (set or show the machine profile, e.g. `private`), `color sample` (print an ANSI color table — 16 + 256 colors), and `doctor` (report unset `locals`) |
-| `git-upstream` | Merge `upstream/master` / initialize the upstream remote |
-| `gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
-| `clip` | Copy a file to the clipboard — `obj` (Finder object) / `text` (contents) / `path` (absolute path); macOS |
-| `gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
-| `fzf-picker` | fzf pickers, one bin with subcommands: `fzf-gh` (pick a GitHub Issue/PR, build a `gh` command — Fish shim inserts it into the command line), `fzf-ghq-cd` (pick a ghq repo / linked worktree, printing the selected path — Fish shim cds), `fzf-worktree-remove` (pick a linked git worktree and remove it — Fish shim cds out if needed), `cdabbr` (expand a prompt_pwd-style abbreviated path and pick a directory with fzf — Fish shim cds) |
-| `env-tools` | environment maintenance, one bin with subcommands: `cleanup-env` (prompt-then-cleanup caches / unused versions for brew / mise / cargo, `-n/--dry-run`), `upgrade-env` (upgrade all installed package managers) |
-| `workers` | background workers started from Fish `conf.d` hooks, one bin with subcommands: `daily-check`, `git-background-fetch` |
+| [`dotfiles`](https://toshiki670.github.io/dotfiles/dotfiles/) | Core: places `configs/` per `manifest.toml` (`apply`), plus `list` / `local` / `profile` / `color` / `doctor` |
+| [`git-upstream`](https://toshiki670.github.io/dotfiles/git_upstream/) | Merge `upstream/master` / initialize the upstream remote |
+| [`gcm`](https://toshiki670.github.io/dotfiles/gcm/) | AI-powered git commit with Conventional Commits |
+| [`clip`](https://toshiki670.github.io/dotfiles/clip/) | Copy a file to the clipboard (macOS) |
+| [`gh-clone`](https://toshiki670.github.io/dotfiles/gh_clone/) | `gh repo clone` + `ghq migrate` |
+| [`fzf-picker`](https://toshiki670.github.io/dotfiles/fzf_picker/) | fzf pickers: `cdabbr` / `fzf-gh` / `fzf-ghq-cd` / `fzf-worktree-remove` |
+| [`env-tools`](https://toshiki670.github.io/dotfiles/env_tools/) | Environment maintenance: `cleanup-env` / `upgrade-env` |
+| [`workers`](https://toshiki670.github.io/dotfiles/workers/) | Background workers: `daily-check` / `git-background-fetch` |
 
 Every command binary supports `--help` / `--version` (per subcommand too), except the env-driven background workers. `gh-clone` and the `fzf-picker` subcommands that must change the parent shell (e.g. `fzf-ghq-cd`) keep a thin Fish shim for that part, with the logic in the Rust binary.
 

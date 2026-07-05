@@ -72,5 +72,9 @@ mod list;
 mod local;
 mod profile;
 
-// CLI 定義とディスパッチ。`src/bin/dotfiles.rs` の数行シムから [`cli::run`] が呼ばれる。
-pub mod cli;
+// CLI 定義とディスパッチ。
+mod cli;
+
+fn main() {
+    cli::run();
+}
