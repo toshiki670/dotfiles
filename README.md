@@ -183,7 +183,7 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 
 All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). Install them into `~/.cargo/bin` with one `cargo install --git https://github.com/toshiki670/dotfiles` (or `cargo install --path .` from a clone; the tools under `tools/` are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `cargo install` (commands) → `dotfiles apply` (configs).
 
-Design and internals (manifest schema, apply pipeline, `locals` resolution, `when` gates, …) are not documented here — they live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (module docs of `dotfiles::core`), rebuilt on every push to `main`. Treat it as the architecture reference.
+Design and internals (manifest schema, apply pipeline, `locals` resolution, `when` gates, …) are not documented here — they live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (the `dotfiles` crate's own module docs), rebuilt on every push to `main`. Treat it as the architecture reference.
 
 | Command | Description |
 | --- | --- |
@@ -192,15 +192,11 @@ Design and internals (manifest schema, apply pipeline, `locals` resolution, `whe
 | `gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
 | `clip` | Copy a file to the clipboard — `obj` (Finder object) / `text` (contents) / `path` (absolute path); macOS |
 | `gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
-| `fzf-gh` | Pick a GitHub Issue/PR with fzf and build a `gh` command (Fish shim inserts it into the command line) |
-| `fzf-ghq-cd` | Pick a ghq repo / linked worktree with fzf, printing the selected path (Fish shim cds) |
-| `fzf-worktree-remove` | Pick a linked git worktree with fzf and remove it (Fish shim cds out if needed) |
-| `cdabbr` | Expand a prompt_pwd-style abbreviated path and pick a directory with fzf (Fish shim cds) |
-| `cleanup-env` | Prompt-then-cleanup caches / unused versions for brew / mise / cargo (`-n/--dry-run`) |
-| `upgrade-env` | Upgrade all installed package managers (brew / mise / cargo) |
-| `daily-check-worker`, `git-background-fetch-worker` | Background workers started from Fish `conf.d` hooks |
+| `fzf-picker` | fzf pickers, one bin with subcommands: `fzf-gh` (pick a GitHub Issue/PR, build a `gh` command — Fish shim inserts it into the command line), `fzf-ghq-cd` (pick a ghq repo / linked worktree, printing the selected path — Fish shim cds), `fzf-worktree-remove` (pick a linked git worktree and remove it — Fish shim cds out if needed), `cdabbr` (expand a prompt_pwd-style abbreviated path and pick a directory with fzf — Fish shim cds) |
+| `env-tools` | environment maintenance, one bin with subcommands: `cleanup-env` (prompt-then-cleanup caches / unused versions for brew / mise / cargo, `-n/--dry-run`), `upgrade-env` (upgrade all installed package managers) |
+| `workers` | background workers started from Fish `conf.d` hooks, one bin with subcommands: `daily-check`, `git-background-fetch` |
 
-Every command binary supports `--help` / `--version`, except the env-driven background workers. `gh-clone` and the fzf-picker binaries (e.g. `fzf-ghq-cd`) keep a thin Fish shim for the part that must change the parent shell (`cd`), with the logic in the Rust binary.
+Every command binary supports `--help` / `--version` (per subcommand too), except the env-driven background workers. `gh-clone` and the `fzf-picker` subcommands that must change the parent shell (e.g. `fzf-ghq-cd`) keep a thin Fish shim for that part, with the logic in the Rust binary.
 
 Not installed (development / maintenance only, under `tools/`):
 

@@ -1,5 +1,5 @@
-//! `dotfiles` 本体（core）コマンドのエントリポイント。ロジックは [`dotfiles::core::cli`]。
+//! `dotfiles` 本体コマンドのエントリポイント。ロジックは [`dotfiles::cli`]。
 
 fn main() {
-    dotfiles::core::cli::run();
+    dotfiles::cli::run();
 }

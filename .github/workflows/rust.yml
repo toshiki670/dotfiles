@@ -71,18 +71,23 @@ jobs:
       - name: Verify distributable Rust commands were installed to ~/.cargo/bin
         run: |
           # 配布物は root dotfiles パッケージ 1 つに統合済み。一度の cargo install で全 bin が入る。
+          # fzf-picker / env-tools / workers は #584 でサブコマンド化し各 family 1 bin に集約。
           # root dotfiles（core）
           test -x "$HOME/.cargo/bin/dotfiles"
           "$HOME/.cargo/bin/dotfiles" --version
-          # 各コマンド + fzf-picker / env-tools の各 bin（存在のみ確認。外部ツール依存のものは実行しない）
-          for bin in clip gcm gh-clone git-upstream \
-                     cdabbr fzf-gh fzf-ghq-cd fzf-worktree-remove \
-                     cleanup-env upgrade-env; do
+          # 各コマンド（存在のみ確認。外部ツール依存のものは実行しない）
+          for bin in clip gcm gh-clone git-upstream fzf-picker env-tools workers; do
             test -x "$HOME/.cargo/bin/$bin"
           done
-          # バックグラウンド worker
-          test -x "$HOME/.cargo/bin/daily-check-worker"
-          test -x "$HOME/.cargo/bin/git-background-fetch-worker"
+          # サブコマンドの存在確認（--help のみ、外部ツール非依存）
+          "$HOME/.cargo/bin/fzf-picker" cdabbr --help
+          "$HOME/.cargo/bin/fzf-picker" fzf-gh --help
+          "$HOME/.cargo/bin/fzf-picker" fzf-ghq-cd --help
+          "$HOME/.cargo/bin/fzf-picker" fzf-worktree-remove --help
+          "$HOME/.cargo/bin/env-tools" cleanup-env --help
+          "$HOME/.cargo/bin/env-tools" upgrade-env --help
+          "$HOME/.cargo/bin/workers" daily-check --help
+          "$HOME/.cargo/bin/workers" git-background-fetch --help
           # スモーク（外部ツール非依存のもののみ）
           "$HOME/.cargo/bin/dotfiles" color sample | head -1
           "$HOME/.cargo/bin/git-upstream" --help

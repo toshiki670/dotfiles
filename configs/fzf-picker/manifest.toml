@@ -1,11 +1,11 @@
-# fzf-picker 系バイナリ（fzf-gh / fzf-ghq-cd / fzf-worktree-remove / cdabbr、いずれも ~/.cargo/bin）
-# の fish 側 shim を fish の functions 合流点へ copy する。
-# Issue #558・#567
+# fzf-picker バイナリ（fzf-gh / fzf-ghq-cd / fzf-worktree-remove / cdabbr の各サブコマンド、
+# ~/.cargo/bin に単一 bin として入る）の fish 側 shim を fish の functions 合流点へ copy する。
+# Issue #558・#567・#584
 #
 # dst は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
 # 中身は fzf-picker に帰属するため、fish 本体（configs/fish）ではなく独立したツールディレクトリ
-# としてここに置く。shim 本体はいずれもバイナリを `command <bin>` で呼び、選択結果を
-# cd / commandline へ渡すだけの薄いラッパー（別プロセスは親シェルの cd を変えられないため。
-# バイナリ側に shim 生成サブコマンドは無く fish 側定義が必須）。20-fzf-bindings.fish の bind・
-# 30-cdabbr.fish の `ca` abbr・ピッカーの preview から参照される。
+# としてここに置く。shim 本体はいずれもバイナリを `command fzf-picker <subcommand>` で呼び、
+# 選択結果を cd / commandline へ渡すだけの薄いラッパー（別プロセスは親シェルの cd を変えられ
+# ないため。バイナリ側に shim 生成サブコマンドは無く fish 側定義が必須）。20-fzf-bindings.fish
+# の bind・30-cdabbr.fish の `ca` abbr・ピッカーの preview から参照される。
 dst = "~/.config/fish/functions"
