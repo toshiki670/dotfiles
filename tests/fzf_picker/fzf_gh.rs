@@ -37,7 +37,9 @@ const NORMAL_PR: &str =
 const EMPTY_JSON: &str = "[]";
 
 fn fzf_gh() -> Command {
-    Command::cargo_bin("fzf-gh").unwrap()
+    let mut cmd = Command::cargo_bin("fzf-picker").unwrap();
+    cmd.arg("fzf-gh");
+    cmd
 }
 
 struct GhFixture {

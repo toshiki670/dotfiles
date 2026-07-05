@@ -15,7 +15,9 @@ use tempfile::TempDir;
 use crate::{EMPTY_PATH, FZF_STUB, git, path_with, write_exec};
 
 fn fzf_worktree_remove() -> Command {
-    Command::cargo_bin("fzf-worktree-remove").unwrap()
+    let mut cmd = Command::cargo_bin("fzf-picker").unwrap();
+    cmd.arg("fzf-worktree-remove");
+    cmd
 }
 
 #[test]
@@ -141,8 +143,9 @@ fn confirm_yes_over_raw_tty_deletes_worktree() {
     let pick = format!("feature/x\t{}", fx.worktree.display());
     let (master, slave) = open_raw_pty();
 
-    let exe = assert_cmd::cargo::cargo_bin("fzf-worktree-remove");
+    let exe = assert_cmd::cargo::cargo_bin("fzf-picker");
     let mut child = StdCommand::new(exe)
+        .arg("fzf-worktree-remove")
         .current_dir(&fx.repo) // メイン側（対象の内側ではない）→ cd 不要
         .env("PATH", path_with(&fx.bin))
         .env("FZF_DUMP", &fx.dump)

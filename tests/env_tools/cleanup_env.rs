@@ -14,7 +14,9 @@ use tempfile::TempDir;
 use crate::{EMPTY_PATH, write_stubs};
 
 fn cleanup_env() -> Command {
-    Command::cargo_bin("cleanup-env").unwrap()
+    let mut cmd = Command::cargo_bin("env-tools").unwrap();
+    cmd.arg("cleanup-env");
+    cmd
 }
 
 /// brew / mise / cargo / cargo-cache のスタブと呼び出しログを用意する。

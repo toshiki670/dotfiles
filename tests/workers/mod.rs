@@ -1,6 +1,6 @@
-//! `dotfiles-workers`（daily-check-worker / git-background-fetch-worker）の
-//! E2E。worker は引数を取らず env 駆動のため、スタブや実 git repo を用いて
-//! 副作用（結果ファイル / スタンプファイル作成）を検証する。
+//! `workers`（daily-check / git-background-fetch サブコマンド）の E2E。worker は
+//! 引数を取らず env 駆動のため、スタブや実 git repo を用いて副作用（結果ファイル /
+//! スタンプファイル作成）を検証する。
 
 use assert_cmd::Command;
 use std::ffi::OsString;
@@ -42,8 +42,9 @@ fn git(dir: &Path, args: &[&str]) {
 
 #[test]
 fn daily_check_worker_exits_success_without_tools() {
-    Command::cargo_bin("daily-check-worker")
+    Command::cargo_bin("workers")
         .unwrap()
+        .arg("daily-check")
         .env("PATH", EMPTY_PATH)
         .assert()
         .success();
@@ -61,8 +62,9 @@ fn daily_check_worker_writes_result_when_outdated_exists() {
     write_exec(bin.path(), "brew", BREW_STUB);
     write_exec(bin.path(), "mise", MISE_STUB);
 
-    Command::cargo_bin("daily-check-worker")
+    Command::cargo_bin("workers")
         .unwrap()
+        .arg("daily-check")
         .env("PATH", path_with(bin.path()))
         .env("DAILY_CHECK_TS", &ts)
         .env("DAILY_CHECK_CACHE", &cache)
@@ -84,8 +86,9 @@ fn git_background_fetch_worker_creates_throttle_stamp_in_repo() {
     let cache = tempfile::tempdir().unwrap();
     git(repo.path(), &["init"]);
 
-    Command::cargo_bin("git-background-fetch-worker")
+    Command::cargo_bin("workers")
         .unwrap()
+        .arg("git-background-fetch")
         .current_dir(repo.path())
         .env("XDG_CACHE_HOME", cache.path())
         .env("GIT_FETCH_THROTTLE_SEC", "9999")

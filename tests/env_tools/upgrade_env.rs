@@ -15,7 +15,9 @@ use tempfile::TempDir;
 use crate::{EMPTY_PATH, write_stubs};
 
 fn upgrade_env() -> Command {
-    Command::cargo_bin("upgrade-env").unwrap()
+    let mut cmd = Command::cargo_bin("env-tools").unwrap();
+    cmd.arg("upgrade-env");
+    cmd
 }
 
 /// スタブ PM 群と呼び出しログを用意する。

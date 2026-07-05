@@ -14,7 +14,9 @@ use tempfile::TempDir;
 use crate::{EMPTY_PATH, FZF_STUB, path_with, write_exec};
 
 fn cdabbr() -> Command {
-    Command::cargo_bin("cdabbr").unwrap()
+    let mut cmd = Command::cargo_bin("fzf-picker").unwrap();
+    cmd.arg("cdabbr");
+    cmd
 }
 
 #[rstest]

@@ -14,7 +14,9 @@ use tempfile::TempDir;
 use crate::{EMPTY_PATH, FZF_STUB, GHQ_STUB, git, path_with, write_exec};
 
 fn fzf_ghq_cd() -> Command {
-    Command::cargo_bin("fzf-ghq-cd").unwrap()
+    let mut cmd = Command::cargo_bin("fzf-picker").unwrap();
+    cmd.arg("fzf-ghq-cd");
+    cmd
 }
 
 #[test]

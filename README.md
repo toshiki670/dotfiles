@@ -183,24 +183,22 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 
 All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). Install them into `~/.cargo/bin` with one `cargo install --git https://github.com/toshiki670/dotfiles` (or `cargo install --path .` from a clone; the tools under `tools/` are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `cargo install` (commands) → `dotfiles apply` (configs).
 
-Design and internals (manifest schema, apply pipeline, `locals` resolution, `when` gates, …) are not documented here — they live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (module docs of `dotfiles::core`), rebuilt on every push to `main`. Treat it as the architecture reference.
+Design and internals (manifest schema, apply pipeline, `locals` resolution, `when` gates, …) are not documented here — they live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (the `dotfiles` crate's own module docs), rebuilt on every push to `main`. Treat it as the architecture reference.
+
+Full descriptions (subcommands, flags) live in each command's own Rustdoc page, linked below — not duplicated here.
 
 | Command | Description |
 | --- | --- |
-| `dotfiles` | dotfiles core; version entry point (`dotfiles --version`) plus `apply` (place `configs/` via per-directory `manifest.toml`; resolves & injects machine-local `locals` values), `list` (overview of every config's destination), `local set <name> <value>` (store a machine-local value in `~/.config/dotfiles/local.toml`), `profile [<name>]` (set or show the machine profile, e.g. `private`), `color sample` (print an ANSI color table — 16 + 256 colors), and `doctor` (report unset `locals`) |
-| `git-upstream` | Merge `upstream/master` / initialize the upstream remote |
-| `gcm` | AI-powered git commit with Conventional Commits (`claude -p`) |
-| `clip` | Copy a file to the clipboard — `obj` (Finder object) / `text` (contents) / `path` (absolute path); macOS |
-| `gh-clone` | `gh repo clone` + `ghq migrate`, printing the migrated path |
-| `fzf-gh` | Pick a GitHub Issue/PR with fzf and build a `gh` command (Fish shim inserts it into the command line) |
-| `fzf-ghq-cd` | Pick a ghq repo / linked worktree with fzf, printing the selected path (Fish shim cds) |
-| `fzf-worktree-remove` | Pick a linked git worktree with fzf and remove it (Fish shim cds out if needed) |
-| `cdabbr` | Expand a prompt_pwd-style abbreviated path and pick a directory with fzf (Fish shim cds) |
-| `cleanup-env` | Prompt-then-cleanup caches / unused versions for brew / mise / cargo (`-n/--dry-run`) |
-| `upgrade-env` | Upgrade all installed package managers (brew / mise / cargo) |
-| `daily-check-worker`, `git-background-fetch-worker` | Background workers started from Fish `conf.d` hooks |
+| [`dotfiles`](https://toshiki670.github.io/dotfiles/dotfiles/) | Core: places `configs/` per `manifest.toml` (`apply`), plus `list` / `local` / `profile` / `color` / `doctor` |
+| [`git-upstream`](https://toshiki670.github.io/dotfiles/git_upstream/) | Merge `upstream/master` / initialize the upstream remote |
+| [`gcm`](https://toshiki670.github.io/dotfiles/gcm/) | AI-powered git commit with Conventional Commits |
+| [`clip`](https://toshiki670.github.io/dotfiles/clip/) | Copy a file to the clipboard (macOS) |
+| [`gh-clone`](https://toshiki670.github.io/dotfiles/gh_clone/) | `gh repo clone` + `ghq migrate` |
+| [`fzf-picker`](https://toshiki670.github.io/dotfiles/fzf_picker/) | fzf pickers: `cdabbr` / `fzf-gh` / `fzf-ghq-cd` / `fzf-worktree-remove` |
+| [`env-tools`](https://toshiki670.github.io/dotfiles/env_tools/) | Environment maintenance: `cleanup-env` / `upgrade-env` |
+| [`workers`](https://toshiki670.github.io/dotfiles/workers/) | Background workers: `daily-check` / `git-background-fetch` |
 
-Every command binary supports `--help` / `--version`, except the env-driven background workers. `gh-clone` and the fzf-picker binaries (e.g. `fzf-ghq-cd`) keep a thin Fish shim for the part that must change the parent shell (`cd`), with the logic in the Rust binary.
+Every command binary supports `--help` / `--version` (per subcommand too), except the env-driven background workers. `gh-clone` and the `fzf-picker` subcommands that must change the parent shell (e.g. `fzf-ghq-cd`) keep a thin Fish shim for that part, with the logic in the Rust binary.
 
 Not installed (development / maintenance only, under `tools/`):
 
