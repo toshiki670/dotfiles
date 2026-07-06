@@ -162,7 +162,7 @@ Bypass everything for a single commit with `git commit --no-verify`.
 
 ## Claude Code
 
-`~/.claude/settings.json` is placed by `dotfiles apply` (base `settings.json` plus a conditional `rtk.json` overlay when `rtk` is on `PATH`). It merges into the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced.
+`~/.claude/settings.json` is placed by `dotfiles apply` (`settings.json` plus a conditional `rtk.json` fragment when `rtk` is on `PATH`, layered onto the live file). It merges into the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced.
 
 `PreToolUse` / `Bash` hooks provide two safety rails:
 

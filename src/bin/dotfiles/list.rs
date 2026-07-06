@@ -1,14 +1,17 @@
 //! `dotfiles list`：configs の分散 manifest を集約し、配置先一覧を表示する。
 //!
 //! 「分散方式の弱点（全体一覧が横断的）を補う」俯瞰ビュー。各単位を
-//! source 相対名でソートし、`名前 → dst [属性]` の形で出力する。配置は行わないため
-//! `home` は不要（dst は manifest の生表記 `~/...` をそのまま見せる方が読みやすい）。
+//! source 相対名でソートし、`名前 → 宛先 [属性]` の形で出力する。配置は行わないため
+//! `home` は不要（宛先は manifest の生表記 `~/...` をそのまま見せる方が読みやすい）。
 //!
 //! 見出しには `source` の実 path でなく解決元ラベル（`origin`・[`crate::source::Origin`]）を出す。
 //! 埋め込み時の `source` は temp dir で、実 path を生で見せても俯瞰の役に立たないため。
+//!
+//! 宛先表記（[`display_dst`]）と steps サマリ（[`summary`]）は apply の 1 行出力とラベルが同じ出所を
+//! 使えるよう `pub(crate)` で公開する。
 
 use crate::discover::{self, MANIFEST};
-use crate::manifest::{Frequency, Manifest};
+use crate::manifest::{Manifest, StepSource};
 use std::path::Path;
 
 /// `source` 配下の設定単位を一覧表示する。`origin` は見出しに出す解決元ラベル。
@@ -34,27 +37,51 @@ pub fn run(source: &Path, origin: &str) -> Result<(), String> {
     for (name, manifest) in &rows {
         println!(
             "  {name:<width$}  → {dst}  [{attrs}]",
-            dst = manifest.dst,
+            dst = display_dst(manifest),
             attrs = attrs(manifest),
         );
     }
     Ok(())
 }
 
-/// 1 単位の属性ラベル（2軸モデル）。
-/// kind ＋ strategy ＋ overlay 数 ＋ preserve ＋ private / executable ＋ when.deps / when.os / when.profile ＋ hooks。
+/// apply の 1 行出力と list が共有する宛先表記: 最初のパス output の生表記（`~/...`）。
+/// パス output を持たない（cmd output だけの）ユニットは `(cmd)` を返す。
+pub(crate) fn display_dst(manifest: &Manifest) -> String {
+    manifest
+        .steps
+        .iter()
+        .find_map(|s| match &s.output {
+            Some(StepSource::Path(p)) => Some(p.clone()),
+            _ => None,
+        })
+        .unwrap_or_else(|| "(cmd)".to_string())
+}
+
+/// apply のラベルと list の属性が共有する steps サマリ。ツリーは `tree`、それ以外は
+/// `steps=Nin/Mout`（＋ `format` ＋ cmd output があれば `output=cmd`）。
+pub(crate) fn summary(manifest: &Manifest) -> String {
+    if manifest.is_tree() {
+        return "tree".to_string();
+    }
+    let n_in = manifest.steps.iter().filter(|s| s.input.is_some()).count();
+    let n_out = manifest.steps.iter().filter(|s| s.output.is_some()).count();
+    let mut parts = vec![format!("steps={n_in}in/{n_out}out")];
+    if let Some(format) = manifest.format {
+        parts.push(format.to_string());
+    }
+    if manifest
+        .steps
+        .iter()
+        .any(|s| matches!(&s.output, Some(StepSource::Cmd(_))))
+    {
+        parts.push("output=cmd".to_string());
+    }
+    parts.join(", ")
+}
+
+/// 1 単位の属性ラベル: steps サマリ ＋ private / executable ＋ when.deps / when.os / when.profile ＋ hooks。
 fn attrs(manifest: &Manifest) -> String {
-    // 表示名は Kind / Strategy の Display に集約する（apply のラベルと同じ出所）。
-    let mut parts = vec![manifest.kind.to_string()];
-    if let Some(strategy) = manifest.strategy {
-        parts.push(strategy.to_string());
-    }
-    if !manifest.overlay.is_empty() {
-        parts.push(format!("overlay={}", manifest.overlay.len()));
-    }
-    if manifest.preserve {
-        parts.push("preserve".to_string());
-    }
+    let mut parts = vec![summary(manifest)];
     if manifest.private {
         parts.push("private".to_string());
     }
@@ -74,18 +101,7 @@ fn attrs(manifest: &Manifest) -> String {
     }
     if !manifest.hooks.is_empty() {
         // フックはコマンド（argv）なので、一覧では件数だけ示す（詳細は manifest を見る）。
-        // always 頻度が混じるときはその内訳を添える ― onchange と実行モデルが違うため
-        // （毎 apply 無条件）、一覧でも区別が付くようにする。
-        let always = manifest
-            .hooks
-            .iter()
-            .filter(|h| h.frequency == Frequency::Always)
-            .count();
-        if always > 0 {
-            parts.push(format!("hooks={} (always={always})", manifest.hooks.len()));
-        } else {
-            parts.push(format!("hooks={}", manifest.hooks.len()));
-        }
+        parts.push(format!("hooks={}", manifest.hooks.len()));
     }
     parts.join(", ")
 }

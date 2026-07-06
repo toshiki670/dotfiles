@@ -1,5 +1,5 @@
 //! apply 時のローカル値解決: 単位の `locals` をストアと突き合わせ、未設定値を
-//! TTY なら対話取得（sensitive は非エコー）、非 TTY なら警告のみで継続する。
+//! TTY なら対話取得、非 TTY なら警告のみで継続する。
 //!
 //! ここで解決できた「名前→値」だけを [`crate::locals::inject`] が placeholder 置換に使う。未解決の名前は
 //! マップに入らないため、配置ファイルでは `@@name@@` が literal のまま残り doctor が検出する。
@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 /// 単位の `locals` を解決し、注入用の「名前→値」マップ（解決できた名前のみ）を返す。
 ///
 /// - ストアに既にあれば採用。
-/// - 無く `interactive`（TTY）なら [`prompt::ask`]（sensitive は非エコー）で取得しストアへ 0600 で書く。
+/// - 無く `interactive`（TTY）なら [`prompt::ask`] で取得しストアへ 0600 で書く。
 /// - 無く非 TTY なら警告（stderr）のみで継続し、その名前はマップに含めない（literal 残し）。
 ///
 /// `manifest.locals` が空なら空マップ（注入対象でない単位）。空マップは [`inject::substitute`] が
@@ -29,7 +29,7 @@ pub fn fill(
             continue;
         }
         if interactive {
-            let value = prompt::ask(name, manifest.sensitive.contains(name))?;
+            let value = prompt::ask(name)?;
             store.set(name, &value);
             store.save()?;
             resolved.insert(name.clone(), value);
@@ -43,7 +43,8 @@ pub fn fill(
 }
 
 /// バイト列へ解決済みローカル値を注入する薄いラッパ（[`inject::substitute`] の再公開）。
-/// copy / compose の両配置経路が同じ注入を通すための単一窓口。
+/// copy / pipeline の両配置経路（[`crate::apply::copy`] / [`crate::apply::pipeline`]）が同じ注入を
+/// 通すための単一窓口。
 pub fn inject(bytes: &[u8], values: &BTreeMap<String, String>) -> Vec<u8> {
     inject::substitute(bytes, values)
 }
@@ -63,7 +64,9 @@ mod tests {
         let mut store = Store::load(home.path()).unwrap();
         store.set("git.email", "me@example.com");
 
-        let m = manifest("dst = \"~/x\"\nlocals = [\"git.email\", \"git.name\"]\n");
+        let m = manifest(
+            "locals = [\"git.email\", \"git.name\"]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n",
+        );
         // 非 TTY: git.email はストアから解決、git.name は未設定で警告のみ（マップに入らない）。
         let resolved = fill(&m, &mut store, false).unwrap();
         assert_eq!(
@@ -77,7 +80,7 @@ mod tests {
     fn empty_locals_yields_empty_map() {
         let home = tempfile::tempdir().unwrap();
         let mut store = Store::load(home.path()).unwrap();
-        let m = manifest("dst = \"~/x\"\n");
+        let m = manifest("[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n");
         assert!(fill(&m, &mut store, false).unwrap().is_empty());
     }
 }

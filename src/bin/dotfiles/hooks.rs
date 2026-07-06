@@ -1,36 +1,33 @@
-//! 配置後フック（#546）: ユニット配置後（after フェーズ）に、manifest が宣言した各フックを
-//! **実行頻度（`frequency`）で分岐**して実行する**汎用エンジン**。
+//! 配置後フック: ユニット配置後（after フェーズ）に、manifest が宣言した各フックを onchange gate を
+//! 通して実行する**汎用エンジン**。
 //!
 //! ツール固有のロジックは binary に一切持たない。フックは manifest の `hooks` 属性が
 //! `cmd`（argv・コマンド列）を**データ**として宣言し、本モジュールはそれを実行するだけ ―
-//! [`crate::apply::generate`] の `cmd`（manifest のコマンドをデータとして実行）と同じ思想で、
-//! 新ツールのフック追加に binary 変更・再コンパイルは要らない（configs と疎結合・スケールする）。
-//! どのフックが macOS 専用か等の知識は manifest 側（ghostty の `os = "darwin"` ＋ コマンド本体）が
-//! 持ち、エンジンは関知しない。
+//! step の `cmd`（manifest のコマンドをデータとして実行）と同じ思想で、新ツールのフック追加に
+//! binary 変更・再コンパイルは要らない（configs と疎結合・スケールする）。どのフックが macOS 専用か等の
+//! 知識は manifest 側（ghostty の `os = "darwin"` ＋ コマンド本体）が持ち、エンジンは関知しない。
 //!
-//! 頻度で実行モデルが分かれる:
-//! - **`onchange`**（既定）: onchange gate（[`crate::hooks::onchange`]）を通す。ユニットのソース
-//!   ハッシュ＋コマンド内容が前回適用時と同じならスキップ、変化（初回・**コマンド変更**を含む）なら実行する。
-//! - **`always`**: gate を通さず毎 apply 無条件に実行する（状態を読み書きしない）。反映対象が dotfiles
-//!   管理外で随時変わる用途向けで、**コマンドの冪等性を前提**とする。
+//! フックは onchange gate（[`crate::hooks::onchange`]）を通す。ユニットのソースハッシュ＋コマンド内容が
+//! 前回適用時と同じならスキップ、変化（初回・**コマンド変更**を含む）なら実行する。用途は配置後の副作用
+//! （bat cache 再構築・symlink 生成）。生きた外部状態への反映は hooks ではなく `output.cmd` step が担う
+//! （毎 apply・冪等契約）ため、頻度軸（`frequency`）は持たない。
 //!
-//! いずれの頻度でも、プログラムが PATH に無い（未インストール）ときは skip してメッセージだけ出す
-//! （`command -v` ガード相当を、ツール名を持たずに汎用化）。実際の spawn と `argv[0]` 解決は
-//! [`mod@exec`] が担う。`onchange` はさらにハッシュを保存しないので、後で入れたら再実行される。トップレベル
-//! `when`（ユニット gate, `deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない
-//! （＝ `when.os` でフックを分岐できる）。
+//! プログラムが PATH に無い（未インストール）ときは skip してメッセージだけ出す（`command -v` ガード
+//! 相当を、ツール名を持たずに汎用化）。実際の spawn と `argv[0]` 解決は [`mod@exec`] が担う。未インストール
+//! 時はハッシュを保存しないので、後で入れたら再実行される。トップレベル `when`（ユニット gate,
+//! `deps` / `os`）が false のユニットは配置ごと skip されるため hooks も走らない（＝ `when.os` でフックを
+//! 分岐できる）。
 
 mod exec;
 pub(crate) mod onchange;
 
-use crate::manifest::{Frequency, Hook};
+use crate::manifest::Hook;
 use exec::{Exec, exec};
 use onchange::State;
 use std::path::Path;
 
-/// ユニットが宣言した全 hooks を宣言順に、各フックの `frequency` で分岐して実行する
-/// （[`crate::apply`] が配置後に呼ぶ）。onchange のソースハッシュは 1 回だけ計算して使い回す
-/// （always だけのユニットでは無駄になるので計算しない）。
+/// ユニットが宣言した全 hooks を宣言順に onchange gate を通して実行する（[`crate::apply`] が配置後に
+/// 呼ぶ）。ソースハッシュは 1 回だけ計算して全フックで使い回す。
 pub fn run_unit_hooks(
     unit_dir: &Path,
     unit_rel: &str,
@@ -40,29 +37,14 @@ pub fn run_unit_hooks(
     if hooks.is_empty() {
         return Ok(());
     }
-    // ソースハッシュは onchange 頻度のフックだけが要る。1 つでもあれば 1 回計算して使い回し、
-    // always だけのユニットでは走査を丸ごと省く（反映対象が管理外＝ソースを見ても意味が無いため）。
-    let source_hash = if hooks.iter().any(|h| h.frequency == Frequency::Onchange) {
-        Some(onchange::hash_dir(unit_dir)?)
-    } else {
-        None
-    };
+    let source_hash = onchange::hash_dir(unit_dir)?;
     for hook in hooks {
-        match hook.frequency {
-            Frequency::Onchange => {
-                // onchange が 1 つでもあれば上で source_hash は Some になっている（不変条件）。
-                let source_hash = source_hash
-                    .as_deref()
-                    .expect("onchange フックがあれば source_hash は計算済み");
-                run_onchange(&hook.cmd, unit_dir, unit_rel, source_hash, state)?;
-            }
-            Frequency::Always => run_always(&hook.cmd, unit_dir, unit_rel)?,
-        }
+        run_onchange(&hook.cmd, unit_dir, unit_rel, &source_hash, state)?;
     }
     Ok(())
 }
 
-/// 1 つの onchange フック（`frequency = "onchange"`）を onchange gate を通して実行する。
+/// 1 つのフック（hooks は onchange 固定）を onchange gate を通して実行する。
 ///
 /// 状態キーは `<unit>::<コマンドの短ハッシュ>`。コマンド内容をキーに織り込むことで、manifest 上で
 /// **コマンドを変えた場合も新しいキー＝再実行**になる（`manifest.toml` はソースハッシュ対象外なので、
@@ -95,27 +77,6 @@ fn run_onchange(
         }
         Exec::ProgramMissing => {
             // 未インストール → ハッシュ未保存（入れたら次回 apply で再実行）。
-            println!("hook: {label} ({unit_rel}) → skip ({program} が PATH にない)");
-        }
-    }
-    Ok(())
-}
-
-/// 1 つの always フック（`frequency = "always"`）を毎 apply 無条件に実行する。
-///
-/// onchange gate（[`State`] の読み書き）を通さず [`mod@exec`] を毎回呼ぶ。反映対象が dotfiles 管理外で
-/// 随時変わる用途（copy/compose と同じ「常に再実行」）向けで、**コマンドが冪等であること**を前提とする
-/// ― 毎 apply 無条件に走るため。未インストール（[`Exec::ProgramMissing`]）は onchange と同じく skip
-/// 表示に留める（ハッシュを持たないので保存も無い）。
-fn run_always(argv: &[String], unit_dir: &Path, unit_rel: &str) -> Result<(), String> {
-    let Some(program) = argv.first() else {
-        // manifest 検証で非空を保証済みだが防御的に弾く。
-        return Err(format!("{unit_rel}: hook コマンドが空です"));
-    };
-    let label = argv.join(" ");
-    match exec(argv, unit_dir)? {
-        Exec::Ran => println!("hook: {label} ({unit_rel}) → ran (always)"),
-        Exec::ProgramMissing => {
             println!("hook: {label} ({unit_rel}) → skip ({program} が PATH にない)");
         }
     }

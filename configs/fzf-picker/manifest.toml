@@ -8,4 +8,9 @@
 # 選択結果を cd / commandline へ渡すだけの薄いラッパー（別プロセスは親シェルの cd を変えられ
 # ないため。バイナリ側に shim 生成サブコマンドは無く fish 側定義が必須）。20-fzf-bindings.fish
 # の bind・30-cdabbr.fish の `ca` abbr・ピッカーの preview から参照される。
-dst = "~/.config/fish/functions"
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/fish/functions"

@@ -1,10 +1,10 @@
 //! `dotfiles apply` の copy 層: ディレクトリ単位で実体をそのまま書き出す。
 //!
-//! copy はユニットのソースツリーを相対構造を保ったまま `dst`（ディレクトリ）の下へ書き出す
-//! 生成方式で、overlay を持たないユニットの大多数がこの経路を通る。`manifest.toml` 自体と、
-//! 別 manifest を持つサブツリー（委譲先の責務）は除外する。パーミッションは manifest の
-//! `private` / `executable` 属性に従う（適用は [`crate::apply::set_mode`]）。
-//! `locals`（named value）が解決されている単位では、各ファイルへ `@@name@@` 注入を通す。
+//! ツリー output（`input = "."` ＋ パス output）の配置経路。ユニットのソースツリーを相対構造を
+//! 保ったまま宛先ディレクトリの下へ書き出す。`manifest.toml` 自体と、別 manifest を持つサブツリー
+//! （委譲先の責務）は除外する。パーミッションは manifest の `private` / `executable` 属性に従う
+//! （適用は [`crate::apply::set_mode`]）。`locals`（named value）が解決されている単位では、各ファイルへ
+//! `@@name@@` 注入を通す。[`crate::apply::pipeline`] が D＝ツリーのときに呼ぶ。
 
 use super::set_mode;
 use crate::discover::{self, MANIFEST};

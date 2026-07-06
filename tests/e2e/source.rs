@@ -13,11 +13,15 @@ use crate::dotfiles;
 use predicates::prelude::*;
 use std::fs;
 
-/// `<root>/configs/<unit>` に最小の copy ユニット（`dst` ＋ 1 ファイル）を作る。
+/// `<root>/configs/<unit>` に最小のツリーユニット（`input = "."` ＋ output ＋ 1 ファイル）を作る。
 fn write_unit(configs: &std::path::Path, unit: &str, dst: &str, file: &str) {
     let dir = configs.join(unit);
     fs::create_dir_all(&dir).unwrap();
-    fs::write(dir.join("manifest.toml"), format!("dst = \"{dst}\"\n")).unwrap();
+    fs::write(
+        dir.join("manifest.toml"),
+        format!("[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"{dst}\"\n"),
+    )
+    .unwrap();
     fs::write(dir.join(file), "x\n").unwrap();
 }
 

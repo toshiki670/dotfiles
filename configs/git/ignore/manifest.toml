@@ -1,17 +1,20 @@
-# git のグローバル ignore（~/.config/git/ignore）を concat 合成で配置する。
+# git のグローバル ignore（~/.config/git/ignore）を text 連結で配置する。
 #
 # 以前は ignore 本体＋ignores/{gitignore.io,custom} の連結だった。
-# テンプレート変数・条件分岐は無い単純連結だったため、overlay ＋ strategy="concat" で表現する
-# （gitignore.io 生成分 → custom の順。旧テンプレートの連結順を踏襲）。
-# core.excludesFile は未設定（git既定の $XDG_CONFIG_HOME/git/ignore を使う）。
+# テンプレート変数・条件分岐は無い単純連結なので、gitignore.io → custom の順で append する
+# （旧テンプレートの連結順を踏襲）。core.excludesFile は未設定（git既定の
+# $XDG_CONFIG_HOME/git/ignore を使う）。
 #
 # 各断片は自己記述（gitignore.io は toptal の生成ヘッダ、custom は自前のヘッダ/フッタ行）を
 # 既に持つため、旧テンプレートの外側バナー（"### Git Ignore Rules ###" 等）は付けない。
-dst      = "~/.config/git/ignore"
-strategy = "concat"
+format = "text"
 
-[[overlay]]
-src = "gitignore.io"
+[[steps]]
+input = "gitignore.io"
 
-[[overlay]]
-src = "custom"
+[[steps]]
+input = "custom"
+merge = "append"
+
+[[steps]]
+output = "~/.config/git/ignore"

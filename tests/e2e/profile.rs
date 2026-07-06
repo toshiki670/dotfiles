@@ -12,14 +12,14 @@ use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
 
-/// `profile` 状態を持つ架空ユニットを `work/configs/demo` に用意する。
+/// `profile` 状態を持つ架空ユニットを `work/configs/demo` に用意する（ツリー配置）。
 /// `body` は `manifest.toml` の追加行（`when` 等）。
 fn write_gated_unit(work: &Path, body: &str) {
     let unit = work.join("configs/demo");
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        format!("dst = \"~/.config/demo\"\n{body}"),
+        format!("{body}[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n"),
     )
     .unwrap();
     fs::write(unit.join("conf"), "x\n").unwrap();

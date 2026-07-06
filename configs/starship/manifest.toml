@@ -1,10 +1,10 @@
-# starship の設定（starship.toml）を ~/.config 直下へ配置する（copy 層）。
+# starship の設定（starship.toml）を ~/.config 直下へ配置する（ツリー配置）。
 #
-# dst=~/.config（ディレクトリ）。配下の starship.toml を相対構造のまま copy し
+# output=~/.config（ディレクトリ）。配下の starship.toml を相対構造のまま配置し
 # ~/.config/starship.toml に置く。~/.config 配下の他ツール設定には触れない。
 #
 # fish/（fish 起動連携 `starship init fish` を conf.d 合流点へ置く別単位）はサブ manifest を
-# 持つので、この copy からは委譲され除外される（claude の settings/ と同じ関係）。
+# 持つので、このツリー配置からは委譲され除外される（claude の settings/ と同じ関係）。
 #
 # $schema: starship.toml 先頭の `$schema` は starship 公式のスキーマ URL
 # （https://starship.rs/config-schema.json）を指す。エディタ / taplo はこの URL を取得して
@@ -18,6 +18,10 @@
 # module は `when`（shell コマンド・終了 0 で表示）を持つので、節は常時置きつつ
 # `when = "command -v merge-ready-prompt"` で自己 gate する。merge-ready 不在マシンでは
 # starship 自身が節を非表示にするため、出し分けと挙動は等価で、配置は単純 copy に保てる
-# （条件分岐を engine の overlay へ持ち込まず、表示可否という starship 固有の意図を starship の
+# （条件分岐を engine へ持ち込まず、表示可否という starship 固有の意図を starship の
 # 設定そのものに宿す）。
-dst = "~/.config"
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config"

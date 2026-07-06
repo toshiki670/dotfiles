@@ -1,23 +1,26 @@
-//! `dotfiles apply` の copy 層（S0/S1）の E2E。
+//! `dotfiles apply` のツリー配置層（`input = "."` ＋ パス output）の E2E。
 //!
-//! kind 省略時の copy 既定と `~` 展開・サブディレクトリ再帰と入れ子 manifest の委譲・
+//! ツリー input・`~` 展開・サブディレクトリ再帰と入れ子 manifest の委譲・
 //! パーミッション属性の合成を検証する。
 
 use crate::dotfiles;
 use rstest::rstest;
 use std::fs;
 
-/// kind 省略時に copy として扱われ、`~` が HOME に展開されることを、
-/// 一時ソース fixture で検証する（hermetic）。
+/// ツリーユニットが `~` を HOME に展開して配置することを、一時ソース fixture で検証する（hermetic）。
 #[test]
-fn apply_defaults_to_copy_and_expands_tilde() {
+fn apply_places_tree_and_expands_tilde() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
 
-    // 一時ソース configs/demo/{manifest.toml, hello.conf} を用意（kind は省略）。
+    // 一時ソース configs/demo/{manifest.toml, hello.conf} を用意。
     let unit = work.path().join("configs/demo");
     fs::create_dir_all(&unit).unwrap();
-    fs::write(unit.join("manifest.toml"), "dst = \"~/.config/demo\"\n").unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+    )
+    .unwrap();
     fs::write(unit.join("hello.conf"), "hello = 1\n").unwrap();
 
     dotfiles()
@@ -52,13 +55,17 @@ fn apply_recurses_subdirs_and_delegates_nested_manifests() {
     let parent = work.path().join("configs/parent");
     fs::create_dir_all(parent.join("nested")).unwrap();
     fs::create_dir_all(parent.join("child")).unwrap();
-    fs::write(parent.join("manifest.toml"), "dst = \"~/.config/parent\"\n").unwrap();
+    fs::write(
+        parent.join("manifest.toml"),
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/parent\"\n",
+    )
+    .unwrap();
     fs::write(parent.join("a.conf"), "a\n").unwrap();
     fs::write(parent.join("nested/b.conf"), "b\n").unwrap();
     // child は自前の manifest を持つ別単位（管轄を委譲され、独立した dst へ）。
     fs::write(
         parent.join("child/manifest.toml"),
-        "dst = \"~/.config/child\"\n",
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/child\"\n",
     )
     .unwrap();
     fs::write(parent.join("child/c.conf"), "c\n").unwrap();
@@ -98,10 +105,14 @@ fn apply_copy_preserves_unmanaged_files_in_dst() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
 
-    // managed は config.toml の 1 ファイルだけ（dst=ディレクトリへ copy）。
+    // managed は config.toml の 1 ファイルだけ（output=ディレクトリへツリー配置）。
     let unit = work.path().join("configs/app");
     fs::create_dir_all(&unit).unwrap();
-    fs::write(unit.join("manifest.toml"), "dst = \"~/.config/app\"\n").unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/app\"\n",
+    )
+    .unwrap();
     fs::write(unit.join("config.toml"), "managed = true\n").unwrap();
 
     // dst 配下に user 所有のファイル（dotfiles 非管理。サブディレクトリの drop-in を模す）を先置き。
@@ -148,7 +159,7 @@ fn apply_sets_permissions_from_manifest(#[case] name: &str, #[case] attr: &str, 
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        format!("dst = \"~/.config/{name}\"\n{attr}"),
+        format!("{attr}[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/{name}\"\n"),
     )
     .unwrap();
     fs::write(unit.join("f.txt"), "x\n").unwrap();

@@ -2,7 +2,12 @@
 # Issue #558
 #
 # dst は fish の conf.d（複数ツールが断片を持ち寄る合流点。eza の 40-eza.fish 等と同じ場所）。
-# 親 configs/starship/manifest.toml は dst=~/.config へのツリー copy（starship.toml を配置）だが、
+# 親 configs/starship/manifest.toml は ~/.config へのツリー配置（starship.toml を配置）だが、
 # このディレクトリは別 manifest を持つので委譲され、~/.config/fish 側からは触れない。
 # ファイル名の番号 prefix (95-) が読み込み順を表す（プロンプトは fish 起動の最終段で初期化する）。
-dst = "~/.config/fish/conf.d"
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/fish/conf.d"

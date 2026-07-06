@@ -12,10 +12,14 @@ fn list_shows_units_sorted_with_attrs() {
     let alpha = work.path().join("configs/alpha");
     fs::create_dir_all(&beta).unwrap();
     fs::create_dir_all(&alpha).unwrap();
-    fs::write(beta.join("manifest.toml"), "dst = \"~/.config/beta\"\n").unwrap();
+    fs::write(
+        beta.join("manifest.toml"),
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/beta\"\n",
+    )
+    .unwrap();
     fs::write(
         alpha.join("manifest.toml"),
-        "dst = \"~/.config/alpha\"\nprivate = true\n",
+        "private = true\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/alpha\"\n",
     )
     .unwrap();
 
@@ -44,7 +48,7 @@ fn list_shows_units_sorted_with_attrs() {
         "dst が出ていない:\n{stdout}"
     );
     assert!(
-        stdout.contains("copy, private"),
+        stdout.contains("tree, private"),
         "属性ラベルが出ていない:\n{stdout}",
     );
 }

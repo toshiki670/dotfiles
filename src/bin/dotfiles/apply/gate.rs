@@ -1,15 +1,15 @@
-//! gate の評価: トップレベル `when`（ユニットスコープ）と `[[overlay]]` の `when`（断片スコープ）。
+//! gate の評価: トップレベル `when`（ユニットスコープ）と step の `when`（step スコープ）。
 //!
 //! gate 語彙を 1 か所に集約する。gate 語彙は `when`
 //! （`deps` 配列・AND / `os` スカラ / `profile` スカラ）に一本化されており、**書く位置でスコープが
-//! 決まる**: トップレベルの `when` はユニット全体 gate（満たさなければユニットごと skip）、overlay の
-//! `when` はその断片だけの採否。両者は **同じ評価規則**（[`when_unsatisfied_reason`]: PATH 探索・
+//! 決まる**: トップレベルの `when` はユニット全体 gate（満たさなければユニットごと skip）、step の
+//! `when` はその step だけの採否。両者は **同じ評価規則**（[`when_unsatisfied_reason`]: PATH 探索・
 //! OS 正規化・profile 状態一致・複数キー AND）を共有する。ここはその共有ロジックと、PATH 上の
 //! 実行ファイル探索（`which`）を持つ。
 //!
 //! `deps`/`os` は環境（PATH・OS）からその場で判る条件だが、`profile` は user が選んで
 //! おく状態（[`crate::state`]）を読む。状態は apply 開始時に 1 回 [`GateState`] へ解決し、全ユニット
-//! ・全 overlay の評価で共有する（評価ごとにファイルを読み直さない）。`theme`（color スライス）も
+//! ・全 step の評価で共有する（評価ごとにファイルを読み直さない）。`theme`（color スライス）も
 //! 同じ snapshot にフィールドを足して同じ機構を使い回す想定（状態駆動 gate 族）。
 
 use crate::manifest::{Manifest, When};
@@ -20,6 +20,7 @@ use std::path::{Path, PathBuf};
 ///
 /// `profile` は現状唯一の状態 gate。`None` ＝ 未設定で、profile gate は「private ではない」既定として
 /// 解釈する（安全側 opt-in）。`deps`/`os` は環境から都度判るため snapshot に持たない。
+/// 全ユニット・全 step の評価で使い回す（apply で 1 回だけ解決）。
 pub struct GateState {
     profile: Option<String>,
 }
@@ -64,7 +65,7 @@ pub fn unit_skip_reason(manifest: &Manifest, state: &GateState) -> Option<String
         .and_then(|when| when_unsatisfied_reason(when, state))
 }
 
-/// overlay の `when`（断片スコープ gate）を満たすか（省略は真）。
+/// step の `when`（step スコープ gate）を満たすか（省略は真）。
 ///
 /// ユニット gate と同じ [`when_unsatisfied_reason`] を共有し、理由が無い（None）＝満たす。
 pub fn when_satisfied(when: &Option<When>, state: &GateState) -> bool {
@@ -75,7 +76,7 @@ pub fn when_satisfied(when: &Option<When>, state: &GateState) -> bool {
 /// `when`（`deps` 配列・AND / `os` スカラ / `profile` スカラ）を評価し、満たさないとき理由を返す
 /// （満たせば None）。
 ///
-/// ユニットスコープ（[`unit_skip_reason`]）と断片スコープ（[`when_satisfied`]）が共有する
+/// ユニットスコープ（[`unit_skip_reason`]）と step スコープ（[`when_satisfied`]）が共有する
 /// 唯一の評価本体。`deps` は 1 つでも PATH に無ければ不成立、`os` は指定があり現在 OS と
 /// 一致しなければ不成立、`profile` は指定があり現在の profile 状態（`state`）と一致しなければ
 /// 不成立（未設定 ＝ not-private 既定なので指定があれば不成立）。複数キーは AND（どれか 1 つでも

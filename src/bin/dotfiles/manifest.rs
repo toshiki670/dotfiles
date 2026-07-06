@@ -1,176 +1,158 @@
 //! `manifest.toml` のスキーマと読み込み。
 //!
-//! **2軸モデル**を解釈する:
-//! - **生成方式 `kind`**（断片をどう実体化するか）= `copy` / `generate`（省略時 copy）。
-//! - **合成 `strategy`**（複数の条件付き断片を1 dst=ファイルへどう重ねるか）= `concat` /
-//!   `json-shallow` / `plist-shallow`（JSON 版の plist 版）。`merge` は独立 kind ではなく
-//!   合成軸の戦略。
-//! - **条件付き overlay**（`[[overlay]]` ＋ `when`）= dst を「base ＋ gate された断片」の合成
-//!   として組む。各 overlay は `src`（copy 断片）/ `cmd`（generate 断片）のどちらか ＋
-//!   `when`（`deps` / `os`）。既存 dst の温存はユニット属性 `preserve = true`。
+//! ユニットを `[[steps]]` の列として解釈する。文書 D を空から始め、宣言順に各 step を畳む:
+//! - **input** step: D へ内容を畳む（最初の input は D＝内容、2 つ目以降は `merge` で重ねる）。
+//! - **output** step: D を宛先へ書く。
 //!
-//! 属性（`kind` / `dst` / `hooks` / `when`）が分岐するときはディレクトリ（設定単位）を分け、
-//! 内容だけが条件で変わるなら `when` 付き overlay で表す ― これが単位の粒度の指針になる。
+//! 各 step の `input` / `output` は択一で、どちらも「パス文字列」か「`cmd`（argv・標準入出力）」の
+//! 択一（[`StepSource`]）。重ね方の内容型は unit レベルの `format`（json / plist / text）、per-step の
+//! `merge`（shallow / append）が「どう重ねるか」を宣言する。実行時の畳み込みは `format` だけで駆動し、
+//! `merge` は load 時の整合検証のための注釈（[`crate::apply::pipeline`]）。
 //!
 //! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ / `profile` スカラ）に一本化する。**書く位置で
-//! スコープが決まる**: トップレベルの `when` はユニット全体 gate（false なら dst も `hooks` も触らず
-//! skip ＝ all-or-nothing）、`[[overlay]]` 内の `when` はその断片だけの採否。両者は同じ評価規則を
+//! スコープが決まる**: トップレベルの `when` はユニット全体 gate（false ならユニットごと skip ＝
+//! all-or-nothing）、step 内の `when` はその step だけの採否。両者は同じ評価規則を
 //! [`crate::apply::gate`] で共有する。`profile` は環境からその場で判る条件（`deps`/`os`）と違い
 //! user が選んでおく状態（[`crate::state`]）を読む状態 gate で、`theme`（color スライスまで
 //! 未配線）と同族。
-//! `locals` / `sensitive` はマシンローカル値（named value）の宣言。`hooks` は配置後フックの宣言で、
-//! 各エントリが実行する `cmd`（argv）と実行頻度 `frequency`（省略時 `onchange`, #546）を持ち、各
-//! `cmd` が非空であることを load 時に検証する（実行は
+//!
+//! `locals` はマシンローカル値（named value）の宣言。`hooks` は配置後フック（onchange 固定）の宣言で、
+//! 各エントリが実行する `cmd`（argv）を持ち、非空であることを load 時に検証する（実行は
 //! [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
 
 use serde::Deserialize;
 use std::path::Path;
-use strum::{Display, EnumIter, IntoEnumIterator};
+use strum::{Display, EnumIter};
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
 ///
-/// `deny_unknown_fields` で未知キーを load 時に弾く。旧 gate 語彙（unit 属性 `deps` / `os`）が
-/// 残った manifest はここでエラーになる（後方互換は持たせず、誤連想の再発を防ぐ）。
+/// `deny_unknown_fields` で未知キーを load 時に弾く。旧スキーマの語彙（`dst` / `kind` / `strategy` /
+/// `preserve` / ユニット直下 `cmd` / `[[overlay]]` / `sensitive` 等）が残った manifest はここで
+/// エラーになる（後方互換は持たせず、誤連想の再発を防ぐ）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
-    /// 配置先（必須）。`~` は HOME に展開する。
-    /// copy は実体を置くディレクトリ、generate / 合成は生成物を書き出すファイルパス。
-    pub dst: String,
-    /// 生成方式（省略時 = copy）。断片をどう実体化するか（copy / generate）。
-    #[serde(default)]
-    pub kind: Kind,
-    /// 合成戦略（複数 overlay を1 dst=ファイルへ重ねるとき）。単一 overlay なら省略。
-    /// generate の既定挙動（cmd 出力＋sibling 連結）は暗黙 `concat`。
-    #[serde(default)]
-    pub strategy: Option<Strategy>,
-    /// 既存 dst を `json-shallow` の最下層（土台）として温存する。`true` で dotfiles が
-    /// 定義しないトップレベルキー（例 `model` / `effortLevel` や任意のローカル固有キー）を
-    /// 全保持し、dotfiles 所有キーだけ断片で上書きする。
-    /// `json-shallow` 専用（他 strategy・省略との併記は load 時エラー）。省略時 false。
-    #[serde(default)]
-    pub preserve: bool,
-    /// 所有者のみアクセス可（0600 相当）。省略時 false。
-    #[serde(default)]
-    pub private: bool,
-    /// 実行ビットを付与（0644→0755 / 0600→0700）。省略時 false。
-    #[serde(default)]
-    pub executable: bool,
-    /// generate のとき実行するコマンド（argv）。先頭が実行ファイル名、以降が引数。
-    /// 標準出力を断片とする。copy では未使用。
-    #[serde(default)]
-    pub cmd: Vec<String>,
     /// ユニット全体 gate。トップレベルに書いた `when` はユニットスコープで、
-    /// 満たさなければユニット全体を skip する（dst も `hooks` も触らない ＝ all-or-nothing）。
+    /// 満たさなければユニット全体を skip する（配置も `hooks` も触らない ＝ all-or-nothing）。
     /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致し、
     /// `when.profile`（スカラ・状態）が現在の profile 状態と一致した時だけ真。省略時は常時採用。
-    /// 同じ語彙を `[[overlay]]` の `when` がその断片スコープで再利用する。
+    /// 同じ語彙を各 step の `when` がその step スコープで再利用する。
     #[serde(default)]
     pub when: Option<When>,
-    /// 合成 overlay（条件付き断片の配列）。空 = 生成方式の既定挙動。
-    /// 各 overlay は `src` / `cmd` のどちらか ＋ `when?` を持つ。
-    #[serde(default)]
-    pub overlay: Vec<Overlay>,
     /// マシンローカル値（named value）の宣言。ここで宣言した名前 `n` に対し、この単位の
     /// 配置ファイル中の `@@n@@` をストア（`~/.config/dotfiles/local.toml`）の値で置換する。
     /// 置換は `locals` を宣言した単位のファイルにだけ走る（無関係ファイルの `@@…@@` を巻き込まない）。
     /// 例: `locals = ["git.email", "git.name"]`。
     #[serde(default)]
     pub locals: Vec<String>,
-    /// `locals` のうち秘匿値（対話取得時にエコー/ログを抑制する）。git の email/name は commit に
-    /// 載るため**非 sensitive**。`sensitive ⊆ locals` を load 時に検証する — typo で名前が
-    /// `locals` とズレると非エコー抑制が黙って効かず秘匿値が漏れる footgun を防ぐ。
+    /// 合成の内容型（`merge` を使うユニットに必須・使わないユニットには書けない）。
+    /// `json` / `plist` / `text`。実行時の畳み込みはこの単一値だけで駆動する。
     #[serde(default)]
-    pub sensitive: Vec<String>,
-    /// 配置後フック（#546）。このユニットの配置後（after フェーズ）に**宣言順**で実行する
-    /// エントリの配列（例 `[[hooks]]` ＋ `cmd = ["bat", "cache", "--build"]`）。各エントリは実行する
-    /// [`Hook::cmd`]（argv）と実行頻度 [`Hook::frequency`]（onchange / always・省略時 onchange）を持つ。
-    /// ツール固有ロジックは binary に持たず、実行するコマンドをデータとして宣言する
-    /// （[`crate::apply::generate`] の `cmd` と同思想）→ 新ツールのフック追加に binary 変更は不要・
-    /// configs と疎結合。各 `cmd` が非空であることを load 時に検証する。頻度による実行モデルの分岐
-    /// （onchange gate / 無条件実行）は [`crate::hooks`] が担う。トップレベル `when`（ユニット
-    /// gate）が false のユニットは配置ごと skip されるため hooks も走らない（＝ `when.os` でフックを
-    /// 分岐できる）。
+    pub format: Option<Format>,
+    /// 配置パイプライン。input（読む）→ output（書く）の step 列。空は load 時エラー
+    /// （input を 1 つ以上・output を 1 つ以上必須）。
+    #[serde(default)]
+    pub steps: Vec<Step>,
+    /// 所有者のみアクセス可（0600 相当）。省略時 false。パス output を持つユニットのみ。
+    #[serde(default)]
+    pub private: bool,
+    /// 実行ビットを付与（0644→0755 / 0600→0700）。省略時 false。パス output を持つユニットのみ。
+    #[serde(default)]
+    pub executable: bool,
+    /// 配置後フック（onchange 固定）。このユニットの配置後に**宣言順**で実行するエントリの配列
+    /// （例 `[[hooks]]` ＋ `cmd = ["bat", "cache", "--build"]`）。各エントリは実行する [`Hook::cmd`]
+    /// （argv）を持つ。ツール固有ロジックは binary に持たず、実行するコマンドをデータとして宣言する
+    /// → 新ツールのフック追加に binary 変更は不要・configs と疎結合。各 `cmd` が非空であることを
+    /// load 時に検証する。実行は [`crate::hooks`]。トップレベル `when`（ユニット gate）が false の
+    /// ユニットは配置ごと skip されるため hooks も走らない（＝ `when.os` でフックを分岐できる）。
     #[serde(default)]
     pub hooks: Vec<Hook>,
 }
 
-/// 生成方式（断片の実体化方法）。copy / generate。`merge` は kind ではなく `strategy`。
-/// 表示名（`Display`）と受理する TOML トークン（serde）を一致させるため `serialize_all` と
-/// `rename_all` は同じ規則で揃える（ズレは tests の round-trip が検出する）。
-#[derive(Debug, Deserialize, Default, PartialEq, Eq, Display)]
-#[serde(rename_all = "lowercase")]
-#[strum(serialize_all = "lowercase")]
-pub enum Kind {
-    #[default]
-    Copy,
-    Generate,
+/// 配置パイプラインの 1 step。`input` / `output` の択一を持つ。
+/// `deny_unknown_fields` でキーの typo を load 時に弾く。
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Step {
+    /// 読む内容源（パス or cmd 標準出力）。`output` との併記・双方省略は load 時エラー。
+    #[serde(default)]
+    pub input: Option<StepSource>,
+    /// 書く宛先（パス or cmd 標準入力）。`input` との併記・双方省略は load 時エラー。
+    #[serde(default)]
+    pub output: Option<StepSource>,
+    /// 重ね方（2 つ目以降の input に必須・最初の input と output には禁止）。値は `format` に従う:
+    /// json / plist → `shallow`、text → `append`。実行時は畳み込みを駆動せず（`format` が駆動）、
+    /// load 時の整合検証のための注釈。
+    #[serde(default)]
+    pub merge: Option<Merge>,
+    /// この step の採否（省略 = 常時採用）。unit gate と共通の語彙（`deps` / `os` / `profile`）。
+    #[serde(default)]
+    pub when: Option<When>,
+    /// パス input が存在しなければこの step を飛ばす（次の input が土台になる）。既定は
+    /// 「無ければエラー」。パス input のみ有効（cmd input・output への指定は load 時エラー）。
+    #[serde(default)]
+    pub optional: bool,
 }
 
-/// 合成戦略（複数断片を1 dst=ファイルへ重ねる方法）。
-/// 表示名と TOML トークンを揃える規則は [`Kind`] と同じ（`serialize_all` / `rename_all` を `kebab-case` に）。
-/// `EnumIter` は [`Manifest::validate`] のエラーメッセージが有効な戦略を列挙するのに使う（手書き列挙だと
-/// variant 追加時に更新漏れが起きるため、enum 自体を出所にする）。
+/// step の内容源。パス文字列（`"settings.json"` / `"~/.claude/settings.json"`）か
+/// `cmd`（`{ cmd = ["gh", "completion", "fish"] }`）の択一。TOML の型（bare string / inline table）で
+/// 判別するため `untagged` で受ける（src/cmd の排他は型システムが保証し、実行時検証は要らない）。
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum StepSource {
+    /// パス: input は単位相対 or `~` 起点、output は `~` 起点のみ（[`Manifest::validate`] が検証）。
+    /// 特例として input `"."` は「単位ディレクトリツリー」を表す。
+    Path(String),
+    /// コマンド: input は標準出力を読み、output は D を標準入力へ渡す（argv）。
+    Cmd(CmdSource),
+}
+
+/// cmd 内容源（`{ cmd = [...] }`）。`deny_unknown_fields` で `cmd` 以外のキーを弾く。
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CmdSource {
+    /// 実行する argv。先頭が実行ファイル名、以降が引数。
+    pub cmd: Vec<String>,
+}
+
+/// 合成の内容型。表示名（`Display`）と受理する TOML トークン（serde）を一致させるため
+/// `serialize_all` と `rename_all` を同じ規則で揃える（ズレは tests の round-trip が検出する）。
+/// `EnumIter` は tests の round-trip が全 variant を列挙するのに使う（手書き列挙の更新漏れを防ぐ）。
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display, EnumIter)]
-#[serde(rename_all = "kebab-case")]
-#[strum(serialize_all = "kebab-case")]
-pub enum Strategy {
-    /// テキスト連結（後ろへ連結）。境目に改行を 1 つ補う。
-    Concat,
-    /// JSON のトップレベル shallow merge（後勝ち）。deep merge はしない。
-    JsonShallow,
-    /// plist のトップレベル shallow merge（後勝ち）。deep merge はしない。`json-shallow` の plist 版。
-    /// shallow merge を保証するのは plist の dict モデルであって XML という構文ではないため、
-    /// `xml-shallow` ではなく `plist-shallow` と呼ぶ。既存ドメインの export を土台に、リポジトリ
-    /// 管理の断片を dict キー単位で上書きする用途を想定する。
-    PlistShallow,
-}
-
-/// フックの実行頻度（#546）。頻度は per-hook の実行モードで、別リスト（`always_hooks` 等）に
-/// 分けず既存 `hooks` エントリの属性として持つ（分けると validation・表示が二重化する）。
-/// 表示名（`Display`）と受理する TOML トークン（serde）を揃える規則は [`Kind`] / [`Strategy`] と同じ。
-#[derive(Debug, Deserialize, Default, PartialEq, Eq, Display)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
-pub enum Frequency {
-    /// ユニットのソースが前回適用時から変わった時だけ実行する（onchange gate）。省略時の既定。
-    #[default]
-    Onchange,
-    /// 毎 apply 無条件に実行する（gate を通さず状態も読み書きしない）。反映対象が dotfiles
-    /// 管理外で随時変わる用途向け。コマンドが冪等であること（何度走らせても同じ結果）を前提とする。
-    Always,
+pub enum Format {
+    /// JSON。`merge = "shallow"` と両立。
+    Json,
+    /// plist（Apple の property list）。`merge = "shallow"` と両立。
+    Plist,
+    /// プレーンテキスト。`merge = "append"` と両立。
+    Text,
 }
 
-/// 1 つの配置後フック（#546）。ユニット配置後に実行する `cmd`（argv）と実行頻度 `frequency`。
-/// `deny_unknown_fields` でキーの typo（`frequancy` 等）を load 時に弾く（黙って無視しない）。
+/// 重ね方。表示名と TOML トークンを揃える規則は [`Format`] と同じ。
+/// deep（object 再帰マージ）は本スライスでは未実装 ― variant を足さないことで「shallow のつもりが
+/// deep」等の取り違えを型で防ぐ（deep はスライス2で追加予定）。
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display, EnumIter)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
+pub enum Merge {
+    /// トップレベルキー単位で後勝ち置換（json / plist）。
+    Shallow,
+    /// テキスト連結（境目に改行 1 つ）。
+    Append,
+}
+
+/// 1 つの配置後フック（onchange 固定）。ユニット配置後に実行する `cmd`（argv）。
+/// `deny_unknown_fields` でキーの typo を load 時に弾く。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Hook {
     /// 実行するコマンド（argv）。先頭が実行ファイル名、以降が引数。非空を load 時に検証する。
     pub cmd: Vec<String>,
-    /// 実行頻度（省略時 onchange）。onchange = ソース変化時のみ / always = 毎 apply 無条件。
-    #[serde(default)]
-    pub frequency: Frequency,
 }
 
-/// 1 つの overlay（条件付き断片）。`when` を満たす時だけ合成に参加する。
-/// 断片の実体化方法は `src`（copy）/ `cmd`（generate）の択一。既存 dst の温存は overlay では
-/// なくユニット属性 [`Manifest::preserve`]。
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Overlay {
-    /// copy 断片: 単位ディレクトリからの相対ファイル。内容をそのまま断片にする。
-    #[serde(default)]
-    pub src: Option<String>,
-    /// generate 断片: 実行する argv。標準出力を断片にする。
-    #[serde(default)]
-    pub cmd: Vec<String>,
-    /// 採用条件（省略 = 常時採用）。この断片スコープで `when`（`deps` / `os` / `profile`）を AND 評価する。
-    #[serde(default)]
-    pub when: Option<When>,
-}
-
-/// gate の採用条件。トップレベル（ユニットスコープ）と overlay（断片スコープ）で共有する
+/// gate の採用条件。トップレベル（ユニットスコープ）と step（step スコープ）で共有する
 /// 1 つの語彙。複数キーは AND（全て満たす時だけ採用）。
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
@@ -191,7 +173,7 @@ pub struct When {
 }
 
 impl When {
-    /// 実効キー（`deps` / `os`）を 1 つも持たないか。
+    /// 実効キー（`deps` / `os` / `profile`）を 1 つも持たないか。
     ///
     /// 空テーブル `when = {}` や `when = { deps = [] }` は常時採用の silent no-op になり、
     /// 「gate を書いたのに効かない」typo（編集で内部キーだけ消えた等）を黙って通す。これを
@@ -199,6 +181,11 @@ impl When {
     fn has_no_effective_key(&self) -> bool {
         self.deps.is_empty() && self.os.is_none() && self.profile.is_none()
     }
+}
+
+/// step が「ツリー input」（`input = "."` ＝ 単位ディレクトリをそのまま配置）か。
+fn is_tree_input(step: &Step) -> bool {
+    matches!(&step.input, Some(StepSource::Path(p)) if p == ".")
 }
 
 impl Manifest {
@@ -214,69 +201,84 @@ impl Manifest {
         Ok(manifest)
     }
 
-    /// パース後のセマンティック検証。manifest の typo を配置前に弾く。
+    /// このユニットがツリー配置（単位ディレクトリを丸ごと配置）か。`validate` 後に呼ぶ前提
+    /// （検証済みなら `steps[0]` が唯一のツリー input）。list / apply の表示に使う。
+    pub fn is_tree(&self) -> bool {
+        self.steps.iter().any(is_tree_input)
+    }
+
+    /// パース後のセマンティック検証。manifest の typo を配置前に弾く（fail-loud）。
     ///
-    /// - **overlay 明示時は `strategy` 必須**。合成戦略を一意に決めるため、暗黙の `concat` は
-    ///   overlay 未記述の generate 既定挙動だけに限る（overlay を書いて戦略を省くと、意図しない
-    ///   text concat になりうるのを防ぐ）。
-    /// - **`preserve = true` は `strategy = "json-shallow"` 専用**。既存 dst を土台に重ねる
-    ///   意味論は JSON shallow merge でしか定義しないため、他 strategy・省略との併記は typo
-    ///   として弾く（静かに無視しない）。
-    /// - **`preserve = true` は compose 経路（overlay 明示 か `kind = generate`）を要する**。
-    ///   ファイル合成は [`crate::apply`] の `uses_compose`（overlay 非空 or generate）でだけ
-    ///   起動するため、overlay 無しの copy 直行では preserve が黙って無視される。実行されない
-    ///   構成を load 時に弾く（土台だけ再直列化する退化形に意味は無い）。
-    /// - **各 overlay は `src` / `cmd` のうちちょうど 1 つ**（生成方式は択一）。2 つは一方が
-    ///   黙って無視される typo、0 個は断片を実体化できない。
-    /// - **`sensitive ⊆ locals`**。`sensitive` に `locals` 未宣言の名前があると、その名は
-    ///   非エコー/ログ抑制の対象にならず（resolve は `locals` を走査するため）秘匿値が黙って漏れる。
-    ///   typo を配置前に弾く。
-    /// - **`hooks` の各コマンド（`cmd`）は非空**。空の `cmd` は実体化できないコマンドで、
-    ///   apply で黙って無視/panic されると事故になるため load 時に弾く（他の検証群と同じ
-    ///   「静かに無視しない」方針）。フック名のレジストリ検証は持たない ― フックはツール名でなく
-    ///   コマンドそのものをデータとして宣言する（binary は実行するだけ）。
+    /// - **各 step は input / output のちょうど 1 つ**。両方・どちらも無しは typo。
+    /// - **steps は input を 1 つ以上・output を 1 つ以上**持つ（空パイプラインは無意味）。
+    /// - **パス表記**（#579）: output は `~` 起点のみ。input は単位相対 or `~` 起点。`$`・絶対は不可。
+    /// - **`hooks` の各 `cmd` は非空**。
+    /// - **`when` は実効キーを 1 つ以上**（unit・各 step とも。空 when の silent no-op を弾く）。
+    /// - **`private` / `executable` はパス output を持つユニットのみ**（cmd output だけのユニットには
+    ///   書き込み先ファイルが無い）。
+    /// - **ツリー**（`input = "."`）: steps はちょうど 2 つ（`input = "."` ＋ output パス）、step に
+    ///   `when` / `merge` / `optional` は付けない、`format` は書けない（merge / format はバイト文書の
+    ///   step のみ意味を持ち、step の `when` は unit gate と冗長になる）。
+    /// - **`merge`**: 2 つ目以降の input に必須・最初の input / output には禁止（暗黙の合成規則を持た
+    ///   ない・#580）。
+    /// - **`format`**: `merge` を使うユニットに必須・使わないユニットには禁止。`shallow` は json / plist・
+    ///   `append` は text とだけ両立。
+    /// - **`optional`**: パス input のみ（cmd input・output への指定は typo）。
     fn validate(&self) -> Result<(), String> {
-        if !self.overlay.is_empty() && self.strategy.is_none() {
-            let options = Strategy::iter()
-                .map(|s| s.to_string())
-                .collect::<Vec<_>>()
-                .join(" / ");
-            return Err(format!(
-                "overlay を明示する場合は strategy（{options}）が必要です"
-            ));
-        }
-        if self.preserve && self.strategy != Some(Strategy::JsonShallow) {
-            return Err(format!(
-                "preserve = true は strategy = \"{}\" 専用です",
-                Strategy::JsonShallow
-            ));
-        }
-        if self.preserve && self.overlay.is_empty() && self.kind != Kind::Generate {
-            return Err(
-                "preserve = true は overlay か kind = generate を要します（overlay 無しの copy は \
-                 compose 経路に入らず preserve が無視されます）"
-                    .to_string(),
-            );
-        }
-        for (i, ov) in self.overlay.iter().enumerate() {
-            let kinds = [ov.src.is_some(), !ov.cmd.is_empty()]
+        // 各 step は input / output のちょうど 1 つ。
+        for (i, step) in self.steps.iter().enumerate() {
+            let n = [step.input.is_some(), step.output.is_some()]
                 .into_iter()
                 .filter(|&set| set)
                 .count();
-            if kinds != 1 {
+            if n != 1 {
                 return Err(format!(
-                    "overlay[{i}] は src / cmd のうちちょうど 1 つを持つ必要があります（現在 {kinds} 個）"
+                    "steps[{i}] は input / output のうちちょうど 1 つを持つ必要があります（現在 {n} 個）"
                 ));
             }
         }
-        if let Some(orphan) = self.sensitive.iter().find(|s| !self.locals.contains(s)) {
+        let n_input = self.steps.iter().filter(|s| s.input.is_some()).count();
+        let n_output = self.steps.iter().filter(|s| s.output.is_some()).count();
+        if n_input == 0 || n_output == 0 {
             return Err(format!(
-                "sensitive `{orphan}` が locals に宣言されていません（sensitive ⊆ locals）"
+                "steps は input を 1 つ以上・output を 1 つ以上持つ必要があります（現在 input {n_input}・output {n_output}）"
             ));
         }
+
+        // パス表記（#579）: 全 step の path 内容源を検証する。
+        for step in &self.steps {
+            if let Some(StepSource::Path(p)) = &step.input {
+                validate_input_path(p)?;
+            }
+            if let Some(StepSource::Path(p)) = &step.output {
+                validate_output_path(p)?;
+            }
+        }
+
+        // 各 step の cmd（input.cmd / output.cmd）は非空。空 argv は cmd::run/run_piped の cmd[0]
+        // インデックスで panic するため、load 時に弾く（hooks の非空検証と同じ「静かに無視しない」方針）。
+        for (i, step) in self.steps.iter().enumerate() {
+            let empty_side = if matches!(&step.input, Some(StepSource::Cmd(c)) if c.cmd.is_empty())
+            {
+                Some("input")
+            } else if matches!(&step.output, Some(StepSource::Cmd(c)) if c.cmd.is_empty()) {
+                Some("output")
+            } else {
+                None
+            };
+            if let Some(side) = empty_side {
+                return Err(format!(
+                    "steps[{i}].{side}.cmd は非空のコマンド（argv）である必要があります"
+                ));
+            }
+        }
+
+        // hooks の cmd は非空。
         if self.hooks.iter().any(|h| h.cmd.is_empty()) {
             return Err("hooks の各要素は非空のコマンド（cmd）である必要があります".to_string());
         }
+
+        // when は実効キー必須（unit・各 step）。
         if let Some(when) = &self.when
             && when.has_no_effective_key()
         {
@@ -286,13 +288,160 @@ impl Manifest {
             );
         }
         if let Some(i) = self
-            .overlay
+            .steps
             .iter()
-            .position(|ov| ov.when.as_ref().is_some_and(When::has_no_effective_key))
+            .position(|s| s.when.as_ref().is_some_and(When::has_no_effective_key))
         {
             return Err(format!(
-                "overlay[{i}] の when は実効キー（deps / os / profile）を 1 つ以上持つ必要があります（空の when は silent no-op）"
+                "steps[{i}] の when は実効キー（deps / os / profile）を 1 つ以上持つ必要があります（空の when は silent no-op）"
             ));
+        }
+
+        // private / executable はパス output を持つユニットのみ。
+        if (self.private || self.executable)
+            && !self
+                .steps
+                .iter()
+                .any(|s| matches!(&s.output, Some(StepSource::Path(_))))
+        {
+            return Err(
+                "private / executable はパス output を持つユニットのみに指定できます（cmd output だけの \
+                 ユニットには書き込み先ファイルが無い）"
+                    .to_string(),
+            );
+        }
+
+        // ツリー（input = "."）は専用の形に固定する。
+        if self.steps.iter().any(is_tree_input) {
+            return self.validate_tree();
+        }
+
+        self.validate_pipeline()
+    }
+
+    /// ツリー（`input = "."`）ユニットの形を検証する。バイト文書の合成語彙（merge / format）は
+    /// ツリーには意味を持たず、step の `when` は unit gate と冗長になるため、いずれも禁止する。
+    fn validate_tree(&self) -> Result<(), String> {
+        if self.steps.len() != 2 {
+            return Err(format!(
+                "ツリー input（input = \".\"）を持つユニットは steps がちょうど 2 つ（input = \".\" と \
+                 output）である必要があります（現在 {} 個）",
+                self.steps.len()
+            ));
+        }
+        if !is_tree_input(&self.steps[0]) {
+            return Err(
+                "ツリー input（input = \".\"）は最初の step である必要があります".to_string(),
+            );
+        }
+        if self.steps[0].when.is_some() || self.steps[0].merge.is_some() || self.steps[0].optional {
+            return Err(
+                "ツリー input（input = \".\"）には when / merge / optional を指定できません（ユニット \
+                 全体の when gate を使ってください）"
+                    .to_string(),
+            );
+        }
+        let out = &self.steps[1];
+        if out.output.is_none() {
+            return Err("ツリー input の次の step は output である必要があります".to_string());
+        }
+        if out.when.is_some() || out.merge.is_some() || out.optional {
+            return Err("ツリー output には when / merge / optional を指定できません".to_string());
+        }
+        if !matches!(&out.output, Some(StepSource::Path(_))) {
+            return Err(
+                "ツリー output は cmd ではなくパスである必要があります（ツリーを標準入力へ渡すことは \
+                 できません）"
+                    .to_string(),
+            );
+        }
+        if self.format.is_some() {
+            return Err(
+                "ツリーユニットに format は指定できません（merge / format はバイト文書の step のみ）"
+                    .to_string(),
+            );
+        }
+        Ok(())
+    }
+
+    /// バイト文書パイプライン（非ツリー）の merge / format / optional を検証する。
+    fn validate_pipeline(&self) -> Result<(), String> {
+        // merge: 最初の input と output には禁止・2 つ目以降の input には必須。
+        let mut input_index = 0usize;
+        for (i, step) in self.steps.iter().enumerate() {
+            if step.input.is_some() {
+                if input_index == 0 && step.merge.is_some() {
+                    return Err(format!(
+                        "steps[{i}]: 最初の input step は merge を持てません（最初の input は文書の土台）"
+                    ));
+                }
+                if input_index >= 1 && step.merge.is_none() {
+                    return Err(format!(
+                        "steps[{i}]: 2 つ目以降の input step は merge が必須です（暗黙の合成規則を持たない）"
+                    ));
+                }
+                input_index += 1;
+            }
+            if step.output.is_some() && step.merge.is_some() {
+                return Err(format!("steps[{i}]: output step は merge を持てません"));
+            }
+        }
+
+        // format: merge を使うユニットに必須・使わないユニットには禁止。
+        let any_merge = self.steps.iter().any(|s| s.merge.is_some());
+        match (self.format, any_merge) {
+            (Some(_), false) => {
+                return Err(
+                    "format は merge を宣言する step が無いユニットには書けません（merge を使うユニット \
+                     のみ）"
+                        .to_string(),
+                );
+            }
+            (None, true) => {
+                return Err(
+                    "merge を宣言する step があるユニットには format（json / plist / text）が必要です"
+                        .to_string(),
+                );
+            }
+            _ => {}
+        }
+        // 各 merge の値と format の両立（shallow ↔ json/plist・append ↔ text）。
+        for (i, step) in self.steps.iter().enumerate() {
+            if let Some(merge) = step.merge {
+                let compatible = matches!(
+                    (merge, self.format),
+                    (Merge::Shallow, Some(Format::Json | Format::Plist))
+                        | (Merge::Append, Some(Format::Text))
+                );
+                if !compatible {
+                    let format = self
+                        .format
+                        .map_or_else(|| "（未設定）".to_string(), |f| f.to_string());
+                    return Err(format!(
+                        "steps[{i}]: merge = \"{merge}\" は format = \"{format}\" と両立しません（shallow は \
+                         json / plist・append は text）"
+                    ));
+                }
+            }
+        }
+
+        // optional はパス input のみ。
+        for (i, step) in self.steps.iter().enumerate() {
+            if step.optional {
+                match &step.input {
+                    Some(StepSource::Path(_)) => {}
+                    Some(StepSource::Cmd(_)) => {
+                        return Err(format!(
+                            "steps[{i}]: optional は cmd input には使えません（パス input のみ）"
+                        ));
+                    }
+                    None => {
+                        return Err(format!(
+                            "steps[{i}]: optional は output step には使えません（パス input のみ）"
+                        ));
+                    }
+                }
+            }
         }
         Ok(())
     }
@@ -313,9 +462,50 @@ impl Manifest {
     }
 }
 
+/// output パスの表記検証（#579）: `~` / `~/...` のみ。`$` 含み・絶対・相対は load エラー。
+fn validate_output_path(p: &str) -> Result<(), String> {
+    if p.contains('$') {
+        return Err(format!(
+            "output パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
+        ));
+    }
+    if p == "~" || p.starts_with("~/") {
+        Ok(())
+    } else {
+        Err(format!(
+            "output パス `{p}` は ~ 起点（~ または ~/...）である必要があります（絶対パス・相対パスは不可）"
+        ))
+    }
+}
+
+/// input パスの表記検証（#579）: `~` / `~/...`（home 起点）または単位相対（`~` プレフィックス無し・
+/// 絶対でない・`$` を含まない）。特例 `"."` はツリーを表し、単位相対として許容される。
+fn validate_input_path(p: &str) -> Result<(), String> {
+    if p.contains('$') {
+        return Err(format!(
+            "input パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
+        ));
+    }
+    if p == "~" || p.starts_with("~/") {
+        return Ok(());
+    }
+    if p.starts_with('~') {
+        return Err(format!(
+            "input パス `{p}` が不正です（~ 起点は ~ または ~/... のみ）"
+        ));
+    }
+    if p.starts_with('/') {
+        return Err(format!(
+            "input パス `{p}` に絶対パスは使えません（単位相対 または ~ 起点）"
+        ));
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use strum::IntoEnumIterator;
 
     /// パース → validate を一括で通す（load のファイル I/O を介さずに検証）。
     fn parse(toml_src: &str) -> Result<Manifest, String> {
@@ -324,284 +514,492 @@ mod tests {
         Ok(manifest)
     }
 
+    /// 最小のツリーユニット（`input = "."` ＋ output）。多くのテストのベース。
+    const TREE: &str = "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n";
+
+    // ── untagged StepSource の round-trip（設計の土台。ここが崩れると全体が崩れる） ──
+
     #[test]
-    fn kind_display_round_trips_through_serde() {
+    fn step_source_parses_path_and_cmd_forms() {
+        // input = "x"（bare string）→ Path、input.cmd = [...]（inline table）→ Cmd。
+        let m = parse("[[steps]]\ninput = \"a.txt\"\n[[steps]]\noutput = \"~/x\"\n").unwrap();
+        assert!(matches!(&m.steps[0].input, Some(StepSource::Path(p)) if p == "a.txt"));
+
+        let m =
+            parse("[[steps]]\ninput.cmd = [\"gh\", \"completion\"]\n[[steps]]\noutput = \"~/x\"\n")
+                .unwrap();
+        assert!(
+            matches!(&m.steps[0].input, Some(StepSource::Cmd(c)) if c.cmd == ["gh", "completion"])
+        );
+
+        // output.cmd も同様。
+        let m = parse("[[steps]]\ninput.cmd = [\"defaults\", \"export\"]\n[[steps]]\noutput.cmd = [\"defaults\", \"import\"]\n").unwrap();
+        assert!(matches!(&m.steps[1].output, Some(StepSource::Cmd(_))));
+    }
+
+    // ── Format / Merge の Display ↔ serde round-trip ──
+
+    #[test]
+    fn format_display_round_trips_through_serde() {
         // Display（表示名の出所）が serde の受理トークンと一致することを固定する。ズレると
         // apply / list の表示が manifest に書ける値からズレる。
-        for kind in [Kind::Copy, Kind::Generate] {
-            let parsed = parse(&format!("dst = \"~/x\"\nkind = \"{kind}\"\n")).unwrap();
+        for format in Format::iter() {
+            let src = format!(
+                "format = \"{format}\"\n[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\nmerge = \"{}\"\n[[steps]]\noutput = \"~/x\"\n",
+                if format == Format::Text {
+                    "append"
+                } else {
+                    "shallow"
+                },
+            );
+            let parsed = parse(&src).unwrap();
             assert_eq!(
-                parsed.kind, kind,
-                "Display と serde 表現がズレている: {kind}"
+                parsed.format,
+                Some(format),
+                "Display と serde 表現がズレている: {format}"
             );
         }
     }
 
     #[test]
-    fn strategy_display_round_trips_through_serde() {
-        for strategy in [
-            Strategy::Concat,
-            Strategy::JsonShallow,
-            Strategy::PlistShallow,
-        ] {
-            let parsed = parse(&format!("dst = \"~/x\"\nstrategy = \"{strategy}\"\n")).unwrap();
+    fn merge_display_round_trips_through_serde() {
+        for merge in Merge::iter() {
+            let format = if merge == Merge::Append {
+                "text"
+            } else {
+                "json"
+            };
+            let src = format!(
+                "format = \"{format}\"\n[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\nmerge = \"{merge}\"\n[[steps]]\noutput = \"~/x\"\n",
+            );
+            let parsed = parse(&src).unwrap();
             assert_eq!(
-                parsed.strategy,
-                Some(strategy),
-                "Display と serde 表現がズレている: {strategy}"
+                parsed.steps[1].merge,
+                Some(merge),
+                "Display と serde 表現がズレている: {merge}"
             );
         }
     }
 
+    // ── shape ──
+
     #[test]
-    fn validate_accepts_generate_default_without_strategy() {
-        // overlay 未記述の generate は strategy 省略可（暗黙 concat）。
-        assert!(parse("dst = \"~/x\"\nkind = \"generate\"\ncmd = [\"foo\"]\n").is_ok());
+    fn accepts_minimal_tree() {
+        assert!(parse(TREE).is_ok());
     }
 
     #[test]
-    fn validate_requires_strategy_when_overlay_present() {
-        let err = parse("dst = \"~/x\"\n[[overlay]]\nsrc = \"a\"\n").unwrap_err();
-        assert!(
-            err.contains("strategy"),
-            "strategy 必須のエラーが出ていない: {err}"
-        );
-    }
-
-    #[test]
-    fn validate_rejects_overlay_with_multiple_kinds() {
-        // src と cmd を併記 → 一方が黙って無視される typo。
-        let err = parse(
-            "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\ncmd = [\"foo\"]\n",
-        )
-        .unwrap_err();
+    fn rejects_step_with_both_input_and_output() {
+        let err = parse("[[steps]]\ninput = \"a\"\noutput = \"~/x\"\n").unwrap_err();
         assert!(
             err.contains("ちょうど 1 つ"),
-            "排他違反が検知されていない: {err}"
+            "input+output 併記が弾かれていない: {err}"
         );
     }
 
     #[test]
-    fn validate_rejects_preserve_without_json_shallow() {
-        // preserve = true は json-shallow 専用。concat と併記 → load 時エラー（typo 黙殺しない）。
-        let err = parse(
-            "dst = \"~/x\"\nstrategy = \"concat\"\npreserve = true\n[[overlay]]\nsrc = \"a\"\n",
-        )
-        .unwrap_err();
+    fn rejects_step_with_neither_input_nor_output() {
+        let err = parse("[[steps]]\nwhen = { deps = [\"x\"] }\n").unwrap_err();
         assert!(
-            err.contains("preserve") && err.contains("json-shallow"),
-            "preserve × 非 json-shallow が弾かれていない: {err}"
-        );
-        // plist-shallow との併記も同様にエラー（土台は overlay 側の cmd 断片が担う。#531）。
-        let err = parse(
-            "dst = \"~/x\"\nstrategy = \"plist-shallow\"\npreserve = true\n[[overlay]]\nsrc = \"a\"\n",
-        )
-        .unwrap_err();
-        assert!(
-            err.contains("preserve") && err.contains("json-shallow"),
-            "preserve × plist-shallow が弾かれていない: {err}"
-        );
-        // strategy 省略との併記も同様にエラー。
-        assert!(parse("dst = \"~/x\"\npreserve = true\n").is_err());
-    }
-
-    #[test]
-    fn validate_accepts_preserve_with_json_shallow() {
-        // preserve = true ＋ json-shallow ＋ overlay は正規形（既存 dst を土台に断片を重ねる合成）。
-        assert!(
-            parse(
-                "dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n\
-                 [[overlay]]\nsrc = \"settings.json\"\n",
-            )
-            .is_ok()
-        );
-        // generate（cmd 出力を土台へ重ねる）も compose 経路なので overlay 無しでも可。
-        assert!(
-            parse(
-                "dst = \"~/x\"\nkind = \"generate\"\nstrategy = \"json-shallow\"\n\
-                 preserve = true\ncmd = [\"foo\"]\n",
-            )
-            .is_ok()
+            err.contains("ちょうど 1 つ"),
+            "空 step が弾かれていない: {err}"
         );
     }
 
     #[test]
-    fn validate_rejects_preserve_without_compose_routing() {
-        // preserve = true ＋ json-shallow だが overlay 無し ＋ kind=copy（既定）→ copy 直行で
-        // preserve が黙って無視される構成。load 時に弾く（静かな no-op を許さない）。
+    fn rejects_no_input_or_no_output() {
+        // output だけ（input 0）。
+        let err = parse("[[steps]]\noutput = \"~/x\"\n").unwrap_err();
+        assert!(err.contains("input"), "input 0 が弾かれていない: {err}");
+        // input だけ（output 0）。
+        let err = parse("[[steps]]\ninput = \"a\"\n").unwrap_err();
+        assert!(err.contains("output"), "output 0 が弾かれていない: {err}");
+        // 空 steps（省略）。
+        assert!(parse("private = true\n").is_err());
+    }
+
+    // ── path validation（#579） ──
+
+    #[test]
+    fn accepts_valid_paths() {
+        // input: 単位相対・~ 起点、output: ~ 起点。
+        assert!(
+            parse("[[steps]]\ninput = \"sub/dir/a.txt\"\n[[steps]]\noutput = \"~/.config/x\"\n")
+                .is_ok()
+        );
+        assert!(
+            parse("[[steps]]\ninput = \"~/.claude/settings.json\"\n[[steps]]\noutput = \"~\"\n")
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn rejects_output_non_tilde() {
+        for bad in ["out.txt", "/etc/x", "$HOME/x"] {
+            let err = parse(&format!(
+                "[[steps]]\ninput = \"a\"\n[[steps]]\noutput = \"{bad}\"\n"
+            ))
+            .unwrap_err();
+            assert!(
+                err.contains("output パス"),
+                "不正 output `{bad}` が弾かれていない: {err}"
+            );
+        }
+    }
+
+    #[test]
+    fn rejects_input_absolute_or_dollar() {
         let err =
-            parse("dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n").unwrap_err();
+            parse("[[steps]]\ninput = \"/etc/x\"\n[[steps]]\noutput = \"~/x\"\n").unwrap_err();
         assert!(
-            err.contains("preserve") && err.contains("overlay"),
-            "overlay 無しの copy 直行 preserve が弾かれていない: {err}"
+            err.contains("絶対パス"),
+            "絶対 input が弾かれていない: {err}"
         );
+        let err =
+            parse("[[steps]]\ninput = \"$XDG/x\"\n[[steps]]\noutput = \"~/x\"\n").unwrap_err();
+        assert!(err.contains("$"), "$ 含み input が弾かれていない: {err}");
     }
 
-    #[test]
-    fn validate_rejects_overlay_with_no_kind() {
-        // when だけで src/cmd/preserve が無い → 断片を実体化できない。
-        let err = parse(
-            "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nwhen = { deps = [\"faketool\"] }\n",
-        )
-        .unwrap_err();
-        assert!(
-            err.contains("ちょうど 1 つ"),
-            "0 個が検知されていない: {err}"
-        );
-    }
+    // ── merge / format ──
 
     #[test]
-    fn validate_accepts_sensitive_subset_of_locals() {
-        // sensitive ⊆ locals は正規形。email/name は非 sensitive のまま宣言できる。
+    fn accepts_text_append_pipeline() {
         assert!(
             parse(
-                "dst = \"~/x\"\nlocals = [\"git.email\", \"git.name\", \"github.token\"]\n\
-                 sensitive = [\"github.token\"]\n",
+                "format = \"text\"\n\
+                 [[steps]]\ninput = \"a\"\n\
+                 [[steps]]\ninput = \"b\"\nmerge = \"append\"\n\
+                 [[steps]]\noutput = \"~/x\"\n",
             )
             .is_ok()
         );
-        // sensitive 省略（全て非秘匿）も可。
-        assert!(parse("dst = \"~/x\"\nlocals = [\"git.email\", \"git.name\"]\n").is_ok());
     }
 
     #[test]
-    fn validate_rejects_sensitive_not_in_locals() {
-        // locals に無い名を sensitive に書く typo → 非エコー抑制が効かず漏れる footgun。
-        let err = parse("dst = \"~/x\"\nlocals = [\"git.email\"]\nsensitive = [\"githb.token\"]\n")
+    fn rejects_merge_on_first_input() {
+        let err = parse(
+            "format = \"json\"\n[[steps]]\ninput = \"a\"\nmerge = \"shallow\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("最初の input"),
+            "最初の input の merge が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_missing_merge_on_second_input() {
+        let err = parse(
+            "format = \"json\"\n[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("2 つ目以降"),
+            "2 つ目 input の merge 欠落が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_merge_on_output() {
+        let err = parse(
+            "format = \"json\"\n[[steps]]\ninput = \"a\"\n[[steps]]\noutput = \"~/x\"\nmerge = \"shallow\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("output step は merge"),
+            "output の merge が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_format_without_merge() {
+        let err =
+            parse("format = \"json\"\n[[steps]]\ninput = \"a\"\n[[steps]]\noutput = \"~/x\"\n")
+                .unwrap_err();
+        assert!(
+            err.contains("format"),
+            "merge 無しの format が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_merge_without_format() {
+        let err = parse(
+            "[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\nmerge = \"shallow\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("format"),
+            "format 無しの merge が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_merge_format_mismatch() {
+        // shallow ↔ text は非両立。
+        let err = parse(
+            "format = \"text\"\n[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\nmerge = \"shallow\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("両立しません"),
+            "shallow×text が弾かれていない: {err}"
+        );
+        // append ↔ json も非両立。
+        let err = parse(
+            "format = \"json\"\n[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\nmerge = \"append\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("両立しません"),
+            "append×json が弾かれていない: {err}"
+        );
+    }
+
+    // ── optional ──
+
+    #[test]
+    fn accepts_optional_on_path_input() {
+        assert!(
+            parse(
+                "format = \"json\"\n\
+                 [[steps]]\ninput = \"~/.claude/settings.json\"\noptional = true\n\
+                 [[steps]]\ninput = \"settings.json\"\nmerge = \"shallow\"\n\
+                 [[steps]]\noutput = \"~/.claude/settings.json\"\n",
+            )
+            .is_ok()
+        );
+    }
+
+    #[test]
+    fn rejects_optional_on_cmd_input() {
+        let err =
+            parse("[[steps]]\ninput.cmd = [\"x\"]\noptional = true\n[[steps]]\noutput = \"~/x\"\n")
+                .unwrap_err();
+        assert!(
+            err.contains("optional"),
+            "cmd input の optional が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_optional_on_output() {
+        let err = parse("[[steps]]\ninput = \"a\"\n[[steps]]\noutput = \"~/x\"\noptional = true\n")
             .unwrap_err();
         assert!(
-            err.contains("sensitive") && err.contains("githb.token"),
-            "sensitive ⊄ locals が弾かれていない: {err}"
+            err.contains("optional"),
+            "output の optional が弾かれていない: {err}"
+        );
+    }
+
+    // ── tree special case ──
+
+    #[test]
+    fn rejects_tree_with_extra_step() {
+        let err = parse(
+            "[[steps]]\ninput = \".\"\n[[steps]]\ninput = \"a\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("ちょうど 2 つ"),
+            "3 step のツリーが弾かれていない: {err}"
         );
     }
 
     #[test]
-    fn frequency_display_round_trips_through_serde() {
-        // Display（表示名の出所）が serde の受理トークンと一致することを固定する（Kind/Strategy と同じ）。
-        // ズレると list の hooks 内訳表示が manifest に書ける値からズレる。
-        for frequency in [Frequency::Onchange, Frequency::Always] {
-            let parsed = parse(&format!(
-                "dst = \"~/x\"\n[[hooks]]\ncmd = [\"faketool\"]\nfrequency = \"{frequency}\"\n"
-            ))
-            .unwrap();
-            assert_eq!(
-                parsed.hooks[0].frequency, frequency,
-                "Display と serde 表現がズレている: {frequency}"
-            );
-        }
-    }
-
-    #[test]
-    fn validate_accepts_command_hook() {
-        // 非空の cmd を持つ structured hook は受理（エンジンは中身を解釈しない）。frequency 省略時 onchange。
-        let parsed =
-            parse("dst = \"~/x\"\nhooks = [{ cmd = [\"cmd\", \"sub\", \"--flag\"] }]\n").unwrap();
-        assert_eq!(
-            parsed.hooks[0].frequency,
-            Frequency::Onchange,
-            "frequency 省略時は onchange であるべき"
+    fn rejects_tree_input_not_first() {
+        let err = parse("[[steps]]\noutput = \"~/x\"\n[[steps]]\ninput = \".\"\n").unwrap_err();
+        assert!(
+            err.contains("最初の step"),
+            "先頭でないツリー input が弾かれていない: {err}"
         );
     }
 
     #[test]
-    fn validate_rejects_empty_hook() {
-        // 空の cmd は実体化できないコマンド。load 時に弾く（黙って無視/panic しない）。
-        let err = parse("dst = \"~/x\"\nhooks = [{ cmd = [] }]\n").unwrap_err();
+    fn rejects_tree_with_step_when_or_optional() {
+        let err = parse(
+            "[[steps]]\ninput = \".\"\nwhen = { deps = [\"x\"] }\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("when / merge / optional"),
+            "ツリー input の when が弾かれていない: {err}"
+        );
+        let err = parse(
+            "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\nwhen = { deps = [\"x\"] }\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("ツリー output"),
+            "ツリー output の when が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_tree_input_with_merge() {
+        // ツリー input（input = "."）に merge を書くのも when/optional と同様に禁止（バイト文書の
+        // 合成語彙はツリーに意味を持たない）。
+        let err =
+            parse("[[steps]]\ninput = \".\"\nmerge = \"shallow\"\n[[steps]]\noutput = \"~/x\"\n")
+                .unwrap_err();
+        assert!(
+            err.contains("when / merge / optional"),
+            "ツリー input の merge が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_tree_with_format() {
+        let err =
+            parse("format = \"text\"\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n")
+                .unwrap_err();
+        assert!(
+            err.contains("ツリー"),
+            "ツリー + format が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_tree_output_cmd() {
+        let err = parse("[[steps]]\ninput = \".\"\n[[steps]]\noutput.cmd = [\"x\"]\n").unwrap_err();
+        assert!(
+            err.contains("パス"),
+            "ツリー output の cmd が弾かれていない: {err}"
+        );
+    }
+
+    // ── private / executable ──
+
+    #[test]
+    fn accepts_private_with_path_output() {
+        assert!(parse(&format!("private = true\n{TREE}")).is_ok());
+    }
+
+    #[test]
+    fn rejects_private_without_path_output() {
+        // cmd output だけのユニット（stats 相当）で private を付ける。
+        let err = parse(
+            "private = true\n[[steps]]\ninput.cmd = [\"x\"]\n[[steps]]\noutput.cmd = [\"y\"]\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("private"),
+            "パス output 無しの private が弾かれていない: {err}"
+        );
+    }
+
+    // ── step cmd 非空 ──
+
+    #[test]
+    fn accepts_nonempty_step_cmd() {
+        assert!(parse("[[steps]]\ninput.cmd = [\"x\"]\n[[steps]]\noutput.cmd = [\"y\"]\n").is_ok());
+    }
+
+    #[test]
+    fn rejects_empty_input_cmd() {
+        // input.cmd = [] は cmd::run の cmd[0] で panic するため load 時に弾く。
+        let err = parse("[[steps]]\ninput.cmd = []\n[[steps]]\noutput = \"~/x\"\n").unwrap_err();
+        assert!(
+            err.contains("steps[0].input.cmd") && err.contains("非空"),
+            "空の input.cmd が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_empty_output_cmd() {
+        // output.cmd = [] は cmd::run_piped の cmd[0] で panic するため load 時に弾く。
+        let err = parse("[[steps]]\ninput = \"a\"\n[[steps]]\noutput.cmd = []\n").unwrap_err();
+        assert!(
+            err.contains("steps[1].output.cmd") && err.contains("非空"),
+            "空の output.cmd が弾かれていない: {err}"
+        );
+    }
+
+    // ── hooks ──
+
+    #[test]
+    fn accepts_command_hook() {
+        let m = parse(&format!("hooks = [{{ cmd = [\"cmd\", \"sub\"] }}]\n{TREE}")).unwrap();
+        assert_eq!(m.hooks[0].cmd, ["cmd", "sub"]);
+    }
+
+    #[test]
+    fn rejects_empty_hook() {
+        let err = parse(&format!("hooks = [{{ cmd = [] }}]\n{TREE}")).unwrap_err();
         assert!(
             err.contains("hooks") && err.contains("非空"),
             "空コマンドが弾かれていない: {err}"
         );
     }
 
-    #[test]
-    fn parse_rejects_legacy_bare_array_hook() {
-        // 旧 bare-array 構文 `hooks = [["cmd"]]` は廃止（#546）。frequency を持たせるため構造体化し、
-        // 後方互換は取らない。Vec<Hook>（cmd を持つ table を期待）と配列-of-配列の型不一致で parse
-        // 時に弾く＝黙って誤解釈しない。
-        assert!(toml::from_str::<Manifest>("dst = \"~/x\"\nhooks = [[\"faketool\"]]\n").is_err());
-    }
+    // ── when effective key ──
 
     #[test]
-    fn parse_rejects_hook_unknown_field() {
-        // Hook の deny_unknown_fields: frequency の typo（frequancy）は load 時エラー（黙って無視しない）。
+    fn accepts_unit_when_and_step_when() {
         assert!(
-            toml::from_str::<Manifest>(
-                "dst = \"~/x\"\n[[hooks]]\ncmd = [\"faketool\"]\nfrequancy = \"always\"\n"
-            )
-            .is_err()
+            parse(&format!(
+                "when = {{ deps = [\"gh\"], os = \"darwin\" }}\n{TREE}"
+            ))
+            .is_ok()
         );
-    }
-
-    #[test]
-    fn validate_accepts_well_formed_overlays() {
-        // preserve = true（ユニット属性）＋ base(src) ＋ 条件付き断片(src+when) の正規形。
         assert!(
             parse(
-                "dst = \"~/x\"\nstrategy = \"json-shallow\"\npreserve = true\n\
-                 [[overlay]]\nsrc = \"base.json\"\n\
-                 [[overlay]]\nsrc = \"faketool.json\"\nwhen = { deps = [\"faketool\"] }\n",
+                "format = \"json\"\n\
+                 [[steps]]\ninput = \"a\"\n\
+                 [[steps]]\ninput = \"b\"\nwhen = { deps = [\"rtk\"] }\nmerge = \"shallow\"\n\
+                 [[steps]]\noutput = \"~/x\"\n",
             )
             .is_ok()
         );
     }
 
     #[test]
-    fn parse_accepts_top_level_when() {
-        // トップレベル when（ユニットスコープ gate）= deps 配列 ＋ os スカラ。
-        assert!(parse("dst = \"~/x\"\nwhen = { deps = [\"ghostty\"], os = \"darwin\" }\n").is_ok());
-    }
-
-    #[test]
-    fn parse_accepts_profile_gate() {
-        // profile（状態 gate）は実効キーとして受理する（単独・他キーとの併記とも）。
-        assert!(parse("dst = \"~/x\"\nwhen = { profile = \"private\" }\n").is_ok());
+    fn rejects_empty_unit_when() {
+        assert!(parse(&format!("when = {{}}\n{TREE}")).is_err());
+        let err = parse(&format!("when = {{ deps = [] }}\n{TREE}")).unwrap_err();
         assert!(
-            parse("dst = \"~/x\"\nwhen = { profile = \"private\", os = \"darwin\" }\n").is_ok()
+            err.contains("実効キー"),
+            "空 unit when が弾かれていない: {err}"
         );
     }
 
     #[test]
-    fn validate_rejects_top_level_empty_when() {
-        // when = {} / when = { deps = [] } は常時採用の silent no-op。load 時に弾く（fail loud）。
-        assert!(parse("dst = \"~/x\"\nwhen = {}\n").is_err());
-        let err = parse("dst = \"~/x\"\nwhen = { deps = [] }\n").unwrap_err();
+    fn rejects_empty_step_when() {
+        let err = parse(
+            "format = \"json\"\n[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\nwhen = {}\nmerge = \"shallow\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
         assert!(
-            err.contains("when") && err.contains("実効キー"),
-            "実効キーの無いトップレベル when が弾かれていない: {err}"
+            err.contains("実効キー"),
+            "空 step when が弾かれていない: {err}"
         );
     }
 
+    // ── legacy vocabulary rejected via deny_unknown_fields ──
+
     #[test]
-    fn validate_rejects_overlay_empty_when() {
-        // overlay の when も同様に実効キー必須（断片が常時採用される silent no-op を弾く）。
-        let err =
-            parse("dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = {}\n")
-                .unwrap_err();
+    fn rejects_legacy_vocabulary() {
+        // 旧スキーマの語彙は全て未知フィールドとして parse 時に弾かれる（後方互換なし）。
+        for legacy in [
+            "dst = \"~/x\"\n",
+            "kind = \"generate\"\n",
+            "strategy = \"concat\"\n",
+            "preserve = true\n",
+            "cmd = [\"x\"]\n",
+            "sensitive = [\"a\"]\n",
+            "[[overlay]]\nsrc = \"a\"\n",
+        ] {
+            let src = format!("{legacy}{TREE}");
+            assert!(
+                toml::from_str::<Manifest>(&src).is_err(),
+                "旧語彙が弾かれていない: {legacy}"
+            );
+        }
+        // hooks[].frequency も Hook の deny_unknown_fields で弾く。
         assert!(
-            err.contains("overlay[0]") && err.contains("実効キー"),
-            "実効キーの無い overlay の when が弾かれていない: {err}"
-        );
-    }
-
-    #[test]
-    fn parse_rejects_legacy_unit_deps() {
-        // 旧 unit 属性 deps は廃止。deny_unknown_fields が load 時に弾く（後方互換なし）。
-        assert!(toml::from_str::<Manifest>("dst = \"~/x\"\ndeps = [\"gh\"]\n").is_err());
-    }
-
-    #[test]
-    fn parse_rejects_legacy_unit_os() {
-        // 旧 unit 属性 os も同様に廃止。
-        assert!(toml::from_str::<Manifest>("dst = \"~/x\"\nos = \"darwin\"\n").is_err());
-    }
-
-    #[test]
-    fn parse_rejects_legacy_singular_dep_in_when() {
-        // overlay の単数 dep は廃止し複数形 deps へ。旧キーは load 時エラー。
-        assert!(
-            toml::from_str::<Manifest>(
-                "dst = \"~/x\"\nstrategy = \"concat\"\n[[overlay]]\nsrc = \"a\"\nwhen = { dep = \"faketool\" }\n",
-            )
+            toml::from_str::<Manifest>(&format!(
+                "{TREE}[[hooks]]\ncmd = [\"x\"]\nfrequency = \"always\"\n"
+            ))
             .is_err()
         );
     }

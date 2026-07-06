@@ -1,21 +1,29 @@
-# Claude Code の settings.json を json-shallow 合成で配置する。既存 dst を `preserve = true`
-# で土台に温存するため、app 自身が書くトップレベルキー（`model` / `effortLevel` 等）は保たれ、
-# 共有キー（hooks / statusLine / language / theme / voiceEnabled）は base/rtk の overlay が
-# 常に勝つ。
+# Claude Code の settings.json を配置する。宛先の現在内容を土台に読み（optional）、dotfiles 所有
+# キーを shallow でリセットし、rtk 断片を重ねる ― app 自身が書くトップレベルキー（`model` /
+# `effortLevel` 等）は保たれ、共有キー（hooks / statusLine / language / theme / voiceEnabled）は
+# 断片が常に勝つ。
 #
-# 注: json-shallow は `hooks` を object ごと差し替えるため、rtk.json は rm→trash ガードを含む
-# hooks 全体を持つ（base と一部重複する）。これは「rtk hook だけ条件付き」を deep merge 無しで
-# 表現する設計上のコスト。rm ガードを変えるときは settings.json と rtk.json の両方を直すこと。
-dst      = "~/.claude/settings.json"
-preserve = true
-strategy = "json-shallow"
+# 注: shallow は `hooks` を object ごと差し替えるため、rtk.json は rm→trash ガードを含む hooks 全体を
+# 持つ（settings.json と一部重複する）。これは「rtk hook だけ条件付き」を deep merge 無しで表現する
+# 暫定コスト（deep 化はスライス2）。rm ガードを変えるときは settings.json と rtk.json の両方を直すこと。
+format = "json"
 
-# base（常時）: 共有設定の土台。hooks は rtk 抜き（rm→trash ガードのみ）。
-[[overlay]]
-src = "settings.json"
+# 宛先の現在内容を土台に（app 所有キーを保持）。初回 apply ではまだ無いため optional。
+[[steps]]
+input    = "~/.claude/settings.json"
+optional = true
 
-# rtk hook 断片: rtk が PATH にある時だけ重ねる。`when` で表現することで、rtk が無い環境でも
+# dotfiles 所有キーを shallow でリセットする。
+[[steps]]
+input = "settings.json"
+merge = "shallow"
+
+# rtk 断片: rtk が PATH にある時だけ重ねる。`when` で表現することで、rtk が無い環境でも
 # hooks 全体が壊れる（無条件化の回帰）のを防ぐ。
-[[overlay]]
-src  = "rtk.json"
-when = { deps = [ "rtk" ] }
+[[steps]]
+input = "rtk.json"
+when  = { deps = [ "rtk" ] }
+merge = "shallow"
+
+[[steps]]
+output = "~/.claude/settings.json"

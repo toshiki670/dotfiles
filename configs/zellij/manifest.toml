@@ -1,2 +1,7 @@
 # zellij の設定を ~/.config/zellij へ copy する。
-dst = "~/.config/zellij"
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/zellij"

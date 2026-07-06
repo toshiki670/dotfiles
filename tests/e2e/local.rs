@@ -21,7 +21,7 @@ fn local_set_then_apply_injects_local_value() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nlocals = [\"demo.token\"]\n",
+        "locals = [\"demo.token\"]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
     )
     .unwrap();
     fs::write(unit.join("conf"), "token = @@demo.token@@\n").unwrap();
@@ -57,7 +57,7 @@ fn apply_without_value_warns_and_leaves_placeholder() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nlocals = [\"demo.token\"]\n",
+        "locals = [\"demo.token\"]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
     )
     .unwrap();
     fs::write(unit.join("conf"), "token = @@demo.token@@\n").unwrap();
@@ -111,7 +111,7 @@ fn doctor_warns_unset_then_clears_after_set() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/demo\"\nlocals = [\"demo.token\"]\n",
+        "locals = [\"demo.token\"]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
     )
     .unwrap();
 
@@ -139,9 +139,10 @@ fn doctor_warns_unset_then_clears_after_set() {
         .stdout(predicate::str::contains("全て設定済み"));
 }
 
-/// load 時検証 `sensitive ⊆ locals` がバイナリ経由でも apply を失敗させることを検証。
+/// `sensitive`（旧スキーマ。利用者ゼロで削除・#588 スライス1）はもう manifest のフィールドでない
+/// ため、バイナリ経由でも未知フィールドとして load 時に弾かれることを検証する。
 #[test]
-fn apply_rejects_sensitive_not_in_locals() {
+fn apply_rejects_legacy_sensitive_field() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
 
@@ -149,7 +150,7 @@ fn apply_rejects_sensitive_not_in_locals() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/bad\"\nlocals = [\"a\"]\nsensitive = [\"b\"]\n",
+        "locals = [\"a\"]\nsensitive = [\"a\"]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/bad\"\n",
     )
     .unwrap();
     fs::write(unit.join("f"), "x\n").unwrap();

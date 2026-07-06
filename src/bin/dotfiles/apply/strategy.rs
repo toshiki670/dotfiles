@@ -1,15 +1,17 @@
-//! 合成戦略: 複数の断片を 1 つの dst=ファイルへ重ねる純ロジック。
+//! 合成戦略: 内容の断片を後勝ちで重ねる純ロジック。[`crate::apply::pipeline`] が step ごとに、
+//! 現在の文書 D を `base`・新しい input を単一断片として呼ぶ（`format` が戦略を選ぶ）。
 //!
-//! - `concat` … テキスト連結（後ろへ連結。境目に改行を 1 つ補う）。generate の
-//!   「cmd 出力＋sibling 連結」もこの戦略へ統一する（出力は従来と不変）。
-//! - `json_shallow` … JSON のトップレベル shallow merge（後勝ち）。`base`（既存 dst）を
-//!   与えると最下層の土台として最初に畳み、dotfiles 所有のトップレベルキーだけを断片で
+//! - `concat`（`format = "text"`）… テキスト連結（後ろへ連結。境目に改行を 1 つ補う）。
+//! - `json_shallow`（`format = "json"`）… JSON のトップレベル shallow merge（後勝ち）。`base`
+//!   （現在の D）を与えると最下層の土台として最初に畳み、dotfiles 所有のトップレベルキーだけを断片で
 //!   上書きする。dotfiles が定義しない非管理キーは土台のまま全保持される（deep merge はしない）。
-//! - `plist_shallow` … `json_shallow` の plist 版（トップレベル shallow merge・後勝ち・deep merge
-//!   しない）。shallow merge を保証するのは plist の dict モデルであって XML という構文ではない
-//!   ため、`xml_shallow` ではなく `plist_shallow` と呼ぶ。
+//! - `plist_shallow`（`format = "plist"`）… `json_shallow` の plist 版（トップレベル shallow merge・
+//!   後勝ち・deep merge しない）。shallow merge を保証するのは plist の dict モデルであって XML という
+//!   構文ではないため、`xml_shallow` ではなく `plist_shallow` と呼ぶ。
 //!
-//! いずれも副作用のない純関数で、配置（書き込み）は [`crate::apply::compose`] が行う。
+//! いずれも副作用のない純関数で、配置（書き込み）は [`crate::apply::pipeline`] が行う。単一断片＋
+//! `base = None` で呼ぶと断片そのもの（再直列化）を返すため、`base` の有無で「最初の input は置換・
+//! 2 つ目以降は merge」を分岐なく表現できる（[`crate::apply::pipeline`] の `fold_in`）。
 
 use plist::{Dictionary, Value as PlistValue};
 use serde_json::{Map, Value};
@@ -29,7 +31,7 @@ pub fn concat(frags: &[Vec<u8>]) -> Vec<u8> {
     out
 }
 
-/// JSON 断片をトップレベル shallow merge（宣言順・後勝ち）する。`base`（既存 dst）を与えると
+/// JSON 断片をトップレベル shallow merge（宣言順・後勝ち）する。`base`（現在の D）を与えると
 /// 最下層の土台として最初に畳み、その上に断片を重ねる。各断片・`base` は JSON オブジェクトを要する。
 ///
 /// `base` の意味は「dotfiles 非管理のトップレベルキーを全保持し、dotfiles 所有キー（断片が
@@ -38,16 +40,16 @@ pub fn concat(frags: &[Vec<u8>]) -> Vec<u8> {
 pub fn json_shallow(frags: &[Vec<u8>], base: Option<&[u8]>) -> Result<Vec<u8>, String> {
     let mut merged = Map::new();
 
-    // preserve = true のとき、既存 dst を最下層の土台として最初に畳む（非管理キーを保持）。
+    // base（現在の D）があれば最下層の土台として最初に畳む（非管理キーを保持）。
     if let Some(base) = base {
-        let obj = parse_object(base).map_err(|e| format!("既存 dst {e}"))?;
+        let obj = parse_object(base).map_err(|e| format!("base {e}"))?;
         for (k, v) in obj {
             merged.insert(k, v);
         }
     }
 
     for (i, frag) in frags.iter().enumerate() {
-        let obj = parse_object(frag).map_err(|e| format!("overlay {} {e}", i + 1))?;
+        let obj = parse_object(frag).map_err(|e| format!("input {} {e}", i + 1))?;
         for (k, v) in obj {
             merged.insert(k, v); // 後勝ち。dotfiles 所有キーが土台を上書き（トップレベル粒度）。
         }
@@ -70,25 +72,25 @@ fn parse_object(bytes: &[u8]) -> Result<Map<String, Value>, String> {
 }
 
 /// plist 断片をトップレベル shallow merge（宣言順・後勝ち）する。`json_shallow` の plist 版。
-/// `base` を与えると最下層の土台として最初に畳み、その上に断片を重ねる。各断片・`base` は
+/// `base`（現在の D）を与えると最下層の土台として最初に畳み、その上に断片を重ねる。各断片・`base` は
 /// plist 辞書（トップレベル dict）を要する。入力は `parse_dict`（`plist::Value::from_reader`）が
 /// XML/binary/ASCII のどの直列化でも自動判別する。出力は XML plist に固定する（差分可読性。#465）。
 ///
-/// 呼び出し側の運用（`preserve` の意味・生きたドメインをどの引数で渡すか等）は呼び出し元
-/// （[`crate::apply::compose`]）の責務。本関数はマージのみを純粋に担う。既存ドメインの
-/// export を土台に、リポジトリ管理の断片を dict キー単位で上書きする用途を想定する。
+/// 生きたドメインをどの引数で渡すか等の運用は呼び出し元（[`crate::apply::pipeline`]）の責務。本関数は
+/// マージのみを純粋に担う。既存ドメインの export を土台に、リポジトリ管理の断片を dict キー単位で
+/// 上書きする用途を想定する。
 pub fn plist_shallow(frags: &[Vec<u8>], base: Option<&[u8]>) -> Result<Vec<u8>, String> {
     let mut merged = Dictionary::new();
 
     if let Some(base) = base {
-        let dict = parse_dict(base).map_err(|e| format!("既存 dst {e}"))?;
+        let dict = parse_dict(base).map_err(|e| format!("base {e}"))?;
         for (k, v) in dict {
             merged.insert(k, v);
         }
     }
 
     for (i, frag) in frags.iter().enumerate() {
-        let dict = parse_dict(frag).map_err(|e| format!("overlay {} {e}", i + 1))?;
+        let dict = parse_dict(frag).map_err(|e| format!("input {} {e}", i + 1))?;
         for (k, v) in dict {
             merged.insert(k, v); // 後勝ち。dotfiles 所有キーが土台を上書き（トップレベル粒度）。
         }
