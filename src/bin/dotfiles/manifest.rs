@@ -256,6 +256,8 @@ impl Manifest {
     /// - **ツリー**（`input = "."`）: steps はちょうど 2 つ（`input = "."` ＋ output パス）、step に
     ///   `when` / `merge` / `optional` は付けない、`format` は書けない（merge / format はバイト内容の
     ///   step のみ意味を持ち、step の `when` は unit gate と冗長になる）。
+    /// - **非ツリーは先頭 step が input**（[`Manifest::validate_pipeline`]）: output が先頭だと、
+    ///   apply で内容がまだ空のまま書き込みへ到達する。
     /// - **`merge`**: 2 つ目以降の input に必須・最初の input / output には禁止（暗黙の合成規則を持た
     ///   ない・#580）。
     /// - **`format`**: `merge` を使うユニットに必須・使わないユニットには禁止。`shallow` は json / plist・
@@ -402,8 +404,19 @@ impl Manifest {
         Ok(())
     }
 
-    /// バイト内容パイプライン（非ツリー）の merge / format / optional を検証する。
+    /// バイト内容パイプライン（非ツリー）の形（先頭 step）と merge / format / optional を検証する。
     fn validate_pipeline(&self) -> Result<(), String> {
+        // 先頭 step は input。ここに来る時点で input・output が各 1 つ以上あり、各 step は input /
+        // output のちょうど 1 つなので steps は 2 つ以上 ―`steps[0]` の添字は安全。output が先頭だと、
+        // 宣言順に畳む apply で内容がまだ空のまま書き込みへ到達する（実行時エラーになる前に load で弾く）。
+        if self.steps[0].output.is_some() {
+            return Err(
+                "steps[0] が output です（先頭は input である必要があります）。output より前に内容を \
+                 組み立てる input が無く、apply 時に内容が空のまま書き込みに到達します"
+                    .to_string(),
+            );
+        }
+
         // merge: 最初の input と output には禁止・2 つ目以降の input には必須。
         let mut input_index = 0usize;
         for (i, step) in self.steps.iter().enumerate() {
@@ -769,6 +782,19 @@ mod tests {
         assert!(
             err.contains(".."),
             "`..` を含む output が弾かれていない: {err}"
+        );
+    }
+
+    // ── pipeline shape ──
+
+    #[test]
+    fn rejects_pipeline_starting_with_output() {
+        // 非ツリー（`.` を含まない）で先頭が output。畳む内容がまだ無いまま書き込みへ到達するため
+        // load 時に弾く。
+        let err = parse("[[steps]]\noutput = \"~/x\"\n[[steps]]\ninput = \"a\"\n").unwrap_err();
+        assert!(
+            err.contains("steps[0]") && err.contains("output"),
+            "先頭 output のパイプラインが弾かれていない: {err}"
         );
     }
 

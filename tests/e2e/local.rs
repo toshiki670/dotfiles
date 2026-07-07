@@ -2,7 +2,6 @@
 //!
 //! `dotfiles local set` でストアへ設定 →`apply` で `@@name@@` 注入、未設定時の非 TTY 警告と
 //! placeholder 残し、`doctor` の未設定警告を架空 fixture（`demo` 単位）で検証する。
-//! sensitive の非エコー対話（TTY）は pty 依存で自動化困難なため手動検証（PR 説明参照）。
 //!
 //! 注: `assert_cmd` の `.assert()` は `Command::output()` 経由で子の stdin を継承しない（= 非 TTY）。
 //! よって apply は常に非対話経路（警告のみ）を通り、テストがプロンプトでハングしない。

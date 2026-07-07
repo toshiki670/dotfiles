@@ -79,7 +79,7 @@ Preview what would be placed and where, without writing anything.
 dotfiles apply
 ```
 
-Places everything under `configs/`. If a machine-local value (e.g. git email/name) isn't stored yet, apply prompts for it interactively (sensitive values are read without echo) and saves it for next time; see [Daily usage](#daily-usage).
+Places everything under `configs/`. If a machine-local value (e.g. git email/name) isn't stored yet, apply prompts for it interactively and saves it for next time; see [Daily usage](#daily-usage).
 
 ## 4. Restart Shell
 
