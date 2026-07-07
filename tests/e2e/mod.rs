@@ -54,7 +54,7 @@ pub(crate) fn dotfiles() -> Command {
 }
 
 /// PATH に置く実行可能スタブを書き出す（固定テキストを stdout に出す）。
-/// generate / overlay / hooks の各テストが共有する。
+/// generate / steps / hooks の各テストが共有する。
 #[cfg(unix)]
 pub(crate) fn write_stub(dir: &std::path::Path, name: &str, body: &str) {
     use std::os::unix::fs::PermissionsExt;

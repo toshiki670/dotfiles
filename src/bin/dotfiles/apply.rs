@@ -5,7 +5,7 @@
 //! 配置を一切触らず skip）。生き残った単位は `[[steps]]` パイプライン（[`crate::apply::pipeline`]）で
 //! 実行する ― 内容を空から始め、宣言順に input（読む）→ output（書く）を畳む。ツリー input
 //! （`input = "."`）は [`crate::apply::copy`] で単位ディレクトリを再帰配置し、バイト内容の合成は
-//! [`crate::apply::strategy`]、cmd 実行は [`crate::apply::cmd`] が担う。配置の直前に `locals`
+//! [`crate::apply::fold`]、cmd 実行は [`crate::apply::cmd`] が担う。配置の直前に `locals`
 //! （named value）を解決し（[`crate::locals::resolve`]）、配置ファイルの `@@name@@` を注入する。
 //! 配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時から変わっていれば
 //! 実行する（[`crate::hooks`]）。ユニット gate が false のときは配置前に短絡 return するため、その
@@ -22,9 +22,9 @@
 
 pub(crate) mod cmd;
 pub(crate) mod copy;
+mod fold;
 pub(crate) mod gate;
 pub(crate) mod pipeline;
-mod strategy;
 
 use crate::discover::{self, MANIFEST, Unit};
 use crate::hooks;
@@ -84,14 +84,16 @@ fn apply_unit(
         resolve::fill(&manifest, store, prompt::is_tty())?
     };
 
-    pipeline::run(&unit.dir, home, &manifest, &locals, gate_state)?;
+    // パイプラインのエラーにはユニット名を前置する（32 ユニットのどれで壊れたか即座に分かるように）。
+    pipeline::run(&unit.dir, home, &manifest, &locals, gate_state)
+        .map_err(|e| format!("{name}: {e}"))?;
     // 宛先表記は最初のパス output（`~/...`）。cmd output だけの `stats` は `(cmd)` を出すが、`stats` は
     // `when.deps = ["defaults"]` で常に skip される（`real_configs` の空 PATH でも同様）ため、`(cmd)` は
     // `real_configs` の stdout パースには現れない ― とはいえ将来 manifest が変わっても壊れないよう明示。
     println!(
         "apply: {name} → {} ({})",
-        crate::list::display_dst(&manifest),
-        crate::list::summary(&manifest)
+        manifest.display_dst(),
+        manifest.summary()
     );
 
     // 配置後（after フェーズ）に onchange フックを走らせる。ソースが前回適用時と同じなら skip。

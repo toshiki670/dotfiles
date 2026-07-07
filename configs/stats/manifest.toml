@@ -14,7 +14,7 @@
 #      たびに Stats の実バージョン情報や実測値をスナップショット時点の古い値へ巻き戻してしまう
 #      （ユーザー設定ではなく Stats 自身が書く値なので、土台（生きたドメイン）にそのまま委ねる）。
 #      土台の上に重なり、dotfiles 所有キーだけを上書きする（shallow・トップレベル粒度）。
-#   3. output.cmd（`defaults import eu.exelban.Stats -`）= 合成済み D を標準入力へ渡し、ライブドメインへ
+#   3. output.cmd（`defaults import eu.exelban.Stats -`）= 合成済みの内容を標準入力へ渡し、ライブドメインへ
 #      反映する。毎 apply 実行され、コマンドが冪等であることを契約とする（#531 が実機検証して出荷済みの
 #      挙動）。これで旧構成の使い捨て下書きファイル（~/.cache/dotfiles/…）と hooks（frequency=always）は
 #      不要になった ― 生きた状態が毎 apply 合成に入り、書き戻しで結果が収束する。

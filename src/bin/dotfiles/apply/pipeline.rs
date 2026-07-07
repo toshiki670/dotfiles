@@ -4,19 +4,24 @@
 //! 決め、採用された input は内容へ中身を畳み、output は内容を宛先へ書く。ツリー input（`input = "."`）は
 //! 内容を「ファイルツリー」にし、パス output で相対構造を保って再帰配置する（[`crate::apply::copy`]）。
 //!
-//! **設計の核**: manifest の `merge` は load 時の整合検証のための注釈で、実行時の畳み込みは分岐させない。
-//! 畳み込みは unit レベルの単一値 `format` だけで駆動する（[`fold_in`]）。`format`-駆動の畳み込みを
-//! 全 input に一様に適用すると「最初の input は置換・2 つ目以降は merge」と byte 単位で一致する ―
-//! [`crate::apply::strategy`] の `concat` / `json_shallow` / `plist_shallow` はいずれも空の土台から
-//! 最初の断片を畳むと断片そのもの（再直列化）を返す incremental な後勝ち fold だから。これにより、
-//! optional / gate で先頭 input が実行時に飛んでも（宣言上の 2 番目が実際の最初になっても）結果は
-//! 一定になる。
+//! **slice 1 の性質（`format` 一様駆動）**: 本スライスでは manifest の `merge` は load 時の整合検証の
+//! ための注釈にすぎず、実行時の畳み込みは unit レベルの単一値 `format` だけで駆動する（[`fold_in`]）。
+//! `format`-駆動の畳み込みを全 input に一様に適用すると「最初の input は置換・2 つ目以降は merge」と
+//! byte 単位で一致する ― [`crate::apply::fold`] の `concat` / `json_shallow` / `plist_shallow` はいずれも
+//! 空の土台（`base = None`）から最初の断片を畳むと断片そのもの（再直列化）を返す incremental な後勝ち
+//! fold だから。これにより、optional / gate で先頭 input が実行時に飛んでも（宣言上の 2 番目が実際の
+//! 最初になっても）結果は一定になる。
+//!
+//! この一様さは、slice 1 で `format` と `merge` が 1:1 に対応する（json/plist→shallow・text→append）
+//! から成り立つ暫定的な性質。slice 2 で `merge = "deep"` が入ると `format = "json"` が shallow / deep の
+//! どちらとも対になり得るため、`fold_in` は per-step の `merge` を実行時に見る必要が生じ、この一様さは
+//! 崩れる（#554 / #588）。
 //!
 //! 不変条件①（ユニット gate 先・false で短絡）は [`crate::apply`] が前段で担う（gate=false のユニットは
 //! ここへ来ない）。
 
 use super::gate::{self, GateState};
-use super::{cmd, copy, set_mode, strategy};
+use super::{cmd, copy, fold, set_mode};
 use crate::locals::resolve;
 use crate::manifest::{Format, Manifest, StepSource};
 use std::collections::BTreeMap;
@@ -80,13 +85,18 @@ fn apply_input(
         StepSource::Path(p) => {
             let path = resolve_input_path(unit_dir, home, p);
             match std::fs::read(&path) {
-                Ok(bytes) => fold_in(content, format, bytes)?,
+                // パースエラーには input パスのラベルを添える（どの input が壊れたか）。
+                Ok(bytes) => fold_in(content, format, &bytes).map_err(|e| format!("{p}: {e}"))?,
                 // optional な不在は内容を触らず飛ばす（既定は「無ければエラー」）。
                 Err(e) if e.kind() == io::ErrorKind::NotFound && optional => {}
                 Err(e) => return Err(format!("{}: 読み込み失敗: {e}", path.display())),
             }
         }
-        StepSource::Cmd(c) => fold_in(content, format, cmd::run(&c.cmd)?)?,
+        StepSource::Cmd(c) => {
+            let bytes = cmd::run(&c.cmd)?;
+            // パースエラーには cmd argv のラベルを添える。
+            fold_in(content, format, &bytes).map_err(|e| format!("{}: {e}", c.cmd.join(" ")))?;
+        }
     }
     Ok(())
 }
@@ -126,24 +136,22 @@ fn apply_output(
 }
 
 /// 読んだ新しい中身（`bytes`）を内容へ畳む。畳み方は unit の `format` だけで決まる
-/// （`merge` は実行時に見ない）。
+/// （slice 1 では `merge` を実行時に見ない ― モジュール doc 参照）。
 ///
-/// 内容が空（`Empty`）なら土台なしで最初の中身を畳む ― `concat` は空の out に対し境目の改行を
-/// 補わず、`json_shallow` / `plist_shallow` は `base = None` で最初の断片そのものを返すため、
-/// いずれも最初の input は中身そのまま（再直列化）になる。`format = None`（merge を使わない
-/// ユニット）は中身をそのまま内容にする。
-fn fold_in(content: &mut Content, format: Option<Format>, bytes: Vec<u8>) -> Result<(), String> {
+/// 内容が空（`Empty`）なら土台なし（`base = None`）で最初の中身を畳む ― [`fold::concat`] は
+/// 土台が無ければ境目の改行を補わず、[`fold::json_shallow`] / [`fold::plist_shallow`] は最初の断片
+/// そのものを返すため、いずれも最初の input は中身そのまま（再直列化）になる。`format = None`
+/// （merge を使わないユニット）は中身をそのまま内容にする。
+fn fold_in(content: &mut Content, format: Option<Format>, bytes: &[u8]) -> Result<(), String> {
     let base = match content {
         Content::Bytes(b) => Some(b.as_slice()),
         _ => None,
     };
     let merged = match format {
-        None => bytes,
-        Some(Format::Text) => {
-            strategy::concat(&[base.map(<[u8]>::to_vec).unwrap_or_default(), bytes])
-        }
-        Some(Format::Json) => strategy::json_shallow(&[bytes], base)?,
-        Some(Format::Plist) => strategy::plist_shallow(&[bytes], base)?,
+        None => bytes.to_vec(),
+        Some(Format::Text) => fold::concat(base, bytes),
+        Some(Format::Json) => fold::json_shallow(base, bytes)?,
+        Some(Format::Plist) => fold::plist_shallow(base, bytes)?,
     };
     *content = Content::Bytes(merged);
     Ok(())

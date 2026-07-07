@@ -12,7 +12,7 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 
 /// `cmd`（argv）を実行し標準出力を返す。非ゼロ終了は stderr 付きでエラーにする。
-/// input.cmd（標準出力を D へ畳む内容源）が使う。
+/// input.cmd（標準出力を内容へ畳む中身源）が使う。
 pub fn run(cmd: &[String]) -> Result<Vec<u8>, String> {
     let output = Command::new(&cmd[0])
         .args(&cmd[1..])
@@ -45,7 +45,7 @@ pub fn run(cmd: &[String]) -> Result<Vec<u8>, String> {
 /// 書き込みスレッドの失敗（例: 子が早期に stdin を閉じた `BrokenPipe`）は、プロセスの終了ステータスが
 /// 非ゼロならそちらを優先して報告する（実際の失敗理由は exit status + stderr にあり、`BrokenPipe` は
 /// 「子が早期に読むのをやめた」という結果を示すだけで原因ではないため）。プロセスが成功終了したのに
-/// 書き込みが失敗した場合（子が入力を全部読まずに正常終了する等）は、D の反映が不完全な可能性があり
+/// 書き込みが失敗した場合（子が入力を全部読まずに正常終了する等）は、内容の反映が不完全な可能性があり
 /// `output.cmd` の「合成済みの内容をそのまま反映する」契約を破るため、黙って握りつぶさずエラーにする。
 pub fn run_piped(cmd: &[String], input: &[u8]) -> Result<(), String> {
     let mut child = Command::new(&cmd[0])

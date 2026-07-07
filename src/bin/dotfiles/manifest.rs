@@ -6,8 +6,8 @@
 //!
 //! 各 step の `input` / `output` は択一で、どちらも「パス文字列」か「`cmd`（argv・標準入出力）」の
 //! 択一（[`StepSource`]）。重ね方の内容型は unit レベルの `format`（json / plist / text）、per-step の
-//! `merge`（shallow / append）が「どう重ねるか」を宣言する。実行時の畳み込みは `format` だけで駆動し、
-//! `merge` は load 時の整合検証のための注釈（[`crate::apply::pipeline`]）。
+//! `merge`（shallow / append）が「どう重ねるか」を宣言する。`merge` は load 時の整合検証のための注釈で、
+//! 実行時の畳み込みの仕組みは [`crate::apply::pipeline`]。
 //!
 //! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ / `profile` スカラ）に一本化する。**書く位置で
 //! スコープが決まる**: トップレベルの `when` はユニット全体 gate（false ならユニットごと skip ＝
@@ -21,7 +21,7 @@
 //! [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
 
 use serde::Deserialize;
-use std::path::Path;
+use std::path::{Component, Path};
 use strum::{Display, EnumIter};
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
@@ -81,8 +81,8 @@ pub struct Step {
     #[serde(default)]
     pub output: Option<StepSource>,
     /// 重ね方（2 つ目以降の input に必須・最初の input と output には禁止）。値は `format` に従う:
-    /// json / plist → `shallow`、text → `append`。実行時は畳み込みを駆動せず（`format` が駆動）、
-    /// load 時の整合検証のための注釈。
+    /// json / plist → `shallow`、text → `append`。load 時の整合検証のための注釈で、実行時の
+    /// 畳み込みの駆動については [`crate::apply::pipeline`]。
     #[serde(default)]
     pub merge: Option<Merge>,
     /// この step の採否（省略 = 常時採用）。unit gate と共通の語彙（`deps` / `os` / `profile`）。
@@ -207,6 +207,40 @@ impl Manifest {
         self.steps.iter().any(is_tree_input)
     }
 
+    /// apply の 1 行出力と `list` が共有する宛先表記: 最初のパス output の生表記（`~/...`）。
+    /// パス output を持たない（cmd output だけの）ユニットは `(cmd)` を返す。
+    pub fn display_dst(&self) -> String {
+        self.steps
+            .iter()
+            .find_map(|s| match &s.output {
+                Some(StepSource::Path(p)) => Some(p.clone()),
+                _ => None,
+            })
+            .unwrap_or_else(|| "(cmd)".to_string())
+    }
+
+    /// apply のラベルと `list` の属性が共有する steps サマリ。ツリーは `tree`、それ以外は
+    /// `steps=Nin/Mout`（＋ `format` ＋ cmd output があれば `output=cmd`）。
+    pub fn summary(&self) -> String {
+        if self.is_tree() {
+            return "tree".to_string();
+        }
+        let n_in = self.steps.iter().filter(|s| s.input.is_some()).count();
+        let n_out = self.steps.iter().filter(|s| s.output.is_some()).count();
+        let mut parts = vec![format!("steps={n_in}in/{n_out}out")];
+        if let Some(format) = self.format {
+            parts.push(format.to_string());
+        }
+        if self
+            .steps
+            .iter()
+            .any(|s| matches!(&s.output, Some(StepSource::Cmd(_))))
+        {
+            parts.push("output=cmd".to_string());
+        }
+        parts.join(", ")
+    }
+
     /// パース後のセマンティック検証。manifest の typo を配置前に弾く（fail-loud）。
     ///
     /// - **各 step は input / output のちょうど 1 つ**。両方・どちらも無しは typo。
@@ -217,7 +251,7 @@ impl Manifest {
     /// - **`private` / `executable` はパス output を持つユニットのみ**（cmd output だけのユニットには
     ///   書き込み先ファイルが無い）。
     /// - **ツリー**（`input = "."`）: steps はちょうど 2 つ（`input = "."` ＋ output パス）、step に
-    ///   `when` / `merge` / `optional` は付けない、`format` は書けない（merge / format はバイト文書の
+    ///   `when` / `merge` / `optional` は付けない、`format` は書けない（merge / format はバイト内容の
     ///   step のみ意味を持ち、step の `when` は unit gate と冗長になる）。
     /// - **`merge`**: 2 つ目以降の input に必須・最初の input / output には禁止（暗黙の合成規則を持た
     ///   ない・#580）。
@@ -319,7 +353,7 @@ impl Manifest {
         self.validate_pipeline()
     }
 
-    /// ツリー（`input = "."`）ユニットの形を検証する。バイト文書の合成語彙（merge / format）は
+    /// ツリー（`input = "."`）ユニットの形を検証する。バイト内容の合成語彙（merge / format）は
     /// ツリーには意味を持たず、step の `when` は unit gate と冗長になるため、いずれも禁止する。
     fn validate_tree(&self) -> Result<(), String> {
         if self.steps.len() != 2 {
@@ -357,14 +391,14 @@ impl Manifest {
         }
         if self.format.is_some() {
             return Err(
-                "ツリーユニットに format は指定できません（merge / format はバイト文書の step のみ）"
+                "ツリーユニットに format は指定できません（merge / format はバイト内容の step のみ）"
                     .to_string(),
             );
         }
         Ok(())
     }
 
-    /// バイト文書パイプライン（非ツリー）の merge / format / optional を検証する。
+    /// バイト内容パイプライン（非ツリー）の merge / format / optional を検証する。
     fn validate_pipeline(&self) -> Result<(), String> {
         // merge: 最初の input と output には禁止・2 つ目以降の input には必須。
         let mut input_index = 0usize;
@@ -372,7 +406,7 @@ impl Manifest {
             if step.input.is_some() {
                 if input_index == 0 && step.merge.is_some() {
                     return Err(format!(
-                        "steps[{i}]: 最初の input step は merge を持てません（最初の input は文書の土台）"
+                        "steps[{i}]: 最初の input step は merge を持てません（最初の input は内容の土台）"
                     ));
                 }
                 if input_index >= 1 && step.merge.is_none() {
@@ -462,31 +496,49 @@ impl Manifest {
     }
 }
 
-/// output パスの表記検証（#579）: `~` / `~/...` のみ。`$` 含み・絶対・相対は load エラー。
+/// output パスの表記検証（#579）: `~` / `~/...` のみ。`$` 含み・絶対・相対・`~/` 後の `..` は load
+/// エラー（`..` は `~` 起点でも home の外へ脱出できてしまうため弾く）。
 fn validate_output_path(p: &str) -> Result<(), String> {
     if p.contains('$') {
         return Err(format!(
             "output パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
         ));
     }
-    if p == "~" || p.starts_with("~/") {
-        Ok(())
-    } else {
-        Err(format!(
-            "output パス `{p}` は ~ 起点（~ または ~/...）である必要があります（絶対パス・相対パスは不可）"
-        ))
+    if p == "~" {
+        return Ok(());
     }
+    if let Some(rest) = p.strip_prefix("~/") {
+        if has_parent_component(rest) {
+            return Err(format!(
+                "output パス `{p}` に `..`（親ディレクトリ参照）は使えません（home の外を指す）"
+            ));
+        }
+        return Ok(());
+    }
+    Err(format!(
+        "output パス `{p}` は ~ 起点（~ または ~/...）である必要があります（絶対パス・相対パスは不可）"
+    ))
 }
 
 /// input パスの表記検証（#579）: `~` / `~/...`（home 起点）または単位相対（`~` プレフィックス無し・
-/// 絶対でない・`$` を含まない）。特例 `"."` はツリーを表し、単位相対として許容される。
+/// 絶対でない・`$` を含まない）。特例 `"."` はツリーを表し、単位相対として許容される。`~/` 起点・
+/// 単位相対のいずれも `..`（home / 単位ディレクトリの外へ脱出）を弾き、単位相対では加えて空文字列
+/// （実行時に単位ディレクトリ自身を指し無意味）も弾く。
 fn validate_input_path(p: &str) -> Result<(), String> {
     if p.contains('$') {
         return Err(format!(
             "input パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
         ));
     }
-    if p == "~" || p.starts_with("~/") {
+    if p == "~" {
+        return Ok(());
+    }
+    if let Some(rest) = p.strip_prefix("~/") {
+        if has_parent_component(rest) {
+            return Err(format!(
+                "input パス `{p}` に `..`（親ディレクトリ参照）は使えません（home の外を指す）"
+            ));
+        }
         return Ok(());
     }
     if p.starts_with('~') {
@@ -499,7 +551,21 @@ fn validate_input_path(p: &str) -> Result<(), String> {
             "input パス `{p}` に絶対パスは使えません（単位相対 または ~ 起点）"
         ));
     }
+    // 単位相対（特例 `"."` は `.` 単一成分で `..` を含まないため通る）。
+    if p.is_empty() {
+        return Err("input パスに空文字列は使えません（単位相対パスが必要）".to_string());
+    }
+    if has_parent_component(p) {
+        return Err(format!(
+            "input パス `{p}` に `..`（親ディレクトリ参照）は使えません（単位ディレクトリの外を指す）"
+        ));
+    }
     Ok(())
+}
+
+/// パス文字列が `..`（親ディレクトリ参照）成分を含むか。単位ディレクトリ / home の外への脱出を弾く。
+fn has_parent_component(p: &str) -> bool {
+    Path::new(p).components().any(|c| c == Component::ParentDir)
 }
 
 #[cfg(test)]
@@ -658,6 +724,40 @@ mod tests {
         let err =
             parse("[[steps]]\ninput = \"$XDG/x\"\n[[steps]]\noutput = \"~/x\"\n").unwrap_err();
         assert!(err.contains("$"), "$ 含み input が弾かれていない: {err}");
+    }
+
+    #[test]
+    fn rejects_input_parent_escape_or_empty() {
+        // 単位相対で `..`（単位ディレクトリの外へ脱出）は不可。
+        let err = parse("[[steps]]\ninput = \"../../outside\"\n[[steps]]\noutput = \"~/x\"\n")
+            .unwrap_err();
+        assert!(
+            err.contains(".."),
+            "`..` を含む input が弾かれていない: {err}"
+        );
+        // `~/` 起点でも `..` で home の外へ脱出するのは不可（output と同じ規則）。
+        let err = parse("[[steps]]\ninput = \"~/../etc/passwd\"\n[[steps]]\noutput = \"~/x\"\n")
+            .unwrap_err();
+        assert!(
+            err.contains(".."),
+            "`..` を含む ~ 起点 input が弾かれていない: {err}"
+        );
+        // 空文字列は不可（`.` はツリーの特例として別途許容される）。
+        let err = parse("[[steps]]\ninput = \"\"\n[[steps]]\noutput = \"~/x\"\n").unwrap_err();
+        assert!(err.contains("空"), "空 input パスが弾かれていない: {err}");
+        // 単位相対の `.`（ツリー）は引き続き許容される。
+        assert!(parse(TREE).is_ok());
+    }
+
+    #[test]
+    fn rejects_output_parent_escape() {
+        // `~/` 起点でも `..` で home の外へ脱出するのは不可。
+        let err =
+            parse("[[steps]]\ninput = \"a\"\n[[steps]]\noutput = \"~/../etc/x\"\n").unwrap_err();
+        assert!(
+            err.contains(".."),
+            "`..` を含む output が弾かれていない: {err}"
+        );
     }
 
     // ── merge / format ──
@@ -837,7 +937,7 @@ mod tests {
 
     #[test]
     fn rejects_tree_input_with_merge() {
-        // ツリー input（input = "."）に merge を書くのも when/optional と同様に禁止（バイト文書の
+        // ツリー input（input = "."）に merge を書くのも when/optional と同様に禁止（バイト内容の
         // 合成語彙はツリーに意味を持たない）。
         let err =
             parse("[[steps]]\ninput = \".\"\nmerge = \"shallow\"\n[[steps]]\noutput = \"~/x\"\n")

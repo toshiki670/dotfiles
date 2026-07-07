@@ -7,11 +7,11 @@
 //! 見出しには `source` の実 path でなく解決元ラベル（`origin`・[`crate::source::Origin`]）を出す。
 //! 埋め込み時の `source` は temp dir で、実 path を生で見せても俯瞰の役に立たないため。
 //!
-//! 宛先表記（[`display_dst`]）と steps サマリ（[`summary`]）は apply の 1 行出力とラベルが同じ出所を
-//! 使えるよう `pub(crate)` で公開する。
+//! 宛先表記（[`Manifest::display_dst`]）と steps サマリ（[`Manifest::summary`]）は apply の 1 行出力と
+//! ラベルの出所を共有する（どちらもスキーマの純関数として [`crate::manifest`] に置く）。
 
 use crate::discover::{self, MANIFEST};
-use crate::manifest::{Manifest, StepSource};
+use crate::manifest::Manifest;
 use std::path::Path;
 
 /// `source` 配下の設定単位を一覧表示する。`origin` は見出しに出す解決元ラベル。
@@ -37,51 +37,16 @@ pub fn run(source: &Path, origin: &str) -> Result<(), String> {
     for (name, manifest) in &rows {
         println!(
             "  {name:<width$}  → {dst}  [{attrs}]",
-            dst = display_dst(manifest),
+            dst = manifest.display_dst(),
             attrs = attrs(manifest),
         );
     }
     Ok(())
 }
 
-/// apply の 1 行出力と list が共有する宛先表記: 最初のパス output の生表記（`~/...`）。
-/// パス output を持たない（cmd output だけの）ユニットは `(cmd)` を返す。
-pub(crate) fn display_dst(manifest: &Manifest) -> String {
-    manifest
-        .steps
-        .iter()
-        .find_map(|s| match &s.output {
-            Some(StepSource::Path(p)) => Some(p.clone()),
-            _ => None,
-        })
-        .unwrap_or_else(|| "(cmd)".to_string())
-}
-
-/// apply のラベルと list の属性が共有する steps サマリ。ツリーは `tree`、それ以外は
-/// `steps=Nin/Mout`（＋ `format` ＋ cmd output があれば `output=cmd`）。
-pub(crate) fn summary(manifest: &Manifest) -> String {
-    if manifest.is_tree() {
-        return "tree".to_string();
-    }
-    let n_in = manifest.steps.iter().filter(|s| s.input.is_some()).count();
-    let n_out = manifest.steps.iter().filter(|s| s.output.is_some()).count();
-    let mut parts = vec![format!("steps={n_in}in/{n_out}out")];
-    if let Some(format) = manifest.format {
-        parts.push(format.to_string());
-    }
-    if manifest
-        .steps
-        .iter()
-        .any(|s| matches!(&s.output, Some(StepSource::Cmd(_))))
-    {
-        parts.push("output=cmd".to_string());
-    }
-    parts.join(", ")
-}
-
 /// 1 単位の属性ラベル: steps サマリ ＋ private / executable ＋ when.deps / when.os / when.profile ＋ hooks。
 fn attrs(manifest: &Manifest) -> String {
-    let mut parts = vec![summary(manifest)];
+    let mut parts = vec![manifest.summary()];
     if manifest.private {
         parts.push("private".to_string());
     }

@@ -299,6 +299,42 @@ fn apply_json_shallow_writes_base_without_gated_step() {
     );
 }
 
+/// 初回 apply（宛先未作成）: 先頭の optional path input（宛先自身）が不在でも、次の base 断片が
+/// 土台になり output が書かれる。`fold_in` の `Content::Empty` → `base = None` 経路が full apply で
+/// 通ることを保証する。既存 json テストは宛先を事前作成するが、ここは fresh HOME（`configs/claude/settings`
+/// の一番最初の apply と同じ形）で走らせる。
+#[cfg(unix)]
+#[test]
+fn apply_json_shallow_first_apply_folds_from_empty_when_optional_input_missing() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let empty_bin = tempfile::tempdir().unwrap(); // faketool 不在 → gated step も脱落。
+
+    write_json_shallow_unit(work.path());
+
+    // 宛先は事前作成しない（初回 apply）。先頭の optional input（宛先自身）は不在で飛ぶ。
+    let dst = home.path().join(".config/app/settings.json");
+    assert!(!dst.exists(), "前提: 宛先は初回 apply 前に存在しない");
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .env("PATH", empty_bin.path())
+        .assert()
+        .success();
+
+    // base 断片（settings.json）だけを畳んだ結果 ＝ 単一 input を素で書いたのと同じ内容
+    // （欠落した optional read の残骸・既定値が混ざらない）。
+    let out: serde_json::Value = serde_json::from_str(&fs::read_to_string(&dst).unwrap()).unwrap();
+    let expected: serde_json::Value =
+        serde_json::from_str("{\"language\":\"ja\",\"hook\":\"base\"}").unwrap();
+    assert_eq!(
+        out, expected,
+        "初回 apply では base 断片だけが書かれ、欠落 optional の残骸が混ざらないべき",
+    );
+}
+
 /// 宛先を土台に読む input が無い（純 dotfiles 所有 json）は既存宛先を無視する（従来挙動）。
 #[test]
 fn apply_json_without_dst_read_ignores_existing() {
@@ -568,7 +604,7 @@ fn apply_errors_when_second_input_missing_merge() {
         .stderr(predicate::str::contains("merge"));
 }
 
-/// 最初の input に `merge` を書くと load 時にエラー（最初の input は文書の土台）。
+/// 最初の input に `merge` を書くと load 時にエラー（最初の input は内容の土台）。
 #[test]
 fn apply_errors_when_first_input_has_merge() {
     let work = tempfile::tempdir().unwrap();

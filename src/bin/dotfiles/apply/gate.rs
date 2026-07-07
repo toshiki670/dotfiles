@@ -57,7 +57,7 @@ pub fn current_os() -> &'static str {
 /// （満たせば None）。
 ///
 /// 不変条件①の短絡判定に使う。`when` 省略のユニットは常時採用（None）。判定は
-/// overlay と共有の [`when_unsatisfied_reason`] に委譲する。
+/// step と共有の [`when_unsatisfied_reason`] に委譲する。
 pub fn unit_skip_reason(manifest: &Manifest, state: &GateState) -> Option<String> {
     manifest
         .when

@@ -21,8 +21,8 @@
 //!   「`cmd`（argv・標準入出力）」の択一（[`manifest::StepSource`]）。特例としてパス `"."` は
 //!   単位ディレクトリ丸ごと（ツリー）を表す。
 //! - **`merge`**: 2 つ目以降の `input` に必須の重ね方注釈（`shallow`＝トップレベルキー単位の
-//!   後勝ち / `append`＝テキスト連結）。実行時の畳み込みはユニット単位の `format` だけで駆動し、
-//!   `merge` は load 時の整合検証のためだけに存在する（[`apply::pipeline`]）。
+//!   後勝ち / `append`＝テキスト連結）。load 時の整合検証のための注釈で、実行時の畳み込みの
+//!   駆動は [`apply::pipeline`] を見よ。
 //! - **`format`**: 内容の型（`json` / `plist` / `text`）。`merge` を使うユニットに必須。
 //! - **gate / `when`**: 採用条件（`deps`＝コマンドの有無 / `os` / `profile`）。ユニット直下に
 //!   書けばユニット全体を、step 内に書けばその step だけを gate する。false の意味は階層で
@@ -58,7 +58,7 @@ mod manifest;
 mod source;
 mod state;
 
-// 配置エンジン。子モジュール（copy / pipeline / cmd / strategy / gate）は apply.rs が束ねる。
+// 配置エンジン。子モジュール（copy / pipeline / cmd / fold / gate）は apply.rs が束ねる。
 mod apply;
 
 // named value。子モジュール（store / resolve / inject / prompt）は locals.rs が束ねる。
