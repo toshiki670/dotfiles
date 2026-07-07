@@ -88,8 +88,11 @@ pub struct Step {
     /// この step の採否（省略 = 常時採用）。unit gate と共通の語彙（`deps` / `os` / `profile`）。
     #[serde(default)]
     pub when: Option<When>,
-    /// パス input が存在しなければこの step を飛ばす（次の input が土台になる）。既定は
-    /// 「無ければエラー」。パス input のみ有効（cmd input・output への指定は load 時エラー）。
+    /// `~` 起点のパス input が存在しなければこの step を飛ばす（次の input が土台になる）。既定は
+    /// 「無ければエラー」。`~` 起点のパス input のみ有効 ― 単位相対ファイルは repo 追跡の静的ファイルで
+    /// 不在は typo の可能性が高く、恒久的に step を握り潰すため、cmd input・output への指定と併せて
+    /// load 時エラー。唯一の正当な用途は宛先の現在内容（初回 apply 前は未在り得る `~` 起点ファイル）を
+    /// 土台に読むこと。
     #[serde(default)]
     pub optional: bool,
 }
@@ -257,7 +260,8 @@ impl Manifest {
     ///   ない・#580）。
     /// - **`format`**: `merge` を使うユニットに必須・使わないユニットには禁止。`shallow` は json / plist・
     ///   `append` は text とだけ両立。
-    /// - **`optional`**: パス input のみ（cmd input・output への指定は typo）。
+    /// - **`optional`**: `~` 起点のパス input のみ（単位相対ファイルは静的なので不在は typo・cmd input・
+    ///   output への指定も typo）。
     fn validate(&self) -> Result<(), String> {
         // 各 step は input / output のちょうど 1 つ。
         for (i, step) in self.steps.iter().enumerate() {
@@ -459,19 +463,27 @@ impl Manifest {
             }
         }
 
-        // optional はパス input のみ。
+        // optional は ~ 起点のパス input のみ。単位相対ファイルは repo 追跡の静的ファイルで、typo に
+        // よる不在を「無ければ飛ばす」で恒久的に握り潰してしまう（optional の正当な用途は宛先の現在
+        // 内容＝初回 apply 前は未在り得る ~ 起点ファイルを土台に読むことだけ）。
         for (i, step) in self.steps.iter().enumerate() {
             if step.optional {
                 match &step.input {
-                    Some(StepSource::Path(_)) => {}
+                    Some(StepSource::Path(p)) if p == "~" || p.starts_with("~/") => {}
+                    Some(StepSource::Path(_)) => {
+                        return Err(format!(
+                            "steps[{i}]: optional は ~ 起点の input にのみ使えます（単位相対ファイルは \
+                             repo 追跡の静的ファイルで、不在は typo の可能性が高く step を恒久的に握り潰す）"
+                        ));
+                    }
                     Some(StepSource::Cmd(_)) => {
                         return Err(format!(
-                            "steps[{i}]: optional は cmd input には使えません（パス input のみ）"
+                            "steps[{i}]: optional は cmd input には使えません（~ 起点のパス input のみ）"
                         ));
                     }
                     None => {
                         return Err(format!(
-                            "steps[{i}]: optional は output step には使えません（パス input のみ）"
+                            "steps[{i}]: optional は output step には使えません（~ 起点のパス input のみ）"
                         ));
                     }
                 }
@@ -889,6 +901,23 @@ mod tests {
         assert!(
             err.contains("optional"),
             "output の optional が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_optional_on_unit_relative_input() {
+        // 単位相対パス input への optional は不可（repo 追跡の静的ファイルなので不在は typo の
+        // 可能性が高く、恒久的に step を握り潰す）。~ 起点の input だけが optional を持てる。
+        let err = parse(
+            "format = \"json\"\n\
+             [[steps]]\ninput = \"settings.json\"\noptional = true\n\
+             [[steps]]\ninput = \"~/.claude/settings.json\"\nmerge = \"shallow\"\n\
+             [[steps]]\noutput = \"~/.claude/settings.json\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("optional") && err.contains("~ 起点"),
+            "単位相対 input の optional が弾かれていない: {err}"
         );
     }
 

@@ -10,7 +10,8 @@
 //! 配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時から変わっていれば
 //! 実行する（[`crate::hooks`]）。ユニット gate が false のときは配置前に短絡 return するため、その
 //! hooks も走らない（＝ `when.os` でフックを分岐できる）。
-//! 本モジュールはオーケストレーションと、パイプラインが共有する小道具（パーミッション適用）を持つ。
+//! 本モジュールはオーケストレーションと、各配置経路が共有する小道具（パーミッション適用・冪等書き込み）
+//! を持つ。
 //!
 //! 配置は実体の書き出し（copy）で、symlink は採用しない。`cargo install --git` で配布された
 //! バイナリは埋め込みソースだけで配置できる必要があり、symlink はリンク先の実体（リポジトリの
@@ -114,4 +115,19 @@ fn set_mode(dst: &Path, manifest: &Manifest) -> Result<(), String> {
 #[cfg(not(unix))]
 fn set_mode(_dst: &Path, _manifest: &Manifest) -> Result<(), String> {
     Ok(())
+}
+
+/// 現在内容と一致すれば書き込みを省略する（冪等最適化）。親ディレクトリは作成する。
+/// ツリー配置（[`crate::apply::copy`]）とパス output（[`crate::apply::pipeline`]）が
+/// `super::write_if_changed` で共有し、byte-identical な再 apply で mtime を無用に更新しない
+/// （config を監視するツールの誤リロードを避ける）。
+fn write_if_changed(path: &Path, bytes: &[u8]) -> Result<(), String> {
+    if std::fs::read(path).ok().as_deref() == Some(bytes) {
+        return Ok(());
+    }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("{}: ディレクトリ作成失敗: {e}", parent.display()))?;
+    }
+    std::fs::write(path, bytes).map_err(|e| format!("{}: 書き込み失敗: {e}", path.display()))
 }

@@ -2,11 +2,13 @@
 //!
 //! ツリー output（`input = "."` ＋ パス output）の配置経路。ユニットのソースツリーを相対構造を
 //! 保ったまま宛先ディレクトリの下へ書き出す。`manifest.toml` 自体と、別 manifest を持つサブツリー
-//! （委譲先の責務）は除外する。パーミッションは manifest の `private` / `executable` 属性に従う
-//! （適用は [`crate::apply::set_mode`]）。`locals`（named value）が解決されている単位では、各ファイルへ
-//! `@@name@@` 注入を通す。[`crate::apply::pipeline`] が内容がツリーのときに呼ぶ。
+//! （委譲先の責務）は除外する。書き込みは [`crate::apply::write_if_changed`] を通し、byte-identical な
+//! ファイルは再 apply でも mtime を保つ（パス output と同じ冪等最適化）。パーミッションは manifest の
+//! `private` / `executable` 属性に従う（適用は [`crate::apply::set_mode`]）。`locals`（named value）が
+//! 解決されている単位では、各ファイルへ `@@name@@` 注入を通す。[`crate::apply::pipeline`] が内容が
+//! ツリーのときに呼ぶ。
 
-use super::set_mode;
+use super::{set_mode, write_if_changed};
 use crate::discover::{self, MANIFEST};
 use crate::locals::resolve;
 use crate::manifest::Manifest;
@@ -51,28 +53,23 @@ fn copy_tree(
     Ok(())
 }
 
-/// 親ディレクトリを作りつつ 1 ファイルを配置し、manifest のパーミッションを与える。
-/// `locals` が空なら高速な `fs::copy`、非空なら read→注入→write で `@@name@@` を埋める。
+/// 1 ファイルを配置し、manifest のパーミッションを与える。`src` を読み（`locals` が非空なら
+/// `@@name@@` を注入して）最終バイトを作り、[`crate::apply::write_if_changed`] で親ディレクトリを
+/// 作りつつ冪等に書く（byte-identical なら書き込みを省いて mtime を保つ）。書き込みを省いても
+/// mode は毎回再適用する（属性変更が反映されるように・パス output と対称）。
 fn copy_file(
     src: &Path,
     dst: &Path,
     manifest: &Manifest,
     locals: &BTreeMap<String, String>,
 ) -> Result<(), String> {
-    if let Some(parent) = dst.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("{}: ディレクトリ作成失敗: {e}", parent.display()))?;
-    }
-    if locals.is_empty() {
-        std::fs::copy(src, dst)
-            .map_err(|e| format!("{} → {}: コピー失敗: {e}", src.display(), dst.display()))?;
+    let bytes = std::fs::read(src).map_err(|e| format!("{}: 読み込み失敗: {e}", src.display()))?;
+    let final_bytes = if locals.is_empty() {
+        bytes
     } else {
-        let bytes =
-            std::fs::read(src).map_err(|e| format!("{}: 読み込み失敗: {e}", src.display()))?;
-        let injected = resolve::inject(&bytes, locals);
-        std::fs::write(dst, &injected)
-            .map_err(|e| format!("{}: 書き込み失敗: {e}", dst.display()))?;
-    }
+        resolve::inject(&bytes, locals)
+    };
+    write_if_changed(dst, &final_bytes)?;
     set_mode(dst, manifest)?;
     Ok(())
 }

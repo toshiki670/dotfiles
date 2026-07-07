@@ -44,6 +44,66 @@ fn apply_places_tree_and_expands_tilde() {
 // 無ければ埋め込みフォールバックで解決するため、もうエラーにならない。解決の二段切替は
 // [`crate::source`] が検証する（ソース欠落の旧契約はそこへ移った）。
 
+/// 冪等最適化: ソースが変わらなければ再 apply で配置先を書き直さない（mtime を保つ ―
+/// config を監視するツールの誤リロードを避ける・パス output と対称）。同じ sleep 幅で「内容を
+/// 変えれば mtime も変わる」ことも確かめ、無変更ケースの検証が coarse-mtime による偽合格でない
+/// ことを担保する。
+#[cfg(unix)]
+#[test]
+fn apply_copy_skips_rewrite_when_source_unchanged() {
+    use std::thread::sleep;
+    use std::time::Duration;
+
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+    )
+    .unwrap();
+    fs::write(unit.join("hello.conf"), "hello = 1\n").unwrap();
+
+    let apply = || {
+        dotfiles()
+            .arg("apply")
+            .current_dir(work.path())
+            .env("HOME", home.path())
+            .assert()
+            .success();
+    };
+    let placed = home.path().join(".config/demo/hello.conf");
+    let mtime = || fs::metadata(&placed).unwrap().modified().unwrap();
+
+    apply();
+    let first = mtime();
+
+    // 2 回目: ソース無変更 → 書き込み省略で mtime 据え置き。1 秒粒度の FS でも tick 境界を跨ぐよう待つ。
+    sleep(Duration::from_millis(1100));
+    apply();
+    assert_eq!(
+        mtime(),
+        first,
+        "無変更ソースの再 apply が配置先を書き直した（mtime が動いた）",
+    );
+
+    // ソースを変えれば書き直され、内容も mtime も更新される（無変更ケースが偽合格でない証左）。
+    sleep(Duration::from_millis(1100));
+    fs::write(unit.join("hello.conf"), "hello = 2\n").unwrap();
+    apply();
+    assert_eq!(
+        fs::read_to_string(&placed).unwrap(),
+        "hello = 2\n",
+        "変更ソースが配置先に反映されていない",
+    );
+    assert!(
+        mtime() > first,
+        "変更ソースの apply で mtime が更新されていない",
+    );
+}
+
 /// S1 受け入れ条件: サブディレクトリ再帰・複数ファイル・manifest の再帰委譲。
 /// 親単位は配下を再帰コピーするが、自前 manifest を持つサブツリー（child）は
 /// 委譲先の責務として親のコピー対象から外れ、child 自身の dst へ配置される。

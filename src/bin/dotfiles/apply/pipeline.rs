@@ -21,7 +21,7 @@
 //! ここへ来ない）。
 
 use super::gate::{self, GateState};
-use super::{cmd, copy, fold, set_mode};
+use super::{cmd, copy, fold, set_mode, write_if_changed};
 use crate::locals::resolve;
 use crate::manifest::{Format, Manifest, StepSource};
 use std::collections::BTreeMap;
@@ -155,18 +155,6 @@ fn fold_in(content: &mut Content, format: Option<Format>, bytes: &[u8]) -> Resul
     };
     *content = Content::Bytes(merged);
     Ok(())
-}
-
-/// 現在内容と一致すれば書き込みを省略する（冪等最適化）。親ディレクトリは作成する。
-fn write_if_changed(path: &Path, bytes: &[u8]) -> Result<(), String> {
-    if std::fs::read(path).ok().as_deref() == Some(bytes) {
-        return Ok(());
-    }
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("{}: ディレクトリ作成失敗: {e}", parent.display()))?;
-    }
-    std::fs::write(path, bytes).map_err(|e| format!("{}: 書き込み失敗: {e}", path.display()))
 }
 
 /// input パスを解決する: `~` 起点は `home` に展開、それ以外は単位相対（`unit_dir` に join）。
