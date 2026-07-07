@@ -15,20 +15,20 @@
 //!
 //! - **設定単位（ユニット）**: `manifest.toml` を持つ `configs/` 配下のディレクトリ。
 //!   配置宣言とソースをひとまとめにした、走査・gate・フックの単位。
-//! - **文書 D**: 1 ユニットが `[[steps]]` を上から評価しながら組み立てる内容。空から始まり、
-//!   `input` step で内容を畳み、`output` step で書き出される。
+//! - **内容（Content）**: 1 ユニットが `[[steps]]` を上から評価しながら組み立てる中身。空から
+//!   始まり、`input` step で中身を畳み、`output` step で書き出される。
 //! - **step**: `input`（読む）か `output`（書く）の択一。どちらも「パス文字列」か
 //!   「`cmd`（argv・標準入出力）」の択一（[`manifest::StepSource`]）。特例としてパス `"."` は
 //!   単位ディレクトリ丸ごと（ツリー）を表す。
 //! - **`merge`**: 2 つ目以降の `input` に必須の重ね方注釈（`shallow`＝トップレベルキー単位の
 //!   後勝ち / `append`＝テキスト連結）。実行時の畳み込みはユニット単位の `format` だけで駆動し、
 //!   `merge` は load 時の整合検証のためだけに存在する（[`apply::pipeline`]）。
-//! - **`format`**: 文書 D の内容型（`json` / `plist` / `text`）。`merge` を使うユニットに必須。
+//! - **`format`**: 内容の型（`json` / `plist` / `text`）。`merge` を使うユニットに必須。
 //! - **gate / `when`**: 採用条件（`deps`＝コマンドの有無 / `os` / `profile`）。ユニット直下に
 //!   書けばユニット全体を、step 内に書けばその step だけを gate する。false の意味は階層で
 //!   異なる: ユニット gate=false は配置先ごと作らない、step の when=false はその step だけ脱落
-//!   （D は不変のまま次の step へ進む）。
-//! - **`optional`**: パス `input` が存在しなくてもエラーにせず D を素通しする（次の input が
+//!   （内容は不変のまま次の step へ進む）。
+//! - **`optional`**: パス `input` が存在しなくてもエラーにせず内容を素通しする（次の input が
 //!   土台になる）。既定は「無ければエラー」。
 //! - **profile**: user が一度選んでおくマシンクラス状態（例 `private`）。`when.profile` が読む。
 //! - **locals（named value）**: マシンローカル値。manifest が名前を宣言し、apply が配置時に
@@ -40,7 +40,7 @@
 //!
 //! ソースを二段構えで解決し（作業ツリー検出 → バイナリ埋め込み・[`source`]）、ユニットを
 //! 走査（[`discover`]）→ ユニット gate を評価（[`apply::gate`]）→ `[[steps]]` を実行して
-//! 文書 D を組み立て配置（[`apply::pipeline`]、cmd 実行は [`apply::cmd`]）→ locals を解決・注入
+//! 内容を組み立て配置（[`apply::pipeline`]、cmd 実行は [`apply::cmd`]）→ locals を解決・注入
 //! （[`locals`]）→ 配置後フックを実行（[`hooks`]）、の順に進む。
 
 // `deny(broken_intra_doc_links)`: doc コメントのリンク切れを CI の `cargo doc -p dotfiles` で

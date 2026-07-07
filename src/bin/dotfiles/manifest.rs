@@ -1,8 +1,8 @@
 //! `manifest.toml` のスキーマと読み込み。
 //!
-//! ユニットを `[[steps]]` の列として解釈する。文書 D を空から始め、宣言順に各 step を畳む:
-//! - **input** step: D へ内容を畳む（最初の input は D＝内容、2 つ目以降は `merge` で重ねる）。
-//! - **output** step: D を宛先へ書く。
+//! ユニットを `[[steps]]` の列として解釈する。内容を空から始め、宣言順に各 step を畳む:
+//! - **input** step: 内容へ中身を畳む（最初の input は内容＝中身、2 つ目以降は `merge` で重ねる）。
+//! - **output** step: 内容を宛先へ書く。
 //!
 //! 各 step の `input` / `output` は択一で、どちらも「パス文字列」か「`cmd`（argv・標準入出力）」の
 //! 択一（[`StepSource`]）。重ね方の内容型は unit レベルの `format`（json / plist / text）、per-step の
@@ -103,7 +103,7 @@ pub enum StepSource {
     /// パス: input は単位相対 or `~` 起点、output は `~` 起点のみ（[`Manifest::validate`] が検証）。
     /// 特例として input `"."` は「単位ディレクトリツリー」を表す。
     Path(String),
-    /// コマンド: input は標準出力を読み、output は D を標準入力へ渡す（argv）。
+    /// コマンド: input は標準出力を読み、output は内容を標準入力へ渡す（argv）。
     Cmd(CmdSource),
 }
 

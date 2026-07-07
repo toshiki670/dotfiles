@@ -3,8 +3,8 @@
 //! 走査（manifest 発見・再帰委譲）は [`crate::discover`]。各単位は次の評価順に従う:
 //! ①**トップレベル `when`（ユニット gate）を最初に評価し false なら短絡**（[`crate::apply::gate`]、
 //! 配置を一切触らず skip）。生き残った単位は `[[steps]]` パイプライン（[`crate::apply::pipeline`]）で
-//! 実行する ― 文書 D を空から始め、宣言順に input（読む）→ output（書く）を畳む。ツリー input
-//! （`input = "."`）は [`crate::apply::copy`] で単位ディレクトリを再帰配置し、バイト文書の合成は
+//! 実行する ― 内容を空から始め、宣言順に input（読む）→ output（書く）を畳む。ツリー input
+//! （`input = "."`）は [`crate::apply::copy`] で単位ディレクトリを再帰配置し、バイト内容の合成は
 //! [`crate::apply::strategy`]、cmd 実行は [`crate::apply::cmd`] が担う。配置の直前に `locals`
 //! （named value）を解決し（[`crate::locals::resolve`]）、配置ファイルの `@@name@@` を注入する。
 //! 配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時から変わっていれば

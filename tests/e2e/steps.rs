@@ -1,6 +1,6 @@
 //! `dotfiles apply` の `[[steps]]` パイプライン（#588 スライス1）の E2E。
 //!
-//! 文書 D を input（読む）→ merge（重ねる）→ output（書く）で畳む挙動と、評価順不変条件
+//! 内容を input（読む）→ merge（重ねる）→ output（書く）で畳む挙動と、評価順不変条件
 //! （①ユニット gate 短絡 ②宣言順 ③2 つ目以降の input は merge・最初の input は土台）を hermetic
 //! fixture で検証する。when.deps（配列・AND）は PATH 先頭スタブ（[`crate::write_stub`]）の有無で、
 //! when.os は現在 OS（`darwin`/`linux` 表記）で gate する。トップレベル when はユニットスコープ、
@@ -73,7 +73,7 @@ fn apply_text_append_includes_step_when_dep_present() {
     );
 }
 
-/// when.deps を満たさない（faketool 不在）と該当 step だけ脱落し、最初の input は残る（D は不変）。
+/// when.deps を満たさない（faketool 不在）と該当 step だけ脱落し、最初の input は残る（内容は不変）。
 #[cfg(unix)]
 #[test]
 fn apply_text_append_drops_step_when_dep_absent() {
@@ -404,7 +404,7 @@ fn list_shows_steps_summary_format_and_os_attrs() {
 
 /// `output.cmd`（#560）単位（`configs/demo`）を書き出す。最初の input は架空ツール `prefctl` の
 /// `input.cmd`（外部コマンド実行。標準出力を土台にする）、2 つ目の input は dotfiles 管理サブセット
-/// （`managed.plist`）、output は `output.cmd`（合成済み D を標準入力へ渡し、生きたドメインへ反映する）
+/// （`managed.plist`）、output は `output.cmd`（合成済みの内容を標準入力へ渡し、生きたドメインへ反映する）
 /// （`configs/stats` の `defaults export`/`defaults import` と同型。#531/#560）。output.cmd は
 /// 毎 apply 無条件に実行される（hooks を介さない）。`when` は `deps` のみで `os` は付けない（実
 /// configs の stats 自体は darwin 限定だが、エンジンの契約は OS 非依存に保つ）。
@@ -477,14 +477,14 @@ fn import_count(home: &Path) -> usize {
 /// input.cmd（外部コマンドの標準出力を土台にする）＋ merge=shallow ＋ output.cmd 反映が
 /// 一気通貫で動くことを検証する（#531 の Stats.plist 実装 / #560 の output.cmd 移行が拠って立つ経路）。
 ///
-/// 検証すること: ① 土台（`prefctl export` の標準出力）の非管理キーが D に保持される、
+/// 検証すること: ① 土台（`prefctl export` の標準出力）の非管理キーが内容に保持される、
 /// ② dotfiles 管理サブセットの所有キーが土台を上書きする（宣言順・後勝ち）、③ output.cmd が
-/// 合成済み D をそのまま標準入力へ渡す（反映が composed D に結線されている）、④ **ソース
+/// 合成済みの内容をそのまま標準入力へ渡す（反映が composed content に結線されている）、④ **ソース
 /// （`managed.plist`）不変のまま 2 回目 apply しても output.cmd は毎回実行される**（hooks を介さない
 /// cmd output の契約 ― onchange gate を通らず常に実行される）。
 #[cfg(unix)]
 #[test]
-fn apply_output_cmd_reflects_composed_document_every_apply() {
+fn apply_output_cmd_reflects_composed_content_every_apply() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let bin = tempfile::tempdir().unwrap();

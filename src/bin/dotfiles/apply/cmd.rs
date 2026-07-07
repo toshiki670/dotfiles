@@ -1,8 +1,8 @@
 //! コマンド実行プリミティブ: step の `cmd` 内容源を spawn する。
 //!
-//! - **input.cmd**（[`run`]）: argv を実行し、その標準出力を文書 D へ畳む内容にする。補完生成
+//! - **input.cmd**（[`run`]）: argv を実行し、その標準出力を内容へ畳む中身にする。補完生成
 //!   （`gh completion …`）や生きた外部状態の取得（`defaults export …`）が使う。
-//! - **output.cmd**（[`run_piped`]）: 合成済みの D を子プロセスの標準入力へ渡す。生きた外部状態への
+//! - **output.cmd**（[`run_piped`]）: 合成済みの内容を子プロセスの標準入力へ渡す。生きた外部状態への
 //!   書き戻し（`defaults import … -`）が使う。**毎 apply 実行**され、コマンドが冪等であることを契約
 //!   とする（#531 が実機検証して出荷済みの挙動）。
 //!
@@ -28,7 +28,7 @@ pub fn run(cmd: &[String]) -> Result<Vec<u8>, String> {
     Ok(output.stdout)
 }
 
-/// `cmd`（argv）を実行し、`input`（合成済み D）を子プロセスの標準入力へ渡す。output.cmd が使う。
+/// `cmd`（argv）を実行し、`input`（合成済みの内容）を子プロセスの標準入力へ渡す。output.cmd が使う。
 ///
 /// 標準出力は捨てる（`Stdio::null`）。書き戻し先コマンド（`defaults import … -` 等）は標準出力に
 /// 意味を持たない sink であり、`null` にすることで「子が stdout へ書こうとして詰まり、親は stdin を
@@ -46,7 +46,7 @@ pub fn run(cmd: &[String]) -> Result<Vec<u8>, String> {
 /// 非ゼロならそちらを優先して報告する（実際の失敗理由は exit status + stderr にあり、`BrokenPipe` は
 /// 「子が早期に読むのをやめた」という結果を示すだけで原因ではないため）。プロセスが成功終了したのに
 /// 書き込みが失敗した場合（子が入力を全部読まずに正常終了する等）は、D の反映が不完全な可能性があり
-/// `output.cmd` の「合成済み D をそのまま反映する」契約を破るため、黙って握りつぶさずエラーにする。
+/// `output.cmd` の「合成済みの内容をそのまま反映する」契約を破るため、黙って握りつぶさずエラーにする。
 pub fn run_piped(cmd: &[String], input: &[u8]) -> Result<(), String> {
     let mut child = Command::new(&cmd[0])
         .args(&cmd[1..])
