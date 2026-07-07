@@ -3,9 +3,9 @@
 # `effortLevel` 等）は保たれ、共有キー（hooks / statusLine / language / theme / voiceEnabled）は
 # 断片が常に勝つ。
 #
-# 注: shallow は `hooks` を object ごと差し替えるため、rtk.json は rm→trash ガードを含む hooks 全体を
-# 持つ（settings.json と一部重複する）。これは「rtk hook だけ条件付き」を deep merge 無しで表現する
-# 暫定コスト（deep 化はスライス2）。rm ガードを変えるときは settings.json と rtk.json の両方を直すこと。
+# 注: rtk.json は rm→trash ガードを含む hooks 全体を持つ（settings.json と一部重複する）。これは
+# 「rtk hook だけ条件付き」を deep merge 無しで表現する暫定コスト（deep 化はスライス2）。rm ガードを
+# 変えるときは settings.json と rtk.json の両方を直すこと。
 format = "json"
 
 # 宛先の現在内容を土台に（app 所有キーを保持）。初回 apply ではまだ無いため optional。

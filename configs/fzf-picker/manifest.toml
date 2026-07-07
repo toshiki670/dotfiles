@@ -2,7 +2,7 @@
 # ~/.cargo/bin に単一 bin として入る）の fish 側 shim を fish の functions 合流点へ copy する。
 # Issue #558・#567・#584
 #
-# dst は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
+# 配置先は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
 # 中身は fzf-picker に帰属するため、fish 本体（configs/fish）ではなく独立したツールディレクトリ
 # としてここに置く。shim 本体はいずれもバイナリを `command fzf-picker <subcommand>` で呼び、
 # 選択結果を cd / commandline へ渡すだけの薄いラッパー（別プロセスは親シェルの cd を変えられ

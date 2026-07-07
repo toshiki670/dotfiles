@@ -44,7 +44,7 @@ pub fn run_unit_hooks(
     Ok(())
 }
 
-/// 1 つのフック（hooks は onchange 固定）を onchange gate を通して実行する。
+/// 1 つのフックを onchange gate を通して実行する。
 ///
 /// 状態キーは `<unit>::<コマンドの短ハッシュ>`。コマンド内容をキーに織り込むことで、manifest 上で
 /// **コマンドを変えた場合も新しいキー＝再実行**になる（`manifest.toml` はソースハッシュ対象外なので、

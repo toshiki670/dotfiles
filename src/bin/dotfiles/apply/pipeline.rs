@@ -28,8 +28,8 @@ use std::collections::BTreeMap;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// 実行時の内容（manifest スキーマには現れないパイプライン内部型）。ユビキタス言語では単に
-/// 「内容」と呼び、rustdoc・issue の議論でも同じ語を使う。
+/// 実行時の内容（manifest スキーマには現れないパイプライン内部型。[`crate`] 冒頭の用語集の
+/// 「内容」に対応する）。
 enum Content {
     /// まだ何も畳んでいない（初期状態・全 input が optional / gate で飛んだ状態）。
     Empty,

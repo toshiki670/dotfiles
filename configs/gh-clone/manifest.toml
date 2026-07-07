@@ -1,7 +1,7 @@
 # gh-clone バイナリ（~/.cargo/bin）の fish 側 shim を fish の functions 合流点へ copy する。
 # Issue #558・#567
 #
-# dst は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
+# 配置先は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
 # 中身は gh-clone に帰属するため、fish 本体（configs/fish）ではなく独立したツールディレクトリ
 # としてここに置く。別プロセスは親シェルの cd を変えられないため、バイナリが出力した移設先
 # パスへ cd するだけの薄いラッパー（バイナリ側に shim 生成サブコマンドは無く fish 側定義が必須）。
