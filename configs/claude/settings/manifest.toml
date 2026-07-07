@@ -22,8 +22,8 @@ merge = "shallow"
 # hooks 全体が壊れる（無条件化の回帰）のを防ぐ。
 [[steps]]
 input = "rtk.json"
-when  = { deps = [ "rtk" ] }
 merge = "shallow"
+when  = { deps = [ "rtk" ] }
 
 [[steps]]
 output = "~/.claude/settings.json"
