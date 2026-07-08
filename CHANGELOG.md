@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.70.1] - 2026-07-08
+### Features
+- Rustdoc doc コメントの無駄を削る skill を追加する ([#583](https://github.com/toshiki670/dotfiles/pull/583)) ([`e546538`](https://github.com/toshiki670/dotfiles/commit/e546538600406c0698947d40e43219d05121a6d1))
+- Memory-tidy skill に有用性判定と階層化エスカレーションを追加する ([#586](https://github.com/toshiki670/dotfiles/pull/586)) ([`bf71f07`](https://github.com/toshiki670/dotfiles/commit/bf71f0745b9c1e883da8a16a3b5fa2a4e97d65ac))
+
+
 ## [0.70.0] - 2026-07-04
 ### Features
 - MacOS アプリの preference plist を一級扱いする(Stats.plist 移行) ([#559](https://github.com/toshiki670/dotfiles/pull/559)) ([`6940e68`](https://github.com/toshiki670/dotfiles/commit/6940e68e285fd730ed91f96bc67b9779a18a307d))
