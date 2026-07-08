@@ -10,12 +10,10 @@
 # エディタや taplo はこの URL を取得して設定を検証する。
 #
 # merge-ready 連携: [custom.merge_ready] 節は merge-ready-prompt を呼ぶプロンプトモジュール。
-# 旧 tmpl は `{{ if lookPath "merge-ready" }}` で節ごと出し分けていたが、starship の custom
-# module は `when`（shell コマンド・終了 0 で表示）を持つので、節は常時置きつつ
-# `when = "command -v merge-ready-prompt"` で自己 gate する。merge-ready 不在マシンでは
-# starship 自身が節を非表示にするため、出し分けと挙動は等価で、配置は単純 copy に保てる
-# （条件分岐を engine へ持ち込まず、表示可否という starship 固有の意図を starship の
-# 設定そのものに宿す）。
+# starship の custom module は `when`（shell コマンド・終了 0 で表示）を持つので、節は常時置きつつ
+# `when = "command -v merge-ready-prompt"` で自己 gate する。merge-ready 不在マシンでは starship
+# 自身が節を非表示にするため、表示可否の判断は starship の設定に閉じ込められ、配置は単純 copy の
+# ままで済む。
 [[steps]]
 input = "."
 
