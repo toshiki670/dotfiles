@@ -17,7 +17,7 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## コミット規約
 
-[Conventional Commits](https://www.conventionalcommits.org/ja/) 形式を推奨（任意）。
+[Conventional Commits](https://www.conventionalcommits.org/ja/) 形式を必須とする。**PR title も Conventional Commits 形式にすること**。
 
 ### このリポジトリ固有の判断基準
 
