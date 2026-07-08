@@ -1,11 +1,10 @@
 # git のグローバル ignore（~/.config/git/ignore）を text 連結で配置する。
 #
-# 以前は ignore 本体＋ignores/{gitignore.io,custom} の連結だった。
 # テンプレート変数・条件分岐は無い単純連結なので、gitignore.io → custom の順で append する。
 # core.excludesFile は未設定（git既定の $XDG_CONFIG_HOME/git/ignore を使う）。
 #
 # 各断片は自己記述（gitignore.io は toptal の生成ヘッダ、custom は自前のヘッダ/フッタ行）を
-# 既に持つため、旧テンプレートの外側バナー（"### Git Ignore Rules ###" 等）は付けない。
+# 持つため、外側バナー（"### Git Ignore Rules ###" 等）は付けない。
 format = "text"
 
 [[steps]]

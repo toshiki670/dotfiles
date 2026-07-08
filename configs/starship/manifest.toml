@@ -1,4 +1,4 @@
-# starship の設定（starship.toml）を ~/.config 直下へ配置する（ツリー配置）。
+# starship の設定を ~/.config 直下へ配置する（ツリー配置）。
 #
 # output=~/.config（ディレクトリ）。配下の starship.toml を相対構造のまま配置し
 # ~/.config/starship.toml に置く。~/.config 配下の他ツール設定には触れない。
@@ -6,12 +6,8 @@
 # fish/（fish 起動連携 `starship init fish` を conf.d 合流点へ置く別単位）はサブ manifest を
 # 持つので、このツリー配置からは委譲され除外される（claude の settings/ と同じ関係）。
 #
-# $schema: starship.toml 先頭の `$schema` は starship 公式のスキーマ URL
-# （https://starship.rs/config-schema.json）を指す。エディタ / taplo はこの URL を取得して
-# 設定を検証するため、スキーマ本体を repo にも ~/.config にも vendoring しない。以前は
-# 同梱の starship-config-schema.json を ~/.config へ deploy しローカル参照していたが、こちらは
-# ネットワーク参照に寄せて 170KB の同梱物を持たない（taplo のスキーマ検証はネットワーク到達性に
-# 依存する）。
+# starship.toml 先頭の `$schema` は starship 公式のスキーマ URL を設定。
+# エディタや taplo はこの URL を取得して設定を検証する。
 #
 # merge-ready 連携: [custom.merge_ready] 節は merge-ready-prompt を呼ぶプロンプトモジュール。
 # 旧 tmpl は `{{ if lookPath "merge-ready" }}` で節ごと出し分けていたが、starship の custom

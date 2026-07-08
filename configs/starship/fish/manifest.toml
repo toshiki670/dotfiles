@@ -1,5 +1,4 @@
-# starship の fish 連携（起動時に `starship init fish` を source）を conf.d 合流点へ copy する。
-# Issue #558
+# starship の fish 連携（起動時に `starship init fish` を source）を conf.d 合流点へ配置する。
 #
 # 配置先は fish の conf.d（複数ツールが断片を持ち寄る合流点。eza の 40-eza.fish 等と同じ場所）。
 # 親 configs/starship/manifest.toml は ~/.config へのツリー配置（starship.toml を配置）だが、

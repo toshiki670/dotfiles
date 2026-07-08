@@ -1,4 +1,4 @@
-# git config を dotfiles ネイティブで配置する（ツリー配置 ＋ named value 注入）。
+# git config を配置する（ツリー配置 ＋ named value 注入）。
 #
 # git 設定一式を output 配下へツリーのまま配置する:
 #   config            … git native [include] で配下 configs/<part> を束ねる薄い親
