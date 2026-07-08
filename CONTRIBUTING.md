@@ -17,7 +17,7 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## コミット規約
 
-[Conventional Commits](https://www.conventionalcommits.org/ja/) 形式を必須とする。PR は squash merge で `main` に入り、PR title がそのままコミットメッセージになるため、**PR title を Conventional Commits 形式にすること**（CI の `check-pr-title` が強制。型は `build` / `chore` / `ci` / `docs` / `feat` / `fix` / `perf` / `refactor` / `revert` / `style` / `test`）。
+[Conventional Commits](https://www.conventionalcommits.org/ja/) 形式を必須とする。**PR title も Conventional Commits 形式にすること**。
 
 ### このリポジトリ固有の判断基準
 
