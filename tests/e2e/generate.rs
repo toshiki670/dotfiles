@@ -1,33 +1,36 @@
-//! `dotfiles apply` の generate 層（S2 / #456）の E2E。
+//! `dotfiles apply` の cmd input/output（旧 generate 層）の E2E。
 //!
 //! 実バイナリに依存せず、PATH 先頭に置いたスタブ（架空 `foo` / [`crate::write_stub`]）で
-//! `cmd` 実行と when.deps gate を検証する。スタブは sh スクリプトなので unix 限定。
+//! `input.cmd` 実行と when.deps gate、明示 append step、list 表示を検証する。スタブは sh
+//! スクリプトなので unix 限定。
 
 use crate::{dotfiles, write_stub};
 use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
 
-/// generate 単位 `configs/foo/completion`（dst=ファイル / cmd=foo / when.deps=["foo"]）を書き出す。
+/// cmd input 単位 `configs/foo/completion`（input.cmd=foo / output=ファイル / when.deps=["foo"]）を
+/// 書き出す。
 #[cfg(unix)]
 fn write_generate_unit(work: &Path) -> std::path::PathBuf {
     let unit = work.join("configs/foo/completion");
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/fish/completions/foo.fish\"\n\
-         kind = \"generate\"\n\
-         cmd = [\"foo\"]\n\
-         when = { deps = [\"foo\"] }\n",
+        "when = { deps = [\"foo\"] }\n\
+         [[steps]]\n\
+         input.cmd = [\"foo\"]\n\
+         [[steps]]\n\
+         output = \"~/.config/fish/completions/foo.fish\"\n",
     )
     .unwrap();
     unit
 }
 
-/// kind=generate が `cmd` を実行し、その標準出力を dst のファイルへ書き出すことを検証する。
+/// input.cmd が cmd を実行し、その標準出力を output のファイルへ書き出すことを検証する。
 #[cfg(unix)]
 #[test]
-fn apply_generate_runs_cmd_and_writes_output() {
+fn apply_input_cmd_runs_cmd_and_writes_output() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let bin = tempfile::tempdir().unwrap();
@@ -47,14 +50,14 @@ fn apply_generate_runs_cmd_and_writes_output() {
     assert_eq!(
         fs::read_to_string(&placed).unwrap(),
         "complete -c foo -f\n",
-        "cmd の stdout がそのまま dst に書かれていない",
+        "cmd の stdout がそのまま output に書かれていない",
     );
 }
 
-/// when.deps gate: 依存バイナリが PATH に無ければ生成をスキップし、ファイルを作らない（成功終了）。
+/// when.deps gate: 依存バイナリが PATH に無ければユニットごとスキップし、ファイルを作らない（成功終了）。
 #[cfg(unix)]
 #[test]
-fn apply_generate_gate_skips_when_dep_missing() {
+fn apply_input_cmd_gate_skips_when_dep_missing() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let empty_bin = tempfile::tempdir().unwrap(); // foo を置かない＝依存欠落。
@@ -80,17 +83,32 @@ fn apply_generate_gate_skips_when_dep_missing() {
     );
 }
 
-/// generate は単位内の `manifest.toml` 以外のファイル（同梱した独自補完ブロック相当）を
-/// 生成物の後ろへ連結する。
+/// 明示 append step: cmd 出力の後ろへ、同梱の静的ファイル（独自補完ブロック相当）を append で
+/// 連結する（gh completion の custom.fish と同じ形。旧 generate の暗黙 sibling 連結は廃止された
+/// ため、append は明示 step として書く）。
 #[cfg(unix)]
 #[test]
-fn apply_generate_appends_sibling_files() {
+fn apply_appends_static_step_after_cmd_output() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let bin = tempfile::tempdir().unwrap();
 
     write_stub(bin.path(), "foo", "printf 'GENERATED\\n'\n");
-    let unit = write_generate_unit(work.path());
+    let unit = work.path().join("configs/foo/completion");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "format = \"text\"\n\
+         when   = { deps = [\"foo\"] }\n\
+         [[steps]]\n\
+         input.cmd = [\"foo\"]\n\
+         [[steps]]\n\
+         input = \"custom.fish\"\n\
+         merge = \"append\"\n\
+         [[steps]]\n\
+         output = \"~/.config/fish/completions/foo.fish\"\n",
+    )
+    .unwrap();
     fs::write(unit.join("custom.fish"), "# CUSTOM\n").unwrap();
 
     dotfiles()
@@ -105,13 +123,14 @@ fn apply_generate_appends_sibling_files() {
     assert_eq!(
         fs::read_to_string(&placed).unwrap(),
         "GENERATED\n# CUSTOM\n",
-        "生成物の後ろへ sibling が連結されていない",
+        "cmd 出力の後ろへ append step の内容が連結されていない",
     );
 }
 
-/// generate で `cmd` が無い manifest はエラー終了する。
+/// steps に input が 1 つも無い manifest は load 時にエラー（旧「generate で cmd 無し」の直接の
+/// 後継: 実体化できない/空のパイプラインを弾く）。
 #[test]
-fn apply_generate_without_cmd_errors() {
+fn apply_errors_when_no_input_step() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
 
@@ -119,7 +138,7 @@ fn apply_generate_without_cmd_errors() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/fish/completions/foo.fish\"\nkind = \"generate\"\n",
+        "[[steps]]\noutput = \"~/.config/fish/completions/foo.fish\"\n",
     )
     .unwrap();
 
@@ -129,22 +148,46 @@ fn apply_generate_without_cmd_errors() {
         .env("HOME", home.path())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("cmd が必要"));
+        .stderr(predicate::str::contains("input"));
 }
 
-/// `dotfiles list` が generate 単位を generate ＋ deps 付きで表示することを検証する。
+/// `{ cmd = [...] }` の `cmd` キーが無い input（例えば typo で空テーブルだけ書いた）は
+/// StepSource のいずれの形（bare string / `{ cmd = [...] }`）にも一致せずパース時にエラーになる。
 #[test]
-fn list_shows_generate_kind_with_deps() {
+fn apply_errors_when_cmd_table_missing_cmd_key() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/foo/completion");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "[[steps]]\ninput = {}\n[[steps]]\noutput = \"~/.config/fish/completions/foo.fish\"\n",
+    )
+    .unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure();
+}
+
+/// `dotfiles list` が cmd input 単位を steps サマリ ＋ deps 付きで表示することを検証する。
+#[test]
+fn list_shows_steps_summary_with_deps() {
     let work = tempfile::tempdir().unwrap();
 
     let unit = work.path().join("configs/foo/completion");
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "dst = \"~/.config/fish/completions/foo.fish\"\n\
-         kind = \"generate\"\n\
-         cmd = [\"foo\"]\n\
-         when = { deps = [\"foo\"] }\n",
+        "when = { deps = [\"foo\"] }\n\
+         [[steps]]\n\
+         input.cmd = [\"foo\"]\n\
+         [[steps]]\n\
+         output = \"~/.config/fish/completions/foo.fish\"\n",
     )
     .unwrap();
 
@@ -153,6 +196,6 @@ fn list_shows_generate_kind_with_deps() {
         .current_dir(work.path())
         .assert()
         .success()
-        .stdout(predicate::str::contains("generate"))
+        .stdout(predicate::str::contains("steps=1in/1out"))
         .stdout(predicate::str::contains("when.deps=foo"));
 }

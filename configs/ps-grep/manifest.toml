@@ -1,7 +1,9 @@
-# ps-grep（バイナリ化なしの純 fish 関数）を fish の functions 合流点へ copy する。
-# Issue #567
+# ps-grep（単純な処理のみの fish 関数。バイナリ化不要）を fish の functions 合流点へ配置する。
 #
-# dst は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
-# fzf-picker / gh-clone と違い帰属先の Rust バイナリを持たず、ps-grep 自身が独立したツールとして
-# fish 本体（configs/fish）ではなく独立したツールディレクトリとしてここに置く。
-dst = "~/.config/fish/functions"
+# 配置先は fish の functions（conf.d・completions と同様、複数ツールが断片を持ち寄る合流点）。
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/fish/functions"

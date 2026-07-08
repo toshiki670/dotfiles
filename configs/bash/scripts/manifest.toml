@@ -1,4 +1,8 @@
-# bash 断片（common/interactive/login/nonlogin）を配置する（copy 層）。
+# bash 断片（common/interactive/login/nonlogin）を配置する（ツリー配置）。
 # ~/.bash_profile 等（configs/bash/manifest.toml）が起動時に source する実体。
-# 以前 bash/*.sh として source 連結していた実体をそのまま移設。
-dst = "~/.config/bash"
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/bash"

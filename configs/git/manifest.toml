@@ -1,15 +1,20 @@
-# git config を dotfiles ネイティブで配置する（copy 層 ＋ named value 注入）。
+# git config を配置する（ツリー配置 ＋ named value 注入）。
 #
-# git 設定一式を dst 配下へツリーのまま copy する:
+# git 設定一式を output 配下へツリーのまま配置する:
 #   config            … git native [include] で配下 configs/<part> を束ねる薄い親
 #   configs/<part>    … alias / core / delta / fast_forward / ghq / push / user / vimdiff
 #
 # user 部品は email/name をマシンローカル値（named value）として持ち、配置時に `@@git.email@@` /
 # `@@git.name@@` がストア（~/.config/dotfiles/local.toml）から注入される。旧 env
 # "DOTFILES_GIT_EMAIL/NAME" 注入＋user.tmpl の if 分岐を廃し、宣言的な locals に一本化する。
-# email/name は commit に載るため非 sensitive（sensitive は宣言しない）。
+# email/name は commit に載る値であり秘匿ではない。
 #
 # hooks（configs/git/hooks）と ignore（configs/git/ignore）はそれぞれ別 manifest を持つ別単位
-# （dst が ~/.config/git/hooks・~/.config/git/ignore で本単位の dst=~/.config/git と異なるため）。
-dst    = "~/.config/git"
+# （配置先が ~/.config/git/hooks・~/.config/git/ignore で本単位の ~/.config/git と異なるため）。
 locals = [ "git.email", "git.name" ]
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/git"

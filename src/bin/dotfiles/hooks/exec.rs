@@ -3,8 +3,8 @@
 //!
 //! 未インストール（bare 名の `NotFound`）は [`Exec::ProgramMissing`]（skip 相当）、ユニット同梱物の
 //! 不在（区切り付き相対・絶対の `NotFound`）はエラーとして区別する ― `command -v` ガードを
-//! ツール名を持たずに汎用再現する部分。頻度による実行モデルの分岐（onchange gate / 無条件実行）は
-//! 上位の [`crate::hooks`] が担い、本モジュールは「どう起動し、`argv[0]` をどう解決するか」だけを持つ。
+//! ツール名を持たずに汎用再現する部分。onchange gate は上位の [`crate::hooks`] が担い、本モジュールは
+//! 「どう起動し、`argv[0]` をどう解決するか」だけを持つ。
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

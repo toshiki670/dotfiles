@@ -1,6 +1,11 @@
 # eza の fish 連携（ls/la/lt エイリアス + ライト/ダークのテーマ追従）。
 #
-# dst は fish の conf.d（複数ツールが断片を持ち寄る合流点）。`~` は HOME に展開。
+# 配置先は fish の conf.d（複数ツールが断片を持ち寄る合流点）。`~` は HOME に展開。
 # ファイル名の番号 prefix (40-) が読み込み順を表す。
 # テーマ追従（theme = "follower"）は color スライスで属性化する。
-dst = "~/.config/fish/conf.d"
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/fish/conf.d"

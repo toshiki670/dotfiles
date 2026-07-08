@@ -21,11 +21,12 @@
 //! 各ファイルの doc はその**ローカルな検証意図だけ**を述べる。
 //!
 //! - [`cli`]: `--help` / `--version` / 引数なし（契約）
-//! - [`apply_copy`]: copy 層（S0/S1）— kind 既定・tilde 展開・再帰委譲・パーミッション（契約）
+//! - [`apply_copy`]: ツリー配置層（S0/S1）— `input = "."` 既定・tilde 展開・再帰委譲・パーミッション（契約）
 //! - [`list`]: 分散 manifest の名前順・属性ラベル（契約）
-//! - [`generate`]: generate 層（S2/#456）— cmd 実行・when.deps gate・sibling 連結・list 表示（契約）
-//! - [`overlay`]: 合成軸（S3/#471）— overlay/strategy/when/preserve と load 時検証群。overlay の
-//!   `cmd` 断片＋plist-shallow＋hooks 反映の一気通貫（#531）も含む（契約）
+//! - [`generate`]: cmd input/output（旧 generate 層。S2/#456/#560）— `input.cmd` 実行・when.deps gate・
+//!   明示 append step・list 表示（契約）
+//! - [`steps`]: `[[steps]]` パイプライン（#588 スライス1）— input/merge/output・format・optional・
+//!   when と load 時検証群。`input.cmd` 断片＋plist ＋ `output.cmd` 反映の一気通貫（#531/#560）も含む（契約）
 //! - [`local`]: マシンローカル値（S4/#458）— local set / 注入 / doctor（契約）
 //! - [`profile`]: マシンクラス状態 gate（#467）— profile set/show・`when.profile` の配置/skip・冪等（契約）
 //! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証（契約）
@@ -42,10 +43,10 @@ mod generate;
 mod hooks;
 mod list;
 mod local;
-mod overlay;
 mod profile;
 mod real_configs;
 mod source;
+mod steps;
 
 /// 実バイナリ `dotfiles` を起動する Command を返す（全テスト共通）。
 pub(crate) fn dotfiles() -> Command {
@@ -53,7 +54,7 @@ pub(crate) fn dotfiles() -> Command {
 }
 
 /// PATH に置く実行可能スタブを書き出す（固定テキストを stdout に出す）。
-/// generate / overlay / hooks の各テストが共有する。
+/// generate / steps / hooks の各テストが共有する。
 #[cfg(unix)]
 pub(crate) fn write_stub(dir: &std::path::Path, name: &str, body: &str) {
     use std::os::unix::fs::PermissionsExt;
