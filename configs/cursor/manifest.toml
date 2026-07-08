@@ -1,8 +1,13 @@
 # Cursor のルール（rules/git-no-commit-on-main.mdc）を ~/.cursor へ copy する。
 #
-# dst=~/.cursor のディレクトリ単位 copy。配下は相対構造を保って再帰配置される:
+# output=~/.cursor のディレクトリ単位ツリー配置。配下は相対構造を保って再帰配置される:
 #   rules/git-no-commit-on-main.mdc → ~/.cursor/rules/git-no-commit-on-main.mdc
 #
 # claude/rules/git-no-commit-on-main.md と内容が重複しているが、ルール本体の出所の一本化・
-# 各ツール形式（.md/.mdc）への展開方式は別スライスで検討する。本スライスは素朴 copy のみで完了させる。
-dst = "~/.cursor"
+# 各ツール形式（.md/.mdc）への展開方式は別スライスで検討する。本スライスは素朴なツリー配置のみで完了させる。
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.cursor"

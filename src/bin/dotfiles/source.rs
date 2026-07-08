@@ -7,9 +7,9 @@
 //! - **埋め込み**（配布の完成形）: `cargo install dotfiles` だけ（clone 無し）で自己完結させるため、
 //!   コンパイル時に `configs/` をバイナリへ焼き込み（[`mod@include_dir`]）、解決時に temp dir へ展開する。
 //!
-//! 配置エンジン（[`crate::discover`] / [`crate::apply::copy`] / [`crate::apply::compose`] / [`crate::apply::generate`] /
-//! [`crate::hooks`]）は全て実 path で `std::fs` を読む。埋め込みを temp dir へ実体化して**実 path**を
-//! 渡すことで、エンジンは「ソースが埋め込みか実 FS か」を知らずに済む。
+//! 配置エンジン（[`crate::discover`] / [`crate::apply::copy`] / [`crate::apply::pipeline`] /
+//! [`crate::apply::cmd`] / [`crate::hooks`]）は全て実 path で `std::fs` を読む。埋め込みを temp dir へ
+//! 実体化して**実 path**を渡すことで、エンジンは「ソースが埋め込みか実 FS か」を知らずに済む。
 
 use crate::discover;
 use include_dir::{Dir, include_dir};
@@ -22,7 +22,7 @@ static EMBEDDED: Dir = include_dir!("$CARGO_MANIFEST_DIR/configs");
 
 /// 解決元（どの段で解決したか）。ユーザー向け表示（apply ヘッダ / list）に使う。
 ///
-/// 表示ラベルは英語にする ― 周囲の技術ラベル（`copy` / `generate` / `overlay` 等）が英語で、
+/// 表示ラベルは英語にする ― 周囲の技術ラベル（`tree` / `steps=Nin/Mout` 等）が英語で、
 /// そこへ日本語語句を混ぜると不揃いになるため（出力の体裁を 1 系統に揃える）。
 pub enum Origin {
     /// `--source` 明示（上級オプション）。
@@ -169,7 +169,12 @@ mod tests {
 
         let unit = configs.join("foo");
         fs::create_dir_all(&unit).unwrap();
-        fs::write(unit.join("manifest.toml"), "dst = \"~/x\"\n").unwrap();
+        // has_units は manifest.toml の存在だけを見る（parse しない）ため中身は最小でよい。
+        fs::write(
+            unit.join("manifest.toml"),
+            "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap();
         assert!(has_units(&configs), "manifest を持つ dir はユニット有り");
     }
 

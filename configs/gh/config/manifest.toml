@@ -1,6 +1,11 @@
 # gh 本体設定（config.yml）を ~/.config/gh へ copy する。
 #
-# git_protocol / editor / prompt / pager 等、gh 自身が読む設定一式。completion（fish 補完の generate 層）は
-# 同じ configs/gh 配下でも kind が異なる別単位（configs/gh/completion）として分離済み。
+# git_protocol / editor / prompt / pager 等、gh 自身が読む設定一式。completion（fish 補完を生成する別単位）は
+# 同じ configs/gh 配下でも別単位（configs/gh/completion）として分離済み。
 #
-dst = "~/.config/gh"
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/gh"

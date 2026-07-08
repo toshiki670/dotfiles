@@ -9,10 +9,15 @@
 # （unit スコープの when ＝ all-or-nothing）。実行時 `if set -q` チェックは不要（存在＝gate の結果）。
 #
 # locals（named value）: ブラウザ選択はマシン固有値なので `@@yt.browser@@` をストア
-# （~/.config/dotfiles/local.toml）から注入する。commit に載らないが秘匿でもないため非 sensitive。
+# （~/.config/dotfiles/local.toml）から注入する。commit には載らず、秘匿値でもない。
 #
-# dst は fish の conf.d（複数ツールが断片を持ち寄る合流点）。ファイル名の番号 prefix (30-) が
+# 配置先は fish の conf.d（複数ツールが断片を持ち寄る合流点）。ファイル名の番号 prefix (30-) が
 # 読み込み順を表す。
-dst    = "~/.config/fish/conf.d"
 locals = [ "yt.browser" ]
 when   = { profile = "private" }
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/fish/conf.d"

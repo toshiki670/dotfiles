@@ -1,7 +1,7 @@
 # fish 本体（config.fish・conf.d・functions・themes）を ~/.config/fish へ copy する。
 # 決定経緯: Issue #530・#558
 #
-# dst=~/.config/fish のディレクトリ単位 copy。配下は相対構造を保って再帰配置される:
+# output=~/.config/fish のディレクトリ単位ツリー配置。配下は相対構造を保って再帰配置される:
 #   config.fish                   → ~/.config/fish/config.fish
 #   conf.d/*.fish, README.md      → ~/.config/fish/conf.d/*
 #   functions/_fzf_file.fish      → ~/.config/fish/functions/_fzf_file.fish
@@ -18,4 +18,9 @@
 # （60-daily-check.fish・70-git-background-fetch.fish）・starship（95-starship-prompt.fish）は
 # 各ツール側の manifest（configs/claude/fish, configs/workers, configs/starship/fish）が持つ
 # ためここには含めない。
-dst = "~/.config/fish"
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/fish"
