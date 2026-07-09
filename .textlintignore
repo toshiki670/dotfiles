@@ -8,5 +8,4 @@ CONTRIBUTING.md
 configs/nvim/README.md
 configs/claude/rules/design-creed.md
 configs/claude/skills/memory-tidy/SKILL.md
-.claude/skills/rustdoc-tidy/SKILL.md
 .github/ISSUE_TEMPLATE/feature_request.md
