@@ -1,8 +1,13 @@
 //! prose 文書の lint 規則（textlint を呼ぶ）。
 //!
-//! prose の自動修正は意味を壊しうるため check のみで、fix は提供しない
-//! （rumdl 等の構文フォーマッタとは異なり、prh の `expected` は人間向けの指示文であって
-//! そのまま本文へ代入してよい修正案ではない）。
+//! 対象は preset-ja-technical-writing・preset-ai-writing・ja-no-weak-phrase
+//! など、文章の形式的特徴（文長・助詞連続・AI 文体の特徴等）を見るルールに限る。
+//! 語彙が特定の内部設計方針を参照しているか等、文脈・出自の判断が要るものは
+//! 静的なパターンマッチでは原理的に代替できない（prh ベースの語彙禁止を試みたが、
+//! 用語自体は他の文脈でも一般的に使われうるため誤検知が避けられず撤去した）。
+//! そうした判断は prose-tidy skill 側（AI の文脈読解）に委ねる。
+//!
+//! prose の自動修正は意味を壊しうるため check のみで、fix は提供しない。
 //!
 //! package.json は持たない。`npx -p` の複数指定で textlint 本体とルールパッケージを
 //! 同じ一時環境に揃え、その場だけで解決させる（実機検証済み）。mise の npm backend は
@@ -17,7 +22,6 @@ const TEXTLINT_PACKAGES: &[&str] = &[
     "textlint-rule-preset-ja-technical-writing@12.0.2",
     "textlint-rule-preset-ai-writing@1.1.0",
     "textlint-rule-ja-no-weak-phrase@2.0.0",
-    "textlint-rule-prh@6.1.0",
 ];
 
 impl Orchestrator {

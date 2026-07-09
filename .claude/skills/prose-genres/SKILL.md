@@ -1,20 +1,22 @@
 ---
 name: prose-genres
-description: "prose-tidy の観点3(経緯・実装事情を残すか削るか)を、このリポジトリの実際の文書ジャンルに当てはめて判定する。README.md / CONTRIBUTING.md / COLOR.md / commit message / PR・Issue本文・レビューコメント / fish・bash・TOML等のコード内平文コメントが対象。prose-tidy がこのリポジトリで発火したときに参照する。"
+description: "prose-tidy のジャンル依存の観点(観点1: 前置きが空語か、観点3: 経緯・実装事情を残すか削るか)を、このリポジトリの実際の文書ジャンルに当てはめて判定する。README.md / CONTRIBUTING.md / COLOR.md / commit message / PR・Issue本文・レビューコメント / fish・bash・TOML等のコード内平文コメントが対象。prose-tidy がこのリポジトリで発火したときに参照する。"
 ---
 
 # prose-genres — このリポジトリの文書ジャンル別デフォルト
 
-`prose-tidy` の観点3は「経緯を残すか削るかは文書の目的で決める」という手続きだけを定め、具体的な verdict はリポジトリごとの companion skill に委ねている。これはこのリポジトリ(dotfiles)での具体値。
+`prose-tidy` の観点1・3 は「文書の目的(ジャンル)で判定が変わる」という手続きだけを定め、具体的な verdict はリポジトリごとの companion skill に委ねている。これはこのリポジトリ(dotfiles)での具体値。
 
 ## ジャンル別デフォルト
 
-| ジャンル | 該当ファイル | 経緯・実装事情 |
-| --- | --- | --- |
-| 使い方ガイド/リファレンス | `README.md`、`COLOR.md` | 削る |
-| ルール集 | `CONTRIBUTING.md` | 削る(ただし分類・判断基準として機能する理由は残す。例: 「`.claude/` 配下はホームに展開されないので `chore:`、展開されユーザー環境に影響するものは `feat:`」という基準そのもの) |
-| 意思決定の記録 | commit message の body、PR/Issue 本文・レビューコメント | 残す |
-| コード内平文コメント | `*.fish` / `*.sh` / `manifest.toml` 等のコメント | 削る(ただし Chesterton's Fence 予防は残す) |
+| ジャンル | 該当ファイル | 前置き(観点1) | 経緯・実装事情(観点3) |
+| --- | --- | --- | --- |
+| 使い方ガイド/リファレンス | `README.md`、`COLOR.md` | 削る | 削る |
+| ルール集 | `CONTRIBUTING.md` | 削る | 削る(ただし分類・判断基準として機能する理由は残す。例: 「`.claude/` 配下はホームに展開されないので `chore:`、展開されユーザー環境に影響するものは `feat:`」という基準そのもの) |
+| 意思決定の記録 | commit message の body、PR/Issue 本文・レビューコメント | 削る | 残す |
+| コード内平文コメント | `*.fish` / `*.sh` / `manifest.toml` 等のコメント | 削る | 削る(ただし Chesterton's Fence 予防は残す) |
+
+このリポジトリの文書ジャンルには、正式な仕様書・チュートリアルのような「要約的な前置きが慣行として期待される」ジャンルが無いため、観点1はどのジャンルでも一律「削る」になる。
 
 Rust の `//!` / `///` および設計根拠を運ぶ隣接 `//` コメントは `rustdoc-tidy` の対象で、このジャンル表には含まれない。
 
