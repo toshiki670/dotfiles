@@ -13,6 +13,9 @@ shfmt      = "3.13.1"
 stylua     = "2.5.2"
 taplo      = "0.10.0"
 
+# textlint（devDependencies は package.json、npm 実行に必要な node/npm をここで供給）。
+node = "22.23.1"
+
 [tasks.lint]
 description = "Run linter with auto-fix"
 run         = "cargo run --quiet -p dotfiles-lint -- fix"

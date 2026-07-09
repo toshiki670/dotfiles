@@ -1,0 +1,25 @@
+version: 1
+rules:
+  # design-creed(configs/claude/rules/design-creed.md)固有の抽象語彙。
+  # design-creed 自身を主題にした文書(design-creed.md 自体、この prh.yml 等)を除き、
+  # 読者向けの prose 文書に出た場合は具体的な技術的事実へ置き換える。
+  - expected: "(design-creed 語彙。具体的な技術的事実に置き換える)"
+    pattern: /SSOT/
+    message: "design-creed 由来の抽象語彙(SSOT)。読者向け文書では具体的な事実に置き換える。"
+
+  - expected: "(design-creed 語彙。具体的な技術的事実に置き換える)"
+    pattern: /安定\/揮発|Stable core,? humble edges/
+    message: "design-creed 由来の抽象語彙。読者向け文書では具体的な事実に置き換える。"
+
+  - expected: "(design-creed 語彙。具体的な技術的事実に置き換える)"
+    pattern: /寿命テスト|入れ替えテスト|前借りテスト|媒体テスト|更新箇所テスト|足場テスト/
+    message: "design-creed の判定テスト名。読者向け文書では判定結果(具体的な事実)だけを書く。"
+
+  # 空語的な前置き(prose-tidy 観点1)。頻出する定型マーカーのみ。言い換えは拾えない。
+  - expected: "(前置きを削り、対象そのものを主語にして直接書く)"
+    pattern: /本(ドキュメント|稿|ファイル)では/
+    message: "空語的な前置き。対象そのものを主語にして直接書く。"
+
+  - expected: "(前置きを削り、対象そのものを主語にして直接書く)"
+    pattern: /について(説明します|説明する|述べます|述べる)/
+    message: "空語的な前置き。対象そのものを主語にして直接何であるか・何をするかを言う。"

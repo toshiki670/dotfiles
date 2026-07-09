@@ -2,6 +2,8 @@
 description: Universal design creed for every repo — stable core, humble edges (lifecycle alignment, stability over volatility, known before unknown, fit to the medium, intent in structure, conform-then-improve in others' repos, leave no trace in artifacts)
 ---
 
+<!-- textlint-disable prh -->
+
 # 設計信条 — Stable core, humble edges
 
 これは特定プロジェクトの指針ではなく、**あらゆるリポジトリでの開発に常時効かせる普遍的な設計信条**。**計画の前後・実装の前後**で都度この信条に立ち返り、整合を確かめる（迷ったときだけの拠り所にしない）。ただし他者のリポジトリでは原則 VI が常に優先する。

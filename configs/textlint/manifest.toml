@@ -1,0 +1,15 @@
+# textlint のグローバルデフォルト設定を配置する（~/.textlintrc.json）。
+#
+# 一般的な日本語/Markdown 向けの preset（technical-writing・ai-writing）のみを持つ。
+# dotfiles リポジトリ自身のような、より厳格な語彙制約（prh）はリポジトリ側の
+# .textlintrc.json で個別に持つ（このグローバル設定を継承しない、自己完結）。
+#
+# textlint 本体・preset パッケージのインストールは CONTRIBUTING.md の手動セットアップ手順が担う
+# （dotfiles apply の管轄外。バイナリ導入は apply の外、という CLAUDE.md の既定方針と同じ）。
+format = "json"
+
+[[steps]]
+input = ".textlintrc.json"
+
+[[steps]]
+output = "~/.textlintrc.json"

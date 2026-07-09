@@ -3,6 +3,9 @@
 .claude/worktrees/
 .claude/settings.local.json
 
+## textlint devDependencies (package.json)
+node_modules/
+
 ## Vim
 vim/plugin/*
 !.keep

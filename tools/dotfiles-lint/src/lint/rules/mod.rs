@@ -5,6 +5,7 @@ mod lua;
 mod markdown;
 mod python;
 mod shell;
+mod textlint;
 mod toml;
 
 use super::{FileContext, classify};
