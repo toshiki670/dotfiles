@@ -27,3 +27,38 @@ jobs:
 
       - name: Run dotfiles-lint check
         run: mise exec -- cargo run --quiet -p dotfiles-lint -- check --summary
+
+  prose-lint-diff:
+    name: prose lint (changed files)
+    runs-on: ubuntu-latest
+    # この PR で変更された Markdown だけを対象にする。.textlintignore で除外中の
+    # 既存文書(#599 時点で内容修正が別 PR 送りのもの)は、このジョブでも対象外のまま
+    # (dotfiles-lint 側の除外設定をそのまま使うのではなく、textlint 自身の
+    # .textlintignore 解決に任せる)。プロジェクト全体の再チェックはしない。
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup mise (node)
+        uses: jdx/mise-action@v4
+
+      - name: Lint changed Markdown files
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}...HEAD" -- '*.md')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed Markdown files."
+            exit 0
+          fi
+          printf '%s\n' "${files[@]}"
+          # パッケージ版は tools/dotfiles-lint/src/lint/rules/textlint.rs の
+          # TEXTLINT_PACKAGES と同期させる。
+          npx -y \
+            -p textlint@15.7.1 \
+            -p textlint-rule-preset-ja-technical-writing@12.0.2 \
+            -p textlint-rule-preset-ai-writing@1.1.0 \
+            -p textlint-rule-ja-no-weak-phrase@2.0.0 \
+            textlint "${files[@]}"
