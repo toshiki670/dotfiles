@@ -17,9 +17,6 @@ jobs:
       - name: Setup mise (rust + pinned linters)
         uses: jdx/mise-action@v4
 
-      - name: Install npm dependencies (textlint)
-        run: mise exec -- npm ci
-
       - name: Install fish (not supplied by mise)
         run: |
           sudo apt-get update

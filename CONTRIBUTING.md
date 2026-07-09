@@ -11,16 +11,11 @@ brew install git gh mise fish
 
 lint/format ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff）と
 Rust・Node.js ツールチェーンは、リポジトリの `mise.toml` から `mise install` で供給されます
-（`fish` のみ brew）。textlint 等の node devDependencies は `npm install` で供給されます。
+（`fish` のみ brew）。textlint はインストール不要です。`dotfiles-lint` は `npx -p` の複数指定で
+textlint 本体・ルールパッケージをその場だけの一時環境に揃えて実行します（package.json は持ちません）。
 
-dotfiles 以外のプロジェクトでも textlint を使いたい場合は、グローバルインストールが別途必要です:
-
-```bash
-npm install -g textlint textlint-rule-preset-ja-technical-writing textlint-rule-preset-ai-writing
-```
-
-`dotfiles apply` は `~/.textlintrc.json`(一般的な日本語/Markdown 向け preset)を配置しますが、
-textlint 本体・preset パッケージの導入は上記の手動コマンドが担います。
+`dotfiles apply` は `~/.textlintrc.json`(一般的な日本語/Markdown 向け preset)を配置するので、
+dotfiles 以外のプロジェクトでも同じ `npx -p` の形で textlint を実行すれば、その設定が使われます。
 
 dotfiles の利用に必要なツールは [`README.md`](README.md) を参照してください。
 
