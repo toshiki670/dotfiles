@@ -1,5 +1,5 @@
-# 一時的な除外リスト。#599系のtextlint導入(基盤・CI配線)PRの時点で
-# 既存文書がまだ preset-ja-technical-writing / preset-ai-writing の基準を
+# 一時的な除外リスト。textlint 導入の時点で既存文書がまだ
+# preset-ja-technical-writing / preset-ai-writing の基準を
 # 満たしていないため、内容修正は別PRで行う（このリストはそのPRで空にする）。
 CLAUDE.md
 README.md

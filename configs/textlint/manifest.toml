@@ -4,8 +4,7 @@
 # dotfiles リポジトリ自身の .textlintrc.json はこのグローバル設定を継承せず、
 # 自己完結で追加のルール（ja-no-weak-phrase 等）を持つ。
 #
-# textlint 本体・preset パッケージの実行は npx -p のその場限り実行が担う
-# （dotfiles apply の管轄外。バイナリ導入は apply の外、という CLAUDE.md の既定方針と同じ）。
+# textlint 本体・preset パッケージの実行は npx -p のその場限り実行が担う。
 
 [[steps]]
 input = ".textlintrc.json"
