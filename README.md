@@ -4,7 +4,7 @@
 
 # Overview
 
-Personal dotfiles for macOS, managed by a self-contained Rust **`dotfiles`** CLI: one `cargo install` plus one `dotfiles apply` sets up a machine. **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** tooling (split config + delta), **mise**, optional **Ghostty** / **Zellij** configs, a few scripts under `bin/`, and small Rust CLI commands (`git-upstream`, `gcm`, `clip`, …) built as bins of the same package (see [Rust commands](#rust-commands)).
+Personal dotfiles for macOS, managed by a self-contained Rust **`dotfiles`** CLI: one `cargo install` plus one `dotfiles apply` sets up a machine. **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** tooling (split config + delta), and **mise**. Optional **Ghostty** / **Zellij** configs and a few scripts live under `bin/`. Small Rust CLI commands (`git-upstream`, `gcm`, `clip`, …) are built as bins of the same package (see [Rust commands](#rust-commands)).
 
 # Prerequisites
 
@@ -151,10 +151,16 @@ On macOS, `dotfiles apply` runs a hook that symlinks Ghostty's expected config p
 
 ## Git hooks (gitleaks)
 
-Git is configured with a global `core.hooksPath = ~/.config/git/hooks`, so the managed hooks run for **every** repository on the host. A single dispatcher script (`dispatch`) is symlinked under every client-side hook name (`pre-commit`, `commit-msg`, `prepare-commit-msg`, `pre-push`, `post-checkout`, `post-merge`, `post-commit`, `pre-rebase`, `pre-merge-commit`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`) and dispatches on `basename "$0"` (`dispatch` itself is not a hook name, so Git never runs it directly). It does two things:
+Git is configured with a global `core.hooksPath = ~/.config/git/hooks`, so the managed hooks run for **every** repository on the host. A single dispatcher script (`dispatch`) is symlinked under every client-side hook name and dispatches on `basename "$0"`. `dispatch` itself is not a hook name, so Git never runs it directly. The covered hook names:
+
+```text
+pre-commit, commit-msg, prepare-commit-msg, pre-push, post-checkout, post-merge, post-commit, pre-rebase, pre-merge-commit, post-rewrite, applypatch-msg, pre-applypatch, post-applypatch
+```
+
+It does two things:
 
 1. **Secret scan (pre-commit only)** — runs `gitleaks git --staged` on the staged diff. If a likely secret is found, the commit is **blocked**; secret values are redacted in the output. False positives can be silenced with a `.gitleaks.toml` allowlist or an inline `gitleaks:allow` comment. If `gitleaks` is not installed, the scan is **skipped with a warning** (the commit is not blocked).
-2. **Chaining (all hook types)** — because a global `core.hooksPath` makes Git stop looking at each repo's `.git/hooks`, the dispatcher explicitly invokes the repository-local `.git/hooks/<hook>` afterwards (if present and executable), forwarding arguments and stdin, so per-project hooks keep working.
+2. **Chaining (all hook types)** — a global `core.hooksPath` makes Git stop looking at each repo's `.git/hooks`. The dispatcher explicitly invokes the repository-local `.git/hooks/<hook>` afterwards (if present and executable), forwarding arguments and stdin, so per-project hooks keep working.
 
 Bypass everything for a single commit with `git commit --no-verify`.
 
@@ -162,7 +168,7 @@ Bypass everything for a single commit with `git commit --no-verify`.
 
 ## Claude Code
 
-`~/.claude/settings.json` is placed by `dotfiles apply` (`settings.json` plus a conditional `rtk.json` fragment when `rtk` is on `PATH`, layered onto the live file). It merges into the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved, while dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced.
+`~/.claude/settings.json` is placed by `dotfiles apply` (`settings.json` plus a conditional `rtk.json` fragment when `rtk` is on `PATH`, layered onto the live file). It merges into the live file so keys the app writes itself (`model`, `theme`, `effortLevel`, …) are preserved. Dotfiles-owned shared settings (`hooks`, `statusLine`, `language`, `voiceEnabled`) are always enforced.
 
 `PreToolUse` / `Bash` hooks provide two safety rails:
 
@@ -183,7 +189,7 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 
 All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). Install them into `~/.cargo/bin` with one `cargo install --git https://github.com/toshiki670/dotfiles` (or `cargo install --path .` from a clone; the tools under `tools/` are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `cargo install` (commands) → `dotfiles apply` (configs).
 
-Design and internals (manifest schema, apply pipeline, `locals` resolution, `when` gates, …) are not documented here — they live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (the `dotfiles` crate's own module docs), rebuilt on every push to `main`. Treat it as the architecture reference.
+Design and internals (manifest schema / apply pipeline / `locals` resolution / `when` gates / …) are not documented here. They live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (the `dotfiles` crate's own module docs), rebuilt on every push to `main`. Treat it as the architecture reference.
 
 Full descriptions (subcommands, flags) live in each command's own Rustdoc page, linked below — not duplicated here.
 

@@ -1,6 +1,6 @@
 # COLOR.md — カラーテーマ インデックス
 
-この dotfiles のカラーテーマ設定を一覧化したもの。**テーマを変更するときはここを起点**にすると、関係ファイルを素早く特定できる。
+**テーマを変更するときはここを起点**にすると、関係ファイルを素早く特定できる。
 
 ## 現在の構成
 
@@ -30,7 +30,7 @@
 
 - **Ghostty が起点**：OS 外観 → 端末の背景色 + ANSI 16 色パレットを切替。
 - **Fish / eza / delta** は `fish_terminal_color_theme`（fish が最初の対話プロンプト以降、OSC 11 で背景を検出して `light`/`dark`/`unknown` を設定する read-only 変数）を共有して追従する。
-- **fzf** は `--color` を ANSI 番号（`-1`/`0`〜`15`）で指定するだけで Ghostty のパレット切替に追従する。シェル変数にもネイティブ検出にも依存しない（eza の色付き要素と同じ ANSI 追従）。
+- **fzf** は `--color` を ANSI 番号（`-1`/`0`〜`15`）で指定するだけで Ghostty のパレット切替に追従する。シェル変数やネイティブ検出には依存しない（eza の色付き要素と同じ ANSI 追従）。
 - **nvim** は標準機能で **起動時のみ** `&background` を検出（起動中の OS 切替は次回起動で反映）。
 - **bat** は `--theme=auto` で自前検出するため、シェル変数に依存しない。
 
@@ -61,8 +61,8 @@ light / dark を別のテーマセットに変える手順。**上から順に**
 
 ## 適用と確認
 
-- **適用**: `dotfiles apply`（bat テーマを変えた場合は hook が `bat cache --build` を実行）。
-- **確認**:
+- 適用は `dotfiles apply`（bat テーマを変えた場合は hook が `bat cache --build` を実行）。
+- 確認は以下の方法で行う。
   - bat: `bat <ファイル>`（`--theme=auto` なので即時反映）
   - delta: **新しい fish** で `git diff` / `git show`
   - nvim: 再起動

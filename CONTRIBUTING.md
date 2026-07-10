@@ -35,7 +35,7 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 このリポジトリは [release-plz](https://release-plz.dev/) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。version の source of truth は root `Cargo.toml`、CHANGELOG は git-cliff（`cliff.toml`）で生成します。crates.io へは publish せず、git タグ + GitHub Release のみを作成します。
 
-**単一版**: 配布物は root `dotfiles` パッケージ 1 つに統合済みで、版もこの 1 つだけを振ります。タグは `v{version}`（従来どおり）、CHANGELOG は root `CHANGELOG.md` に生成されます。`tools/` 配下の開発・保守ツール（`dotfiles-lint` / `v-sync`）は `release = false` で release-plz の対象外（版を振りません）。下表のバンプ規則は、その版に触れたコミットの type で判定されます。
+**単一版**: 配布物は root `dotfiles` パッケージ 1 つに統合済みで、版もこの 1 つだけを振ります。タグは `v{version}`、CHANGELOG は root `CHANGELOG.md` に生成されます。`tools/` 配下の開発・保守ツール（`dotfiles-lint` / `v-sync`）は `release = false` で release-plz の対象外（版を振りません）。下表のバンプ規則は、その版に触れたコミットの type で判定されます。
 
 ### バージョン決定ルール
 
@@ -63,7 +63,7 @@ git describe --tags --abbrev=0 --match 'v[0-9]*'
 
 ## テスト
 
-変更をコミットする前に、以下を確認してください：
+変更をコミットする前に、以下を確認する。
 
 ### lint/check
 
@@ -76,22 +76,22 @@ mise run check
 ```
 
 lint は Rust 製オーケストレータ `dotfiles-lint`（`tools/dotfiles-lint`）が、mise 供給の
-各ツールを呼んで実行します。コマンドや lint オーケストレータを変更したときは、以下で
-workspace 全体のテスト（各クレートの unit + E2E）を確認してください:
+各ツールを呼んで実行する。コマンドや lint オーケストレータを変更したときは、以下で
+workspace 全体のテスト（各クレートの unit + E2E）を確認する。
 
 ```bash
 cargo test --workspace
 ```
 
-補足:
+#### 補足
 
 - CI は `cargo run -p dotfiles-lint -- check`（lint）と `cargo test --workspace`（unit + E2E）を
-  実行します。
-- 詳細ログが必要な場合は `cargo run -p dotfiles-lint -- check --summary --json` を使ってください。
+  実行する。
+- 詳細ログが必要な場合は `cargo run -p dotfiles-lint -- check --summary --json` を使う。
 
 ### テスト方針（エンジンはツールのライフサイクルから独立）
 
-`dotfiles` バイナリは汎用エンジンで、`configs/` の個々のツール（claude / bat / ghostty …）はいつか消えるデータ。テストは「configs から特定ツールを削除・改名しても壊れない」ことを原則とする（壊れるなら defect として直す）。2 層で書く:
+`dotfiles` バイナリは汎用エンジンで、`configs/` の個々のツール（claude / bat / ghostty …）はいつか消えるデータ。テストは「configs から特定ツールを削除・改名しても壊れない」ことを原則とする（壊れるなら defect として直す）。2 層で書く。
 
 | 層 | 目的 | 入力 |
 | --- | --- | --- |
