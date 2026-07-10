@@ -5,7 +5,6 @@
         "max": 200
       }
     },
-    "preset-ai-writing": true,
-    "ja-no-weak-phrase": true
+    "preset-ai-writing": true
   }
 }

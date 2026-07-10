@@ -73,7 +73,7 @@ description: "人間の読者に向けて書く text 全般を、読者が実際
    - 対象ファイルが ignore 設定(`.textlintignore` 等)で無視され、チェックされずに黙って成功していないかを確認する。無視されているなら、そのファイルだけを明示的に検証対象へ含める(例: `--ignore-path /dev/null` で ignore を無効化)。
    - 手順1でこのプロジェクト固有の lint の仕組みが見つかっていれば、そちらでその対象ファイルだけを検証する(その仕組み側の ignore 設定でも同じ確認をする)。
    - 見つからなければ、事前インストール不要で次を実行する:
-     `npx -y -p textlint -p textlint-rule-preset-ja-technical-writing -p textlint-rule-preset-ai-writing textlint --ignore-path /dev/null <編集したファイル>`
+     `npx -y -p textlint@15.7.1 -p textlint-rule-preset-ja-technical-writing@12.0.2 -p textlint-rule-preset-ai-writing@1.1.0 textlint --ignore-path /dev/null <編集したファイル>`
    - 今回の編集と無関係な既存の指摘が出た場合は、手順2のスコープ規律に従い直さず、出力に既存の指摘として残っている旨だけ記録する。
    - 削除・移動した見出しやセクションへのリンク・アンカー参照が壊れていないかも確認する。
 
