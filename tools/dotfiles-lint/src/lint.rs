@@ -119,9 +119,6 @@ impl Orchestrator {
         if rules::match_markdown(f) && self.check_markdown(f) != 0 {
             failed = true;
         }
-        if rules::match_markdown(f) && self.check_textlint(f) != 0 {
-            failed = true;
-        }
         failed
     }
 }
