@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "preset-ja-technical-writing": {
+      "sentence-length": {
+        "max": 200
+      }
+    },
+    "preset-ai-writing": true
+  }
+}

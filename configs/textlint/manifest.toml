@@ -1,0 +1,13 @@
+# textlint のグローバルデフォルト設定を配置する（~/.textlintrc.json）。
+#
+# 一般的な日本語/Markdown 向けの preset（technical-writing・ai-writing）のみを持つ。
+# dotfiles リポジトリ自身の .textlintrc.json はこのグローバル設定を継承せず、
+# 自己完結でルールの閾値（sentence-length の緩和等）を持つ。
+#
+# textlint 本体・preset パッケージの実行は npx -p のその場限り実行が担う。
+
+[[steps]]
+input = ".textlintrc.json"
+
+[[steps]]
+output = "~/.textlintrc.json"
