@@ -4,7 +4,7 @@
 
 # Overview
 
-Personal dotfiles for macOS, managed by a self-contained Rust **`dotfiles`** CLI: one `cargo install` plus one `dotfiles apply` sets up a machine. **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** tooling (split config + delta), and **mise**. Optional **Ghostty** / **Zellij** configs and a few scripts live under `bin/`. Small Rust CLI commands (`git-upstream`, `gcm`, `clip`, …) are built as bins of the same package (see [Rust commands](#rust-commands)).
+Personal dotfiles for macOS, managed by a self-contained Rust **`dotfiles`** CLI: one `cargo install` plus one `dotfiles apply` sets up a machine. **Fish** is the shell (`~/.config/fish/conf.d/`), with **[Starship](https://starship.rs/)** as the interactive prompt. Also included: **Neovim**, **Git** tooling (split config + delta), and **mise**. Optional **Ghostty** / **Zellij** configs are also included. A few scripts live under `bin/`. Small Rust CLI commands (`git-upstream`, `gcm`, `clip`, …) are built as bins of the same package (see [Rust commands](#rust-commands)).
 
 # Prerequisites
 

@@ -33,9 +33,9 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 
 ## リリースプロセス
 
-このリポジトリは [release-plz](https://release-plz.dev/) を使用して、Conventional Commits に基づくバージョン管理を自動化しています。version の source of truth は root `Cargo.toml`、CHANGELOG は git-cliff（`cliff.toml`）で生成します。crates.io へは publish せず、git タグ + GitHub Release のみを作成します。
+このリポジトリは [release-plz](https://release-plz.dev/) を使用して、Conventional Commits に基づくバージョン管理を自動化している。version の source of truth は root `Cargo.toml`、CHANGELOG は git-cliff（`cliff.toml`）で生成する。crates.io へは publish せず、git タグ + GitHub Release のみを作成する。
 
-**単一版**: 配布物は root `dotfiles` パッケージ 1 つに統合済みで、版もこの 1 つだけを振ります。タグは `v{version}`、CHANGELOG は root `CHANGELOG.md` に生成されます。`tools/` 配下の開発・保守ツール（`dotfiles-lint` / `v-sync`）は `release = false` で release-plz の対象外（版を振りません）。下表のバンプ規則は、その版に触れたコミットの type で判定されます。
+**単一版**: 配布物は root `dotfiles` パッケージ 1 つに統合済みで、版もこの 1 つだけを振る。タグは `v{version}`、CHANGELOG は root `CHANGELOG.md` に生成される。`tools/` 配下の開発・保守ツール（`dotfiles-lint` / `v-sync`）は `release = false` で release-plz の対象外（版を振らない）。下表のバンプ規則は、その版に触れたコミットの type で判定される。
 
 ### バージョン決定ルール
 

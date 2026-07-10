@@ -61,8 +61,8 @@ light / dark を別のテーマセットに変える手順。**上から順に**
 
 ## 適用と確認
 
-- 適用は `dotfiles apply`（bat テーマを変えた場合は hook が `bat cache --build` を実行）。
-- 確認は以下の方法で行う。
+- 適用: `dotfiles apply`（bat テーマを変えた場合は hook が `bat cache --build` を実行）。
+- 確認:
   - bat: `bat <ファイル>`（`--theme=auto` なので即時反映）
   - delta: **新しい fish** で `git diff` / `git show`
   - nvim: 再起動
