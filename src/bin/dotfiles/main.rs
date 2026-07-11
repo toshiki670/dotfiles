@@ -41,7 +41,8 @@
 //! ソースを二段構えで解決し（作業ツリー検出 → バイナリ埋め込み・[`source`]）、ユニットを
 //! 走査（[`discover`]）→ ユニット gate を評価（[`apply::gate`]）→ `[[steps]]` を実行して
 //! 内容を組み立て配置（[`apply::pipeline`]、cmd 実行は [`apply::cmd`]）→ locals を解決・注入
-//! （[`locals`]）→ 配置後フックを実行（[`hooks`]）、の順に進む。
+//! （[`locals`]）→ 配置後フックを実行（[`hooks`]）、を全ユニットについて繰り返した後、今回の
+//! 期待配置集合を [`prune`] の snapshot へ記録する（`--force` のときだけ不要な配置を退避する）。
 
 // `deny(broken_intra_doc_links)`: doc コメントのリンク切れを CI の `cargo doc -p dotfiles` で
 // 検出するガード。`allow(private_intra_doc_links)`: 既定では公開アイテムの doc から非公開
@@ -67,6 +68,9 @@ mod locals;
 
 // 配置後フック。子モジュール（exec / onchange）は hooks.rs が束ねる。
 mod hooks;
+
+// 不要になった配置の追跡・退避（#521）。apply が union、doctor が報告、apply --force が実削除。
+mod prune;
 
 // 単独ビュー / コマンド。
 mod color;

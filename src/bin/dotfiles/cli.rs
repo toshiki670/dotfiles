@@ -40,7 +40,12 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// 設定をホームディレクトリへ配置する（配置先・方法は各 manifest.toml の宣言に従う）。
-    Apply,
+    Apply {
+        /// 不要になった配置（ユニット gate flip・ユニット削除・ツリーファイル削除で取り残された
+        /// もの）を退避する（#521）。省略時は記録のみで実削除しない。
+        #[arg(long)]
+        force: bool,
+    },
     /// 配置の一覧（各ユニットの配置先と方式）を表示する。
     List,
     /// マシン固有の値（git の email 等）をストアへ保存する。
@@ -92,7 +97,7 @@ pub fn run() {
 
     let source = cli.source.as_deref();
     let result = match cli.command {
-        Some(Commands::Apply) => run_apply(source),
+        Some(Commands::Apply { force }) => run_apply(source, force),
         Some(Commands::List) => run_list(source),
         Some(Commands::Local {
             action: LocalAction::Set { name, value },
@@ -118,12 +123,12 @@ pub fn run() {
 }
 
 /// `dotfiles apply`：ソースを二段構えで解決し、HOME を基点に配置する。
-/// 解決元（作業ツリー / 埋め込み / `--source`）を 1 行目に示す。
-fn run_apply(source: Option<&Path>) -> Result<(), String> {
+/// 解決元（作業ツリー / 埋め込み / `--source`）を 1 行目に示す。`force` は #521 の実削除 opt-in。
+fn run_apply(source: Option<&Path>, force: bool) -> Result<(), String> {
     let home = home_dir()?;
     let resolved = source::resolve(source)?;
     println!("apply: source = {}", resolved.origin());
-    apply::run(resolved.root(), Path::new(&home))
+    apply::run(resolved.root(), Path::new(&home), force)
 }
 
 /// `dotfiles list`：ソースを二段構えで解決し、配置先一覧を解決元の表示付きで出す。
