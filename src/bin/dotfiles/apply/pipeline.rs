@@ -138,8 +138,8 @@ fn apply_output(
 /// 読んだ新しい中身（`bytes`）を内容へ畳む。畳み方は unit の `format`（内容種別）と、この step 自身の
 /// `merge`（重ね方。最初の input は常に `None`）の組で決まる ― モジュール doc 参照。
 ///
-/// 内容が空（`Empty`）なら土台なし（`base = None`）で最初の中身を畳む ― [`fold::concat`] は
-/// 土台が無ければ境目の改行を補わず、`json_shallow` / `json_deep` / `plist_shallow` / `plist_deep` は
+/// 内容が空（`Empty`）なら土台なし（`base = None`）で最初の中身を畳む ― [`fold::text::concat`] は
+/// 土台が無ければ境目の改行を補わず、[`fold::json`] / [`fold::plist`] の `shallow` / `deep` は
 /// いずれも最初の断片そのものを返すため、最初の input（`merge = None`）は中身そのまま（再直列化）に
 /// なる。`format = None`（merge を使わないユニット）は中身をそのまま内容にする。
 fn fold_in(
@@ -154,11 +154,11 @@ fn fold_in(
     };
     let merged = match (format, merge) {
         (None, _) => bytes.to_vec(),
-        (Some(Format::Text), _) => fold::concat(base, bytes),
-        (Some(Format::Json), Some(Merge::Deep)) => fold::json_deep(base, bytes)?,
-        (Some(Format::Json), _) => fold::json_shallow(base, bytes)?,
-        (Some(Format::Plist), Some(Merge::Deep)) => fold::plist_deep(base, bytes)?,
-        (Some(Format::Plist), _) => fold::plist_shallow(base, bytes)?,
+        (Some(Format::Text), _) => fold::text::concat(base, bytes),
+        (Some(Format::Json), Some(Merge::Deep)) => fold::json::deep(base, bytes)?,
+        (Some(Format::Json), _) => fold::json::shallow(base, bytes)?,
+        (Some(Format::Plist), Some(Merge::Deep)) => fold::plist::deep(base, bytes)?,
+        (Some(Format::Plist), _) => fold::plist::shallow(base, bytes)?,
     };
     *content = Content::Bytes(merged);
     Ok(())
