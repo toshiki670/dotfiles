@@ -4,10 +4,9 @@
 //! 決め、採用された input は内容へ中身を畳み、output は内容を宛先へ書く。ツリー input（`input = "."`）は
 //! 内容を「ファイルツリー」にし、パス output で相対構造を保って再帰配置する（[`crate::apply::copy`]）。
 //!
-//! バイト内容の畳み込みは unit レベルの `format`（json / plist / text）が内容種別を決め、各 input step
-//! 自身の `merge`（shallow / deep / append）が「どう重ねるか」を選ぶ（[`fold_in`]）。同じ unit の中で
-//! 2 つ目の input が `shallow`、3 つ目が `deep` のように混在してよい ― `fold_in` は unit 全体ではなく
-//! その step の `merge` だけを見て畳み込み関数を選ぶ。最初の input は `merge` を持たない
+//! バイト内容の畳み込みは unit レベルの `format` が内容種別を決め、各 input step 自身の `merge`
+//! （値の一覧は [`crate::manifest`]）が「どう重ねるか」を選ぶ（[`fold_in`]） ― `fold_in` は unit 全体
+//! ではなくその step の `merge` だけを見て畳み込み関数を選ぶ。最初の input は `merge` を持たない
 //! （[`crate::manifest`] の `validate` が禁止）が、土台なし（`base = None`）から畳むといずれの畳み込み
 //! 関数も断片そのもの（再直列化）を返す ― [`crate::apply::fold`] の各関数に共通する性質 ― ため、
 //! optional / gate で先頭 input が実行時に飛んでも（宣言上の 2 番目が実際の最初になっても）結果は
