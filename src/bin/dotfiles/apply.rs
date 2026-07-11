@@ -17,9 +17,11 @@
 //! バイナリは埋め込みソースだけで配置できる必要があり、symlink はリンク先の実体（リポジトリの
 //! clone 常設）を要求するため。編集の即時反映は捨て、反映は `dotfiles apply` の再実行で行う。
 //!
-//! gate=false は「配置しない」であって「撤去する」ではない。エンジンは prune せず、ユニット
-//! gate が false へ転じても配置済みの実体は残る（撤去は手動。prune の設計は #521）。step の
-//! 脱落は、配置先が毎 apply 再合成されるため次の apply で結果から消える。
+//! gate=false は「配置しない」であって即「撤去する」ではない。step の脱落は、配置先が毎 apply
+//! 再合成されるため次の apply で結果から消える。ユニット全体・配置先そのものの取り残し（ユニット
+//! gate flip・ユニット削除・ツリーファイル削除）は既定では残ったまま（[`crate::prune`] が期待
+//! 配置集合を毎回 snapshot へ記録するだけ）で、`force = true`（`dotfiles apply --force`）を渡した
+//! ときだけ実際に退避する（#521）。
 
 pub(crate) mod cmd;
 pub(crate) mod copy;
@@ -33,13 +35,16 @@ use crate::hooks::onchange::State as HookState;
 use crate::locals::store::Store;
 use crate::locals::{prompt, resolve};
 use crate::manifest::Manifest;
+use crate::placements;
+use crate::prune;
 use std::collections::BTreeMap;
 use std::path::Path;
 
 /// `source`（= `configs/`）配下を走査し、各 manifest の配置を実行する。
 /// `home` は `~` 展開先。`locals` の取得・注入に使う named value ストアと、`hooks` の onchange
-/// 状態（[`HookState`]）は開始時に1回ロードし、各単位で逐次更新する。
-pub fn run(source: &Path, home: &Path) -> Result<(), String> {
+/// 状態（[`HookState`]）は開始時に1回ロードし、各単位で逐次更新する。`force` は #521 の実削除
+/// opt-in（`dotfiles apply --force`）。
+pub fn run(source: &Path, home: &Path, force: bool) -> Result<(), String> {
     let units = discover::collect(source)?;
     if units.is_empty() {
         println!(
@@ -55,6 +60,22 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     let gate_state = gate::GateState::load(home)?;
     for unit in &units {
         apply_unit(unit, home, &mut store, &mut hook_state, &gate_state)?;
+    }
+
+    // 今回の期待配置集合（gate 評価後）を snapshot へ記録する。既定は union（縮めない・裏方の記録で
+    // 表には出さない）、force のときだけ stale 候補を退避して snapshot をリセットする（#521）。
+    let current =
+        placements::expected_gated(source, home, &|w| gate::when_satisfied(w, &gate_state))?;
+    if force {
+        let moved = prune::commit(home, &current)?;
+        if moved.is_empty() {
+            println!("apply: prune → 不要な配置はありません");
+        }
+        for path in &moved {
+            println!("apply: prune → {} を退避しました", path.display());
+        }
+    } else {
+        prune::union(home, &current)?;
     }
     Ok(())
 }

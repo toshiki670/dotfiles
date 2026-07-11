@@ -1,19 +1,24 @@
-//! `dotfiles doctor`: 全ユニットの `locals` 宣言と、ユニット間の配置先衝突を診断する。
+//! `dotfiles doctor`: 全ユニットの `locals` 宣言・ユニット間の配置先衝突・不要になった配置を診断する。
 //!
 //! 全単位の `manifest.toml`（[`crate::discover`]）から `locals` を集め、ストア
 //! （[`crate::locals::store`]）に値が無い名前を報告する。加えて [`crate::placements::expected`] が
 //! 導出する期待配置集合から、複数ユニットが同一パスへ output を宣言している箇所（#593）を報告する。
-//! いずれもツール別ロジックは持たず、宣言と現状の突合だけを見る（診断の拡張は #576）。問題があっても
+//! さらに [`crate::prune::stale`] が示す「前回 apply 時点は期待されていたが今回はもう期待されない」
+//! 配置（#521）も報告する ― 実削除はしない（`dotfiles apply --force` の役目）。いずれもツール別
+//! ロジックは持たず、宣言と現状の突合だけを見る（診断の拡張は #576）。問題があっても
 //! **ブロックしない**（exit 0・情報提供）。
 
+use crate::apply::gate;
 use crate::discover::{self, MANIFEST};
 use crate::locals::store::Store;
-use crate::manifest::Manifest;
+use crate::manifest::{Manifest, StepSource, resolve_output_path};
 use crate::placements::{self, Placement};
+use crate::prune;
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// `source` 配下の `locals` 宣言・期待配置集合を突き合わせ、未設定・衝突を stderr に報告する。
+/// `source` 配下の `locals` 宣言・期待配置集合を突き合わせ、未設定・衝突・不要な配置を stderr へ
+/// 報告する。
 pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     let units = discover::collect(source)?;
     let store = Store::load(home)?;
@@ -21,6 +26,12 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
 
     let expected = placements::expected(source, home)?;
     report_placement_conflicts(&expected);
+
+    let gate_state = gate::GateState::load(home)?;
+    let current =
+        placements::expected_gated(source, home, &|w| gate::when_satisfied(w, &gate_state))?;
+    let stale = prune::stale(home, &current);
+    report_stale_placements(source, home, &gate_state, &stale);
 
     Ok(())
 }
@@ -74,4 +85,57 @@ fn report_placement_conflicts(expected: &[Placement]) {
     for (path, units) in &conflicts {
         eprintln!("  - {}: {}", path.display(), units.join(", "));
     }
+}
+
+/// `stale`（[`prune::stale`]）を報告する。実削除はしない（`dotfiles apply --force` の役目）。
+/// 各パスに [`stale_reason`] で理由（gate 不成立の内容、または configs からの削除）を添える。
+fn report_stale_placements(
+    source: &Path,
+    home: &Path,
+    gate_state: &gate::GateState,
+    stale: &[PathBuf],
+) {
+    if stale.is_empty() {
+        println!("doctor: 不要になった配置はありません");
+        return;
+    }
+    eprintln!("doctor: 不要になった配置が {} 件あります:", stale.len());
+    for path in stale {
+        let reason = stale_reason(source, home, gate_state, path);
+        eprintln!("  - {}（{reason}）", path.display());
+    }
+    eprintln!("  `dotfiles apply --force` で退避できます。");
+}
+
+/// `path` が stale になった理由の人間向け説明。表示の親切さのためだけの診断で、除去条件の判定
+/// （[`prune::stale`]）そのものには影響しない。
+///
+/// 今も宣言されている（gate 評価なしの [`placements::expected`]）ユニットが見つかれば、その
+/// ユニットの gate（unit → output step の順）を再評価して理由を言う。見つからなければ、ユニット
+/// 削除かツリーファイル削除で configs 側から消えたとみなす。
+fn stale_reason(source: &Path, home: &Path, gate_state: &gate::GateState, path: &Path) -> String {
+    let declared = placements::expected(source, home).unwrap_or_default();
+    let Some(owner) = declared
+        .iter()
+        .find(|p| p.path == path)
+        .map(|p| p.unit.clone())
+    else {
+        return "configs から削除された可能性があります".to_string();
+    };
+
+    let manifest = match Manifest::load(&source.join(&owner).join(MANIFEST)) {
+        Ok(m) => m,
+        Err(_) => return format!("{owner}: manifest の再読み込みに失敗しました"),
+    };
+    if let Some(reason) = gate::unit_skip_reason(&manifest, gate_state) {
+        return format!("{owner}: {reason}");
+    }
+    let step_gated = manifest.steps.iter().any(|step| {
+        matches!(&step.output, Some(StepSource::Path(p)) if resolve_output_path(home, p) == path)
+            && !gate::when_satisfied(&step.when, gate_state)
+    });
+    if step_gated {
+        return format!("{owner}: output step の when が不成立です");
+    }
+    format!("{owner}: 原因不明")
 }
