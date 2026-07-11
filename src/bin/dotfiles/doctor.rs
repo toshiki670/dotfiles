@@ -59,7 +59,12 @@ fn report_placement_conflicts(expected: &[Placement]) {
             units.push(&p.unit);
         }
     }
-    let conflicts: Vec<_> = by_path.into_iter().filter(|(_, u)| u.len() >= 2).collect();
+    let mut conflicts: Vec<_> = by_path.into_iter().filter(|(_, u)| u.len() >= 2).collect();
+    // ユニット名は discover::collect の走査順（read_dir 由来・未ソート）で積まれるため、表示前に
+    // ソートして出力を決定的にする（走査順が環境で揺れても衝突行の並びは揺れない）。
+    for (_, units) in &mut conflicts {
+        units.sort_unstable();
+    }
 
     if conflicts.is_empty() {
         println!("doctor: 配置先の衝突はありません");

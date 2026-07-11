@@ -58,8 +58,9 @@ fn doctor_reports_conflict_for_same_resolved_path() {
         .assert()
         .success()
         .stderr(predicate::str::contains("衝突が 1 件"))
-        .stderr(predicate::str::contains("a"))
-        .stderr(predicate::str::contains("b"));
+        // ユニット名は sort 済みで列挙される（doctor.rs の report_placement_conflicts）。
+        // 部分文字列（tempdir のランダム名等）への誤マッチを避けるため列挙そのものを固定文字列で見る。
+        .stderr(predicate::str::contains(": a, b"));
 }
 
 /// 導出は gate 評価前の宣言ベース: `when.deps` が現在の PATH に無いバイナリを指し、実 apply では
@@ -86,5 +87,7 @@ fn doctor_reports_conflict_even_when_one_unit_is_gated_off_in_current_env() {
         .env("PATH", empty_path.path()) // dep gate を決定的に外す（a は実 apply では skip される）。
         .assert()
         .success()
-        .stderr(predicate::str::contains("衝突が 1 件"));
+        .stderr(predicate::str::contains("衝突が 1 件"))
+        // gate off の a も宣言ベースでは含まれる（b だけの単独衝突ではない）。
+        .stderr(predicate::str::contains(": a, b"));
 }
