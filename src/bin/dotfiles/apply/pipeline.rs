@@ -18,7 +18,7 @@
 use super::gate::{self, GateState};
 use super::{cmd, copy, fold, set_mode, write_if_changed};
 use crate::locals::resolve;
-use crate::manifest::{Format, Manifest, Merge, StepSource};
+use crate::manifest::{Format, Manifest, Merge, StepSource, resolve_output_path};
 use std::collections::BTreeMap;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -174,10 +174,4 @@ fn resolve_input_path(unit_dir: &Path, home: &Path, p: &str) -> PathBuf {
     } else {
         unit_dir.join(p)
     }
-}
-
-/// output パスを解決する: 常に `~` 起点（`validate` が `~` / `~/...` のみを保証）。
-fn resolve_output_path(home: &Path, p: &str) -> PathBuf {
-    p.strip_prefix("~/")
-        .map_or_else(|| home.to_path_buf(), |rest| home.join(rest))
 }

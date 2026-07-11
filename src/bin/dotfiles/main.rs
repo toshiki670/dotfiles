@@ -55,6 +55,7 @@
 // 共有核（葉。多くの群が片方向で依存する契約・基盤）。
 mod discover;
 mod manifest;
+mod placements;
 mod source;
 mod state;
 

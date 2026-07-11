@@ -28,6 +28,8 @@
 //! - [`steps`]: `[[steps]]` パイプライン（#588 スライス1）— input/merge/output・format・optional・
 //!   when と load 時検証群。`input.cmd` 断片＋plist ＋ `output.cmd` 反映の一気通貫（#531/#560）も含む（契約）
 //! - [`local`]: マシンローカル値（S4/#458）— local set / 注入 / doctor（契約）
+//! - [`placements`]: 期待配置集合・ユニット間 output 衝突検出（#593）— ツリー共有ディレクトリの
+//!   非衝突・同一パス衝突・gate 評価前の宣言ベース検出を doctor 経由で検証（契約）
 //! - [`profile`]: マシンクラス状態 gate（#467）— profile set/show・`when.profile` の配置/skip・冪等（契約）
 //! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証（契約）
 //! - [`color`]: `color sample`（S6/#460）— ANSI 確認表の見出し・エスケープシーケンス（契約）
@@ -43,6 +45,7 @@ mod generate;
 mod hooks;
 mod list;
 mod local;
+mod placements;
 mod profile;
 mod real_configs;
 mod source;
