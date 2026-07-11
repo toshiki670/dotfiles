@@ -29,6 +29,11 @@
           },
           {
             "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE '(^|[;&|()]|(^|[[:space:]])(then|do)[[:space:]]+|![[:space:]]*)[[:space:]]*(command[[:space:]]+)?trash[[:space:]]+.*(\\$\\(|`)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"trash argument looks like an unverified command substitution (a $(...) or backtick expression) somewhere on this line. If it evaluates to an empty string, trash falls back to the current working directory and moves it into Trash instead of the intended target. Assign the substitution to a variable, verify it is non-empty (and not the literal . or cwd), then pass the variable to trash.\"}}'; fi",
+            "statusMessage": "trash guard (unverified arg)"
+          },
+          {
+            "type": "command",
             "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE 'git([[:space:]]|$)' && printf '%s' \"$cmd\" | grep -qE 'push' && printf '%s' \"$cmd\" | grep -qE '(--force|(^|[[:space:]])-[a-zA-Z]*f[a-zA-Z]*([[:space:]]|$)|--no-verify)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Force-push is forbidden in this environment. Do NOT run git push with --force / -f / --force-with-lease, and do NOT use --no-verify. This is not a simple mistake to route around: rewriting already-published history irreversibly destroys shared state (other developers fetches/derived work, review anchors, stacked-PR rebase discipline). To resolve conflicts or update a branch, merge the base (git merge origin/main) or run git pull --rebase, then push normally as a fast-forward. To remove code from the final state, make a normal delete commit, which is different from deleting commits from history. If history truly must be rewritten, STOP and surface the situation to the user; the decision to proceed belongs to the user alone. An automated agent must never force-push or bypass this guard, even when explicitly instructed.\"}}'; fi",
             "statusMessage": "force-push guard"
           }
