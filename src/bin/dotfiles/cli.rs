@@ -62,7 +62,7 @@ enum Commands {
         #[command(subcommand)]
         action: ColorAction,
     },
-    /// 未設定のマシンローカル値を報告する。
+    /// 未設定のマシンローカル値と、ユニット間の配置先衝突を報告する。
     Doctor,
 }
 
@@ -147,7 +147,8 @@ fn run_profile(name: Option<&str>) -> Result<(), String> {
     }
 }
 
-/// `dotfiles doctor`：ソースの `locals` 宣言とストアを突き合わせ未設定を報告する。
+/// `dotfiles doctor`：ソースの `locals` 宣言とストアを突き合わせ未設定を報告し、ユニット間の
+/// 配置先衝突（#593）も報告する。
 fn run_doctor(source: Option<&Path>) -> Result<(), String> {
     let home = home_dir()?;
     let resolved = source::resolve(source)?;

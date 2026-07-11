@@ -22,7 +22,7 @@
 //! [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
 
 use serde::Deserialize;
-use std::path::{Component, Path};
+use std::path::{Component, Path, PathBuf};
 use strum::{Display, EnumIter};
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
@@ -548,6 +548,13 @@ fn validate_output_path(p: &str) -> Result<(), String> {
     Err(format!(
         "output パス `{p}` は ~ 起点（~ または ~/...）である必要があります（絶対パス・相対パスは不可）"
     ))
+}
+
+/// output パス（`validate` 済み・常に `~` / `~/...`）を `home` へ展開する。[`crate::apply::pipeline`]
+/// の実配置と [`crate::placements`] の期待配置集合の導出が、この 1 か所を共有する。
+pub(crate) fn resolve_output_path(home: &Path, p: &str) -> PathBuf {
+    p.strip_prefix("~/")
+        .map_or_else(|| home.to_path_buf(), |rest| home.join(rest))
 }
 
 /// input パスの表記検証（#579）: `~` / `~/...`（home 起点）または単位相対（`~` プレフィックス無し・
