@@ -3,6 +3,11 @@
 # fresh machine は mise で rust を取得してから cargo install する。
 rust = "latest"
 
+# workspace のテストランナー（`cargo test` の代替）。再現性のため版をピンする。
+# CI（.github/workflows/rust.yml）はプリビルドバイナリを別経路で取得するため、
+# 更新時はそちらの版も揃えること。
+"cargo:cargo-nextest" = "0.9.140"
+
 # lint オーケストレータが呼ぶフォーマッタ/リンタ群。
 # 再現性のため版をピンする（更新時は初回 `mise run lint` で差分を吸収）。
 # fish は brew 既存（mise では供給しない）。
