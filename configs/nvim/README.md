@@ -1,7 +1,5 @@
 # Modern Neovim Configuration
 
-モダンなNeovim設定 with Lua + lazy.nvim
-
 ## 概要
 
 このディレクトリには、Neovim (0.8+) 用のモダンなLua設定が含まれています。
@@ -9,11 +7,11 @@
 
 ### 主な特徴
 
-- 🚀 **高速起動**: lazy.nvimによる最適化された遅延読み込み
-- 🎨 **モダンUI**: Treesitter、Telescope、Neo-treeによる美しいインターフェース
-- 🔍 **インテリジェント補完**: LSP + nvim-cmpによる強力な補完機能
-- 📦 **簡単な管理**: Mason経由でLSPサーバーを自動インストール
-- 🛠️ **保守性**: Lua設定で読みやすく保守しやすい
+- 高速起動: lazy.nvimによる最適化された遅延読み込み
+- モダンUI: Treesitter、Telescope、Neo-treeによる美しいインターフェース
+- インテリジェント補完: LSP + nvim-cmpによる強力な補完機能
+- 簡単な管理: Mason経由でLSPサーバーを自動インストール
+- 保守性: Lua設定で読みやすく保守しやすい
 
 ## 前提条件
 
@@ -209,7 +207,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 
 従来の`require('lspconfig').server_name.setup()`から、新しい`vim.lsp.config()`と`vim.lsp.enable()`に移行済み。
 
-デフォルトでインストールされるLSPサーバー:
+デフォルトでインストールされるLSPサーバーは以下。
 
 - **lua_ls** - Lua
 - **ts_ls** - TypeScript/JavaScript
@@ -222,20 +220,9 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 
 追加のLSPサーバーは`:Mason`で簡単にインストールできます。
 
-## 旧設定からの移行
+## 旧設定との共存
 
-### 主な変更点
-
-1. **プラグインマネージャー**: dein.vim → lazy.nvim
-2. **LSP**: LanguageClient-neovim → nvim-lspconfig + mason.nvim
-3. **補完**: deoplete → nvim-cmp
-4. **ファジーファインダー**: denite → telescope.nvim
-5. **ファイルツリー**: defx → neo-tree
-6. **設定言語**: VimScript → Lua
-
-### 共存
-
-旧設定（`vim/`）とこの設定は共存可能です。以下のコマンドで切り替えられます:
+旧設定（`vim/`）とこの設定は共存可能です。以下のコマンドで切り替えられます。
 
 ```bash
 # 旧設定（VimScript + dein.vim）
@@ -263,13 +250,13 @@ nvim
 
 ### solargraph（Ruby LSP）のインストールエラー
 
-solargraphはMason経由でのインストールが失敗することがあります。以下のコマンドで手動インストールしてください:
+solargraphはMason経由のインストールで失敗する場合があります。以下のコマンドで手動インストールしてください。
 
 ```bash
 gem install solargraph
 ```
 
-mise（またはrbenv）を使用している場合:
+mise（またはrbenv）を使用している場合は、以下のコマンドを実行する。
 
 ```bash
 # miseの場合
