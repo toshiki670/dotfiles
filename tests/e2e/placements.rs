@@ -58,8 +58,8 @@ fn doctor_reports_conflict_for_same_resolved_path() {
         .assert()
         .success()
         .stderr(predicate::str::contains("衝突が 1 件"))
-        // ユニット名は sort 済みで列挙される（doctor.rs の report_placement_conflicts）。
-        // 部分文字列（tempdir のランダム名等）への誤マッチを避けるため列挙そのものを固定文字列で見る。
+        // sort 済みの列挙（doctor.rs の report_placement_conflicts）を固定文字列で見る
+        // （tempdir のランダム名等への誤マッチを避ける）。
         .stderr(predicate::str::contains(": a, b"));
 }
 

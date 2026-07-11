@@ -49,8 +49,8 @@ fn report_missing_locals(units: &[discover::Unit], store: &Store) -> Result<(), 
 }
 
 /// 期待配置集合を path でグルーピングし、2 ユニット以上が同一パスへ output を宣言している箇所を
-/// 報告する（#593）。conf.d 等の合流点はファイル粒度で比較するため、別ファイル名を置き合う正当な
-/// 合流は対象に入らない（[`placements::expected`] が既にツリーをファイル展開済み）。
+/// 報告する（#593）。ファイル粒度の比較なので conf.d 等の合流点は誤検知しない（理由は
+/// [`placements::expected`] のモジュール doc）。
 fn report_placement_conflicts(expected: &[Placement]) {
     let mut by_path: BTreeMap<&Path, Vec<&str>> = BTreeMap::new();
     for p in expected {
@@ -61,7 +61,7 @@ fn report_placement_conflicts(expected: &[Placement]) {
     }
     let mut conflicts: Vec<_> = by_path.into_iter().filter(|(_, u)| u.len() >= 2).collect();
     // ユニット名は discover::collect の走査順（read_dir 由来・未ソート）で積まれるため、表示前に
-    // ソートして出力を決定的にする（走査順が環境で揺れても衝突行の並びは揺れない）。
+    // ソートして出力を決定的にする。
     for (_, units) in &mut conflicts {
         units.sort_unstable();
     }
