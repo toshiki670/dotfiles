@@ -188,12 +188,10 @@ mod tests {
         // plist（`defaults export <domain> <file>` が実際に書く形式）で与えても、xml plist の断片と
         // 同じく shallow merge できることを確認する ― `shallow` が「XML の合成」ではなく
         // 「plist（直列化非依存）の合成」であることの直接の証拠。
-        let mut base_dict = Dictionary::new();
-        base_dict.insert(
-            "NSWindow Frame".to_string(),
-            PlistValue::String("0 0 100 200".to_string()),
-        );
-        base_dict.insert("CPU_state".to_string(), PlistValue::Boolean(false));
+        let base_dict = plist::plist_dict! {
+            "NSWindow Frame": "0 0 100 200",
+            "CPU_state": false,
+        };
         let mut base_bin = Vec::new();
         PlistValue::Dictionary(base_dict)
             .to_writer_binary(&mut base_bin)
