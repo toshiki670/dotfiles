@@ -5,9 +5,10 @@
 //! - **output** step: 内容を宛先へ書く。
 //!
 //! 各 step の `input` / `output` は択一で、どちらも「パス文字列」か「`cmd`（argv・標準入出力）」の
-//! 択一（[`StepSource`]）。重ね方の内容型は unit レベルの `format`（json / plist / text）、per-step の
-//! `merge`（shallow / append）が「どう重ねるか」を宣言する。`merge` は load 時の整合検証のための注釈で、
-//! 実行時の畳み込みの仕組みは [`crate::apply::pipeline`]。
+//! 択一（[`StepSource`]）。重ね方の内容型は unit レベルの `format`（json / plist / text）が決め、
+//! per-step の `merge`（shallow / deep / append）が「どう重ねるか」を step ごとに選ぶ ― 同じ unit の
+//! 中で 2 つ目の input が `shallow`、3 つ目が `deep` のように混在できる。実行時の畳み込みの仕組みは
+//! [`crate::apply::pipeline`]。
 //!
 //! gate 語彙は `when`（`deps` 配列 ＝ AND / `os` スカラ / `profile` スカラ）に一本化する。**書く位置で
 //! スコープが決まる**: トップレベルの `when` はユニット全体 gate（false ならユニットごと skip ＝
@@ -46,7 +47,8 @@ pub struct Manifest {
     #[serde(default)]
     pub locals: Vec<String>,
     /// 合成の内容型（`merge` を使うユニットに必須・使わないユニットには書けない）。
-    /// `json` / `plist` / `text`。実行時の畳み込みはこの単一値だけで駆動する。
+    /// `json` / `plist` / `text`。実行時の畳み込みのバイト種別（内容の解釈のしかた）を決め、
+    /// 「どう重ねるか」は各 step 自身の `merge` が選ぶ（[`Step::merge`]）。
     #[serde(default)]
     pub format: Option<Format>,
     /// 配置パイプライン。input（読む）→ output（書く）の step 列。空は load 時エラー
@@ -80,9 +82,9 @@ pub struct Step {
     /// 書く宛先（パス or cmd 標準入力）。`input` との併記・双方省略は load 時エラー。
     #[serde(default)]
     pub output: Option<StepSource>,
-    /// 重ね方（2 つ目以降の input に必須・最初の input と output には禁止）。値は `format` に従う:
-    /// json / plist → `shallow`、text → `append`。load 時の整合検証のための注釈で、実行時の
-    /// 畳み込みの駆動については [`crate::apply::pipeline`]。
+    /// 重ね方（2 つ目以降の input に必須・最初の input と output には禁止）。値は `format` と両立する
+    /// ものを選ぶ: json / plist → `shallow` | `deep`、text → `append`。この step の畳み込みをそのまま
+    /// 駆動する（[`crate::apply::pipeline`]）。
     #[serde(default)]
     pub merge: Option<Merge>,
     /// この step の採否（省略 = 常時採用）。unit gate と共通の語彙（`deps` / `os` / `profile`）。
@@ -125,23 +127,24 @@ pub struct CmdSource {
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum Format {
-    /// JSON。`merge = "shallow"` と両立。
+    /// JSON。`merge = "shallow"` / `"deep"` と両立。
     Json,
-    /// plist（Apple の property list）。`merge = "shallow"` と両立。
+    /// plist（Apple の property list）。`merge = "shallow"` / `"deep"` と両立。
     Plist,
     /// プレーンテキスト。`merge = "append"` と両立。
     Text,
 }
 
 /// 重ね方。表示名と TOML トークンを揃える規則は [`Format`] と同じ。
-/// deep（object 再帰マージ）は本スライスでは未実装 ― variant を足さないことで「shallow のつもりが
-/// deep」等の取り違えを型で防ぐ（deep はスライス2で追加予定）。
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display, EnumIter)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum Merge {
     /// トップレベルキー単位で後勝ち置換（json / plist）。
     Shallow,
+    /// object はキー単位で再帰マージ（後勝ち）・配列は step 順に連結（dedup・位置対応はしない）・
+    /// スカラおよび型不一致は後勝ち（json / plist）。
+    Deep,
     /// テキスト連結（境目に改行 1 つ）。
     Append,
 }
@@ -260,8 +263,8 @@ impl Manifest {
     ///   apply で内容がまだ空のまま書き込みへ到達する。
     /// - **`merge`**: 2 つ目以降の input に必須・最初の input / output には禁止（暗黙の合成規則を持た
     ///   ない・#580）。
-    /// - **`format`**: `merge` を使うユニットに必須・使わないユニットには禁止。`shallow` は json / plist・
-    ///   `append` は text とだけ両立。
+    /// - **`format`**: `merge` を使うユニットに必須・使わないユニットには禁止。`shallow` / `deep` は
+    ///   json / plist・`append` は text とだけ両立。
     /// - **`optional`**: `~` 起点のパス input のみ（単位相対ファイルは静的なので不在は typo・cmd input・
     ///   output への指定も typo）。
     fn validate(&self) -> Result<(), String> {
@@ -456,21 +459,23 @@ impl Manifest {
             }
             _ => {}
         }
-        // 各 merge の値と format の両立（shallow ↔ json/plist・append ↔ text）。
+        // 各 merge の値と format の両立（shallow / deep ↔ json/plist・append ↔ text）。
         for (i, step) in self.steps.iter().enumerate() {
             if let Some(merge) = step.merge {
                 let compatible = matches!(
                     (merge, self.format),
-                    (Merge::Shallow, Some(Format::Json | Format::Plist))
-                        | (Merge::Append, Some(Format::Text))
+                    (
+                        Merge::Shallow | Merge::Deep,
+                        Some(Format::Json | Format::Plist)
+                    ) | (Merge::Append, Some(Format::Text))
                 );
                 if !compatible {
                     let format = self
                         .format
                         .map_or_else(|| "（未設定）".to_string(), |f| f.to_string());
                     return Err(format!(
-                        "steps[{i}]: merge = \"{merge}\" は format = \"{format}\" と両立しません（shallow は \
-                         json / plist・append は text）"
+                        "steps[{i}]: merge = \"{merge}\" は format = \"{format}\" と両立しません（shallow / \
+                         deep は json / plist・append は text）"
                     ));
                 }
             }
@@ -891,6 +896,31 @@ mod tests {
         assert!(
             err.contains("両立しません"),
             "append×json が弾かれていない: {err}"
+        );
+        // deep ↔ text も非両立。
+        let err = parse(
+            "format = \"text\"\n[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\nmerge = \"deep\"\n[[steps]]\noutput = \"~/x\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("両立しません"),
+            "deep×text が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn accepts_deep_merge_mixed_with_shallow_in_same_unit() {
+        // #554: 同じ unit（format="json"）内で 2 つ目の input は shallow、3 つ目は deep が混在できる
+        // （settings ＝ shallow リセット → rtk 断片を deep で重ねる、の実例と同じ形）。
+        assert!(
+            parse(
+                "format = \"json\"\n\
+                 [[steps]]\ninput = \"a\"\n\
+                 [[steps]]\ninput = \"b\"\nmerge = \"shallow\"\n\
+                 [[steps]]\ninput = \"c\"\nmerge = \"deep\"\n\
+                 [[steps]]\noutput = \"~/x\"\n",
+            )
+            .is_ok()
         );
     }
 
