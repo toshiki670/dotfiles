@@ -80,13 +80,15 @@ lint は Rust 製オーケストレータ `dotfiles-lint`（`tools/dotfiles-lint
 workspace 全体のテスト（各クレートの unit + E2E）を確認する。
 
 ```bash
-cargo test --workspace
+cargo nextest run --workspace
 ```
+
+`cargo-nextest` は mise から供給される（`mise install` で導入済み）。
 
 #### 補足
 
-- CI は `cargo run -p dotfiles-lint -- check`（lint）と `cargo test --workspace`（unit + E2E）を
-  実行する。
+- CI は `cargo run -p dotfiles-lint -- check`（lint）と `cargo nextest run --workspace`
+  （unit + E2E）を実行する。
 - 詳細ログが必要な場合は `cargo run -p dotfiles-lint -- check --summary --json` を使う。
 
 ### テスト方針（エンジンはツールのライフサイクルから独立）

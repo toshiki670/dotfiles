@@ -22,6 +22,11 @@ jobs:
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
 
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest@0.9.140
+
       - name: Format check
         run: cargo fmt --all --check
 
@@ -32,7 +37,7 @@ jobs:
         run: cargo build --workspace --locked
 
       - name: Test
-        run: cargo test --workspace --locked
+        run: cargo nextest run --workspace --locked
 
       # intra-doc リンク腐敗の恒久ガード（main.rs の #![deny(rustdoc::broken_intra_doc_links)]）。
       # rustdoc lint は cargo doc 実行時のみ効くため、CI でリンク切れを検出する。
