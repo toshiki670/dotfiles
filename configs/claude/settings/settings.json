@@ -29,7 +29,7 @@
           },
           {
             "type": "command",
-            "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE '(^|[;&|()])[[:space:]]*trash[[:space:]]+[^;&|()]*(\\$\\(|`)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"trash argument looks like an unverified command substitution (a $(...) or backtick expression). If it evaluates to an empty string, trash falls back to the current working directory and moves it into Trash instead of the intended target. Assign the substitution to a variable, verify it is non-empty (and not the literal . or cwd), then pass the variable to trash.\"}}'; fi",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE '(^|[;&|()]|[[:space:]](then|do)[[:space:]]+|![[:space:]]*)[[:space:]]*(command[[:space:]]+)?trash[[:space:]]+.*(\\$\\(|`)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"trash argument looks like an unverified command substitution (a $(...) or backtick expression) somewhere on this line. If it evaluates to an empty string, trash falls back to the current working directory and moves it into Trash instead of the intended target. Assign the substitution to a variable, verify it is non-empty (and not the literal . or cwd), then pass the variable to trash.\"}}'; fi",
             "statusMessage": "trash guard (unverified arg)"
           },
           {
