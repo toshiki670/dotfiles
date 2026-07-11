@@ -1,14 +1,18 @@
 //! 畳み込み: 現在の内容（`base`）へ新しい断片（`frag`）を 1 つ後勝ちで重ねる純ロジック。
 //! [`crate::apply::pipeline`] の `fold_in` が step ごとに、現在の内容を `base`・新しい input を
-//! `frag` として呼ぶ（`format` が戦略を選ぶ）。
+//! `frag` として呼ぶ（`format` × per-step `merge` が重ね方を選ぶ）。
 //!
 //! - `concat`（`format = "text"`）… テキスト連結（`frag` を後ろへ連結。境目に改行を 1 つ補う）。
-//! - `json_shallow`（`format = "json"`）… JSON のトップレベル shallow merge（後勝ち）。`base`
-//!   （現在の内容）を最下層の土台とし、dotfiles 所有のトップレベルキーだけを `frag` で上書きする。
-//!   dotfiles が定義しない非管理キーは土台のまま全保持される（deep merge はしない）。
-//! - `plist_shallow`（`format = "plist"`）… `json_shallow` の plist 版（トップレベル shallow merge・
-//!   後勝ち・deep merge しない）。shallow merge を保証するのは plist の dict モデルであって XML という
-//!   構文ではないため、`xml_shallow` ではなく `plist_shallow` と呼ぶ。
+//! - `json_shallow`（`format = "json"` ＋ `merge = "shallow"`）… JSON のトップレベル shallow merge
+//!   （後勝ち）。`base`（現在の内容）を最下層の土台とし、dotfiles 所有のトップレベルキーだけを
+//!   `frag` で上書きする。dotfiles が定義しない非管理キーは土台のまま全保持される（配下は
+//!   deep merge しない）。
+//! - `plist_shallow`（`format = "plist"` ＋ `merge = "shallow"`）… `json_shallow` の plist 版
+//!   （トップレベル shallow merge・後勝ち）。shallow merge を保証するのは plist の dict モデルで
+//!   あって XML という構文ではないため、`xml_shallow` ではなく `plist_shallow` と呼ぶ。
+//! - `json_deep`（`format = "json"` ＋ `merge = "deep"`）… object はキー単位で再帰マージ（後勝ち）・
+//!   配列は `base` → `frag` の順で連結（dedup・位置対応はしない）・スカラおよび型不一致は後勝ち。
+//! - `plist_deep`（`format = "plist"` ＋ `merge = "deep"`）… `json_deep` の plist 版。
 //!
 //! いずれも副作用のない純関数で、配置（書き込み）は [`crate::apply::pipeline`] が行う。`base = None`
 //! で呼ぶと `frag` そのもの（再直列化）を返す ― これにより step 列の最初の input（土台なし）と
@@ -56,6 +60,48 @@ pub fn json_shallow(base: Option<&[u8]>, frag: &[u8]) -> Result<Vec<u8>, String>
     Ok(out)
 }
 
+/// `base`（現在の内容）へ JSON 断片 `frag` を deep merge する: object はキー単位で再帰マージ（後勝ち）・
+/// 配列は `base` → `frag` の順で連結（dedup・位置対応はしない ― 動機の hooks 配列は「断片の追記」が
+/// 意図で、キー付き dedup はスキーマ知識をエンジンへ持ち込むため不採用）・スカラおよび型不一致は
+/// 後勝ち（`frag` が勝つ）。`base = None` なら `frag` だけを合成する。`frag`・`base` は JSON オブジェクト
+/// を要する。
+pub fn json_deep(base: Option<&[u8]>, frag: &[u8]) -> Result<Vec<u8>, String> {
+    let frag = parse_object(frag)?;
+    let mut merged = match base {
+        Some(base) => parse_object(base).map_err(|e| format!("base {e}"))?,
+        None => Map::new(),
+    };
+    deep_merge_object(&mut merged, frag);
+
+    let mut out = serde_json::to_vec_pretty(&Value::Object(merged))
+        .map_err(|e| format!("JSON 直列化失敗: {e}"))?;
+    out.push(b'\n');
+    Ok(out)
+}
+
+/// object をキー単位で重ねる（[`json_deep`] / [`plist_deep`] が共有する合成規則）。既存キーは
+/// [`deep_merge_value`] へ再帰し、`base` に無いキーは `frag` の値をそのまま挿入する。
+fn deep_merge_object(base: &mut Map<String, Value>, frag: Map<String, Value>) {
+    for (k, frag_v) in frag {
+        match base.get_mut(&k) {
+            Some(base_v) => deep_merge_value(base_v, frag_v),
+            None => {
+                base.insert(k, frag_v);
+            }
+        }
+    }
+}
+
+/// 1 つの値を重ねる: object 同士は [`deep_merge_object`] へ再帰・array 同士は連結、それ以外
+/// （スカラ・型不一致）は後勝ちで `frag` が `base` を置き換える。
+fn deep_merge_value(base: &mut Value, frag: Value) {
+    match (base, frag) {
+        (Value::Object(base), Value::Object(frag)) => deep_merge_object(base, frag),
+        (Value::Array(base), Value::Array(frag)) => base.extend(frag),
+        (base, frag) => *base = frag,
+    }
+}
+
 /// バイト列を JSON オブジェクトとしてパースする（オブジェクト以外はエラー）。
 fn parse_object(bytes: &[u8]) -> Result<Map<String, Value>, String> {
     let value: Value =
@@ -91,6 +137,49 @@ pub fn plist_shallow(base: Option<&[u8]>, frag: &[u8]) -> Result<Vec<u8>, String
         .map_err(|e| format!("plist 直列化失敗: {e}"))?;
     out.push(b'\n');
     Ok(out)
+}
+
+/// `base`（現在の内容）へ plist 断片 `frag` を deep merge する。[`json_deep`] の plist 版（dict は
+/// キー単位で再帰マージ・array は連結・スカラおよび型不一致は後勝ち）。`base = None` なら `frag`
+/// だけを合成する。`frag`・`base` は plist 辞書（トップレベル dict）を要する。
+pub fn plist_deep(base: Option<&[u8]>, frag: &[u8]) -> Result<Vec<u8>, String> {
+    let frag = parse_dict(frag)?;
+    let mut merged = match base {
+        Some(base) => parse_dict(base).map_err(|e| format!("base {e}"))?,
+        None => Dictionary::new(),
+    };
+    deep_merge_dict(&mut merged, frag);
+
+    let mut out = Vec::new();
+    PlistValue::Dictionary(merged)
+        .to_writer_xml(&mut out)
+        .map_err(|e| format!("plist 直列化失敗: {e}"))?;
+    out.push(b'\n');
+    Ok(out)
+}
+
+/// dict をキー単位で重ねる（[`deep_merge_object`] の plist 版）。
+fn deep_merge_dict(base: &mut Dictionary, frag: Dictionary) {
+    for (k, frag_v) in frag {
+        match base.get_mut(&k) {
+            Some(base_v) => deep_merge_plist_value(base_v, frag_v),
+            None => {
+                base.insert(k, frag_v);
+            }
+        }
+    }
+}
+
+/// 1 つの値を重ねる（[`deep_merge_value`] の plist 版）: dict 同士は再帰・array 同士は連結、それ以外
+/// は後勝ち。
+fn deep_merge_plist_value(base: &mut PlistValue, frag: PlistValue) {
+    match (base, frag) {
+        (PlistValue::Dictionary(base), PlistValue::Dictionary(frag)) => {
+            deep_merge_dict(base, frag);
+        }
+        (PlistValue::Array(base), PlistValue::Array(frag)) => base.extend(frag),
+        (base, frag) => *base = frag,
+    }
 }
 
 /// バイト列を plist 辞書（トップレベル dict）としてパースする（辞書以外・パース不能はエラー）。
@@ -187,6 +276,53 @@ mod tests {
         assert!(json_shallow(None, b"[1,2,3]").is_err());
         assert!(json_shallow(None, b"\"scalar\"").is_err());
         assert!(json_shallow(Some(b"[1,2,3]"), b"{}").is_err());
+    }
+
+    // ── json_deep ──
+
+    #[test]
+    fn json_deep_merges_nested_objects_by_key() {
+        // object はキー単位で再帰マージ（json_shallow はここを丸ごと置換する）。
+        let out = json_deep(
+            Some(br#"{"hooks":{"a":1,"b":2}}"#),
+            br#"{"hooks":{"b":3,"c":4}}"#,
+        )
+        .unwrap();
+        let v: Value = serde_json::from_slice(&out).unwrap();
+        assert_eq!(v["hooks"]["a"], 1, "base 側だけのキーは保持される");
+        assert_eq!(v["hooks"]["b"], 3, "同名キーは frag が後勝ち");
+        assert_eq!(v["hooks"]["c"], 4, "frag 側だけのキーは追加される");
+    }
+
+    #[test]
+    fn json_deep_concatenates_arrays_in_step_order() {
+        // 配列は dedup・位置対応なしで base → frag の順に連結する。
+        let out = json_deep(Some(br#"{"list":[1,2]}"#), br#"{"list":[2,3]}"#).unwrap();
+        let v: Value = serde_json::from_slice(&out).unwrap();
+        assert_eq!(v["list"], serde_json::json!([1, 2, 2, 3]));
+    }
+
+    #[test]
+    fn json_deep_scalar_or_type_mismatch_last_wins() {
+        // スカラ同士・型不一致のいずれも frag が base を置き換える。
+        let out = json_deep(Some(br#"{"a":1}"#), br#"{"a":2}"#).unwrap();
+        let v: Value = serde_json::from_slice(&out).unwrap();
+        assert_eq!(v["a"], 2, "スカラは後勝ち");
+
+        let out = json_deep(Some(br#"{"a":{"x":1}}"#), br#"{"a":[1,2]}"#).unwrap();
+        let v: Value = serde_json::from_slice(&out).unwrap();
+        assert_eq!(
+            v["a"],
+            serde_json::json!([1, 2]),
+            "型不一致（object vs array）は frag が後勝ち"
+        );
+    }
+
+    #[test]
+    fn json_deep_without_base_is_frag_only() {
+        let out = json_deep(None, br#"{"a":{"b":1}}"#).unwrap();
+        let v: Value = serde_json::from_slice(&out).unwrap();
+        assert_eq!(v["a"]["b"], 1);
     }
 
     // ── plist_shallow ──
@@ -311,5 +447,60 @@ mod tests {
         let d = dict_of(&out);
         assert_eq!(d["NSWindow Frame"].as_string(), Some("0 0 100 200"));
         assert_eq!(d["CPU_state"].as_boolean(), Some(true)); // frag が binary の土台を上書き。
+    }
+
+    // ── plist_deep ──
+
+    #[test]
+    fn plist_deep_merges_nested_dicts_by_key() {
+        let base = plist_dict(
+            "<key>toolbar</key><dict><key>a</key><integer>1</integer><key>b</key><integer>2</integer></dict>",
+        );
+        let frag = plist_dict(
+            "<key>toolbar</key><dict><key>b</key><integer>3</integer><key>c</key><integer>4</integer></dict>",
+        );
+        let out = plist_deep(Some(&base), &frag).unwrap();
+        let d = dict_of(&out);
+        let toolbar = d["toolbar"].as_dictionary().unwrap();
+        assert_eq!(
+            toolbar["a"].as_signed_integer(),
+            Some(1),
+            "base 側キーは保持"
+        );
+        assert_eq!(
+            toolbar["b"].as_signed_integer(),
+            Some(3),
+            "同名キーは後勝ち"
+        );
+        assert_eq!(
+            toolbar["c"].as_signed_integer(),
+            Some(4),
+            "frag 側キーは追加"
+        );
+    }
+
+    #[test]
+    fn plist_deep_concatenates_arrays_in_step_order() {
+        let base = plist_dict("<key>list</key><array><integer>1</integer></array>");
+        let frag = plist_dict("<key>list</key><array><integer>2</integer></array>");
+        let out = plist_deep(Some(&base), &frag).unwrap();
+        let d = dict_of(&out);
+        let list = d["list"].as_array().unwrap();
+        assert_eq!(
+            list.iter()
+                .map(|v| v.as_signed_integer().unwrap())
+                .collect::<Vec<_>>(),
+            vec![1, 2],
+            "配列は base → frag の順で連結"
+        );
+    }
+
+    #[test]
+    fn plist_deep_scalar_last_wins() {
+        let base = plist_dict("<key>CPU_state</key><false/>");
+        let frag = plist_dict("<key>CPU_state</key><true/>");
+        let out = plist_deep(Some(&base), &frag).unwrap();
+        let d = dict_of(&out);
+        assert_eq!(d["CPU_state"].as_boolean(), Some(true));
     }
 }

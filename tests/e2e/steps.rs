@@ -415,6 +415,125 @@ fn apply_json_shallow_later_input_wins() {
     );
 }
 
+// ── merge = "deep"（#554 / #588 スライス2） ──
+
+/// #554 の実例（claude/settings）と同じ形の単位を書き出す: 宛先読み（optional）→ shallow で
+/// dotfiles 所有キーをリセット → faketool 断片（rtk 相当）を deep で重ねる。base・断片とも
+/// `hooks.PreToolUse` に 1 グループずつ持ち、deep merge が同名キーの配列をどう連結するかを検証する
+/// 土台にする。
+fn write_json_deep_unit(work: &Path) {
+    let unit = work.join("configs/app");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "format = \"json\"\n\
+         [[steps]]\n\
+         input    = \"~/.config/app/settings.json\"\n\
+         optional = true\n\
+         [[steps]]\n\
+         input = \"settings.json\"\n\
+         merge = \"shallow\"\n\
+         [[steps]]\n\
+         input = \"faketool.json\"\n\
+         when  = { deps = [\"faketool\"] }\n\
+         merge = \"deep\"\n\
+         [[steps]]\n\
+         output = \"~/.config/app/settings.json\"\n",
+    )
+    .unwrap();
+    // dotfiles 所有 base: hooks.PreToolUse に 1 グループ（汎用ガード）を持つ。
+    fs::write(
+        unit.join("settings.json"),
+        "{\"hooks\":{\"PreToolUse\":[{\"matcher\":\"Bash\",\"hooks\":[{\"cmd\":\"guard\"}]}]}}\n",
+    )
+    .unwrap();
+    // rtk 相当の断片: 同じ hooks.PreToolUse キーへ別グループを追記する（キー付き dedup はしない）。
+    fs::write(
+        unit.join("faketool.json"),
+        "{\"hooks\":{\"PreToolUse\":[{\"matcher\":\"Bash\",\"hooks\":[{\"cmd\":\"faketool\"}]}]}}\n",
+    )
+    .unwrap();
+}
+
+/// deep merge: object は同名キー（`hooks`／`PreToolUse`）単位で再帰し、その配下の配列は base → frag
+/// の順で連結する（dedup・位置対応なし。settings.json ＋ rtk.json の実 configs が拠って立つ規則）。
+#[cfg(unix)]
+#[test]
+fn apply_json_deep_merges_object_keys_and_concatenates_arrays() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+
+    write_stub(bin.path(), "faketool", "exit 0\n");
+    write_json_deep_unit(work.path());
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .env("PATH", bin.path())
+        .assert()
+        .success();
+
+    let dst = home.path().join(".config/app/settings.json");
+    let out: serde_json::Value = serde_json::from_str(&fs::read_to_string(&dst).unwrap()).unwrap();
+    let pre_tool_use = out["hooks"]["PreToolUse"].as_array().unwrap();
+    assert_eq!(
+        pre_tool_use.len(),
+        2,
+        "deep merge は配列をキーで dedup せず base → frag の順で連結するべき: {pre_tool_use:?}",
+    );
+    assert_eq!(pre_tool_use[0]["hooks"][0]["cmd"], "guard");
+    assert_eq!(pre_tool_use[1]["hooks"][0]["cmd"], "faketool");
+}
+
+/// #554 の中核不変条件: 「宛先読み（optional）→ shallow リセット → deep 重ね」の step 構成は、2 回目
+/// 以降の apply で前回の合成結果（既に 2 グループを持つ配列）を土台に読んでも安定する ― shallow step が
+/// dotfiles 所有キー（`hooks`）を毎回まるごとリセットしてから deep step が重ねるため、配列が
+/// 際限なく伸びる回帰を避けられる。
+#[cfg(unix)]
+#[test]
+fn apply_json_deep_is_idempotent_across_repeated_applies() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+
+    write_stub(bin.path(), "faketool", "exit 0\n");
+    write_json_deep_unit(work.path());
+
+    let apply = || {
+        dotfiles()
+            .arg("apply")
+            .current_dir(work.path())
+            .env("HOME", home.path())
+            .env("PATH", bin.path())
+            .assert()
+            .success();
+    };
+    let dst = home.path().join(".config/app/settings.json");
+
+    apply();
+    let first = fs::read_to_string(&dst).unwrap();
+
+    apply();
+    let second = fs::read_to_string(&dst).unwrap();
+    assert_eq!(
+        first, second,
+        "2 回目の apply は前回の合成結果を土台に読んでも byte-identical であるべき",
+    );
+
+    apply();
+    let third = fs::read_to_string(&dst).unwrap();
+    assert_eq!(second, third, "3 回目も安定するべき");
+
+    let out: serde_json::Value = serde_json::from_str(&third).unwrap();
+    assert_eq!(
+        out["hooks"]["PreToolUse"].as_array().unwrap().len(),
+        2,
+        "繰り返し apply しても配列が際限なく伸びず 2 要素で安定するべき",
+    );
+}
+
 /// `dotfiles list` が steps サマリ・format・when.os 属性を表示する。
 #[test]
 fn list_shows_steps_summary_format_and_os_attrs() {

@@ -1,11 +1,8 @@
 # Claude Code の settings.json を配置する。宛先の現在内容を土台に読み（optional）、dotfiles 所有
-# キーを shallow でリセットし、rtk 断片を重ねる ― app 自身が書くトップレベルキー（`model` /
+# キーを shallow でリセットし、rtk 断片を deep で重ねる ― app 自身が書くトップレベルキー（`model` /
 # `effortLevel` 等）は保たれ、共有キー（hooks / statusLine / language / theme / voiceEnabled）は
-# 断片が常に勝つ。
-#
-# 注: rtk.json は rm→trash ガードを含む hooks 全体を持つ（settings.json と一部重複する）。これは
-# 「rtk hook だけ条件付き」を deep merge 無しで表現する暫定コスト（deep 化はスライス2）。rm ガードを
-# 変えるときは settings.json と rtk.json の両方を直すこと。
+# 断片が常に勝つ。rtk.json の hooks はキー単位で再帰マージされ配列は連結されるため、rtk.json は
+# rtk 固有の hook だけを持つ（rm ガード等を settings.json と重複して持たない）。
 format = "json"
 
 # 宛先の現在内容を土台に（app 所有キーを保持）。初回 apply ではまだ無いため optional。
@@ -19,10 +16,11 @@ input = "settings.json"
 merge = "shallow"
 
 # rtk 断片: rtk が PATH にある時だけ重ねる。`when` で表現することで、rtk が無い環境でも
-# hooks 全体が壊れる（無条件化の回帰）のを防ぐ。
+# hooks 全体が壊れる（無条件化の回帰）のを防ぐ。deep merge により hooks.PreToolUse 配列へ
+# 追記される（rm ガード等の既存グループは残したまま）。
 [[steps]]
 input = "rtk.json"
-merge = "shallow"
+merge = "deep"
 when  = { deps = [ "rtk" ] }
 
 [[steps]]
