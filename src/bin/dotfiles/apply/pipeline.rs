@@ -1,13 +1,15 @@
 //! step 列の実行器: 内容（Content）を空から始め、宣言順に input（読む）→ output（書く）を畳む。
 //!
-//! `manifest.toml` の `[[steps]]` を上から評価する。各 step は `when`（step スコープ gate）で採否を
-//! 決め、採用された input は内容へ中身を畳み、output は内容を宛先へ書く。ツリー input（`input = "."`）は
-//! 内容を「ファイルツリー」にし、パス output で相対構造を保って再帰配置する（[`crate::apply::copy`]）。
+//! `manifest.toml` の `[[steps]]` を解釈した [`crate::manifest::Steps`] を実行する。ツリー配置
+//! （[`Steps::Tree`]）は step 列を持たないため、畳み込みを経ず単位ディレクトリを output へ再帰配置
+//! する（[`crate::apply::copy`]）。パイプライン（[`Steps::Pipeline`]）は step 列を上から評価する:
+//! 各 step は `when`（step スコープ gate）で採否を決め、採用された input は内容へ中身を畳み、
+//! output は内容を宛先へ書く。
 //!
 //! バイト内容の畳み込みは unit レベルの `format` が内容種別を決め、各 input step 自身の `merge`
 //! （値の一覧は [`crate::manifest`]）が「どう重ねるか」を選ぶ（[`fold_in`]） ― `fold_in` は unit 全体
 //! ではなくその step の `merge` だけを見て畳み込み関数を選ぶ。最初の input は `merge` を持たない
-//! （[`crate::manifest`] の `validate` が禁止）が、土台なし（`base = None`）から畳むといずれの畳み込み
+//! （load 時の解釈が禁止）が、土台なし（`base = None`）から畳むといずれの畳み込み
 //! 関数も断片そのもの（再直列化）を返す ― [`crate::apply::fold`] の各関数に共通する性質 ― ため、
 //! optional / gate で先頭 input が実行時に飛んでも（宣言上の 2 番目が実際の最初になっても）結果は
 //! 一定になる。
@@ -18,7 +20,9 @@
 use super::gate::{self, GateState};
 use super::{cmd, copy, fold, set_mode, write_if_changed};
 use crate::locals::resolve;
-use crate::manifest::{Format, Manifest, Merge, StepSource, resolve_output_path};
+use crate::manifest::{
+    Format, InputStep, Manifest, Merge, OutputStep, Step, StepSource, Steps, resolve_output_path,
+};
 use std::collections::BTreeMap;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -30,11 +34,9 @@ enum Content {
     Empty,
     /// バイト列の内容（input を `format` × `merge` で畳んだ結果）。
     Bytes(Vec<u8>),
-    /// 単位ディレクトリツリー（`input = "."`）。パス output で再帰配置する。
-    Tree,
 }
 
-/// 1 単位（`unit_dir`）の step 列を実行する。`home` は `~` 展開先、`locals` は解決済み named value、
+/// 1 単位（`unit_dir`）の steps を実行する。`home` は `~` 展開先、`locals` は解決済み named value、
 /// `gate_state` は step の `when`（状態 gate）評価に使う現在状態スナップショット。
 pub fn run(
     unit_dir: &Path,
@@ -43,94 +45,96 @@ pub fn run(
     locals: &BTreeMap<String, String>,
     gate_state: &GateState,
 ) -> Result<(), String> {
-    let mut content = Content::Empty;
-    for step in &manifest.steps {
-        // step gate: 満たさなければこの step を飛ばす（内容は不変）。
-        if !gate::when_satisfied(&step.when, gate_state) {
-            continue;
-        }
-        if let Some(input) = &step.input {
-            apply_input(
-                &mut content,
+    let (format, steps) = match &manifest.steps {
+        Steps::Tree { output } => {
+            return copy::place(
                 unit_dir,
-                home,
-                manifest.format,
-                step.merge,
-                step.optional,
-                input,
-            )?;
-        } else if let Some(output) = &step.output {
-            apply_output(&content, unit_dir, home, manifest, locals, output)?;
+                &resolve_output_path(home, output),
+                manifest,
+                locals,
+            );
+        }
+        Steps::Pipeline { format, steps } => (*format, steps),
+    };
+    let mut content = Content::Empty;
+    for step in steps {
+        match step {
+            Step::Input(input) => {
+                // step gate: 満たさなければこの step を飛ばす（内容は不変）。
+                if !gate::when_satisfied(&input.when, gate_state) {
+                    continue;
+                }
+                apply_input(&mut content, unit_dir, home, format, input)?;
+            }
+            Step::Output(output) => {
+                if !gate::when_satisfied(&output.when, gate_state) {
+                    continue;
+                }
+                apply_output(&content, home, manifest, locals, output)?;
+            }
         }
     }
     Ok(())
 }
 
-/// input step: 読んだ中身を内容へ畳む（`format` × この step の `merge` で駆動）。ツリー input は
-/// 内容をツリーにする。optional なパス input が不在なら内容を触らず飛ばす（次の input が土台になる）。
+/// input step: 読んだ中身を内容へ畳む（`format` × この step の `merge` で駆動）。
+/// optional なパス input が不在なら内容を触らず飛ばす（次の input が土台になる）。
 fn apply_input(
     content: &mut Content,
     unit_dir: &Path,
     home: &Path,
     format: Option<Format>,
-    merge: Option<Merge>,
-    optional: bool,
-    input: &StepSource,
+    input: &InputStep,
 ) -> Result<(), String> {
-    match input {
-        StepSource::Path(p) if p == "." => *content = Content::Tree,
+    match &input.source {
         StepSource::Path(p) => {
             let path = resolve_input_path(unit_dir, home, p);
             match std::fs::read(&path) {
                 // パースエラーには input パスのラベルを添える（どの input が壊れたか）。
                 Ok(bytes) => {
-                    fold_in(content, format, merge, &bytes).map_err(|e| format!("{p}: {e}"))?;
+                    fold_in(content, format, input.merge, &bytes)
+                        .map_err(|e| format!("{p}: {e}"))?;
                 }
                 // optional な不在は内容を触らず飛ばす（既定は「無ければエラー」）。
-                Err(e) if e.kind() == io::ErrorKind::NotFound && optional => {}
+                Err(e) if e.kind() == io::ErrorKind::NotFound && input.optional => {}
                 Err(e) => return Err(format!("{}: 読み込み失敗: {e}", path.display())),
             }
         }
         StepSource::Cmd(c) => {
             let bytes = cmd::run(&c.cmd)?;
             // パースエラーには cmd argv のラベルを添える。
-            fold_in(content, format, merge, &bytes)
+            fold_in(content, format, input.merge, &bytes)
                 .map_err(|e| format!("{}: {e}", c.cmd.join(" ")))?;
         }
     }
     Ok(())
 }
 
-/// output step: 内容を宛先へ書く。パス output はファイル/ツリーを配置、cmd output は内容を
+/// output step: 内容を宛先へ書く。パス output はファイルを配置、cmd output は内容を
 /// 標準入力へ渡す。
 fn apply_output(
     content: &Content,
-    unit_dir: &Path,
     home: &Path,
     manifest: &Manifest,
     locals: &BTreeMap<String, String>,
-    output: &StepSource,
+    output: &OutputStep,
 ) -> Result<(), String> {
-    match (output, content) {
-        (StepSource::Path(p), Content::Tree) => {
-            copy::place(unit_dir, &resolve_output_path(home, p), manifest, locals)
-        }
-        (StepSource::Path(p), Content::Bytes(bytes)) => {
+    let Content::Bytes(bytes) = content else {
+        return Err(
+            "output に到達しましたが内容が空です（生成された中身がありません）".to_string(),
+        );
+    };
+    match &output.dest {
+        StepSource::Path(p) => {
             let injected = resolve::inject(bytes, locals);
             let path = resolve_output_path(home, p);
             write_if_changed(&path, &injected)?;
             // 書き込みを省略しても mode は毎回再適用する（属性変更が反映されるように）。
             set_mode(&path, manifest)
         }
-        (StepSource::Cmd(c), Content::Bytes(bytes)) => {
+        StepSource::Cmd(c) => {
             // cmd output は毎 apply 実行し、合成済みの内容を標準入力へ渡す（冪等契約）。
             cmd::run_piped(&c.cmd, &resolve::inject(bytes, locals))
-        }
-        (_, Content::Empty) => {
-            Err("output に到達しましたが内容が空です（生成された中身がありません）".to_string())
-        }
-        (StepSource::Cmd(_), Content::Tree) => {
-            unreachable!("validated: ツリー output はパス（cmd 不可）")
         }
     }
 }
@@ -150,7 +154,7 @@ fn fold_in(
 ) -> Result<(), String> {
     let base = match content {
         Content::Bytes(b) => Some(b.as_slice()),
-        _ => None,
+        Content::Empty => None,
     };
     let merged = match (format, merge) {
         (None, _) => bytes.to_vec(),
@@ -165,7 +169,7 @@ fn fold_in(
 }
 
 /// input パスを解決する: `~` 起点は `home` に展開、それ以外は単位相対（`unit_dir` に join）。
-/// 表記は [`crate::manifest`] の `validate` が保証済み（`~` / `~/...` / 単位相対）。
+/// 表記は load 時の解釈（[`crate::manifest`]）が保証済み（`~` / `~/...` / 単位相対）。
 fn resolve_input_path(unit_dir: &Path, home: &Path, p: &str) -> PathBuf {
     if let Some(rest) = p.strip_prefix("~/") {
         home.join(rest)

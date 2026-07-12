@@ -11,7 +11,7 @@
 use crate::apply::gate;
 use crate::discover::{self, MANIFEST};
 use crate::locals::store::Store;
-use crate::manifest::{Manifest, StepSource, resolve_output_path};
+use crate::manifest::{Manifest, Step, StepSource, Steps, resolve_output_path};
 use crate::placements::{self, Placement};
 use crate::prune;
 use std::collections::BTreeMap;
@@ -130,10 +130,17 @@ fn stale_reason(source: &Path, home: &Path, gate_state: &gate::GateState, path: 
     if let Some(reason) = gate::unit_skip_reason(&manifest, gate_state) {
         return format!("{owner}: {reason}");
     }
-    let step_gated = manifest.steps.iter().any(|step| {
-        matches!(&step.output, Some(StepSource::Path(p)) if resolve_output_path(home, p) == path)
-            && !gate::when_satisfied(&step.when, gate_state)
-    });
+    let step_gated = match &manifest.steps {
+        // ツリー配置は step を持たず when も書けない（unit gate のみ）。
+        Steps::Tree { .. } => false,
+        Steps::Pipeline { steps, .. } => steps.iter().any(|step| match step {
+            Step::Output(out) => {
+                matches!(&out.dest, StepSource::Path(p) if resolve_output_path(home, p) == path)
+                    && !gate::when_satisfied(&out.when, gate_state)
+            }
+            Step::Input(_) => false,
+        }),
+    };
     if step_gated {
         return format!("{owner}: output step の when が不成立です");
     }

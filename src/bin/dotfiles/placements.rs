@@ -27,12 +27,11 @@
 //! 報告してしまう。cmd output はファイルシステムに痕跡を残さないため対象外（∅）。比較は解決済み
 //! パスの完全一致だけなので、ツリーが `~/.config/foo/` 配下へ展開する一方で別ユニットが
 //! `~/.config/foo` というファイルへ output する「ディレクトリ×ファイルの前置衝突」も対象外
-//! （#593 が定義する衝突の範囲外として意図的に外す）。ツリーユニットの step に `when` は書けない
-//! （`Manifest::validate` が禁止・unit gate と冗長になるため）ので、ツリー展開そのものに step gate の
-//! 判定は要らない。
+//! （#593 が定義する衝突の範囲外として意図的に外す）。ツリー配置（[`crate::manifest::Steps::Tree`]）
+//! は step を持たず `when` も書けないため、ツリー展開そのものに step gate の判定は要らない。
 
 use crate::discover::{self, MANIFEST};
-use crate::manifest::{Manifest, StepSource, When, resolve_output_path};
+use crate::manifest::{Manifest, Step, StepSource, Steps, When, resolve_output_path};
 use std::path::{Path, PathBuf};
 
 /// 1 つの宣言された配置先。
@@ -79,13 +78,18 @@ fn collect(
             continue; // ユニット gate 不成立 ＝ このユニットは何も置かない。
         }
         let name = unit.rel.to_string_lossy().into_owned();
-        if manifest.is_tree() {
-            push_tree_placements(&unit.dir, &name, &manifest, home, &mut placements)?;
-        } else {
-            for step in &manifest.steps {
-                if let Some(StepSource::Path(p)) = &step.output {
+        match &manifest.steps {
+            Steps::Tree { output } => {
+                push_tree_placements(&unit.dir, &name, output, home, &mut placements)?;
+            }
+            Steps::Pipeline { steps, .. } => {
+                for step in steps {
+                    let Step::Output(out) = step else { continue };
+                    let StepSource::Path(p) = &out.dest else {
+                        continue;
+                    };
                     if let Some(satisfied) = gate
-                        && !satisfied(&step.when)
+                        && !satisfied(&out.when)
                     {
                         continue; // この output step 自身の gate 不成立 ＝ 今回は書かれない。
                     }
@@ -100,17 +104,16 @@ fn collect(
     Ok(placements)
 }
 
-/// ツリーユニット（`input = "."`）を配下ファイルへ展開し、それぞれの配置先を積む。
-/// ツリーの output パスは [`Manifest::display_dst`] が返す唯一のパス表記（`validate` 済みなら
-/// 常にパス output 1 つ）をそのまま使う。
+/// ツリーユニットを配下ファイルへ展開し、それぞれの配置先を積む。`output` はツリーの配置先
+/// （`~` 起点の生表記）。
 fn push_tree_placements(
     unit_dir: &Path,
     name: &str,
-    manifest: &Manifest,
+    output: &str,
     home: &Path,
     out: &mut Vec<Placement>,
 ) -> Result<(), String> {
-    let dst_root = resolve_output_path(home, &manifest.display_dst());
+    let dst_root = resolve_output_path(home, output);
     for file in discover::unit_files(unit_dir)? {
         let rel = file
             .strip_prefix(unit_dir)

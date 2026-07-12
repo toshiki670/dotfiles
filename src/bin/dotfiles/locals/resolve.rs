@@ -53,9 +53,9 @@ pub fn inject(bytes: &[u8], values: &BTreeMap<String, String>) -> Vec<u8> {
 mod tests {
     use super::*;
 
-    /// テキストから Manifest をパースする（検証込み）。
+    /// テキストから Manifest を読み込む（パース＋解釈）。
     fn manifest(src: &str) -> Manifest {
-        toml::from_str(src).unwrap()
+        src.parse().unwrap()
     }
 
     #[test]

@@ -25,41 +25,29 @@ use serde::Deserialize;
 use std::path::{Component, Path, PathBuf};
 use strum::{Display, EnumIter};
 
-/// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様。
+/// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様（解釈済みの確定形）。
 ///
-/// `deny_unknown_fields` で未知キーを load 時に弾く。旧スキーマの語彙（`dst` / `kind` / `strategy` /
-/// `preserve` / ユニット直下 `cmd` / `[[overlay]]` / `sensitive` 等）が残った manifest はここで
-/// エラーになる（後方互換は持たせず、誤連想の再発を防ぐ）。
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
+/// [`Manifest::load`] が生スキーマ（[`RawManifest`]）を検証しながらこの型へ解釈する。パースは
+/// 通るが意味的に不正な形は load 時に弾かれ、その多くはそもそも表現できない（[`Steps`] /
+/// [`Step`] が択一を variant で持つ）ため、この型の値は常に配置可能な宣言を表す。
+#[derive(Debug)]
 pub struct Manifest {
     /// ユニット全体 gate。トップレベルに書いた `when` はユニットスコープで、
     /// 満たさなければユニット全体を skip する（配置も `hooks` も触らない ＝ all-or-nothing）。
     /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致し、
     /// `when.profile`（スカラ・状態）が現在の profile 状態と一致した時だけ真。省略時は常時採用。
     /// 同じ語彙を各 step の `when` がその step スコープで再利用する。
-    #[serde(default)]
     pub when: Option<When>,
     /// マシンローカル値（named value）の宣言。ここで宣言した名前 `n` に対し、この単位の
     /// 配置ファイル中の `@@n@@` をストア（`~/.config/dotfiles/local.toml`）の値で置換する。
     /// 置換は `locals` を宣言した単位のファイルにだけ走る（無関係ファイルの `@@…@@` を巻き込まない）。
     /// 例: `locals = ["git.email", "git.name"]`。
-    #[serde(default)]
     pub locals: Vec<String>,
-    /// 合成の内容型（`merge` を使うユニットに必須・使わないユニットには書けない）。
-    /// `json` / `plist` / `text`。実行時の畳み込みのバイト種別（内容の解釈のしかた）を決め、
-    /// 「どう重ねるか」は各 step 自身の `merge` が選ぶ（[`Step::merge`]）。
-    #[serde(default)]
-    pub format: Option<Format>,
-    /// 配置パイプライン。input（読む）→ output（書く）の step 列。空は load 時エラー
-    /// （input を 1 つ以上・output を 1 つ以上必須）。
-    #[serde(default)]
-    pub steps: Vec<Step>,
+    /// 配置の形。`[[steps]]` の列を解釈した結果（ツリー配置 or バイト内容パイプライン）。
+    pub steps: Steps,
     /// 所有者のみアクセス可（0600 相当）。省略時 false。パス output を持つユニットのみ。
-    #[serde(default)]
     pub private: bool,
     /// 実行ビットを付与（0644→0755 / 0600→0700）。省略時 false。パス output を持つユニットのみ。
-    #[serde(default)]
     pub executable: bool,
     /// 配置後フック（onchange 固定）。このユニットの配置後に**宣言順**で実行するエントリの配列
     /// （例 `[[hooks]]` ＋ `cmd = ["bat", "cache", "--build"]`）。各エントリは実行する [`Hook::cmd`]
@@ -67,36 +55,70 @@ pub struct Manifest {
     /// → 新ツールのフック追加に binary 変更は不要・configs と疎結合。各 `cmd` が非空であることを
     /// load 時に検証する。実行は [`crate::hooks`]。トップレベル `when`（ユニット gate）が false の
     /// ユニットは配置ごと skip されるため hooks も走らない（＝ `when.os` でフックを分岐できる）。
-    #[serde(default)]
     pub hooks: Vec<Hook>,
 }
 
-/// 配置パイプラインの 1 step。`input` / `output` の択一を持つ。
-/// `deny_unknown_fields` でキーの typo を load 時に弾く。
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Step {
-    /// 読む内容源（パス or cmd 標準出力）。`output` との併記・双方省略は load 時エラー。
-    #[serde(default)]
-    pub input: Option<StepSource>,
-    /// 書く宛先（パス or cmd 標準入力）。`input` との併記・双方省略は load 時エラー。
-    #[serde(default)]
-    pub output: Option<StepSource>,
-    /// 重ね方（2 つ目以降の input に必須・最初の input と output には禁止）。値は `format` と両立する
-    /// ものを選ぶ: json / plist → `shallow` | `deep`、text → `append`。この step の畳み込みをそのまま
-    /// 駆動する（[`crate::apply::pipeline`]）。
-    #[serde(default)]
+/// 配置の形。`[[steps]]` の列は load 時にどちらかへ解釈される。ツリー配置とバイト内容パイプライン
+/// は持てる語彙が違い、混在もできないため、別 variant で表現する。
+#[derive(Debug)]
+pub enum Steps {
+    /// ツリー配置（`input = "."` ＋ パス output の 2 step）: 単位ディレクトリを丸ごと、相対構造を
+    /// 保って配置する（[`crate::apply::copy`]）。step 列は持たない ― バイト内容の合成語彙
+    /// （merge / format）はツリーに意味を持たず、step の `when` は unit gate と冗長、`optional` の
+    /// 対象になる不在（repo 追跡の単位ディレクトリは常に在る）も無いため、いずれも load 時に弾かれる。
+    Tree {
+        /// 配置先ディレクトリ（`~` 起点の生表記）。
+        output: String,
+    },
+    /// バイト内容パイプライン: 内容を空から始め、宣言順に input（読む）→ output（書く）を畳む
+    /// （[`crate::apply::pipeline`]）。input 1 つ以上・output 1 つ以上。
+    Pipeline {
+        /// 合成の内容型（`merge` を使うユニットに必須・使わないユニットには書けない）。
+        /// `json` / `plist` / `text`。実行時の畳み込みのバイト種別（内容の解釈のしかた）を決め、
+        /// 「どう重ねるか」は各 input step 自身の `merge` が選ぶ（[`InputStep::merge`]）。
+        format: Option<Format>,
+        /// step 列（宣言順）。
+        steps: Vec<Step>,
+    },
+}
+
+/// 配置パイプラインの 1 step。input（読む）と output（書く）の択一を variant で表現する
+/// （manifest.toml 上の併記・欠落は load 時に弾かれ、ここには到達しない）。
+#[derive(Debug)]
+pub enum Step {
+    /// 読む: 中身を内容へ畳む。
+    Input(InputStep),
+    /// 書く: 内容を宛先へ書く。
+    Output(OutputStep),
+}
+
+/// input step。読んだ中身を内容へ畳む。
+#[derive(Debug)]
+pub struct InputStep {
+    /// 読む内容源（パス or cmd 標準出力）。
+    pub source: StepSource,
+    /// 重ね方（2 つ目以降の input に必須・最初の input には禁止）。値は `format` と両立する
+    /// ものを選ぶ: json / plist → `shallow` | `deep`、text → `append`。この step の畳み込みを
+    /// そのまま駆動する（[`crate::apply::pipeline`]）。
     pub merge: Option<Merge>,
     /// この step の採否（省略 = 常時採用）。unit gate と共通の語彙（`deps` / `os` / `profile`）。
-    #[serde(default)]
     pub when: Option<When>,
     /// `~` 起点のパス input が存在しなければこの step を飛ばす（次の input が土台になる）。既定は
     /// 「無ければエラー」。`~` 起点のパス input のみ有効 ― 単位相対ファイルは repo 追跡の静的ファイルで
-    /// 不在は typo の可能性が高く、恒久的に step を握り潰すため、cmd input・output への指定と併せて
-    /// load 時エラー。唯一の正当な用途は宛先の現在内容（初回 apply 前は未在り得る `~` 起点ファイル）を
+    /// 不在は typo の可能性が高く、恒久的に step を握り潰すため、cmd input への指定と併せて load 時
+    /// エラー。唯一の正当な用途は宛先の現在内容（初回 apply 前は未在り得る `~` 起点ファイル）を
     /// 土台に読むこと。
-    #[serde(default)]
     pub optional: bool,
+}
+
+/// output step。組み立てた内容を宛先へ書く。`merge` / `optional` は持たない（重ね方は input 側の
+/// 語彙で、output の書き込みは常に実行される）。manifest.toml 上の指定は load 時に弾かれる。
+#[derive(Debug)]
+pub struct OutputStep {
+    /// 書く宛先（パス or cmd 標準入力）。
+    pub dest: StepSource,
+    /// この step の採否（省略 = 常時採用）。unit gate と共通の語彙（`deps` / `os` / `profile`）。
+    pub when: Option<When>,
 }
 
 /// step の内容源。パス文字列（`"settings.json"` / `"~/.claude/settings.json"`）か
@@ -105,8 +127,8 @@ pub struct Step {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum StepSource {
-    /// パス: input は単位相対 or `~` 起点、output は `~` 起点のみ（[`Manifest::validate`] が検証）。
-    /// 特例として input `"."` は「単位ディレクトリツリー」を表す。
+    /// パス: input は単位相対 or `~` 起点、output は `~` 起点のみ（[`RawManifest::into_manifest`]
+    /// が load 時に検証）。特例として input `"."` は「単位ディレクトリツリー」を表す。
     Path(String),
     /// コマンド: input は標準出力を読み、output は内容を標準入力へ渡す（argv）。
     Cmd(CmdSource),
@@ -183,105 +205,212 @@ impl When {
     ///
     /// 空テーブル `when = {}` や `when = { deps = [] }` は常時採用の silent no-op になり、
     /// 「gate を書いたのに効かない」typo（編集で内部キーだけ消えた等）を黙って通す。これを
-    /// load 時に弾くため [`Manifest::validate`] が使う。`theme` 等のキー追加時はここに足す。
+    /// load 時に弾くため [`RawManifest::into_manifest`] が使う。`theme` 等のキー追加時はここに足す。
     fn has_no_effective_key(&self) -> bool {
         self.deps.is_empty() && self.os.is_none() && self.profile.is_none()
     }
 }
 
-/// step が「ツリー input」（`input = "."` ＝ 単位ディレクトリをそのまま配置）か。
-fn is_tree_input(step: &Step) -> bool {
-    matches!(&step.input, Some(StepSource::Path(p)) if p == ".")
-}
-
 impl Manifest {
-    /// `manifest.toml` を読み込み、パース後にセマンティックバリデーションを行う。
+    /// `manifest.toml` を読み込む。TOML パース（[`RawManifest`]）→ 検証・解釈
+    /// （[`std::str::FromStr`] 実装）。
     pub fn load(path: &Path) -> Result<Self, String> {
         let text = std::fs::read_to_string(path)
             .map_err(|e| format!("{}: 読み込み失敗: {e}", path.display()))?;
-        let manifest: Self =
-            toml::from_str(&text).map_err(|e| format!("{}: パース失敗: {e}", path.display()))?;
-        manifest
-            .validate()
-            .map_err(|e| format!("{}: {e}", path.display()))?;
-        Ok(manifest)
-    }
-
-    /// このユニットがツリー配置（単位ディレクトリを丸ごと配置）か。`validate` 後に呼ぶ前提
-    /// （検証済みなら `steps[0]` が唯一のツリー input）。list / apply の表示に使う。
-    pub fn is_tree(&self) -> bool {
-        self.steps.iter().any(is_tree_input)
+        text.parse().map_err(|e| format!("{}: {e}", path.display()))
     }
 
     /// apply の 1 行出力と `list` が共有する宛先表記: 最初のパス output の生表記（`~/...`）。
     /// パス output を持たない（cmd output だけの）ユニットは `(cmd)` を返す。
     pub fn display_dst(&self) -> String {
-        self.steps
-            .iter()
-            .find_map(|s| match &s.output {
-                Some(StepSource::Path(p)) => Some(p.clone()),
-                _ => None,
-            })
-            .unwrap_or_else(|| "(cmd)".to_string())
+        match &self.steps {
+            Steps::Tree { output } => output.clone(),
+            Steps::Pipeline { steps, .. } => steps
+                .iter()
+                .find_map(|step| match step {
+                    Step::Output(OutputStep {
+                        dest: StepSource::Path(p),
+                        ..
+                    }) => Some(p.clone()),
+                    _ => None,
+                })
+                .unwrap_or_else(|| "(cmd)".to_string()),
+        }
     }
 
     /// apply のラベルと `list` の属性が共有する steps サマリ。ツリーは `tree`、それ以外は
     /// `steps=Nin/Mout`（＋ `format` ＋ cmd output があれば `output=cmd`）。
     pub fn summary(&self) -> String {
-        if self.is_tree() {
+        let Steps::Pipeline { format, steps } = &self.steps else {
             return "tree".to_string();
-        }
-        let n_in = self.steps.iter().filter(|s| s.input.is_some()).count();
-        let n_out = self.steps.iter().filter(|s| s.output.is_some()).count();
+        };
+        let n_in = steps.iter().filter(|s| matches!(s, Step::Input(_))).count();
+        let n_out = steps
+            .iter()
+            .filter(|s| matches!(s, Step::Output(_)))
+            .count();
         let mut parts = vec![format!("steps={n_in}in/{n_out}out")];
-        if let Some(format) = self.format {
+        if let Some(format) = format {
             parts.push(format.to_string());
         }
-        if self
-            .steps
-            .iter()
-            .any(|s| matches!(&s.output, Some(StepSource::Cmd(_))))
-        {
+        if steps.iter().any(|s| {
+            matches!(
+                s,
+                Step::Output(OutputStep {
+                    dest: StepSource::Cmd(_),
+                    ..
+                })
+            )
+        }) {
             parts.push("output=cmd".to_string());
         }
         parts.join(", ")
     }
 
-    /// パース後のセマンティック検証。manifest の typo を配置前に弾く（fail-loud）。
+    /// この単位の配置ファイルへ与える Unix パーミッション（8 進）。
     ///
-    /// - **各 step は input / output のちょうど 1 つ**。両方・どちらも無しは typo。
+    /// base は `private` で決まる（0600 / 0644）。`executable` のとき、read ビットが
+    /// 立っている桁へ execute ビットを足す（0644→0755 / 0600→0700）。`private` /
+    /// `executable` 属性の合成規則。
+    #[cfg(unix)]
+    pub fn mode(&self) -> u32 {
+        let base: u32 = if self.private { 0o600 } else { 0o644 };
+        if self.executable {
+            base | ((base & 0o444) >> 2)
+        } else {
+            base
+        }
+    }
+}
+
+impl std::str::FromStr for Manifest {
+    type Err = String;
+
+    /// TOML テキストを [`RawManifest`] へパースし、検証しながら [`Manifest`] へ解釈する。
+    /// [`Manifest::load`] とテストが共有する（load はエラーへファイルパスを前置する）。
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        let raw: RawManifest = toml::from_str(text).map_err(|e| format!("パース失敗: {e}"))?;
+        raw.into_manifest()
+    }
+}
+
+/// `manifest.toml` の生スキーマ（TOML と 1:1 の serde ミラー）。[`Manifest`] が表現できない形も
+/// いったんパースで受け、[`RawManifest::into_manifest`] が検証しながら解釈する。
+///
+/// `deny_unknown_fields` で未知キーを load 時に弾く。旧スキーマの語彙（`dst` / `kind` / `strategy` /
+/// `preserve` / ユニット直下 `cmd` / `[[overlay]]` / `sensitive` 等）が残った manifest はここで
+/// エラーになる（後方互換は持たせず、誤連想の再発を防ぐ）。
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawManifest {
+    #[serde(default)]
+    when: Option<When>,
+    #[serde(default)]
+    locals: Vec<String>,
+    #[serde(default)]
+    format: Option<Format>,
+    #[serde(default)]
+    steps: Vec<RawStep>,
+    #[serde(default)]
+    private: bool,
+    #[serde(default)]
+    executable: bool,
+    #[serde(default)]
+    hooks: Vec<Hook>,
+}
+
+/// `[[steps]]` の生スキーマ。`input` / `output` の択一は TOML では表現できない（どちらも任意キー）
+/// ため、ここでは両方を受けて [`RawStep::into_sided`] が解決する。`deny_unknown_fields` でキーの
+/// typo を load 時に弾く。
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawStep {
+    #[serde(default)]
+    input: Option<StepSource>,
+    #[serde(default)]
+    output: Option<StepSource>,
+    #[serde(default)]
+    merge: Option<Merge>,
+    #[serde(default)]
+    when: Option<When>,
+    #[serde(default)]
+    optional: bool,
+}
+
+/// 向き（input / output）を解決した中間形の step。ツリー / パイプラインへの解釈前で、`merge` /
+/// `optional` は output 側にも保持する ― output への指定は不正だが、弾く文言がツリーと
+/// パイプラインで違うため、判定は解釈側（[`tree_steps`] / [`pipeline_steps`]）に置く。
+struct SidedStep {
+    /// step の向きと内容源。
+    side: Side,
+    merge: Option<Merge>,
+    when: Option<When>,
+    optional: bool,
+}
+
+/// step の向き（input / output）と内容源。
+enum Side {
+    Input(StepSource),
+    Output(StepSource),
+}
+
+impl RawStep {
+    /// `input` / `output` の択一を解決する（`i` はエラー表示用の step 位置）。両方・どちらも無しは
+    /// typo として弾く。
+    fn into_sided(self, i: usize) -> Result<SidedStep, String> {
+        let side = match (self.input, self.output) {
+            (Some(source), None) => Side::Input(source),
+            (None, Some(source)) => Side::Output(source),
+            (input, output) => {
+                let n = [input.is_some(), output.is_some()]
+                    .into_iter()
+                    .filter(|&set| set)
+                    .count();
+                return Err(format!(
+                    "steps[{i}] は input / output のうちちょうど 1 つを持つ必要があります（現在 {n} 個）"
+                ));
+            }
+        };
+        Ok(SidedStep {
+            side,
+            merge: self.merge,
+            when: self.when,
+            optional: self.optional,
+        })
+    }
+}
+
+impl SidedStep {
+    /// 「ツリー input」（`input = "."` ＝ 単位ディレクトリをそのまま配置）か。
+    fn is_tree_input(&self) -> bool {
+        matches!(&self.side, Side::Input(StepSource::Path(p)) if p == ".")
+    }
+}
+
+impl RawManifest {
+    /// 生スキーマを検証しながら [`Manifest`] へ解釈する。manifest の typo を配置前に弾く（fail-loud）。
+    ///
+    /// - **各 step は input / output のちょうど 1 つ**（[`RawStep::into_sided`]）。
     /// - **steps は input を 1 つ以上・output を 1 つ以上**持つ（空パイプラインは無意味）。
     /// - **パス表記**（#579）: output は `~` 起点のみ。input は単位相対 or `~` 起点。`$`・絶対は不可。
     /// - **`hooks` の各 `cmd` は非空**。
     /// - **`when` は実効キーを 1 つ以上**（unit・各 step とも。空 when の silent no-op を弾く）。
     /// - **`private` / `executable` はパス output を持つユニットのみ**（cmd output だけのユニットには
     ///   書き込み先ファイルが無い）。
-    /// - **ツリー**（`input = "."`）: steps はちょうど 2 つ（`input = "."` ＋ output パス）、step に
-    ///   `when` / `merge` / `optional` は付けない、`format` は書けない（merge / format はバイト内容の
-    ///   step のみ意味を持ち、step の `when` は unit gate と冗長になる）。
-    /// - **非ツリーは先頭 step が input**（[`Manifest::validate_pipeline`]）: output が先頭だと、
-    ///   apply で内容がまだ空のまま書き込みへ到達する。
-    /// - **`merge`**: 2 つ目以降の input に必須・最初の input / output には禁止（暗黙の合成規則を持た
-    ///   ない・#580）。
-    /// - **`format`**: `merge` を使うユニットに必須・使わないユニットには禁止。`shallow` / `deep` は
-    ///   json / plist・`append` は text とだけ両立。
-    /// - **`optional`**: `~` 起点のパス input のみ（単位相対ファイルは静的なので不在は typo・cmd input・
-    ///   output への指定も typo）。
-    fn validate(&self) -> Result<(), String> {
-        // 各 step は input / output のちょうど 1 つ。
-        for (i, step) in self.steps.iter().enumerate() {
-            let n = [step.input.is_some(), step.output.is_some()]
-                .into_iter()
-                .filter(|&set| set)
-                .count();
-            if n != 1 {
-                return Err(format!(
-                    "steps[{i}] は input / output のうちちょうど 1 つを持つ必要があります（現在 {n} 個）"
-                ));
-            }
-        }
-        let n_input = self.steps.iter().filter(|s| s.input.is_some()).count();
-        let n_output = self.steps.iter().filter(|s| s.output.is_some()).count();
+    /// - **ツリー**（`input = "."`）は [`tree_steps`]、それ以外は [`pipeline_steps`] が形を検証して
+    ///   [`Steps`] へ解釈する。
+    fn into_manifest(self) -> Result<Manifest, String> {
+        let sided: Vec<SidedStep> = self
+            .steps
+            .into_iter()
+            .enumerate()
+            .map(|(i, step)| step.into_sided(i))
+            .collect::<Result<_, _>>()?;
+        let n_input = sided
+            .iter()
+            .filter(|s| matches!(s.side, Side::Input(_)))
+            .count();
+        let n_output = sided.len() - n_input;
         if n_input == 0 || n_output == 0 {
             return Err(format!(
                 "steps は input を 1 つ以上・output を 1 つ以上持つ必要があります（現在 input {n_input}・output {n_output}）"
@@ -289,29 +418,24 @@ impl Manifest {
         }
 
         // パス表記（#579）: 全 step の path 内容源を検証する。
-        for step in &self.steps {
-            if let Some(StepSource::Path(p)) = &step.input {
-                validate_input_path(p)?;
-            }
-            if let Some(StepSource::Path(p)) = &step.output {
-                validate_output_path(p)?;
+        for step in &sided {
+            match &step.side {
+                Side::Input(StepSource::Path(p)) => validate_input_path(p)?,
+                Side::Output(StepSource::Path(p)) => validate_output_path(p)?,
+                _ => {}
             }
         }
 
         // 各 step の cmd（input.cmd / output.cmd）は非空。空 argv は cmd::run/run_piped の cmd[0]
         // インデックスで panic するため、load 時に弾く（hooks の非空検証と同じ「静かに無視しない」方針）。
-        for (i, step) in self.steps.iter().enumerate() {
-            let empty_side = if matches!(&step.input, Some(StepSource::Cmd(c)) if c.cmd.is_empty())
-            {
-                Some("input")
-            } else if matches!(&step.output, Some(StepSource::Cmd(c)) if c.cmd.is_empty()) {
-                Some("output")
-            } else {
-                None
+        for (i, step) in sided.iter().enumerate() {
+            let (label, source) = match &step.side {
+                Side::Input(source) => ("input", source),
+                Side::Output(source) => ("output", source),
             };
-            if let Some(side) = empty_side {
+            if matches!(source, StepSource::Cmd(c) if c.cmd.is_empty()) {
                 return Err(format!(
-                    "steps[{i}].{side}.cmd は非空のコマンド（argv）である必要があります"
+                    "steps[{i}].{label}.cmd は非空のコマンド（argv）である必要があります"
                 ));
             }
         }
@@ -330,8 +454,7 @@ impl Manifest {
                     .to_string(),
             );
         }
-        if let Some(i) = self
-            .steps
+        if let Some(i) = sided
             .iter()
             .position(|s| s.when.as_ref().is_some_and(When::has_no_effective_key))
         {
@@ -342,10 +465,9 @@ impl Manifest {
 
         // private / executable はパス output を持つユニットのみ。
         if (self.private || self.executable)
-            && !self
-                .steps
+            && !sided
                 .iter()
-                .any(|s| matches!(&s.output, Some(StepSource::Path(_))))
+                .any(|s| matches!(&s.side, Side::Output(StepSource::Path(_))))
         {
             return Err(
                 "private / executable はパス output を持つユニットのみに指定できます（cmd output だけの \
@@ -354,76 +476,88 @@ impl Manifest {
             );
         }
 
-        // ツリー（input = "."）は専用の形に固定する。
-        if self.steps.iter().any(is_tree_input) {
-            return self.validate_tree();
-        }
+        // ツリー（input = "."）は専用の形（Steps::Tree）へ、それ以外はパイプラインへ解釈する。
+        let steps = if sided.iter().any(SidedStep::is_tree_input) {
+            tree_steps(self.format, &sided)?
+        } else {
+            pipeline_steps(self.format, sided)?
+        };
 
-        self.validate_pipeline()
+        Ok(Manifest {
+            when: self.when,
+            locals: self.locals,
+            steps,
+            private: self.private,
+            executable: self.executable,
+            hooks: self.hooks,
+        })
+    }
+}
+
+/// ツリー（`input = "."` を含む steps）の形を検証し、[`Steps::Tree`] へ解釈する
+/// （merge / format / step の `when` / `optional` を禁止する理由は [`Steps::Tree`] の doc）。
+fn tree_steps(format: Option<Format>, steps: &[SidedStep]) -> Result<Steps, String> {
+    if steps.len() != 2 {
+        return Err(format!(
+            "ツリー input（input = \".\"）を持つユニットは steps がちょうど 2 つ（input = \".\" と \
+             output）である必要があります（現在 {} 個）",
+            steps.len()
+        ));
+    }
+    if !steps[0].is_tree_input() {
+        return Err("ツリー input（input = \".\"）は最初の step である必要があります".to_string());
+    }
+    if steps[0].when.is_some() || steps[0].merge.is_some() || steps[0].optional {
+        return Err(
+            "ツリー input（input = \".\"）には when / merge / optional を指定できません（ユニット \
+             全体の when gate を使ってください）"
+                .to_string(),
+        );
+    }
+    let out = &steps[1];
+    let Side::Output(dest) = &out.side else {
+        return Err("ツリー input の次の step は output である必要があります".to_string());
+    };
+    if out.when.is_some() || out.merge.is_some() || out.optional {
+        return Err("ツリー output には when / merge / optional を指定できません".to_string());
+    }
+    let StepSource::Path(output) = dest else {
+        return Err(
+            "ツリー output は cmd ではなくパスである必要があります（ツリーを標準入力へ渡すことは \
+             できません）"
+                .to_string(),
+        );
+    };
+    if format.is_some() {
+        return Err(
+            "ツリーユニットに format は指定できません（merge / format はバイト内容の step のみ）"
+                .to_string(),
+        );
+    }
+    Ok(Steps::Tree {
+        output: output.clone(),
+    })
+}
+
+/// バイト内容パイプライン（非ツリー）の形（先頭 step）と merge / format / optional を検証し、
+/// [`Steps::Pipeline`] へ解釈する。
+fn pipeline_steps(format: Option<Format>, steps: Vec<SidedStep>) -> Result<Steps, String> {
+    // 先頭 step は input。ここに来る時点で input・output が各 1 つ以上あるので steps は 2 つ以上 ―
+    // `steps[0]` の添字は安全。output が先頭だと、宣言順に畳む apply で内容がまだ空のまま書き込みへ
+    // 到達する（実行時エラーになる前に load で弾く）。
+    if matches!(steps[0].side, Side::Output(_)) {
+        return Err(
+            "steps[0] が output です（先頭は input である必要があります）。output より前に内容を \
+             組み立てる input が無く、apply 時に内容が空のまま書き込みに到達します"
+                .to_string(),
+        );
     }
 
-    /// ツリー（`input = "."`）ユニットの形を検証する。バイト内容の合成語彙（merge / format）は
-    /// ツリーには意味を持たず、step の `when` は unit gate と冗長になるため、いずれも禁止する。
-    fn validate_tree(&self) -> Result<(), String> {
-        if self.steps.len() != 2 {
-            return Err(format!(
-                "ツリー input（input = \".\"）を持つユニットは steps がちょうど 2 つ（input = \".\" と \
-                 output）である必要があります（現在 {} 個）",
-                self.steps.len()
-            ));
-        }
-        if !is_tree_input(&self.steps[0]) {
-            return Err(
-                "ツリー input（input = \".\"）は最初の step である必要があります".to_string(),
-            );
-        }
-        if self.steps[0].when.is_some() || self.steps[0].merge.is_some() || self.steps[0].optional {
-            return Err(
-                "ツリー input（input = \".\"）には when / merge / optional を指定できません（ユニット \
-                 全体の when gate を使ってください）"
-                    .to_string(),
-            );
-        }
-        let out = &self.steps[1];
-        if out.output.is_none() {
-            return Err("ツリー input の次の step は output である必要があります".to_string());
-        }
-        if out.when.is_some() || out.merge.is_some() || out.optional {
-            return Err("ツリー output には when / merge / optional を指定できません".to_string());
-        }
-        if !matches!(&out.output, Some(StepSource::Path(_))) {
-            return Err(
-                "ツリー output は cmd ではなくパスである必要があります（ツリーを標準入力へ渡すことは \
-                 できません）"
-                    .to_string(),
-            );
-        }
-        if self.format.is_some() {
-            return Err(
-                "ツリーユニットに format は指定できません（merge / format はバイト内容の step のみ）"
-                    .to_string(),
-            );
-        }
-        Ok(())
-    }
-
-    /// バイト内容パイプライン（非ツリー）の形（先頭 step）と merge / format / optional を検証する。
-    fn validate_pipeline(&self) -> Result<(), String> {
-        // 先頭 step は input。ここに来る時点で input・output が各 1 つ以上あり、各 step は input /
-        // output のちょうど 1 つなので steps は 2 つ以上 ―`steps[0]` の添字は安全。output が先頭だと、
-        // 宣言順に畳む apply で内容がまだ空のまま書き込みへ到達する（実行時エラーになる前に load で弾く）。
-        if self.steps[0].output.is_some() {
-            return Err(
-                "steps[0] が output です（先頭は input である必要があります）。output より前に内容を \
-                 組み立てる input が無く、apply 時に内容が空のまま書き込みに到達します"
-                    .to_string(),
-            );
-        }
-
-        // merge: 最初の input と output には禁止・2 つ目以降の input には必須。
-        let mut input_index = 0usize;
-        for (i, step) in self.steps.iter().enumerate() {
-            if step.input.is_some() {
+    // merge: 最初の input と output には禁止・2 つ目以降の input には必須。
+    let mut input_index = 0usize;
+    for (i, step) in steps.iter().enumerate() {
+        match step.side {
+            Side::Input(_) => {
                 if input_index == 0 && step.merge.is_some() {
                     return Err(format!(
                         "steps[{i}]: 最初の input step は merge を持てません（最初の input は内容の土台）"
@@ -436,94 +570,96 @@ impl Manifest {
                 }
                 input_index += 1;
             }
-            if step.output.is_some() && step.merge.is_some() {
-                return Err(format!("steps[{i}]: output step は merge を持てません"));
+            Side::Output(_) => {
+                if step.merge.is_some() {
+                    return Err(format!("steps[{i}]: output step は merge を持てません"));
+                }
             }
         }
+    }
 
-        // format: merge を使うユニットに必須・使わないユニットには禁止。
-        let any_merge = self.steps.iter().any(|s| s.merge.is_some());
-        match (self.format, any_merge) {
-            (Some(_), false) => {
-                return Err(
-                    "format は merge を宣言する step が無いユニットには書けません（merge を使うユニット \
-                     のみ）"
-                        .to_string(),
-                );
-            }
-            (None, true) => {
-                return Err(
-                    "merge を宣言する step があるユニットには format（json / plist / text）が必要です"
-                        .to_string(),
-                );
-            }
-            _ => {}
+    // format: merge を使うユニットに必須・使わないユニットには禁止。
+    let any_merge = steps.iter().any(|s| s.merge.is_some());
+    match (format, any_merge) {
+        (Some(_), false) => {
+            return Err(
+                "format は merge を宣言する step が無いユニットには書けません（merge を使うユニット \
+                 のみ）"
+                    .to_string(),
+            );
         }
-        // 各 merge の値と format の両立（shallow / deep ↔ json/plist・append ↔ text）。
-        for (i, step) in self.steps.iter().enumerate() {
-            if let Some(merge) = step.merge {
-                let compatible = matches!(
-                    (merge, self.format),
-                    (
-                        Merge::Shallow | Merge::Deep,
-                        Some(Format::Json | Format::Plist)
-                    ) | (Merge::Append, Some(Format::Text))
-                );
-                if !compatible {
-                    let format = self
-                        .format
-                        .map_or_else(|| "（未設定）".to_string(), |f| f.to_string());
+        (None, true) => {
+            return Err(
+                "merge を宣言する step があるユニットには format（json / plist / text）が必要です"
+                    .to_string(),
+            );
+        }
+        _ => {}
+    }
+    // 各 merge の値と format の両立（shallow / deep ↔ json/plist・append ↔ text）。
+    for (i, step) in steps.iter().enumerate() {
+        if let Some(merge) = step.merge {
+            let compatible = matches!(
+                (merge, format),
+                (
+                    Merge::Shallow | Merge::Deep,
+                    Some(Format::Json | Format::Plist)
+                ) | (Merge::Append, Some(Format::Text))
+            );
+            if !compatible {
+                let format = format.map_or_else(|| "（未設定）".to_string(), |f| f.to_string());
+                return Err(format!(
+                    "steps[{i}]: merge = \"{merge}\" は format = \"{format}\" と両立しません（shallow / \
+                     deep は json / plist・append は text）"
+                ));
+            }
+        }
+    }
+
+    // optional は ~ 起点のパス input のみ。単位相対ファイルは repo 追跡の静的ファイルで、typo に
+    // よる不在を「無ければ飛ばす」で恒久的に握り潰してしまう（optional の正当な用途は宛先の現在
+    // 内容＝初回 apply 前は未在り得る ~ 起点ファイルを土台に読むことだけ）。
+    for (i, step) in steps.iter().enumerate() {
+        if step.optional {
+            match &step.side {
+                Side::Input(StepSource::Path(p)) if p == "~" || p.starts_with("~/") => {}
+                Side::Input(StepSource::Path(_)) => {
                     return Err(format!(
-                        "steps[{i}]: merge = \"{merge}\" は format = \"{format}\" と両立しません（shallow / \
-                         deep は json / plist・append は text）"
+                        "steps[{i}]: optional は ~ 起点の input にのみ使えます（単位相対ファイルは \
+                         repo 追跡の静的ファイルで、不在は typo の可能性が高く step を恒久的に握り潰す）"
+                    ));
+                }
+                Side::Input(StepSource::Cmd(_)) => {
+                    return Err(format!(
+                        "steps[{i}]: optional は cmd input には使えません（~ 起点のパス input のみ）"
+                    ));
+                }
+                Side::Output(_) => {
+                    return Err(format!(
+                        "steps[{i}]: optional は output step には使えません（~ 起点のパス input のみ）"
                     ));
                 }
             }
         }
-
-        // optional は ~ 起点のパス input のみ。単位相対ファイルは repo 追跡の静的ファイルで、typo に
-        // よる不在を「無ければ飛ばす」で恒久的に握り潰してしまう（optional の正当な用途は宛先の現在
-        // 内容＝初回 apply 前は未在り得る ~ 起点ファイルを土台に読むことだけ）。
-        for (i, step) in self.steps.iter().enumerate() {
-            if step.optional {
-                match &step.input {
-                    Some(StepSource::Path(p)) if p == "~" || p.starts_with("~/") => {}
-                    Some(StepSource::Path(_)) => {
-                        return Err(format!(
-                            "steps[{i}]: optional は ~ 起点の input にのみ使えます（単位相対ファイルは \
-                             repo 追跡の静的ファイルで、不在は typo の可能性が高く step を恒久的に握り潰す）"
-                        ));
-                    }
-                    Some(StepSource::Cmd(_)) => {
-                        return Err(format!(
-                            "steps[{i}]: optional は cmd input には使えません（~ 起点のパス input のみ）"
-                        ));
-                    }
-                    None => {
-                        return Err(format!(
-                            "steps[{i}]: optional は output step には使えません（~ 起点のパス input のみ）"
-                        ));
-                    }
-                }
-            }
-        }
-        Ok(())
     }
 
-    /// この単位の配置ファイルへ与える Unix パーミッション（8 進）。
-    ///
-    /// base は `private` で決まる（0600 / 0644）。`executable` のとき、read ビットが
-    /// 立っている桁へ execute ビットを足す（0644→0755 / 0600→0700）。`private` /
-    /// `executable` 属性の合成規則。
-    #[cfg(unix)]
-    pub fn mode(&self) -> u32 {
-        let base: u32 = if self.private { 0o600 } else { 0o644 };
-        if self.executable {
-            base | ((base & 0o444) >> 2)
-        } else {
-            base
-        }
-    }
+    // 検証済みの step を確定形へ。output 側の merge / optional は上で弾いた後なので現れない。
+    let steps = steps
+        .into_iter()
+        .map(|step| match step.side {
+            Side::Input(source) => Step::Input(InputStep {
+                source,
+                merge: step.merge,
+                when: step.when,
+                optional: step.optional,
+            }),
+            Side::Output(dest) => Step::Output(OutputStep {
+                dest,
+                when: step.when,
+            }),
+        })
+        .collect();
+    Ok(Steps::Pipeline { format, steps })
 }
 
 /// output パスの表記検証（#579）: `~` / `~/...` のみ。`$` 含み・絶対・相対・`~/` 後の `..` は load
@@ -610,11 +746,17 @@ mod tests {
     use super::*;
     use strum::IntoEnumIterator;
 
-    /// パース → validate を一括で通す（load のファイル I/O を介さずに検証）。
+    /// テキストから Manifest を読み込む（load のファイル I/O を介さず、パース＋解釈を通す）。
     fn parse(toml_src: &str) -> Result<Manifest, String> {
-        let manifest: Manifest = toml::from_str(toml_src).map_err(|e| e.to_string())?;
-        manifest.validate()?;
-        Ok(manifest)
+        toml_src.parse()
+    }
+
+    /// パイプラインとして解釈された (format, steps) を取り出す（ツリーなら panic）。
+    fn pipeline(m: &Manifest) -> (Option<Format>, &[Step]) {
+        match &m.steps {
+            Steps::Pipeline { format, steps } => (*format, steps),
+            Steps::Tree { .. } => panic!("パイプラインを期待したがツリーだった"),
+        }
     }
 
     /// 最小のツリーユニット（`input = "."` ＋ output）。多くのテストのベース。
@@ -626,18 +768,28 @@ mod tests {
     fn step_source_parses_path_and_cmd_forms() {
         // input = "x"（bare string）→ Path、input.cmd = [...]（inline table）→ Cmd。
         let m = parse("[[steps]]\ninput = \"a.txt\"\n[[steps]]\noutput = \"~/x\"\n").unwrap();
-        assert!(matches!(&m.steps[0].input, Some(StepSource::Path(p)) if p == "a.txt"));
+        assert!(matches!(
+            &pipeline(&m).1[0],
+            Step::Input(InputStep { source: StepSource::Path(p), .. }) if p == "a.txt"
+        ));
 
         let m =
             parse("[[steps]]\ninput.cmd = [\"gh\", \"completion\"]\n[[steps]]\noutput = \"~/x\"\n")
                 .unwrap();
-        assert!(
-            matches!(&m.steps[0].input, Some(StepSource::Cmd(c)) if c.cmd == ["gh", "completion"])
-        );
+        assert!(matches!(
+            &pipeline(&m).1[0],
+            Step::Input(InputStep { source: StepSource::Cmd(c), .. }) if c.cmd == ["gh", "completion"]
+        ));
 
         // output.cmd も同様。
         let m = parse("[[steps]]\ninput.cmd = [\"defaults\", \"export\"]\n[[steps]]\noutput.cmd = [\"defaults\", \"import\"]\n").unwrap();
-        assert!(matches!(&m.steps[1].output, Some(StepSource::Cmd(_))));
+        assert!(matches!(
+            &pipeline(&m).1[1],
+            Step::Output(OutputStep {
+                dest: StepSource::Cmd(_),
+                ..
+            })
+        ));
     }
 
     // ── Format / Merge の Display ↔ serde round-trip ──
@@ -657,7 +809,7 @@ mod tests {
             );
             let parsed = parse(&src).unwrap();
             assert_eq!(
-                parsed.format,
+                pipeline(&parsed).0,
                 Some(format),
                 "Display と serde 表現がズレている: {format}"
             );
@@ -676,8 +828,11 @@ mod tests {
                 "format = \"{format}\"\n[[steps]]\ninput = \"a\"\n[[steps]]\ninput = \"b\"\nmerge = \"{merge}\"\n[[steps]]\noutput = \"~/x\"\n",
             );
             let parsed = parse(&src).unwrap();
+            let Step::Input(second) = &pipeline(&parsed).1[1] else {
+                panic!("steps[1] は input のはず");
+            };
             assert_eq!(
-                parsed.steps[1].merge,
+                second.merge,
                 Some(merge),
                 "Display と serde 表現がズレている: {merge}"
             );
@@ -688,7 +843,36 @@ mod tests {
 
     #[test]
     fn accepts_minimal_tree() {
-        assert!(parse(TREE).is_ok());
+        // ツリーは step 列を持たない専用の形（output だけ）へ解釈される。
+        let m = parse(TREE).unwrap();
+        assert!(matches!(&m.steps, Steps::Tree { output } if output == "~/x"));
+    }
+
+    #[test]
+    fn interprets_pipeline_step_annotations() {
+        // merge / when / optional が各 step の確定形（InputStep / OutputStep）へ載ることを固定する。
+        let m = parse(
+            "format = \"json\"\n\
+             [[steps]]\ninput = \"~/.claude/settings.json\"\noptional = true\n\
+             [[steps]]\ninput = \"settings.json\"\nmerge = \"shallow\"\nwhen = { deps = [\"rtk\"] }\n\
+             [[steps]]\noutput = \"~/.claude/settings.json\"\n",
+        )
+        .unwrap();
+        let (format, steps) = pipeline(&m);
+        assert_eq!(format, Some(Format::Json));
+        let Step::Input(first) = &steps[0] else {
+            panic!("steps[0] は input のはず");
+        };
+        assert!(first.optional && first.merge.is_none() && first.when.is_none());
+        let Step::Input(second) = &steps[1] else {
+            panic!("steps[1] は input のはず");
+        };
+        assert_eq!(second.merge, Some(Merge::Shallow));
+        assert!(second.when.is_some() && !second.optional);
+        assert!(matches!(
+            &steps[2],
+            Step::Output(OutputStep { dest: StepSource::Path(p), .. }) if p == "~/.claude/settings.json"
+        ));
     }
 
     #[test]
@@ -1183,16 +1367,15 @@ mod tests {
         ] {
             let src = format!("{legacy}{TREE}");
             assert!(
-                toml::from_str::<Manifest>(&src).is_err(),
+                src.parse::<Manifest>().is_err(),
                 "旧語彙が弾かれていない: {legacy}"
             );
         }
         // hooks[].frequency も Hook の deny_unknown_fields で弾く。
         assert!(
-            toml::from_str::<Manifest>(&format!(
-                "{TREE}[[hooks]]\ncmd = [\"x\"]\nfrequency = \"always\"\n"
-            ))
-            .is_err()
+            format!("{TREE}[[hooks]]\ncmd = [\"x\"]\nfrequency = \"always\"\n")
+                .parse::<Manifest>()
+                .is_err()
         );
     }
 }
