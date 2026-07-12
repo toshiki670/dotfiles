@@ -36,9 +36,8 @@ jobs:
           # タグ/Release 作成のみ（main への直接 push なし）。crates.io publish は無効。
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # この時点で main は Release PR マージ済み = root Cargo.toml は bump 後。上のタグ作成が
-      # 打つタグも同じ版なので、ここで読めば新規タグと一致する（release-plz アクションの
-      # 出力スキーマに依存しない。"Set Release PR title" ステップと同じ手法）。
+      # main は Release PR マージ済み（root Cargo.toml は bump 後）の時点なので、ここで読めば
+      # 直前に打った新規タグと同じ版になる。release-plz アクションの出力には依存しない。
       - name: Read root version
         id: version
         run: |
@@ -62,8 +61,7 @@ jobs:
       - name: Bump Formula/dotfiles.rb on toshiki670/homebrew-tap
         env:
           # homebrew-tap 専用の fine-grained PAT（contents:write, homebrew-tap のみ）。
-          # RELEASE_PLEASE_TOKEN は dotfiles リポジトリの Release PR 作成専用に留める
-          # （最小権限；tap への書き込み権限は持たせない）。
+          # RELEASE_PLEASE_TOKEN は dotfiles の Release PR 作成専用に留め、tap への書き込み権限は持たせない。
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           VERSION: ${{ needs.release-publish.outputs.version }}
         run: |
@@ -89,7 +87,6 @@ jobs:
             exit 0
           fi
           git commit -m "chore: bump dotfiles to v${VERSION}"
-          # 合意のとおり直接 main へ push（PR は挟まない）。dotfiles 側 Release PR の
-          # 人間レビューが既にゲートになっている。homebrew-tap main に push 保護が
-          # 無いことが前提。
+          # 直接 main へ push する（PR は挟まない）。dotfiles 側 Release PR の人間レビューが
+          # 既にゲートになっている。homebrew-tap の main に push 保護が無いことが前提。
           git push origin main
