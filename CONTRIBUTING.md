@@ -51,8 +51,9 @@ dotfiles の利用に必要なツールは [`README.md`](README.md) を参照し
 1. `mise run release-prepare`（または GitHub の Release Prepare workflow を `workflow_dispatch`）で release-plz が Release PR（`release-*` ブランチ）を作成・更新する。
 2. Release PR には `Cargo.toml` の version と `CHANGELOG.md` の更新が含まれる（必要なら PR 上で version を手動調整できる）。
 3. Release PR を `main` にマージすると Release Publish workflow が走り、タグ `v{version}` と GitHub Release が作成される。
+4. 続けて同じ workflow が `toshiki670/homebrew-tap` の `Formula/dotfiles.rb`（`url` / `sha256`）を新版へ更新し、直接 `main` へ commit する（専用 PAT、PR は挟まない）。
 
-`main` への直接 push は不要・不可。Release PR のマージがリリースのトリガー（ブランチ保護と両立）。
+dotfiles の `main` への直接 push は不要・不可。Release PR のマージがリリースのトリガー（ブランチ保護と両立）。
 
 ### 現在のバージョン確認
 

@@ -17,6 +17,8 @@ jobs:
       github.event.pull_request.merged == true &&
       startsWith(github.event.pull_request.head.ref, 'release-')
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -33,3 +35,58 @@ jobs:
         env:
           # タグ/Release 作成のみ（main への直接 push なし）。crates.io publish は無効。
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # main は Release PR マージ済み（root Cargo.toml は bump 後）の時点なので、ここで読めば
+      # 直前に打った新規タグと同じ版になる。release-plz アクションの出力には依存しない。
+      - name: Read root version
+        id: version
+        run: |
+          set -euo pipefail
+          version=$(sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' Cargo.toml | head -n1)
+          if [ -z "$version" ]; then
+            echo "::error::root Cargo.toml から version を取得できず"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+  homebrew-tap-bump:
+    name: homebrew-tap-bump
+    needs: release-publish
+    runs-on: ubuntu-latest
+    # このジョブは toshiki670/homebrew-tap のみを書き換える。dotfiles 側 contents への
+    # 書き込み権限は不要なため、workflow 既定の contents: write を明示的に落とす。
+    permissions:
+      contents: read
+    steps:
+      - name: Bump Formula/dotfiles.rb on toshiki670/homebrew-tap
+        env:
+          # homebrew-tap 専用の fine-grained PAT（contents:write, homebrew-tap のみ）。
+          # RELEASE_PLEASE_TOKEN は dotfiles の Release PR 作成専用に留め、tap への書き込み権限は持たせない。
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          VERSION: ${{ needs.release-publish.outputs.version }}
+        run: |
+          set -euo pipefail
+          url="https://github.com/toshiki670/dotfiles/archive/refs/tags/v${VERSION}.tar.gz"
+          sha256=$(curl -fsSL "$url" | shasum -a 256 | cut -d' ' -f1)
+
+          # gh の credential helper 経由で認証する（token を clone URL に埋め込まない）。
+          gh auth setup-git
+          git clone --depth 1 https://github.com/toshiki670/homebrew-tap.git homebrew-tap
+          cd homebrew-tap
+
+          sed -i -E \
+            -e "s#^  url \".*\"\$#  url \"${url}\"#" \
+            -e "s#^  sha256 \".*\"\$#  sha256 \"${sha256}\"#" \
+            Formula/dotfiles.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/dotfiles.rb
+          if git diff --cached --quiet; then
+            echo "formula は既に v${VERSION} 相当のため commit をスキップ"
+            exit 0
+          fi
+          git commit -m "chore: bump dotfiles to v${VERSION}"
+          # 直接 main へ push する（PR は挟まない）。dotfiles 側 Release PR の人間レビューが
+          # 既にゲートになっている。homebrew-tap の main に push 保護が無いことが前提。
+          git push origin main

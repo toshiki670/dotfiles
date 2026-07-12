@@ -60,10 +60,19 @@ rtk init -g
 ## 1. Install the `dotfiles` CLI
 
 ```bash
-cargo install --git https://github.com/toshiki670/dotfiles
+brew tap toshiki670/tap
+brew install dotfiles
 ```
 
-The `configs/` tree is embedded in the binary, so this single command is enough (a local clone's working tree is used automatically when present). The Rust toolchain is supplied by mise (`mise install`); see [Rust commands](#rust-commands).
+Installs all 8 bins (`dotfiles`, `clip`, `gcm`, `gh-clone`, `git-upstream`, `fzf-picker`, `env-tools`, `workers`). `brew upgrade` keeps them current.
+
+Contributors and local development can install straight from a clone instead:
+
+```bash
+cargo install --path . dotfiles
+```
+
+(or `cargo install --git https://github.com/toshiki670/dotfiles dotfiles` without cloning first — the explicit `dotfiles` package name is required because the workspace's `tools/` members also ship bins). The `configs/` tree is embedded in the binary, so either install path is enough on its own (a local clone's working tree is used automatically when present, otherwise the embedded copy is used). The Rust toolchain for `cargo install` is supplied by mise (`mise install`); see [Rust commands](#rust-commands).
 
 ## 2. Review destinations (optional)
 
@@ -187,7 +196,7 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 
 # Rust commands
 
-All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). Install them into `~/.cargo/bin` with one `cargo install --git https://github.com/toshiki670/dotfiles` (or `cargo install --path .` from a clone; the tools under `tools/` are not installed). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `cargo install` (commands) → `dotfiles apply` (configs).
+All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). The recommended install path is Homebrew (see [Installation](#installation)); installing from a clone or via `cargo install --git` needs the package name given explicitly — `cargo install --path . dotfiles` (or `cargo install --git https://github.com/toshiki670/dotfiles dotfiles`) — because the workspace's `tools/` members also have bins, so a bare `cargo install --path .` is ambiguous (`error: multiple packages with binaries found`). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `cargo install` (commands) → `dotfiles apply` (configs).
 
 Design and internals (manifest schema / apply pipeline / `locals` resolution / `when` gates / …) are not documented here. They live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (the `dotfiles` crate's own module docs), rebuilt on every push to `main`. Treat it as the architecture reference.
 
