@@ -60,8 +60,7 @@ rtk init -g
 ## 1. Install the `dotfiles` CLI
 
 ```bash
-brew tap toshiki670/tap
-brew install dotfiles
+brew install toshiki670/tap/dotfiles
 ```
 
 Installs all 8 bins (`dotfiles`, `clip`, `gcm`, `gh-clone`, `git-upstream`, `fzf-picker`, `env-tools`, `workers`). `brew upgrade` keeps them current.
