@@ -27,10 +27,9 @@ use strum::{Display, EnumIter};
 
 /// 1 つの設定単位（`manifest.toml` を持つディレクトリ）の配置仕様（解釈済みの確定形）。
 ///
-/// [`Manifest::load`] が生スキーマ（[`RawManifest`]）を検証しながらこの型へ解釈する。「パースは
-/// 通るが意味的に不正」な形の多く（step の input / output の併記・欠落、ツリーへの format /
-/// merge / step gate の指定等）はこの型では表現できず、残る不整合（パス表記・merge と format の
-/// 両立等）も解釈時に弾かれるため、この型の値は常に配置可能な宣言を表す。
+/// [`Manifest::load`] が生スキーマ（[`RawManifest`]）を検証しながらこの型へ解釈する。パースは
+/// 通るが意味的に不正な形は load 時に弾かれ、その多くはそもそも表現できない（[`Steps`] /
+/// [`Step`] が択一を variant で持つ）ため、この型の値は常に配置可能な宣言を表す。
 #[derive(Debug)]
 pub struct Manifest {
     /// ユニット全体 gate。トップレベルに書いた `when` はユニットスコープで、
@@ -60,14 +59,13 @@ pub struct Manifest {
 }
 
 /// 配置の形。`[[steps]]` の列は load 時にどちらかへ解釈される。ツリー配置とバイト内容パイプライン
-/// は持てる語彙が違い（ツリーは format / merge / step の when / optional を持たない）、混在も
-/// できないため、別 variant で表現する。
+/// は持てる語彙が違い、混在もできないため、別 variant で表現する。
 #[derive(Debug)]
 pub enum Steps {
     /// ツリー配置（`input = "."` ＋ パス output の 2 step）: 単位ディレクトリを丸ごと、相対構造を
     /// 保って配置する（[`crate::apply::copy`]）。step 列は持たない ― バイト内容の合成語彙
-    /// （merge / format）はツリーに意味を持たず、step の `when` は unit gate と冗長になるため、
-    /// いずれも解釈時に弾かれる。
+    /// （merge / format）はツリーに意味を持たず、step の `when` は unit gate と冗長、`optional` の
+    /// 対象になる不在（repo 追跡の単位ディレクトリは常に在る）も無いため、いずれも load 時に弾かれる。
     Tree {
         /// 配置先ディレクトリ（`~` 起点の生表記）。
         output: String,
@@ -85,7 +83,7 @@ pub enum Steps {
 }
 
 /// 配置パイプラインの 1 step。input（読む）と output（書く）の択一を variant で表現する
-/// （manifest.toml 上の併記・欠落は解釈時に弾かれ、ここには到達しない）。
+/// （manifest.toml 上の併記・欠落は load 時に弾かれ、ここには到達しない）。
 #[derive(Debug)]
 pub enum Step {
     /// 読む: 中身を内容へ畳む。
@@ -107,14 +105,14 @@ pub struct InputStep {
     pub when: Option<When>,
     /// `~` 起点のパス input が存在しなければこの step を飛ばす（次の input が土台になる）。既定は
     /// 「無ければエラー」。`~` 起点のパス input のみ有効 ― 単位相対ファイルは repo 追跡の静的ファイルで
-    /// 不在は typo の可能性が高く、恒久的に step を握り潰すため、cmd input への指定と併せて解釈時
+    /// 不在は typo の可能性が高く、恒久的に step を握り潰すため、cmd input への指定と併せて load 時
     /// エラー。唯一の正当な用途は宛先の現在内容（初回 apply 前は未在り得る `~` 起点ファイル）を
     /// 土台に読むこと。
     pub optional: bool,
 }
 
 /// output step。組み立てた内容を宛先へ書く。`merge` / `optional` は持たない（重ね方は input 側の
-/// 語彙で、output の書き込みは常に実行される）。manifest.toml 上の指定は解釈時に弾かれる。
+/// 語彙で、output の書き込みは常に実行される）。manifest.toml 上の指定は load 時に弾かれる。
 #[derive(Debug)]
 pub struct OutputStep {
     /// 書く宛先（パス or cmd 標準入力）。
@@ -129,9 +127,8 @@ pub struct OutputStep {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum StepSource {
-    /// パス: input は単位相対 or `~` 起点、output は `~` 起点のみ（load 時の解釈
-    /// （[`RawManifest::into_manifest`]）が検証）。特例として input `"."` は
-    /// 「単位ディレクトリツリー」を表す。
+    /// パス: input は単位相対 or `~` 起点、output は `~` 起点のみ（[`RawManifest::into_manifest`]
+    /// が load 時に検証）。特例として input `"."` は「単位ディレクトリツリー」を表す。
     Path(String),
     /// コマンド: input は標準出力を読み、output は内容を標準入力へ渡す（argv）。
     Cmd(CmdSource),
@@ -393,8 +390,7 @@ impl SidedStep {
 impl RawManifest {
     /// 生スキーマを検証しながら [`Manifest`] へ解釈する。manifest の typo を配置前に弾く（fail-loud）。
     ///
-    /// - **各 step は input / output のちょうど 1 つ**（[`RawStep::into_sided`]）。両方・どちらも
-    ///   無しは typo。
+    /// - **各 step は input / output のちょうど 1 つ**（[`RawStep::into_sided`]）。
     /// - **steps は input を 1 つ以上・output を 1 つ以上**持つ（空パイプラインは無意味）。
     /// - **パス表記**（#579）: output は `~` 起点のみ。input は単位相対 or `~` 起点。`$`・絶対は不可。
     /// - **`hooks` の各 `cmd` は非空**。
@@ -498,9 +494,8 @@ impl RawManifest {
     }
 }
 
-/// ツリー（`input = "."` を含む steps）の形を検証し、[`Steps::Tree`] へ解釈する。バイト内容の
-/// 合成語彙（merge / format）はツリーには意味を持たず、step の `when` は unit gate と冗長になる
-/// ため、いずれも禁止する。
+/// ツリー（`input = "."` を含む steps）の形を検証し、[`Steps::Tree`] へ解釈する
+/// （merge / format / step の `when` / `optional` を禁止する理由は [`Steps::Tree`] の doc）。
 fn tree_steps(format: Option<Format>, steps: &[SidedStep]) -> Result<Steps, String> {
     if steps.len() != 2 {
         return Err(format!(

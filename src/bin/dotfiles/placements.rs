@@ -28,8 +28,7 @@
 //! パスの完全一致だけなので、ツリーが `~/.config/foo/` 配下へ展開する一方で別ユニットが
 //! `~/.config/foo` というファイルへ output する「ディレクトリ×ファイルの前置衝突」も対象外
 //! （#593 が定義する衝突の範囲外として意図的に外す）。ツリー配置（[`crate::manifest::Steps::Tree`]）
-//! は step を持たず `when` も書けない（unit gate と冗長になるため）ので、ツリー展開そのものに
-//! step gate の判定は要らない。
+//! は step を持たず `when` も書けないため、ツリー展開そのものに step gate の判定は要らない。
 
 use crate::discover::{self, MANIFEST};
 use crate::manifest::{Manifest, Step, StepSource, Steps, When, resolve_output_path};
