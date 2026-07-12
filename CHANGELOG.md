@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.71.0] - 2026-07-12
+### Features
+- Rustdoc doc コメントの無駄を削る skill を追加する ([#583](https://github.com/toshiki670/dotfiles/pull/583)) ([`e546538`](https://github.com/toshiki670/dotfiles/commit/e546538600406c0698947d40e43219d05121a6d1))
+- Memory-tidy skill に有用性判定と階層化エスカレーションを追加する ([#586](https://github.com/toshiki670/dotfiles/pull/586)) ([`bf71f07`](https://github.com/toshiki670/dotfiles/commit/bf71f0745b9c1e883da8a16a3b5fa2a4e97d65ac))
+- Design-creed を prose 文書に適用する prose-tidy skill を追加する ([#599](https://github.com/toshiki670/dotfiles/pull/599)) ([`b67d151`](https://github.com/toshiki670/dotfiles/commit/b67d151cceb97f92f1803667082d958cdabed1d2))
+- Prose-tidyとtextlintのskillを分離する ([#603](https://github.com/toshiki670/dotfiles/pull/603)) ([`c588492`](https://github.com/toshiki670/dotfiles/commit/c588492841ee11e1bb94bcc39b878ef9672cd80a))
+- Steps の merge = "deep" を実装する ([#604](https://github.com/toshiki670/dotfiles/pull/604)) ([`689efb4`](https://github.com/toshiki670/dotfiles/commit/689efb43841cefceca52edcb3ef53ce2c2868bd7))
+- 期待配置集合の導出とユニット間 output 衝突検出を実装する ([#605](https://github.com/toshiki670/dotfiles/pull/605)) ([`93acb00`](https://github.com/toshiki670/dotfiles/commit/93acb002b804940f765894095e72092b4d6d1543))
+- Plist_dict! マクロでテストの Dictionary 手動構築を置き換える ([#612](https://github.com/toshiki670/dotfiles/pull/612)) ([`48de662`](https://github.com/toshiki670/dotfiles/commit/48de662c34308a19b15c3b7dbcc866d34e9bf071))
+- 不要になった配置の追跡・退避を実装する ([#616](https://github.com/toshiki670/dotfiles/pull/616)) ([`112b760`](https://github.com/toshiki670/dotfiles/commit/112b7609336b5bf49a8a3e7104a38f43f93fddbc))
+### Fixes
+- Trash への空文字列引数渡しをフックで検知する ([#617](https://github.com/toshiki670/dotfiles/pull/617)) ([`1a031c8`](https://github.com/toshiki670/dotfiles/commit/1a031c8c330567fbfb4cfa74509befb11ebc0f2e))
+### Refactor
+- [**BREAKING**] Manifest.toml を steps パイプライン(input→merge→output)へ移行する ([`326fdc5`](https://github.com/toshiki670/dotfiles/commit/326fdc5aaeb160545d5204bb0c09fee666e99e97))
+
+
 ## [0.70.0] - 2026-07-04
 ### Features
 - MacOS アプリの preference plist を一級扱いする(Stats.plist 移行) ([#559](https://github.com/toshiki670/dotfiles/pull/559)) ([`6940e68`](https://github.com/toshiki670/dotfiles/commit/6940e68e285fd730ed91f96bc67b9779a18a307d))
