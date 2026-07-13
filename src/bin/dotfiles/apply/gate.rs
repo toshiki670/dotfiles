@@ -12,7 +12,7 @@
 //! ・全 step の評価で共有する（評価ごとにファイルを読み直さない）。`theme`（color スライス）も
 //! 同じ snapshot にフィールドを足して同じ機構を使い回す想定（状態駆動 gate 族）。
 
-use crate::manifest::{Manifest, When};
+use crate::manifest::{Manifest, Os, When};
 use crate::state;
 use std::path::{Path, PathBuf};
 
@@ -42,14 +42,15 @@ impl GateState {
     }
 }
 
-/// 現在の OS を `when.os` 表記で返す（macOS は `darwin`）。
+/// 現在の OS を manifest の語彙（[`Os`]）で返す。
 ///
-/// manifest の `when.os` は `darwin` / `linux` 表記で書くため、Rust の
-/// `std::env::consts::OS`（macOS では `macos`）を `darwin` に正規化して比較する。
-pub fn current_os() -> &'static str {
+/// `darwin` / `linux` 以外のビルドターゲットは None ＝ どの `os` gate とも一致しない（`os` を
+/// 書いたユニット / step は skip）。
+pub fn current_os() -> Option<Os> {
     match std::env::consts::OS {
-        "macos" => "darwin",
-        other => other,
+        "macos" => Some(Os::Darwin),
+        "linux" => Some(Os::Linux),
+        _ => None,
     }
 }
 
@@ -85,10 +86,13 @@ fn when_unsatisfied_reason(when: &When, state: &GateState) -> Option<String> {
     if let Some(missing) = first_missing_dep(&when.deps) {
         return Some(format!("依存 `{missing}` が PATH にない"));
     }
-    if let Some(want) = &when.os
-        && want != current_os()
+    if let Some(want) = when.os
+        && Some(want) != current_os()
     {
-        return Some(format!("OS `{want}` 不一致（現在 {}）", current_os()));
+        // 未対応 OS（None）は生の OS 名で出す ― 不一致の相手が読めないと直せない。
+        let current =
+            current_os().map_or_else(|| std::env::consts::OS.to_string(), |os| os.to_string());
+        return Some(format!("OS `{want}` 不一致（現在 {current}）"));
     }
     if let Some(want) = &when.profile
         && state.profile.as_deref() != Some(want.as_str())
@@ -137,14 +141,16 @@ fn is_executable(p: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use strum::IntoEnumIterator;
 
     #[test]
-    fn current_os_normalizes_macos_to_darwin() {
-        // ビルドした OS に応じて `darwin`/`linux` 表記を返す。
+    fn current_os_maps_build_target_to_manifest_vocabulary() {
         let expected = if cfg!(target_os = "macos") {
-            "darwin"
+            Some(Os::Darwin)
+        } else if cfg!(target_os = "linux") {
+            Some(Os::Linux)
         } else {
-            std::env::consts::OS
+            None
         };
         assert_eq!(current_os(), expected);
     }
@@ -161,19 +167,19 @@ mod tests {
 
     #[test]
     fn when_os_matches_current_only() {
-        let hit = When {
-            deps: vec![],
-            os: Some(current_os().to_string()),
-            profile: None,
-        };
-        assert!(when_satisfied(&Some(hit), &no_profile()));
-
-        let miss = When {
-            deps: vec![],
-            os: Some("nonsuch-os".to_string()),
-            profile: None,
-        };
-        assert!(!when_satisfied(&Some(miss), &no_profile()));
+        // 不正値（`macos` / typo）は型で構築できない ― load で弾く検証は manifest 側にある。
+        for os in Os::iter() {
+            let want = When {
+                deps: vec![],
+                os: Some(os),
+                profile: None,
+            };
+            assert_eq!(
+                when_satisfied(&Some(want), &no_profile()),
+                Some(os) == current_os(),
+                "os gate が現在 OS 一致のときだけ成立していない: {os}"
+            );
+        }
     }
 
     #[test]
@@ -245,7 +251,7 @@ mod tests {
         // deps・os は満たすが profile が外れる → 全体は false（AND）。
         let mixed = When {
             deps: vec!["/bin/sh".to_string()],
-            os: Some(current_os().to_string()),
+            os: current_os(),
             profile: Some("private".to_string()),
         };
         assert!(!when_satisfied(&Some(mixed), &no_profile()));
@@ -253,7 +259,7 @@ mod tests {
         assert!(when_satisfied(
             &Some(When {
                 deps: vec!["/bin/sh".to_string()],
-                os: Some(current_os().to_string()),
+                os: current_os(),
                 profile: Some("private".to_string()),
             }),
             &GateState::with_profile(Some("private")),

@@ -11,19 +11,10 @@
 //! （`configs/stats` の実例）を架空ツール `prefctl` で検証する。実 configs を名指ししない契約
 //! テストなので `when` は `deps` のみ（`os` gate は付けない＝ Linux CI でも実行される）。
 
-use crate::{dotfiles, write_stub};
+use crate::{dotfiles, foreign_os, write_stub};
 use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
-
-/// 現在の OS を `when.os` 表記（macOS=darwin）で返す。`when.os` fixture に埋める。
-fn current_os() -> &'static str {
-    if cfg!(target_os = "macos") {
-        "darwin"
-    } else {
-        std::env::consts::OS
-    }
-}
 
 /// text append 単位（base 常時 ＋ faketool 断片 when.deps=["faketool"]）の単位を書き出す。
 fn write_text_append_unit(work: &Path) {
@@ -100,6 +91,8 @@ fn apply_text_append_drops_step_when_dep_absent() {
 }
 
 /// when.os は現在 OS 一致の step だけ採用し、不一致の step は脱落する。
+/// 「一致する `when.os` 値」は受理値（darwin / linux）のターゲットにしか無い（[`crate::current_os`]）。
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 #[test]
 fn apply_step_when_os_gates_by_current_os() {
     let work = tempfile::tempdir().unwrap();
@@ -119,11 +112,12 @@ fn apply_step_when_os_gates_by_current_os() {
              merge = \"append\"\n\
              [[steps]]\n\
              input = \"elsewhere.txt\"\n\
-             when  = {{ os = \"nonsuch-os\" }}\n\
+             when  = {{ os = \"{other}\" }}\n\
              merge = \"append\"\n\
              [[steps]]\n\
              output = \"~/.config/demo/out.txt\"\n",
-            os = current_os(),
+            os = crate::current_os(),
+            other = foreign_os(),
         ),
     )
     .unwrap();
@@ -153,11 +147,14 @@ fn apply_unit_os_gate_short_circuits_without_touching_dst() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
 
-    let unit = work.path().join("configs/maconly");
+    let unit = work.path().join("configs/otheros");
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "when = { os = \"nonsuch-os\" }\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/maconly\"\n",
+        format!(
+            "when = {{ os = \"{other}\" }}\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/otheros\"\n",
+            other = foreign_os(),
+        ),
     )
     .unwrap();
     fs::write(unit.join("f.txt"), "x\n").unwrap();
@@ -169,10 +166,10 @@ fn apply_unit_os_gate_short_circuits_without_touching_dst() {
         .assert()
         .success()
         .stdout(predicate::str::contains("skip"))
-        .stdout(predicate::str::contains("maconly"));
+        .stdout(predicate::str::contains("otheros"));
 
     assert!(
-        !home.path().join(".config/maconly").exists(),
+        !home.path().join(".config/otheros").exists(),
         "os gate=false でユニット全体が skip されず宛先が作られた",
     );
 }
@@ -697,6 +694,36 @@ fn apply_output_cmd_reflects_composed_content_every_apply() {
 }
 
 // ── load 時検証（#588 スライス1で新設した規則の代表例。網羅は manifest.rs の #[cfg(test)]） ──
+
+/// `when.os` の typo（`macos` 等）は load 時にエラーで、宛先を作らない（黙って恒久 skip させない）。
+#[test]
+fn apply_errors_when_os_is_not_an_accepted_value() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "when = { os = \"macos\" }\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+    )
+    .unwrap();
+    fs::write(unit.join("f.txt"), "x\n").unwrap();
+
+    dotfiles()
+        .arg("apply")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("darwin"))
+        .stderr(predicate::str::contains("linux"));
+
+    assert!(
+        !home.path().join(".config/demo").exists(),
+        "load エラーの単位が配置されている",
+    );
+}
 
 /// 2 つ目以降の input に `merge` を書かないと load 時にエラー（暗黙の合成規則を持たない）。
 #[test]
