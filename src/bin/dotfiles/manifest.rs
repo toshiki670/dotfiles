@@ -180,6 +180,20 @@ pub struct Hook {
     pub cmd: Vec<String>,
 }
 
+/// `when.os` が受理する OS。表示名と TOML トークンを揃える規則は [`Format`] と同じ。
+///
+/// 受理値を型で閉じ、typo を load 時に弾く ― 任意文字列を受けると、どの環境とも一致しない値が
+/// ユニット / step を黙って恒久 skip させる。
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Display, EnumIter)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
+pub enum Os {
+    /// macOS（Rust の `std::env::consts::OS` は `macos`）。
+    Darwin,
+    /// Linux。
+    Linux,
+}
+
 /// gate の採用条件。トップレベル（ユニットスコープ）と step（step スコープ）で共有する
 /// 1 つの語彙。複数キーは AND（全て満たす時だけ採用）。
 #[derive(Debug, Deserialize, Default)]
@@ -189,9 +203,9 @@ pub struct When {
     /// 単数 `dep` は廃止し、複数形＝配列で統一する（語感の破綻を避ける）。
     #[serde(default)]
     pub deps: Vec<String>,
-    /// OS（スカラ）。現在 OS と一致時だけ採用（`darwin` / `linux` 表記）。
+    /// OS（スカラ）。現在 OS と一致時だけ採用（[`Os`]）。
     #[serde(default)]
-    pub os: Option<String>,
+    pub os: Option<Os>,
     /// マシンクラス（スカラ・状態 gate）。`dotfiles profile <name>` が書いた現在の profile 状態
     /// （[`crate::state`]）と一致するときだけ採用する。`deps`（環境検出）・`os`（環境検出）と違い
     /// **user が選んでおく状態**を読む点が族として `theme`（color スライス）と同じ。未設定の既定は
@@ -792,7 +806,7 @@ mod tests {
         ));
     }
 
-    // ── Format / Merge の Display ↔ serde round-trip ──
+    // ── Format / Merge / Os の Display ↔ serde round-trip ──
 
     #[test]
     fn format_display_round_trips_through_serde() {
@@ -837,6 +851,27 @@ mod tests {
                 "Display と serde 表現がズレている: {merge}"
             );
         }
+    }
+
+    #[test]
+    fn os_display_round_trips_through_serde() {
+        for os in Os::iter() {
+            let parsed = parse(&format!("when = {{ os = \"{os}\" }}\n{TREE}")).unwrap();
+            assert_eq!(
+                parsed.when.and_then(|when| when.os),
+                Some(os),
+                "Display と serde 表現がズレている: {os}"
+            );
+        }
+    }
+
+    #[test]
+    fn rejects_unknown_os() {
+        let err = parse(&format!("when = {{ os = \"macos\" }}\n{TREE}")).unwrap_err();
+        assert!(
+            err.contains("darwin") && err.contains("linux"),
+            "受理値を示さずに弾いている: {err}"
+        );
     }
 
     // ── shape ──

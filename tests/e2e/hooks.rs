@@ -8,7 +8,7 @@
 //! hooks は onchange 固定（`frequency` は #588 スライス1で削除。生きた外部状態への反映は
 //! `output.cmd` step が担う ― [`crate::steps`] 参照）。
 
-use crate::{dotfiles, write_stub};
+use crate::{dotfiles, foreign_os, write_stub};
 use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
@@ -106,7 +106,10 @@ fn os_gate_skips_unit_hooks() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "when = { os = \"nonsuch-os\" }\nhooks = [{ cmd = [\"faketool\"] }]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+        format!(
+            "when = {{ os = \"{other}\" }}\nhooks = [{{ cmd = [\"faketool\"] }}]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+            other = foreign_os(),
+        ),
     )
     .unwrap();
     fs::write(unit.join("data.txt"), "v1").unwrap();

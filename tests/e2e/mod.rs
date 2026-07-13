@@ -56,6 +56,25 @@ pub(crate) fn dotfiles() -> Command {
     Command::cargo_bin("dotfiles").unwrap()
 }
 
+/// 現在の OS を `when.os` 表記（macOS = darwin）で返す。gate が成立する fixture に埋める。
+pub(crate) fn current_os() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "darwin"
+    } else {
+        "linux"
+    }
+}
+
+/// 現在 OS ではない方の `when.os` 値。gate が成立しない fixture に埋める。架空の OS 名は load
+/// エラーになるため、不一致はもう一方の実在 OS で書く。
+pub(crate) fn foreign_os() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "linux"
+    } else {
+        "darwin"
+    }
+}
+
 /// PATH に置く実行可能スタブを書き出す（固定テキストを stdout に出す）。
 /// generate / steps / hooks の各テストが共有する。
 #[cfg(unix)]
