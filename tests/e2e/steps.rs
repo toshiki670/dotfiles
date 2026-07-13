@@ -11,7 +11,7 @@
 //! （`configs/stats` の実例）を架空ツール `prefctl` で検証する。実 configs を名指ししない契約
 //! テストなので `when` は `deps` のみ（`os` gate は付けない＝ Linux CI でも実行される）。
 
-use crate::{current_os, dotfiles, foreign_os, write_stub};
+use crate::{dotfiles, foreign_os, write_stub};
 use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
@@ -91,6 +91,8 @@ fn apply_text_append_drops_step_when_dep_absent() {
 }
 
 /// when.os は現在 OS 一致の step だけ採用し、不一致の step は脱落する。
+/// 「一致する `when.os` 値」は受理値（darwin / linux）のターゲットにしか無い（[`crate::current_os`]）。
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 #[test]
 fn apply_step_when_os_gates_by_current_os() {
     let work = tempfile::tempdir().unwrap();
@@ -114,7 +116,7 @@ fn apply_step_when_os_gates_by_current_os() {
              merge = \"append\"\n\
              [[steps]]\n\
              output = \"~/.config/demo/out.txt\"\n",
-            os = current_os(),
+            os = crate::current_os(),
             other = foreign_os(),
         ),
     )
