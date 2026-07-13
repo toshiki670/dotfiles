@@ -19,6 +19,8 @@ struct OrderId(i32);
 
 `CustomerId` と `OrderId` を別の型にしておけば、引数の渡し間違いはコンパイルエラーになる。
 
+newtype に `Deref` を実装すると、対象型のメソッドをすべて呼び出せるようになり、型安全のために隠したかったメソッドまで意図せず公開してしまう可能性がある。そのため型安全・API 制限が目的の newtype には `Deref` を実装せず、必要な変換は [`AsRef`](https://doc.rust-lang.org/std/convert/trait.AsRef.html) や専用のアクセサメソッドで明示的に提供する（出典: [Microsoft RustTraining](https://microsoft.github.io/RustTraining/rust-patterns-book/ch03-the-newtype-and-type-state-patterns.html)、[std::ops::Deref](https://doc.rust-lang.org/std/ops/trait.Deref.html)）。
+
 ### ライフサイクルの状態ごとに型を分ける（状態分離）
 
 「未検証」「検証済み」のようなドメイン上の状態を、同一型のフラグではなく別々の型として表現する（出典: [nwiizo](https://syu-m-5151.hatenablog.com/entry/2026/01/22/094654)）。
@@ -36,7 +38,7 @@ fn validate(order: UnvalidatedOrder) -> Result<ValidatedOrder, ValidationError> 
 
 ### スマートコンストラクタで不変条件を強制する
 
-バリデーションを行うコンストラクタ関数だけを公開し、フィールドを非公開にすることで「正当な値だけが存在できる」型を作る（出典: [Luca Palmieri — Using Types To Guarantee Domain Invariants](https://www.lpalmieri.com/posts/2020-12-11-zero-to-production-6-domain-modelling/)、"Parse, Don't Validate" 原則）。
+バリデーションを行うコンストラクタ関数だけを公開し、フィールドを非公開にすることで「正当な値だけが存在できる」型を作る（"Parse, Don't Validate" 原則。原典: [Alexis King — Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)。Rust での適用例は [Luca Palmieri — Using Types To Guarantee Domain Invariants](https://www.lpalmieri.com/posts/2020-12-11-zero-to-production-6-domain-modelling/)）。
 
 ```rust
 pub struct Email(String);
@@ -80,11 +82,9 @@ impl Connection<Authenticated> {
 
 ただし Typestate には限界もある。状態が実行時の入力によって決まる場合は表現しにくく、異なる状態の値を同じコレクションへ入れるのも難しい（結局 enum でラップする必要が出てくる）。状態数が増えるほど型と `impl` ブロックの数も増え、内部実装のための状態が公開 API に漏れやすくなる。目安として、状態遷移が小さく静的なプロトコル（接続の確立・認証など）には Typestate が向き、実行時に分岐する状態機械には enum ベースの設計の方が扱いやすいことが多い（出典: [Yoshua Wuyts — State Machines III: Type States](https://blog.yoshuawuyts.com/state-machines-3/)）。
 
-newtype に `Deref` を実装すると、対象型のメソッドをすべて呼び出せるようになり、型安全のために隠したかったメソッドまで意図せず公開してしまう可能性がある。そのため型安全・API 制限が目的の newtype には `Deref` を実装せず、必要な変換は [`AsRef`](https://doc.rust-lang.org/std/convert/trait.AsRef.html) や専用のアクセサメソッドで明示的に提供する（出典: [Microsoft RustTraining](https://microsoft.github.io/RustTraining/rust-patterns-book/ch03-the-newtype-and-type-state-patterns.html)、[std::ops::Deref](https://doc.rust-lang.org/std/ops/trait.Deref.html)）。
-
 ### Parse, Don't Validate
 
-`is_valid_name() -> bool` のような検証関数は、その場限りの判定結果を返すだけで再利用できない。代わりに、より構造化された型を返すパース関数を書く（出典: [Luca Palmieri](https://www.lpalmieri.com/posts/2020-12-11-zero-to-production-6-domain-modelling/)）。
+`is_valid_name() -> bool` のような検証関数は、その場限りの判定結果を返すだけで再利用できない。代わりに、より構造化された型を返すパース関数を書く（原典: [Alexis King — Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)。Rust での適用例は [Luca Palmieri](https://www.lpalmieri.com/posts/2020-12-11-zero-to-production-6-domain-modelling/)）。
 
 ```rust
 fn parse_name(raw: String) -> Result<SubscriberName, String> {
@@ -104,9 +104,9 @@ Rust が防ぐのはあくまで「消費済みの同じ値を再利用するこ
 
 ### 所有権と自動リソース解放（RAII）
 
-所有権が保証するのは「値が非エイリアスである」ことではない。`&T` による共有参照は複数同時に存在でき、`Rc<T>` / `Arc<T>` は所有権そのものを複数の場所で共有できる。Rust が保証するのは、所有者とライフタイムが静的に追跡され、可変アクセス（`&mut T`）は常に排他的である（同時に他の参照と共存しない）ことである。
+Rust が保証するのは、値の所有者とライフタイムが静的に追跡され、可変アクセス（`&mut T`）が常に排他的である（同時に他の参照と共存しない）ことである。`&T` による共有参照は複数同時に存在でき、`Rc<T>` / `Arc<T>` を使えば所有権そのものを複数箇所で共有することもできる。共有所有権の場合、実際に破棄されるタイミングは実行時の参照カウントに依存するが、それでも「各所有者の生存期間が尽きたときに最終的にデストラクタが走ること」自体は静的な追跡によって保証されている。
 
-RAII が成り立つのは、この所有権とライフタイムの追跡によって「値をいつ破棄してよいか」がコンパイル時に決定できるからであり、「非エイリアスだからデストラクタを走らせられる」という単純な因果関係ではない。ハンドル型で排他アクセスを表現するのは、`&mut T` の排他性を活かした典型的な API 設計パターンである（出典: [without.boats — Ownership](https://without.boats/blog/ownership/)）。
+この保証があるからこそ、ファイルハンドルや mutex のようなリソースは「閉じ忘れ・アンロック忘れ」を気にせず、値のスコープに解放処理（`Drop::drop`）を委ねる設計にできる。排他アクセスが必要なリソースは、生のポインタやフラグで手動管理するのではなく、`&mut T` の排他性を活かしたハンドル型（例: ロック取得時に返るガード型）でラップし、借用チェックをコンパイラに任せる（出典: [without.boats — Ownership](https://without.boats/blog/ownership/)）。
 
 なお [`Drop`](https://doc.rust-lang.org/std/ops/trait.Drop.html) は必ず実行されるとは限らない。`mem::forget` による意図的な抑制、プロセスの異常終了、`panic = "abort"` 設定時の巻き戻し省略などでは呼ばれない。
 
@@ -132,7 +132,7 @@ Rust は例外機構を持たず、エラーを「回復可能」（`Result<T, E
 
 ### thiserror と anyhow の使い分け
 
-`thiserror` はエラー型そのものを提供するクレートではなく、`enum` / `struct` に `#[derive(thiserror::Error)]` を付けることで [`std::error::Error`](https://doc.rust-lang.org/std/error/trait.Error.html)（`Display` / `From` / `source()`）の実装を自動生成する導出マクロである。型付きエラーは `thiserror` を使わず手動で実装してもよいし、`enum` に限らず単一の失敗理由を持つ `struct` として定義してもよい。一方 `anyhow::Error` は型を消去して 1 つの型に集約するが、`downcast` / `downcast_ref` で元の具体型へ戻すこともでき、完全に不透明というわけではない。
+`thiserror` はエラー型そのものを提供するクレートではなく、`enum` / `struct` に `#[derive(thiserror::Error)]` を付けることでエラー型に必要な実装をまとめて生成する導出マクロである。`#[error("...")]` 属性から [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) を、`#[from]` 属性から [`From`](https://doc.rust-lang.org/std/convert/trait.From.html) を、そして `source()` を含む [`std::error::Error`](https://doc.rust-lang.org/std/error/trait.Error.html) 自体の実装を、それぞれ生成する。`Display` ・ `From` ・ `Error` は独立したトレイトであり、`thiserror` はこれらをまとめて自動導出しているに過ぎない。型付きエラーは `thiserror` を使わず手動で実装してもよいし、`enum` に限らず単一の失敗理由を持つ `struct` として定義してもよい。一方 `anyhow::Error` は型を消去して 1 つの型に集約するが、`downcast` / `downcast_ref` で元の具体型へ戻すこともでき、完全に不透明というわけではない。
 
 本質的な違いは「呼び出し側に安定したエラー契約（どの variant が起こりうるか）を公開するか」と「異種のエラーを 1 つの型でまとめて報告するか」にある。判断基準としては次の 2 つを併記できる（出典: [Luca Palmieri — Error Handling In Rust](https://www.lpalmieri.com/posts/error-handling-rust/)、[0h-n0 — Qiita](https://qiita.com/0h-n0/items/36b6071417025136f2a4)）。
 
@@ -189,6 +189,7 @@ Rust は例外機構を持たず、エラーを「回復可能」（`Result<T, E
 
 ### 個人ブログ（英語圏）
 
+- [Alexis King — Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)（2019） — "Parse, Don't Validate" 原則の原典（Haskell 例。Rust ではない）
 - [matklad — Newtype Index Pattern](https://matklad.github.io/2018/06/04/newtype-index-pattern.html)（Alex Kladov, rust-analyzer 開発者）
 - [Luca Palmieri — Using Types To Guarantee Domain Invariants](https://www.lpalmieri.com/posts/2020-12-11-zero-to-production-6-domain-modelling/) / [Error Handling In Rust](https://www.lpalmieri.com/posts/error-handling-rust/)（*Zero To Production In Rust* 著者）
 - [Yoshua Wuyts — Error Handling Survey](https://blog.yoshuawuyts.com/error-handling-survey) / [State Machines III: Type States](https://blog.yoshuawuyts.com/state-machines-3/)
