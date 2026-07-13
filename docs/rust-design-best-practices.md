@@ -132,7 +132,7 @@ Rust は例外機構を持たず、エラーを「回復可能」（`Result<T, E
 
 ### thiserror と anyhow の使い分け
 
-`thiserror` はエラー型そのものを提供するクレートではなく、`enum` / `struct` に `#[derive(thiserror::Error)]` を付けることでエラー型に必要な実装をまとめて生成する導出マクロである。`#[error("...")]` 属性から [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) を、`#[from]` 属性から [`From`](https://doc.rust-lang.org/std/convert/trait.From.html) を、そして `source()` を含む [`std::error::Error`](https://doc.rust-lang.org/std/error/trait.Error.html) 自体の実装を、それぞれ生成する。`Display` ・ `From` ・ `Error` は独立したトレイトであり、`thiserror` はこれらをまとめて自動導出しているに過ぎない。型付きエラーは `thiserror` を使わず手動で実装してもよいし、`enum` に限らず単一の失敗理由を持つ `struct` として定義してもよい。一方 `anyhow::Error` は型を消去して 1 つの型に集約するが、`downcast` / `downcast_ref` で元の具体型へ戻すこともでき、完全に不透明というわけではない。
+`thiserror` はエラー型そのものを提供するクレートではなく、`enum` / `struct` に `#[derive(thiserror::Error)]` を付けることでエラー型に必要な実装をまとめて生成する導出マクロである。`#[error("...")]` 属性から [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) を、`#[from]` 属性から [`From`](https://doc.rust-lang.org/std/convert/trait.From.html) を、そして `source()` を含む [`std::error::Error`](https://doc.rust-lang.org/std/error/trait.Error.html) 自体の実装を、それぞれ生成する。型付きエラーは `thiserror` を使わず手動で実装してもよいし、`enum` に限らず単一の失敗理由を持つ `struct` として定義してもよい。一方 `anyhow::Error` は型を消去して 1 つの型に集約するが、`downcast` / `downcast_ref` で元の具体型へ戻すこともでき、完全に不透明というわけではない。
 
 本質的な違いは「呼び出し側に安定したエラー契約（どの variant が起こりうるか）を公開するか」と「異種のエラーを 1 つの型でまとめて報告するか」にある。判断基準としては次の 2 つを併記できる（出典: [Luca Palmieri — Error Handling In Rust](https://www.lpalmieri.com/posts/error-handling-rust/)、[0h-n0 — Qiita](https://qiita.com/0h-n0/items/36b6071417025136f2a4)）。
 
