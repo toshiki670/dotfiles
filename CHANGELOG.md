@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.71.1] - 2026-07-13
+### Features
+- Homebrew tap 経由の自動 formula 更新を追加する ([#619](https://github.com/toshiki670/dotfiles/pull/619)) ([`c3893ad`](https://github.com/toshiki670/dotfiles/commit/c3893adcc09ccaa32ca8f808dbe3eb6f7a9886bf))
+### Fixes
+- Use fully-qualified brew install command ([#620](https://github.com/toshiki670/dotfiles/pull/620)) ([`0e235c1`](https://github.com/toshiki670/dotfiles/commit/0e235c15717c4145a0ec2b68b65a4140ae1fc1ad))
+- When.os の typo を load 時に弾く（silent skip をやめる） ([#629](https://github.com/toshiki670/dotfiles/pull/629)) ([`bd5a571`](https://github.com/toshiki670/dotfiles/commit/bd5a5712ff1d1af893a187df68420d0da5e51906))
+### Refactor
+- Tree/Pipeline と step の input/output 択一を型で表現する ([#622](https://github.com/toshiki670/dotfiles/pull/622)) ([`6472cf9`](https://github.com/toshiki670/dotfiles/commit/6472cf9a3599f17480852e3c75189313a3858af9))
+
+
 ## [0.71.0] - 2026-07-12
 ### Features
 - Rustdoc doc コメントの無駄を削る skill を追加する ([#583](https://github.com/toshiki670/dotfiles/pull/583)) ([`e546538`](https://github.com/toshiki670/dotfiles/commit/e546538600406c0698947d40e43219d05121a6d1))
