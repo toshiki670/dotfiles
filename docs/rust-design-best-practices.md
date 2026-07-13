@@ -1,6 +1,6 @@
 # Rust 設計ベストプラクティス
 
-Rust で API・モジュール・型・エラーハンドリングを設計する際に参照するパターン集。複数の著者・情報源から集めた原則を、開発中にすぐ引ける形でまとめる。各主張の出典はセクション内に直接リンクし、資料の一覧は末尾にまとめる。
+複数の著者・情報源から集めた Rust 設計の原則を、開発中にすぐ引ける形でまとめたパターン集。各主張の出典はセクション内に直接リンクし、資料の一覧は末尾にまとめる。
 
 いずれのパターンにも適用条件や限界がある。断定文だけを鵜呑みにせず、各項目の但し書きを踏まえてプロジェクトごとに判断すること。
 
@@ -84,7 +84,7 @@ impl Connection<Authenticated> {
 
 ### Parse, Don't Validate
 
-`is_valid_name() -> bool` のような検証関数は、その場限りの判定結果を返すだけで再利用できない。代わりに、より構造化された型を返すパース関数を書く（原典: [Alexis King — Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)。Rust での適用例は [Luca Palmieri](https://www.lpalmieri.com/posts/2020-12-11-zero-to-production-6-domain-modelling/)）。
+`is_valid_name() -> bool` のような検証関数は、その場限りの判定結果を返すだけで再利用できない。代わりに、より構造化された型を返すパース関数を書く（原典: [Alexis King — Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)）。
 
 ```rust
 fn parse_name(raw: String) -> Result<SubscriberName, String> {
@@ -98,7 +98,7 @@ fn parse_name(raw: String) -> Result<SubscriberName, String> {
 
 ### ムーブセマンティクスで状態遷移を扱う
 
-`fn validate(order: UnvalidatedOrder) -> ValidatedOrder` のようなシグネチャにすると、`UnvalidatedOrder` が `Copy` を実装しておらず事前に複製もされていない限り、渡した値は呼び出しと同時にムーブされ、以降そのバインディングは使用できなくなる（出典: [nwiizo](https://syu-m-5151.hatenablog.com/entry/2026/01/22/094654)）。
+`fn validate(order: UnvalidatedOrder) -> ValidatedOrder` のようなシグネチャにすると、渡した値は呼び出しと同時にムーブされ、以降そのバインディングは使用できなくなる（出典: [nwiizo](https://syu-m-5151.hatenablog.com/entry/2026/01/22/094654)）。
 
 Rust が防ぐのはあくまで「消費済みの同じ値を再利用すること」であり、値の複製がどこにも残らないことまで保証するわけではない。`Clone` で複製すれば、古い状態の値は別のバインディングとして生き続けられる。
 
@@ -139,7 +139,7 @@ Rust は例外機構を持たず、エラーを「回復可能」（`Result<T, E
 - **呼び出し側の要求で選ぶ**: 失敗モードごとに呼び出し側が異なる振る舞いをする必要がある → 型付きエラー（`thiserror` 等）。失敗した事実と文脈が分かれば十分 → `anyhow` / `eyre` で集約する。
 - **従来からの経験則**: ライブラリは呼び出し側に契約を示すため型付きエラーを、アプリケーションは末端で人間やログに報告するだけなので `anyhow` を使う、という区分も依然として広く使われている。
 
-ドメイン層・インフラ層で `thiserror` による型付きエラーを定義し、アプリケーション層で `anyhow` に集約する構成は、レイヤードアーキテクチャでよく見られる選択肢の一つである（唯一の正解ではない）。
+ドメイン層・インフラ層で `thiserror` による型付きエラーを定義し、アプリケーション層で `anyhow` に集約する構成は、レイヤードアーキテクチャでよく見られる選択肢の一つである。
 
 `Error::source()` を実装する構造化エラーでは、エラー自身の `Display` に `source` のメッセージまで含めるべきではない。標準ライブラリの指針では「source として返すか、Display に含めるかのどちらか一方」とされており、両方に含めるとレポーター側（ログ用の 1 行整形、ターミナル用の多行整形など）でメッセージが重複する原因になる（出典: [Jane Lusby](https://github.com/yaahc/rustconf/blob/master/error-handling-isnt-all-about-errors.md)）。
 
@@ -164,15 +164,11 @@ Rust は例外機構を持たず、エラーを「回復可能」（`Result<T, E
 
 複数のトレイト境界を持つジェネリック構造体（`Foo<S, C, I, M, G>` のように型パラメータが増えていく状態）で、それらの型が実装ごとに一意に決まる組み合わせであるなら、関連型を束ねた 1 つのトレイト（例: `Config`）にまとめて `Foo<Cfg: Config>` へ単純化できる（出典: [Microsoft RustTraining](https://microsoft.github.io/RustTraining/rust-patterns-book/ch03-the-newtype-and-type-state-patterns.html)）。ただしこの集約には代償もある。型の組み合わせが固定されるため個別の差し替えが難しくなり、トレイト境界やエラーメッセージが複雑になりやすい。単純に型エイリアスや型推論で足りるケースまで無理に関連型へ寄せる必要はない。
 
-### ガイドラインは強制ではなく判断材料
-
-[Rust API Guidelines](https://rust-lang.github.io/api-guidelines/about.html) 自体が明言している通り、これらは crate 作者への推奨事項であり、絶対的なルールではない。トレードオフと採用理由を意識した上で、プロジェクトごとに適用の可否を判断する。
-
 ## 参考資料
 
 ### 公式・準公式
 
-- [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/about.html) — Rust ライブラリチームによる API 設計チェックリスト
+- [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/about.html) — Rust ライブラリチームによる API 設計チェックリスト。ガイドライン自体が「crate 作者への推奨事項であり、絶対的なルールではない」と明言している
 - [The Rust Book](https://doc.rust-lang.org/book/) — Steve Klabnik ほか。エラー分類など言語の設計思想そのものを解説
 - [Rust Design Patterns](https://rust-unofficial.github.io/patterns/) — コミュニティによる idiom / pattern / anti-pattern 集
 - 標準ライブラリドキュメント: [`std::error::Error`](https://doc.rust-lang.org/std/error/trait.Error.html) / [`std::ops::Deref`](https://doc.rust-lang.org/std/ops/trait.Deref.html) / [`std::ops::Drop`](https://doc.rust-lang.org/std/ops/trait.Drop.html)
@@ -201,7 +197,7 @@ Rust は例外機構を持たず、エラーを「回復可能」（`Result<T, E
 
 事例・補助資料として有用だが、一般原則の根拠としては上記の公式資料・書籍を優先すること。
 
-- **nwiizo**（株式会社スリーシェイク） — [「型は壁、Rustでもバグを直すな、表現できなくせよ」](https://speakerdeck.com/nwiizo/xing-habi-rustdemobaguwozhi-suna-biao-xian-dekinakuseyo)（登壇資料）、[はてなブログ（syu-m-5151）](https://syu-m-5151.hatenablog.com/entry/2026/01/22/094654)。型設計 4 パターン（状態分離・newtype・スマートコンストラクタ・網羅的 enum）の出典。モジュール結合度可視化ツール `cargo-coupling` の開発記事も参照
+- **nwiizo**（株式会社スリーシェイク） — [「型は壁、Rustでもバグを直すな、表現できなくせよ」](https://speakerdeck.com/nwiizo/xing-habi-rustdemobaguwozhi-suna-biao-xian-dekinakuseyo)（登壇資料）、[はてなブログ（syu-m-5151）](https://syu-m-5151.hatenablog.com/entry/2026/01/22/094654)。型設計 4 パターン（状態分離・newtype・スマートコンストラクタ・網羅的 enum）の出典
 - [taiki45 — 実用Rustアプリケーション開発](https://zenn.dev/taiki45/books/pragmatic-rust-application-development)（Zenn Book） — エラーハンドリング・交換可能性（trait 抽象化）を含む実務設計書
 - [msakuta — Zenn](https://zenn.dev/msakuta/articles/83f9991b2aba62) — `pub` 可視性設計論
 - [0h-n0 — Qiita](https://qiita.com/0h-n0/items/36b6071417025136f2a4) — thiserror/anyhow の判断基準
