@@ -11,7 +11,7 @@
 use crate::apply::gate;
 use crate::discover::{self, MANIFEST};
 use crate::locals::store::Store;
-use crate::manifest::{Manifest, Step, StepSource, Steps, resolve_output_path};
+use crate::manifest::{Manifest, OutputSource, Step, Steps};
 use crate::placements::{self, Placement};
 use crate::prune;
 use std::collections::BTreeMap;
@@ -135,7 +135,7 @@ fn stale_reason(source: &Path, home: &Path, gate_state: &gate::GateState, path: 
         Steps::Tree { .. } => false,
         Steps::Pipeline { steps, .. } => steps.iter().any(|step| match step {
             Step::Output(out) => {
-                matches!(&out.dest, StepSource::Path(p) if resolve_output_path(home, p) == path)
+                matches!(&out.dest, OutputSource::Path(p) if p.resolve(home) == path)
                     && !gate::when_satisfied(&out.when, gate_state)
             }
             Step::Input(_) => false,

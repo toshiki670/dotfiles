@@ -31,7 +31,7 @@
 //! は step を持たず `when` も書けないため、ツリー展開そのものに step gate の判定は要らない。
 
 use crate::discover::{self, MANIFEST};
-use crate::manifest::{Manifest, Step, StepSource, Steps, When, resolve_output_path};
+use crate::manifest::{HomePath, Manifest, OutputSource, Step, Steps, When};
 use std::path::{Path, PathBuf};
 
 /// 1 つの宣言された配置先。
@@ -85,7 +85,7 @@ fn collect(
             Steps::Pipeline { steps, .. } => {
                 for step in steps {
                     let Step::Output(out) = step else { continue };
-                    let StepSource::Path(p) = &out.dest else {
+                    let OutputSource::Path(p) = &out.dest else {
                         continue;
                     };
                     if let Some(satisfied) = gate
@@ -95,7 +95,7 @@ fn collect(
                     }
                     placements.push(Placement {
                         unit: name.clone(),
-                        path: resolve_output_path(home, p),
+                        path: p.resolve(home),
                     });
                 }
             }
@@ -105,15 +105,15 @@ fn collect(
 }
 
 /// ツリーユニットを配下ファイルへ展開し、それぞれの配置先を積む。`output` はツリーの配置先
-/// （`~` 起点の生表記）。
+/// （検証済みの `~` 起点パス）。
 fn push_tree_placements(
     unit_dir: &Path,
     name: &str,
-    output: &str,
+    output: &HomePath,
     home: &Path,
     out: &mut Vec<Placement>,
 ) -> Result<(), String> {
-    let dst_root = resolve_output_path(home, output);
+    let dst_root = output.resolve(home);
     for file in discover::unit_files(unit_dir)? {
         let rel = file
             .strip_prefix(unit_dir)
