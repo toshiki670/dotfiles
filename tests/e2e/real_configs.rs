@@ -12,7 +12,7 @@
 //! エンジンの契約を満たす実体である」結線（load＋ルート配置＋list）だけを見る。
 //!
 //! 前提: dep gate を空 PATH で外せるのは configs の dep が全て bare 名だから（`/` 区切りの絶対/相対
-//! dep は `gate::which` が PATH 非探索なので外れない）。実 apply のため un-gate な単位の onchange
+//! dep は PATH 非探索なので外れない）。実 apply のため un-gate な単位の onchange
 //! hooks も走り得るが、現状そのような単位は無く、bare hook は未インストール→skip で安全。前提が崩れる
 //! 単位が入ったら、ここではなく当該 manifest 側か別テストで扱う。
 

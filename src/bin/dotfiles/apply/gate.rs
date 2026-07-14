@@ -14,7 +14,7 @@
 
 use crate::manifest::{Manifest, Os, When};
 use crate::state;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// apply 開始時に 1 回解決した、状態駆動 gate（`profile` / 将来の `theme`）の現在状態スナップショット。
 ///
@@ -107,35 +107,7 @@ fn when_unsatisfied_reason(when: &When, state: &GateState) -> Option<String> {
 fn first_missing_dep(deps: &[String]) -> Option<&str> {
     deps.iter()
         .map(String::as_str)
-        .find(|dep| which(dep).is_none())
-}
-
-/// `name` の実行ファイルを `$PATH` から探す（簡易 which）。
-pub fn which(name: &str) -> Option<PathBuf> {
-    // パス区切りを含む名前は PATH 探索せず、そのまま実行ファイルとして扱う。
-    if name.contains('/') {
-        let p = PathBuf::from(name);
-        return is_executable(&p).then_some(p);
-    }
-    let path = std::env::var_os("PATH")?;
-    std::env::split_paths(&path)
-        .map(|dir| dir.join(name))
-        .find(|candidate| is_executable(candidate))
-}
-
-/// 実ファイルかつ実行ビットが立っているか（Unix）。
-#[cfg(unix)]
-fn is_executable(p: &Path) -> bool {
-    use std::os::unix::fs::PermissionsExt;
-    std::fs::metadata(p)
-        .map(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
-        .unwrap_or(false)
-}
-
-/// 非 Unix では実ファイルの存在のみで判定する。
-#[cfg(not(unix))]
-fn is_executable(p: &Path) -> bool {
-    p.is_file()
+        .find(|dep| which::which(dep).is_err())
 }
 
 #[cfg(test)]
