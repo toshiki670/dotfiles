@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.71.2] - 2026-07-14
+### Features
+- Prose-tidy skill に「置換より削除」の自己点検を追加する ([#640](https://github.com/toshiki670/dotfiles/pull/640)) ([`da1f043`](https://github.com/toshiki670/dotfiles/commit/da1f04375f0cc6671217d639bace6be86187291b))
+### Refactor
+- StepSource のパス表記検証をパースへ変え、下流の再パースを無くす ([#632](https://github.com/toshiki670/dotfiles/pull/632)) ([`dbc8006`](https://github.com/toshiki670/dotfiles/commit/dbc8006eb86903419db4bbc29899660e41319b7c))
+- PATH 実行ファイル存在確認を which crate に統一する ([#635](https://github.com/toshiki670/dotfiles/pull/635)) ([`52b478a`](https://github.com/toshiki670/dotfiles/commit/52b478aa683f395ce2dd3be21c18ba05cb5d9c4e))
+- Env-tools を upkeep へリネームし、サブコマンド名の重複と fish 補完欠落を解消する ([#639](https://github.com/toshiki670/dotfiles/pull/639)) ([`6241f4a`](https://github.com/toshiki670/dotfiles/commit/6241f4a189d208bed419062d89e4dc7c156b299e))
+- Completion manifest.toml のコメント重複を削る ([#641](https://github.com/toshiki670/dotfiles/pull/641)) ([`6d85fba`](https://github.com/toshiki670/dotfiles/commit/6d85fbac58c95e7bdc02e899e31d548070738d6b))
+- Fzf-picker E2E doc の「各 bin」表記をサブコマンドへ揃える ([#642](https://github.com/toshiki670/dotfiles/pull/642)) ([`3b51db1`](https://github.com/toshiki670/dotfiles/commit/3b51db14be7bfeeaeb0035a75ed34eca13dcd15d))
+
+
 ## [0.71.1] - 2026-07-13
 ### Features
 - Homebrew tap 経由の自動 formula 更新を追加する ([#619](https://github.com/toshiki670/dotfiles/pull/619)) ([`c3893ad`](https://github.com/toshiki670/dotfiles/commit/c3893adcc09ccaa32ca8f808dbe3eb6f7a9886bf))
