@@ -1,6 +1,4 @@
 # dotfiles の fish 補完を生成・配置する。
-# `dotfiles --completions fish` の標準出力を output のファイルへ書き出す（completions は top-level option。
-# サブコマンドにしないことで `dotfiles <Tab>` の候補に出さない）。
 # when.deps = dotfiles が PATH に無ければ生成をスキップ（ユニット gate）。`dotfiles apply` 初回など
 # dotfiles 未 install の段階では生成されない。
 when = { deps = [ "dotfiles" ] }

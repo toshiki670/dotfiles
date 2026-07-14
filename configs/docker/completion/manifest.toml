@@ -1,5 +1,4 @@
 # docker の fish 補完を生成・配置する。
-# `docker completion fish` の標準出力を output のファイルへ書き出す。
 # when.deps = docker が PATH に無ければ生成をスキップ（ユニット gate）。
 when = { deps = [ "docker" ] }
 

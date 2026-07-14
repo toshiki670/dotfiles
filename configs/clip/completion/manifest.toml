@@ -1,6 +1,4 @@
 # clip（src/bin/clip）の fish 補完を生成・配置する。
-# `clip --completions fish` の標準出力を output のファイルへ書き出す（completions は top-level option。
-# サブコマンドにしないことで `clip <Tab>` の候補に出さない）。
 # when.deps = clip が PATH に無ければ生成をスキップ（ユニット gate）。`dotfiles apply` 初回など
 # clip 未 install の段階では生成されない。
 when = { deps = [ "clip" ] }
