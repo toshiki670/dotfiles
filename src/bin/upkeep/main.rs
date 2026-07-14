@@ -8,8 +8,6 @@
 //! - **純ロジックと IO を分離**。判定（[`prompt::is_yes`]）はユニットテストを同居させ、
 //!   外部コマンドを叩く IO 層（[`command`]）と対話 IO はバイナリの E2E（`tests/upkeep/`）で
 //!   検証する。
-//! - 各サブコマンド（`cleanup` / `upgrade`）の `run()` は [`cli`] からのみ
-//!   呼ばれる。この `main()` が [`cli::run`] を呼ぶ入口。
 
 mod banner;
 mod command;

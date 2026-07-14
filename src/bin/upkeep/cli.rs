@@ -10,7 +10,6 @@ use clap_complete::Shell;
 
 use super::{cleanup, upgrade};
 
-/// 環境メンテナンス系コマンドをまとめた入口。
 #[derive(Parser)]
 #[command(
     name = "upkeep",
