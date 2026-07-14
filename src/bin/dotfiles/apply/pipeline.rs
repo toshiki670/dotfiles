@@ -21,11 +21,11 @@ use super::gate::{self, GateState};
 use super::{cmd, copy, fold, set_mode, write_if_changed};
 use crate::locals::resolve;
 use crate::manifest::{
-    Format, InputStep, Manifest, Merge, OutputStep, Step, StepSource, Steps, resolve_output_path,
+    Format, InputSource, InputStep, Manifest, Merge, OutputSource, OutputStep, Step, Steps,
 };
 use std::collections::BTreeMap;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// 実行時の内容（manifest スキーマには現れないパイプライン内部型。[`crate`] 冒頭の用語集の
 /// 「内容」に対応する）。
@@ -47,12 +47,8 @@ pub fn run(
 ) -> Result<(), String> {
     let (format, steps) = match &manifest.steps {
         Steps::Tree { output } => {
-            return copy::place(
-                unit_dir,
-                &resolve_output_path(home, output),
-                manifest,
-                locals,
-            );
+            let dst = output.resolve(home);
+            return copy::place(unit_dir, &dst, manifest, locals);
         }
         Steps::Pipeline { format, steps } => (*format, steps),
     };
@@ -87,20 +83,20 @@ fn apply_input(
     input: &InputStep,
 ) -> Result<(), String> {
     match &input.source {
-        StepSource::Path(p) => {
-            let path = resolve_input_path(unit_dir, home, p);
-            match std::fs::read(&path) {
+        InputSource::Path(path) => {
+            let resolved = path.resolve(unit_dir, home);
+            match std::fs::read(&resolved) {
                 // パースエラーには input パスのラベルを添える（どの input が壊れたか）。
                 Ok(bytes) => {
                     fold_in(content, format, input.merge, &bytes)
-                        .map_err(|e| format!("{p}: {e}"))?;
+                        .map_err(|e| format!("{path}: {e}"))?;
                 }
                 // optional な不在は内容を触らず飛ばす（既定は「無ければエラー」）。
                 Err(e) if e.kind() == io::ErrorKind::NotFound && input.optional => {}
-                Err(e) => return Err(format!("{}: 読み込み失敗: {e}", path.display())),
+                Err(e) => return Err(format!("{}: 読み込み失敗: {e}", resolved.display())),
             }
         }
-        StepSource::Cmd(c) => {
+        InputSource::Cmd(c) => {
             let bytes = cmd::run(&c.cmd)?;
             // パースエラーには cmd argv のラベルを添える。
             fold_in(content, format, input.merge, &bytes)
@@ -125,14 +121,14 @@ fn apply_output(
         );
     };
     match &output.dest {
-        StepSource::Path(p) => {
+        OutputSource::Path(path) => {
             let injected = resolve::inject(bytes, locals);
-            let path = resolve_output_path(home, p);
-            write_if_changed(&path, &injected)?;
+            let resolved = path.resolve(home);
+            write_if_changed(&resolved, &injected)?;
             // 書き込みを省略しても mode は毎回再適用する（属性変更が反映されるように）。
-            set_mode(&path, manifest)
+            set_mode(&resolved, manifest)
         }
-        StepSource::Cmd(c) => {
+        OutputSource::Cmd(c) => {
             // cmd output は毎 apply 実行し、合成済みの内容を標準入力へ渡す（冪等契約）。
             cmd::run_piped(&c.cmd, &resolve::inject(bytes, locals))
         }
@@ -166,16 +162,4 @@ fn fold_in(
     };
     *content = Content::Bytes(merged);
     Ok(())
-}
-
-/// input パスを解決する: `~` 起点は `home` に展開、それ以外は単位相対（`unit_dir` に join）。
-/// 表記は load 時の解釈（[`crate::manifest`]）が保証済み（`~` / `~/...` / 単位相対）。
-fn resolve_input_path(unit_dir: &Path, home: &Path, p: &str) -> PathBuf {
-    if let Some(rest) = p.strip_prefix("~/") {
-        home.join(rest)
-    } else if p == "~" {
-        home.to_path_buf()
-    } else {
-        unit_dir.join(p)
-    }
 }

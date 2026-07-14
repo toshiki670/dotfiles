@@ -4,8 +4,8 @@
 //! - **input** step: 内容へ中身を畳む（最初の input は内容＝中身、2 つ目以降は `merge` で重ねる）。
 //! - **output** step: 内容を宛先へ書く。
 //!
-//! 各 step の `input` / `output` は択一で、どちらも「パス文字列」か「`cmd`（argv・標準入出力）」の
-//! 択一（[`StepSource`]）。重ね方の内容型は unit レベルの `format`（json / plist / text）が決め、
+//! 各 step の `input` / `output` は択一で、どちらも「パス」か「`cmd`（argv・標準入出力）」の
+//! 択一（[`InputSource`] / [`OutputSource`]）。重ね方の内容型は unit レベルの `format`（json / plist / text）が決め、
 //! per-step の `merge`（shallow / deep / append）が「どう重ねるか」を step ごとに選ぶ ― 同じ unit の
 //! 中で 2 つ目の input が `shallow`、3 つ目が `deep` のように混在できる。実行時の畳み込みの仕組みは
 //! [`crate::apply::pipeline`]。
@@ -67,8 +67,8 @@ pub enum Steps {
     /// （merge / format）はツリーに意味を持たず、step の `when` は unit gate と冗長、`optional` の
     /// 対象になる不在（repo 追跡の単位ディレクトリは常に在る）も無いため、いずれも load 時に弾かれる。
     Tree {
-        /// 配置先ディレクトリ（`~` 起点の生表記）。
-        output: String,
+        /// 配置先ディレクトリ（検証済みの `~` 起点パス）。
+        output: HomePath,
     },
     /// バイト内容パイプライン: 内容を空から始め、宣言順に input（読む）→ output（書く）を畳む
     /// （[`crate::apply::pipeline`]）。input 1 つ以上・output 1 つ以上。
@@ -95,8 +95,8 @@ pub enum Step {
 /// input step。読んだ中身を内容へ畳む。
 #[derive(Debug)]
 pub struct InputStep {
-    /// 読む内容源（パス or cmd 標準出力）。
-    pub source: StepSource,
+    /// 読む内容源（検証済みパス or cmd 標準出力）。
+    pub source: InputSource,
     /// 重ね方（2 つ目以降の input に必須・最初の input には禁止）。値は `format` と両立する
     /// ものを選ぶ: json / plist → `shallow` | `deep`、text → `append`。この step の畳み込みを
     /// そのまま駆動する（[`crate::apply::pipeline`]）。
@@ -115,20 +115,161 @@ pub struct InputStep {
 /// 語彙で、output の書き込みは常に実行される）。manifest.toml 上の指定は load 時に弾かれる。
 #[derive(Debug)]
 pub struct OutputStep {
-    /// 書く宛先（パス or cmd 標準入力）。
-    pub dest: StepSource,
+    /// 書く宛先（検証済み home 起点パス or cmd 標準入力）。
+    pub dest: OutputSource,
     /// この step の採否（省略 = 常時採用）。unit gate と共通の語彙（`deps` / `os` / `profile`）。
     pub when: Option<When>,
 }
 
-/// step の内容源。パス文字列（`"settings.json"` / `"~/.claude/settings.json"`）か
-/// `cmd`（`{ cmd = ["gh", "completion", "fish"] }`）の択一。TOML の型（bare string / inline table）で
-/// 判別するため `untagged` で受ける（src/cmd の排他は型システムが保証し、実行時検証は要らない）。
+/// 検証済みの home 起点パス（`~` または `~/...`）。output はこの表記のみ許容し、input の home 分岐も
+/// これを再利用する。`None` は `~` 単体、`Some(rest)` は `~/rest`（`rest` が空なら `~/`）。
+#[derive(Debug, Clone)]
+pub struct HomePath(Option<String>);
+
+impl HomePath {
+    /// output パスの表記をパースする。`$` 含み・絶対・相対・`~/` 後の `..` は load エラー
+    /// （`..` は `~` 起点でも home の外へ脱出できてしまうため弾く）。
+    fn parse(p: &str) -> Result<Self, String> {
+        if p.contains('$') {
+            return Err(format!(
+                "output パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
+            ));
+        }
+        if p == "~" {
+            return Ok(Self(None));
+        }
+        let Some(rest) = p.strip_prefix("~/") else {
+            return Err(format!(
+                "output パス `{p}` は ~ 起点（~ または ~/...）である必要があります（絶対パス・相対パスは不可）"
+            ));
+        };
+        if has_parent_component(rest) {
+            return Err(format!(
+                "output パス `{p}` に `..`（親ディレクトリ参照）は使えません（home の外を指す）"
+            ));
+        }
+        Ok(Self(Some(rest.to_string())))
+    }
+
+    /// `home` を基点にパスを解決する。`~` 単体・`~/`（空 rest）はどちらも home 自身になる。
+    pub(crate) fn resolve(&self, home: &Path) -> PathBuf {
+        match &self.0 {
+            None => home.to_path_buf(),
+            Some(rest) => home.join(rest),
+        }
+    }
+}
+
+impl std::fmt::Display for HomePath {
+    /// 解決前の生表記へ戻す（`~` 単体・`~/`・`~/rest` を区別して復元する）。apply の 1 行出力・
+    /// `list` の宛先表記が使う。
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.0 {
+            None => write!(f, "~"),
+            Some(rest) => write!(f, "~/{rest}"),
+        }
+    }
+}
+
+/// 検証済みの input パス表記。home 起点（[`HomePath`]）または単位相対。特例 `"."`（ツリー）は
+/// 単位相対として表現される。
+#[derive(Debug)]
+pub enum InputPath {
+    /// home 起点（`~` / `~/...`）。output の [`HomePath`] と表記・解決を共有する。
+    Home(HomePath),
+    /// 単位相対（`~` プレフィックス無し・絶対でない・`$` を含まない）。`unit_dir` を基点に解決する。
+    UnitRelative(String),
+}
+
+impl InputPath {
+    /// input パスの表記をパースする。home 起点（`~` / `~/...`）または単位相対を受け、`$` 含み・絶対・
+    /// 空文字列・`..`（home / 単位ディレクトリの外へ脱出）は load エラー。特例 `"."` は `.` 単一成分で
+    /// `..` を含まないため単位相対として通り、[`RawManifest::into_manifest`] がツリーへ振り分ける。
+    fn parse(p: &str) -> Result<Self, String> {
+        if p.contains('$') {
+            return Err(format!(
+                "input パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
+            ));
+        }
+        if p == "~" {
+            return Ok(InputPath::Home(HomePath(None)));
+        }
+        if let Some(rest) = p.strip_prefix("~/") {
+            if has_parent_component(rest) {
+                return Err(format!(
+                    "input パス `{p}` に `..`（親ディレクトリ参照）は使えません（home の外を指す）"
+                ));
+            }
+            return Ok(InputPath::Home(HomePath(Some(rest.to_string()))));
+        }
+        if p.starts_with('~') {
+            return Err(format!(
+                "input パス `{p}` が不正です（~ 起点は ~ または ~/... のみ）"
+            ));
+        }
+        if p.starts_with('/') {
+            return Err(format!(
+                "input パス `{p}` に絶対パスは使えません（単位相対 または ~ 起点）"
+            ));
+        }
+        if p.is_empty() {
+            return Err("input パスに空文字列は使えません（単位相対パスが必要）".to_string());
+        }
+        if has_parent_component(p) {
+            return Err(format!(
+                "input パス `{p}` に `..`（親ディレクトリ参照）は使えません（単位ディレクトリの外を指す）"
+            ));
+        }
+        Ok(InputPath::UnitRelative(p.to_string()))
+    }
+
+    /// input パスを解決する: home 起点は `home`、単位相対は `unit_dir` を基点にする。
+    pub(crate) fn resolve(&self, unit_dir: &Path, home: &Path) -> PathBuf {
+        match self {
+            InputPath::Home(home_path) => home_path.resolve(home),
+            InputPath::UnitRelative(rest) => unit_dir.join(rest),
+        }
+    }
+}
+
+impl std::fmt::Display for InputPath {
+    /// 解決前の生表記へ戻す（fold のパースエラーに添える input ラベル）。
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InputPath::Home(home_path) => write!(f, "{home_path}"),
+            InputPath::UnitRelative(rest) => write!(f, "{rest}"),
+        }
+    }
+}
+
+/// input step の解釈済み内容源: 検証済みパス（[`InputPath`]）か cmd 標準出力。
+#[derive(Debug)]
+pub enum InputSource {
+    /// 検証済みの input パス（単位相対 or home 起点）。
+    Path(InputPath),
+    /// cmd の標準出力を読む（argv）。
+    Cmd(CmdSource),
+}
+
+/// output step の解釈済み内容源: 検証済み home 起点パス（[`HomePath`]）か cmd 標準入力。
+#[derive(Debug)]
+pub enum OutputSource {
+    /// 検証済みの home 起点パス（`~` / `~/...`）。
+    Path(HomePath),
+    /// 内容を cmd の標準入力へ渡す（argv）。
+    Cmd(CmdSource),
+}
+
+/// `[[steps]]` の `input` / `output` の生スキーマ（TOML と 1:1）。パス文字列
+/// （`"settings.json"` / `"~/.claude/settings.json"`）か `cmd`（`{ cmd = ["gh", "completion", "fish"] }`）
+/// の択一。TOML の型（bare string / inline table）で判別するため `untagged` で受ける（src/cmd の
+/// 排他は型システムが保証し、実行時検証は要らない）。表記の検証は [`RawManifest::into_manifest`] が
+/// 担い、[`InputPath`] / [`HomePath`] へ parse して確定形（[`InputSource`] / [`OutputSource`]）にする。
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub enum StepSource {
-    /// パス: input は単位相対 or `~` 起点、output は `~` 起点のみ（[`RawManifest::into_manifest`]
-    /// が load 時に検証）。特例として input `"."` は「単位ディレクトリツリー」を表す。
+enum StepSource {
+    /// パス: input は単位相対 or `~` 起点、output は `~` 起点のみ。特例として input `"."` は
+    /// 「単位ディレクトリツリー」を表す。
     Path(String),
     /// コマンド: input は標準出力を読み、output は内容を標準入力へ渡す（argv）。
     Cmd(CmdSource),
@@ -238,14 +379,14 @@ impl Manifest {
     /// パス output を持たない（cmd output だけの）ユニットは `(cmd)` を返す。
     pub fn display_dst(&self) -> String {
         match &self.steps {
-            Steps::Tree { output } => output.clone(),
+            Steps::Tree { output } => output.to_string(),
             Steps::Pipeline { steps, .. } => steps
                 .iter()
                 .find_map(|step| match step {
                     Step::Output(OutputStep {
-                        dest: StepSource::Path(p),
+                        dest: OutputSource::Path(p),
                         ..
-                    }) => Some(p.clone()),
+                    }) => Some(p.to_string()),
                     _ => None,
                 })
                 .unwrap_or_else(|| "(cmd)".to_string()),
@@ -271,7 +412,7 @@ impl Manifest {
             matches!(
                 s,
                 Step::Output(OutputStep {
-                    dest: StepSource::Cmd(_),
+                    dest: OutputSource::Cmd(_),
                     ..
                 })
             )
@@ -395,9 +536,52 @@ impl RawStep {
 }
 
 impl SidedStep {
-    /// 「ツリー input」（`input = "."` ＝ 単位ディレクトリをそのまま配置）か。
+    /// パス表記をパースして [`ParsedStep`] へ解釈する（#579）。input は [`InputPath`]、output は
+    /// [`HomePath`] へ parse し、cmd はそのまま移す。
+    fn into_parsed(self) -> Result<ParsedStep, String> {
+        let side = match self.side {
+            Side::Input(StepSource::Path(p)) => {
+                ParsedSide::Input(InputSource::Path(InputPath::parse(&p)?))
+            }
+            Side::Input(StepSource::Cmd(c)) => ParsedSide::Input(InputSource::Cmd(c)),
+            Side::Output(StepSource::Path(p)) => {
+                ParsedSide::Output(OutputSource::Path(HomePath::parse(&p)?))
+            }
+            Side::Output(StepSource::Cmd(c)) => ParsedSide::Output(OutputSource::Cmd(c)),
+        };
+        Ok(ParsedStep {
+            side,
+            merge: self.merge,
+            when: self.when,
+            optional: self.optional,
+        })
+    }
+}
+
+/// パス表記まで parse 済みの中間形 step（[`SidedStep`] を [`SidedStep::into_parsed`] が解釈した形）。
+/// `merge` / `optional` を output 側にも保持する理由は [`SidedStep`] と同じ。
+struct ParsedStep {
+    /// step の向きと検証済み内容源。
+    side: ParsedSide,
+    merge: Option<Merge>,
+    when: Option<When>,
+    optional: bool,
+}
+
+/// step の向き（input / output）と検証済み内容源。
+enum ParsedSide {
+    Input(InputSource),
+    Output(OutputSource),
+}
+
+impl ParsedStep {
+    /// 「ツリー input」（`input = "."` ＝ 単位ディレクトリをそのまま配置）か。`"."` が単位相対として
+    /// 通る理由は [`InputPath::parse`] を参照。
     fn is_tree_input(&self) -> bool {
-        matches!(&self.side, Side::Input(StepSource::Path(p)) if p == ".")
+        matches!(
+            &self.side,
+            ParsedSide::Input(InputSource::Path(InputPath::UnitRelative(p))) if p == "."
+        )
     }
 }
 
@@ -431,23 +615,22 @@ impl RawManifest {
             ));
         }
 
-        // パス表記（#579）: 全 step の path 内容源を検証する。
-        for step in &sided {
-            match &step.side {
-                Side::Input(StepSource::Path(p)) => validate_input_path(p)?,
-                Side::Output(StepSource::Path(p)) => validate_output_path(p)?,
-                _ => {}
-            }
-        }
+        // パス表記（#579）: 全 step の path 内容源を parse し、検証済みの中間形（ParsedStep）へ。
+        // 以降の検証・解釈はこの parsed を見る（生文字列の再パースを残さない）。
+        let parsed: Vec<ParsedStep> = sided
+            .into_iter()
+            .map(SidedStep::into_parsed)
+            .collect::<Result<_, _>>()?;
 
         // 各 step の cmd（input.cmd / output.cmd）は非空。空 argv は cmd::run/run_piped の cmd[0]
         // インデックスで panic するため、load 時に弾く（hooks の非空検証と同じ「静かに無視しない」方針）。
-        for (i, step) in sided.iter().enumerate() {
-            let (label, source) = match &step.side {
-                Side::Input(source) => ("input", source),
-                Side::Output(source) => ("output", source),
+        for (i, step) in parsed.iter().enumerate() {
+            let (label, empty) = match &step.side {
+                ParsedSide::Input(InputSource::Cmd(c)) => ("input", c.cmd.is_empty()),
+                ParsedSide::Output(OutputSource::Cmd(c)) => ("output", c.cmd.is_empty()),
+                _ => continue,
             };
-            if matches!(source, StepSource::Cmd(c) if c.cmd.is_empty()) {
+            if empty {
                 return Err(format!(
                     "steps[{i}].{label}.cmd は非空のコマンド（argv）である必要があります"
                 ));
@@ -468,7 +651,7 @@ impl RawManifest {
                     .to_string(),
             );
         }
-        if let Some(i) = sided
+        if let Some(i) = parsed
             .iter()
             .position(|s| s.when.as_ref().is_some_and(When::has_no_effective_key))
         {
@@ -479,9 +662,9 @@ impl RawManifest {
 
         // private / executable はパス output を持つユニットのみ。
         if (self.private || self.executable)
-            && !sided
+            && !parsed
                 .iter()
-                .any(|s| matches!(&s.side, Side::Output(StepSource::Path(_))))
+                .any(|s| matches!(&s.side, ParsedSide::Output(OutputSource::Path(_))))
         {
             return Err(
                 "private / executable はパス output を持つユニットのみに指定できます（cmd output だけの \
@@ -491,10 +674,10 @@ impl RawManifest {
         }
 
         // ツリー（input = "."）は専用の形（Steps::Tree）へ、それ以外はパイプラインへ解釈する。
-        let steps = if sided.iter().any(SidedStep::is_tree_input) {
-            tree_steps(self.format, &sided)?
+        let steps = if parsed.iter().any(ParsedStep::is_tree_input) {
+            tree_steps(self.format, &parsed)?
         } else {
-            pipeline_steps(self.format, sided)?
+            pipeline_steps(self.format, parsed)?
         };
 
         Ok(Manifest {
@@ -510,7 +693,7 @@ impl RawManifest {
 
 /// ツリー（`input = "."` を含む steps）の形を検証し、[`Steps::Tree`] へ解釈する
 /// （merge / format / step の `when` / `optional` を禁止する理由は [`Steps::Tree`] の doc）。
-fn tree_steps(format: Option<Format>, steps: &[SidedStep]) -> Result<Steps, String> {
+fn tree_steps(format: Option<Format>, steps: &[ParsedStep]) -> Result<Steps, String> {
     if steps.len() != 2 {
         return Err(format!(
             "ツリー input（input = \".\"）を持つユニットは steps がちょうど 2 つ（input = \".\" と \
@@ -529,13 +712,13 @@ fn tree_steps(format: Option<Format>, steps: &[SidedStep]) -> Result<Steps, Stri
         );
     }
     let out = &steps[1];
-    let Side::Output(dest) = &out.side else {
+    let ParsedSide::Output(dest) = &out.side else {
         return Err("ツリー input の次の step は output である必要があります".to_string());
     };
     if out.when.is_some() || out.merge.is_some() || out.optional {
         return Err("ツリー output には when / merge / optional を指定できません".to_string());
     }
-    let StepSource::Path(output) = dest else {
+    let OutputSource::Path(output) = dest else {
         return Err(
             "ツリー output は cmd ではなくパスである必要があります（ツリーを標準入力へ渡すことは \
              できません）"
@@ -555,11 +738,11 @@ fn tree_steps(format: Option<Format>, steps: &[SidedStep]) -> Result<Steps, Stri
 
 /// バイト内容パイプライン（非ツリー）の形（先頭 step）と merge / format / optional を検証し、
 /// [`Steps::Pipeline`] へ解釈する。
-fn pipeline_steps(format: Option<Format>, steps: Vec<SidedStep>) -> Result<Steps, String> {
+fn pipeline_steps(format: Option<Format>, steps: Vec<ParsedStep>) -> Result<Steps, String> {
     // 先頭 step は input。ここに来る時点で input・output が各 1 つ以上あるので steps は 2 つ以上 ―
     // `steps[0]` の添字は安全。output が先頭だと、宣言順に畳む apply で内容がまだ空のまま書き込みへ
     // 到達する（実行時エラーになる前に load で弾く）。
-    if matches!(steps[0].side, Side::Output(_)) {
+    if matches!(steps[0].side, ParsedSide::Output(_)) {
         return Err(
             "steps[0] が output です（先頭は input である必要があります）。output より前に内容を \
              組み立てる input が無く、apply 時に内容が空のまま書き込みに到達します"
@@ -571,7 +754,7 @@ fn pipeline_steps(format: Option<Format>, steps: Vec<SidedStep>) -> Result<Steps
     let mut input_index = 0usize;
     for (i, step) in steps.iter().enumerate() {
         match step.side {
-            Side::Input(_) => {
+            ParsedSide::Input(_) => {
                 if input_index == 0 && step.merge.is_some() {
                     return Err(format!(
                         "steps[{i}]: 最初の input step は merge を持てません（最初の input は内容の土台）"
@@ -584,7 +767,7 @@ fn pipeline_steps(format: Option<Format>, steps: Vec<SidedStep>) -> Result<Steps
                 }
                 input_index += 1;
             }
-            Side::Output(_) => {
+            ParsedSide::Output(_) => {
                 if step.merge.is_some() {
                     return Err(format!("steps[{i}]: output step は merge を持てません"));
                 }
@@ -636,19 +819,19 @@ fn pipeline_steps(format: Option<Format>, steps: Vec<SidedStep>) -> Result<Steps
     for (i, step) in steps.iter().enumerate() {
         if step.optional {
             match &step.side {
-                Side::Input(StepSource::Path(p)) if p == "~" || p.starts_with("~/") => {}
-                Side::Input(StepSource::Path(_)) => {
+                ParsedSide::Input(InputSource::Path(InputPath::Home(_))) => {}
+                ParsedSide::Input(InputSource::Path(InputPath::UnitRelative(_))) => {
                     return Err(format!(
                         "steps[{i}]: optional は ~ 起点の input にのみ使えます（単位相対ファイルは \
                          repo 追跡の静的ファイルで、不在は typo の可能性が高く step を恒久的に握り潰す）"
                     ));
                 }
-                Side::Input(StepSource::Cmd(_)) => {
+                ParsedSide::Input(InputSource::Cmd(_)) => {
                     return Err(format!(
                         "steps[{i}]: optional は cmd input には使えません（~ 起点のパス input のみ）"
                     ));
                 }
-                Side::Output(_) => {
+                ParsedSide::Output(_) => {
                     return Err(format!(
                         "steps[{i}]: optional は output step には使えません（~ 起点のパス input のみ）"
                     ));
@@ -661,93 +844,19 @@ fn pipeline_steps(format: Option<Format>, steps: Vec<SidedStep>) -> Result<Steps
     let steps = steps
         .into_iter()
         .map(|step| match step.side {
-            Side::Input(source) => Step::Input(InputStep {
+            ParsedSide::Input(source) => Step::Input(InputStep {
                 source,
                 merge: step.merge,
                 when: step.when,
                 optional: step.optional,
             }),
-            Side::Output(dest) => Step::Output(OutputStep {
+            ParsedSide::Output(dest) => Step::Output(OutputStep {
                 dest,
                 when: step.when,
             }),
         })
         .collect();
     Ok(Steps::Pipeline { format, steps })
-}
-
-/// output パスの表記検証（#579）: `~` / `~/...` のみ。`$` 含み・絶対・相対・`~/` 後の `..` は load
-/// エラー（`..` は `~` 起点でも home の外へ脱出できてしまうため弾く）。
-fn validate_output_path(p: &str) -> Result<(), String> {
-    if p.contains('$') {
-        return Err(format!(
-            "output パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
-        ));
-    }
-    if p == "~" {
-        return Ok(());
-    }
-    if let Some(rest) = p.strip_prefix("~/") {
-        if has_parent_component(rest) {
-            return Err(format!(
-                "output パス `{p}` に `..`（親ディレクトリ参照）は使えません（home の外を指す）"
-            ));
-        }
-        return Ok(());
-    }
-    Err(format!(
-        "output パス `{p}` は ~ 起点（~ または ~/...）である必要があります（絶対パス・相対パスは不可）"
-    ))
-}
-
-/// output パス（`validate` 済み・常に `~` / `~/...`）を `home` へ展開する。[`crate::apply::pipeline`]
-/// の実配置と [`crate::placements`] の期待配置集合の導出が、この 1 か所を共有する。
-pub(crate) fn resolve_output_path(home: &Path, p: &str) -> PathBuf {
-    p.strip_prefix("~/")
-        .map_or_else(|| home.to_path_buf(), |rest| home.join(rest))
-}
-
-/// input パスの表記検証（#579）: `~` / `~/...`（home 起点）または単位相対（`~` プレフィックス無し・
-/// 絶対でない・`$` を含まない）。特例 `"."` はツリーを表し、単位相対として許容される。`~/` 起点・
-/// 単位相対のいずれも `..`（home / 単位ディレクトリの外へ脱出）を弾き、単位相対では加えて空文字列
-/// （実行時に単位ディレクトリ自身を指し無意味）も弾く。
-fn validate_input_path(p: &str) -> Result<(), String> {
-    if p.contains('$') {
-        return Err(format!(
-            "input パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
-        ));
-    }
-    if p == "~" {
-        return Ok(());
-    }
-    if let Some(rest) = p.strip_prefix("~/") {
-        if has_parent_component(rest) {
-            return Err(format!(
-                "input パス `{p}` に `..`（親ディレクトリ参照）は使えません（home の外を指す）"
-            ));
-        }
-        return Ok(());
-    }
-    if p.starts_with('~') {
-        return Err(format!(
-            "input パス `{p}` が不正です（~ 起点は ~ または ~/... のみ）"
-        ));
-    }
-    if p.starts_with('/') {
-        return Err(format!(
-            "input パス `{p}` に絶対パスは使えません（単位相対 または ~ 起点）"
-        ));
-    }
-    // 単位相対（特例 `"."` は `.` 単一成分で `..` を含まないため通る）。
-    if p.is_empty() {
-        return Err("input パスに空文字列は使えません（単位相対パスが必要）".to_string());
-    }
-    if has_parent_component(p) {
-        return Err(format!(
-            "input パス `{p}` に `..`（親ディレクトリ参照）は使えません（単位ディレクトリの外を指す）"
-        ));
-    }
-    Ok(())
 }
 
 /// パス文字列が `..`（親ディレクトリ参照）成分を含むか。単位ディレクトリ / home の外への脱出を弾く。
@@ -776,7 +885,7 @@ mod tests {
     /// 最小のツリーユニット（`input = "."` ＋ output）。多くのテストのベース。
     const TREE: &str = "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n";
 
-    // ── untagged StepSource の round-trip（設計の土台。ここが崩れると全体が崩れる） ──
+    // ── input/output の untagged 判別（bare string→パス / inline table→cmd。設計の土台） ──
 
     #[test]
     fn step_source_parses_path_and_cmd_forms() {
@@ -784,7 +893,7 @@ mod tests {
         let m = parse("[[steps]]\ninput = \"a.txt\"\n[[steps]]\noutput = \"~/x\"\n").unwrap();
         assert!(matches!(
             &pipeline(&m).1[0],
-            Step::Input(InputStep { source: StepSource::Path(p), .. }) if p == "a.txt"
+            Step::Input(InputStep { source: InputSource::Path(p), .. }) if p.to_string() == "a.txt"
         ));
 
         let m =
@@ -792,7 +901,7 @@ mod tests {
                 .unwrap();
         assert!(matches!(
             &pipeline(&m).1[0],
-            Step::Input(InputStep { source: StepSource::Cmd(c), .. }) if c.cmd == ["gh", "completion"]
+            Step::Input(InputStep { source: InputSource::Cmd(c), .. }) if c.cmd == ["gh", "completion"]
         ));
 
         // output.cmd も同様。
@@ -800,7 +909,7 @@ mod tests {
         assert!(matches!(
             &pipeline(&m).1[1],
             Step::Output(OutputStep {
-                dest: StepSource::Cmd(_),
+                dest: OutputSource::Cmd(_),
                 ..
             })
         ));
@@ -880,7 +989,7 @@ mod tests {
     fn accepts_minimal_tree() {
         // ツリーは step 列を持たない専用の形（output だけ）へ解釈される。
         let m = parse(TREE).unwrap();
-        assert!(matches!(&m.steps, Steps::Tree { output } if output == "~/x"));
+        assert!(matches!(&m.steps, Steps::Tree { output } if output.to_string() == "~/x"));
     }
 
     #[test]
@@ -906,7 +1015,7 @@ mod tests {
         assert!(second.when.is_some() && !second.optional);
         assert!(matches!(
             &steps[2],
-            Step::Output(OutputStep { dest: StepSource::Path(p), .. }) if p == "~/.claude/settings.json"
+            Step::Output(OutputStep { dest: OutputSource::Path(p), .. }) if p.to_string() == "~/.claude/settings.json"
         ));
     }
 
@@ -1014,6 +1123,16 @@ mod tests {
             err.contains(".."),
             "`..` を含む output が弾かれていない: {err}"
         );
+    }
+
+    #[test]
+    fn preserves_bare_tilde_vs_tilde_slash_in_display() {
+        // 生表記の `~`（末尾スラッシュ無し）と `~/`（末尾スラッシュ有り）は解決先は同じでも
+        // 表示は区別して復元する（apply の 1 行出力・`list` の宛先表記）。
+        let m = parse("[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~\"\n").unwrap();
+        assert_eq!(m.display_dst(), "~", "bare `~` が `~/` に化けている");
+        let m = parse("[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/\"\n").unwrap();
+        assert_eq!(m.display_dst(), "~/", "`~/` が `~` に化けている");
     }
 
     // ── pipeline shape ──
