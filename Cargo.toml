@@ -1,12 +1,12 @@
 # root package = `dotfiles`。配布コマンド群を 1 パッケージの複数 bin として束ねる
-# （core ＋ clip / gcm / gh-clone / git-upstream / fzf-picker 系 / env-tools 系 / workers）。
+# （core ＋ clip / gcm / gh-clone / git-upstream / fzf-picker 系 / upkeep 系 / workers）。
 # `cargo install --git <repo>` 一発で全 bin が `~/.cargo/bin` に入る。
 # version は SoT（タグ `v{version}`）＝唯一の配布版。
 # publish はあえて false にしない: release-plz は Cargo.toml が publish=false の package を
 # release 対象から除外しタグを作らない（再追加すると release が "nothing to release" になる）。
 # crates.io への publish 抑止は release-plz config の publish=false + git_only に一本化。
 [package]
-description = "toshiki670/dotfiles の配布コマンド群（core ＋ clip / gcm / fzf-picker / env-tools ほか）"
+description = "toshiki670/dotfiles の配布コマンド群（core ＋ clip / gcm / fzf-picker / upkeep ほか）"
 edition     = { workspace = true }
 license     = { workspace = true }
 name        = "dotfiles"
@@ -61,8 +61,8 @@ name = "fzf-picker"
 path = "tests/fzf_picker/mod.rs"
 
 [[test]]
-name = "env-tools"
-path = "tests/env_tools/mod.rs"
+name = "upkeep"
+path = "tests/upkeep/mod.rs"
 
 [[test]]
 name = "workers"

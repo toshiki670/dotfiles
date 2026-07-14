@@ -1,7 +1,8 @@
-//! `cleanup-env`: brew / mise / cargo のキャッシュ・不要バージョンを対話的に削除する。
+//! `cleanup`: brew / mise / cargo のキャッシュ・不要バージョンを対話的に削除する。
 //!
 //! 各項目は `y/N` で確認し、`-n/--dry-run` のときは実削除せず削除対象だけを表示する。
-//! PATH 上に存在するパッケージマネージャだけを対象にし、各ステップは失敗しても続行する。
+//! PATH 上に存在するパッケージマネージャだけを対象にし、各ステップは失敗しても
+//! 続行する（[`super::command::run`]）。
 
 use super::banner::header;
 use super::command::{self, command_exists};
