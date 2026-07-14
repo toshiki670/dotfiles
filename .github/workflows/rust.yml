@@ -76,12 +76,12 @@ jobs:
       - name: Verify distributable Rust commands were installed to ~/.cargo/bin
         run: |
           # 配布物は root dotfiles パッケージ 1 つに統合済み。一度の cargo install で全 bin が入る。
-          # fzf-picker / env-tools / workers は #584 でサブコマンド化し各 family 1 bin に集約。
+          # fzf-picker / upkeep / workers は #584 でサブコマンド化し各 family 1 bin に集約。
           # root dotfiles（core）
           test -x "$HOME/.cargo/bin/dotfiles"
           "$HOME/.cargo/bin/dotfiles" --version
           # 各コマンド（存在のみ確認。外部ツール依存のものは実行しない）
-          for bin in clip gcm gh-clone git-upstream fzf-picker env-tools workers; do
+          for bin in clip gcm gh-clone git-upstream fzf-picker upkeep workers; do
             test -x "$HOME/.cargo/bin/$bin"
           done
           # サブコマンドの存在確認（--help のみ、外部ツール非依存）
@@ -89,8 +89,8 @@ jobs:
           "$HOME/.cargo/bin/fzf-picker" fzf-gh --help
           "$HOME/.cargo/bin/fzf-picker" fzf-ghq-cd --help
           "$HOME/.cargo/bin/fzf-picker" fzf-worktree-remove --help
-          "$HOME/.cargo/bin/env-tools" cleanup-env --help
-          "$HOME/.cargo/bin/env-tools" upgrade-env --help
+          "$HOME/.cargo/bin/upkeep" cleanup --help
+          "$HOME/.cargo/bin/upkeep" upgrade --help
           "$HOME/.cargo/bin/workers" daily-check --help
           "$HOME/.cargo/bin/workers" git-background-fetch --help
           # スモーク（外部ツール非依存のもののみ）

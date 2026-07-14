@@ -1,0 +1,11 @@
+# upkeep（src/bin/upkeep）の fish 補完を生成・配置する。
+# `upkeep --completions fish` の標準出力を output のファイルへ書き出す。
+# when.deps = upkeep が PATH に無ければ生成をスキップ（ユニット gate）。`dotfiles apply` 初回など
+# upkeep 未 install の段階では生成されない。
+when = { deps = [ "upkeep" ] }
+
+[[steps]]
+input.cmd = [ "upkeep", "--completions", "fish" ]
+
+[[steps]]
+output = "~/.config/fish/completions/upkeep.fish"

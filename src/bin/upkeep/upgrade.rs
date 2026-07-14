@@ -1,4 +1,4 @@
-//! `upgrade-env`: brew / mise / cargo を一括更新する。
+//! `upgrade`: brew / mise / cargo を一括更新する。
 //!
 //! PATH 上に存在するパッケージマネージャだけを順に更新する。各ステップは失敗しても
 //! 続行する（[`super::command::run`]）。引数は取らないが clap で `--help` /

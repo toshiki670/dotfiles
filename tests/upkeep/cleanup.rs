@@ -1,4 +1,4 @@
-//! `cleanup-env` の E2E（実バイナリ + スタブ PM で検証）。
+//! `cleanup` の E2E（実バイナリ + スタブ PM で検証）。
 //!
 //! 検証: `--help`/`--version`、確認 `y` で実削除コマンドを呼ぶ、`--dry-run` で各コマンドに
 //! dry-run フラグが付く、確認 `n`／EOF（非対話）で何も実行しない、未知オプションで失敗。
@@ -13,9 +13,9 @@ use tempfile::TempDir;
 
 use crate::{EMPTY_PATH, write_stubs};
 
-fn cleanup_env() -> Command {
-    let mut cmd = Command::cargo_bin("env-tools").unwrap();
-    cmd.arg("cleanup-env");
+fn cleanup() -> Command {
+    let mut cmd = Command::cargo_bin("upkeep").unwrap();
+    cmd.arg("cleanup");
     cmd
 }
 
@@ -47,16 +47,16 @@ fn log_of(fx: &Fixture) -> String {
 #[case("--help")]
 #[case("--version")]
 fn meta_flags_succeed(#[case] flag: &str) {
-    cleanup_env().arg(flag).assert().success();
+    cleanup().arg(flag).assert().success();
 }
 
 #[test]
 fn confirm_yes_runs_real_cleanups() {
     let fx = fixture();
 
-    cleanup_env()
+    cleanup()
         .env("PATH", &fx.bin)
-        .env("ENV_TOOLS_LOG", &fx.log)
+        .env("UPKEEP_LOG", &fx.log)
         .write_stdin("y\ny\ny\ny\n") // brew cleanup / brew autoremove / mise prune / cargo cache
         .assert()
         .success();
@@ -82,10 +82,10 @@ fn confirm_yes_runs_real_cleanups() {
 fn dry_run_passes_dry_flags() {
     let fx = fixture();
 
-    cleanup_env()
+    cleanup()
         .arg("--dry-run")
         .env("PATH", &fx.bin)
-        .env("ENV_TOOLS_LOG", &fx.log)
+        .env("UPKEEP_LOG", &fx.log)
         .write_stdin("y\ny\ny\ny\n")
         .assert()
         .success()
@@ -116,9 +116,9 @@ fn dry_run_passes_dry_flags() {
 fn confirm_no_runs_nothing() {
     let fx = fixture();
 
-    cleanup_env()
+    cleanup()
         .env("PATH", &fx.bin)
-        .env("ENV_TOOLS_LOG", &fx.log)
+        .env("UPKEEP_LOG", &fx.log)
         .write_stdin("n\nn\nn\nn\n")
         .assert()
         .success();
@@ -131,9 +131,9 @@ fn eof_stdin_runs_nothing() {
     // 非対話（stdin が即 EOF）では各確認が No 扱いになり何も実行しない。
     let fx = fixture();
 
-    cleanup_env()
+    cleanup()
         .env("PATH", &fx.bin)
-        .env("ENV_TOOLS_LOG", &fx.log)
+        .env("UPKEEP_LOG", &fx.log)
         .write_stdin("")
         .assert()
         .success();
@@ -143,7 +143,7 @@ fn eof_stdin_runs_nothing() {
 
 #[test]
 fn unknown_option_fails() {
-    cleanup_env()
+    cleanup()
         .arg("--bogus")
         .env("PATH", EMPTY_PATH)
         .assert()
