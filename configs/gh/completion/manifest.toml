@@ -1,7 +1,6 @@
 # gh の fish 補完を生成・配置する。
-# `gh completion --shell fish` の標準出力に、同ディレクトリの custom.fish（ID 補完の独自
-# ブロック）を明示 append で連結して output へ書き出す。fish は補完をコマンド名のファイル（gh.fish）
-# でのみ autoload するため、独自補完も同じ gh.fish へ同梱する必要がある。
+# custom.fish（ID 補完の独自ブロック）を append で連結する。fish は補完をコマンド名のファイル
+# （gh.fish）でのみ autoload するため、独自補完も同じ gh.fish へ同梱する必要がある。
 # when.deps = gh が PATH に無ければ生成をスキップ（ユニット gate）。
 format = "text"
 when   = { deps = [ "gh" ] }

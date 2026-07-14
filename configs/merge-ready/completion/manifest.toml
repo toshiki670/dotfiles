@@ -1,5 +1,4 @@
 # merge-ready（外部ツール）の fish 補完を生成・配置する。
-# `merge-ready completions fish` の標準出力を output のファイルへ書き出す。
 # when.deps = merge-ready が PATH に無ければ生成をスキップ（ユニット gate）。
 when = { deps = [ "merge-ready" ] }
 
