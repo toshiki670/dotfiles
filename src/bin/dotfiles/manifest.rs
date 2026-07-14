@@ -122,10 +122,9 @@ pub struct OutputStep {
 }
 
 /// 検証済みの home 起点パス（`~` または `~/...`）。output はこの表記のみ許容し、input の home 分岐も
-/// これを再利用する。内部値は prefix を剥がした残り（`~/x` → `"x"`）で、空文字列は home 直下
-/// （`~` と `~/` はどちらもこの形へ正規化され、表示は `~/`）。
+/// これを再利用する。`None` は `~` 単体、`Some(rest)` は `~/rest`（`rest` が空なら `~/`）。
 #[derive(Debug, Clone)]
-pub struct HomePath(String);
+pub struct HomePath(Option<String>);
 
 impl HomePath {
     /// output パスの表記をパースする。`$` 含み・絶対・相対・`~/` 後の `..` は load エラー
@@ -136,7 +135,10 @@ impl HomePath {
                 "output パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
             ));
         }
-        let Some(rest) = strip_home_prefix(p) else {
+        if p == "~" {
+            return Ok(Self(None));
+        }
+        let Some(rest) = p.strip_prefix("~/") else {
             return Err(format!(
                 "output パス `{p}` は ~ 起点（~ または ~/...）である必要があります（絶対パス・相対パスは不可）"
             ));
@@ -146,35 +148,26 @@ impl HomePath {
                 "output パス `{p}` に `..`（親ディレクトリ参照）は使えません（home の外を指す）"
             ));
         }
-        Ok(Self(rest.to_string()))
+        Ok(Self(Some(rest.to_string())))
     }
 
-    /// `home` を基点にパスを解決する。空は home 自身、それ以外は home 配下。
-    /// [`crate::apply::pipeline`] の実配置と [`crate::placements`] の期待配置集合の導出が共有する。
+    /// `home` を基点にパスを解決する。`~` 単体・`~/`（空 rest）はどちらも home 自身になる。
     pub(crate) fn resolve(&self, home: &Path) -> PathBuf {
-        if self.0.is_empty() {
-            home.to_path_buf()
-        } else {
-            home.join(&self.0)
+        match &self.0 {
+            None => home.to_path_buf(),
+            Some(rest) => home.join(rest),
         }
     }
 }
 
 impl std::fmt::Display for HomePath {
-    /// 解決前の生表記（`~/...`。home 直下は `~/`）へ戻す。apply の 1 行出力・`list` の宛先表記が使う。
+    /// 解決前の生表記へ戻す（`~` 単体・`~/`・`~/rest` を区別して復元する）。apply の 1 行出力・
+    /// `list` の宛先表記が使う。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "~/{}", self.0)
-    }
-}
-
-/// `~` / `~/...` の prefix を剥がす（`~` 単体は空文字列を返す。一致しなければ `None`）。
-/// [`HomePath`] / [`InputPath`] の home 分岐が判定だけを共有する（`$` 検証とエラー文言は input /
-/// output で異なるため各 `parse` に残す）。
-fn strip_home_prefix(p: &str) -> Option<&str> {
-    if p == "~" {
-        Some("")
-    } else {
-        p.strip_prefix("~/")
+        match &self.0 {
+            None => write!(f, "~"),
+            Some(rest) => write!(f, "~/{rest}"),
+        }
     }
 }
 
@@ -198,13 +191,16 @@ impl InputPath {
                 "input パス `{p}` に `$` を含めることはできません（環境変数展開は不採用）"
             ));
         }
-        if let Some(rest) = strip_home_prefix(p) {
+        if p == "~" {
+            return Ok(InputPath::Home(HomePath(None)));
+        }
+        if let Some(rest) = p.strip_prefix("~/") {
             if has_parent_component(rest) {
                 return Err(format!(
                     "input パス `{p}` に `..`（親ディレクトリ参照）は使えません（home の外を指す）"
                 ));
             }
-            return Ok(InputPath::Home(HomePath(rest.to_string())));
+            return Ok(InputPath::Home(HomePath(Some(rest.to_string()))));
         }
         if p.starts_with('~') {
             return Err(format!(
@@ -1127,6 +1123,16 @@ mod tests {
             err.contains(".."),
             "`..` を含む output が弾かれていない: {err}"
         );
+    }
+
+    #[test]
+    fn preserves_bare_tilde_vs_tilde_slash_in_display() {
+        // 生表記の `~`（末尾スラッシュ無し）と `~/`（末尾スラッシュ有り）は解決先は同じでも
+        // 表示は区別して復元する（apply の 1 行出力・`list` の宛先表記）。
+        let m = parse("[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~\"\n").unwrap();
+        assert_eq!(m.display_dst(), "~", "bare `~` が `~/` に化けている");
+        let m = parse("[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/\"\n").unwrap();
+        assert_eq!(m.display_dst(), "~/", "`~/` が `~` に化けている");
     }
 
     // ── pipeline shape ──
