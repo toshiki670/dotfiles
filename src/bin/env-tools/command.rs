@@ -4,8 +4,7 @@ use std::process::Command;
 
 /// `command -v <name>` 相当: PATH 上に指定コマンドの実行ファイルがあるか判定する。
 pub fn command_exists(name: &str) -> bool {
-    std::env::var_os("PATH")
-        .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(name).is_file()))
+    which::which(name).is_ok()
 }
 
 /// `=== <label> ===` を出してコマンドを実行し、終了後に空行を入れる。

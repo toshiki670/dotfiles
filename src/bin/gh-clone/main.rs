@@ -83,6 +83,5 @@ fn main() -> ExitCode {
 
 /// `command -q` 相当: PATH 上に指定コマンドの実行ファイルがあるか判定する。
 fn command_exists(cmd: &str) -> bool {
-    std::env::var_os("PATH")
-        .is_some_and(|paths| std::env::split_paths(&paths).any(|dir| dir.join(cmd).is_file()))
+    which::which(cmd).is_ok()
 }
