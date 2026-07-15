@@ -11,19 +11,28 @@ Analyze the staged diff and split into the minimum number of semantically indepe
 - Single concern -> one entry
 - Multiple independent concerns (e.g. feat + fix, or unrelated files) -> multiple entries
 
-Output a JSON array of commit objects:
-
-[{\"message\": \"<type>[scope]: <description>\", \"files\": [\"path/to/file\"]}, ...]
-
 Rules:
 - type: feat, fix, docs, style, refactor, test, chore, perf, ci, build
 - description: English, imperative mood (add, fix, update, remove, ...)
 - Every staged file must appear in exactly one entry's files array";
 
+/// commit 提案の構造を Anthropic 側のツール呼び出しとして強制するスキーマ。
+const OUTPUT_SCHEMA: &str = r#"{"type":"object","properties":{"commits":{"type":"array","items":{"type":"object","properties":{"message":{"type":"string"},"files":{"type":"array","items":{"type":"string"}}},"required":["message","files"]}}},"required":["commits"]}"#;
+
 /// claude を呼び出して commit 提案を得る。
 pub(crate) fn call_claude(conversation: &str, model: &str) -> Option<Vec<Commit>> {
     let mut child = match Command::new("claude")
-        .args(["-p", "--model", model, "--system-prompt", SYSTEM_PROMPT])
+        .args([
+            "-p",
+            "--model",
+            model,
+            "--system-prompt",
+            SYSTEM_PROMPT,
+            "--json-schema",
+            OUTPUT_SCHEMA,
+            "--output-format",
+            "json",
+        ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -54,9 +63,8 @@ pub(crate) fn call_claude(conversation: &str, model: &str) -> Option<Vec<Commit>
             eprintln!("コミット提案が空です。");
             None
         }
-        Err(_) => {
-            eprintln!("不正なJSON出力を受け取りました:");
-            eprintln!("{raw}");
+        Err(msg) => {
+            eprintln!("生成に失敗しました: {msg}");
             None
         }
     }

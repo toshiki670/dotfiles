@@ -1,8 +1,7 @@
 //! `gcm`（AI コミット）の純粋ロジック。
 //!
-//! claude の出力（markdown フェンスで包まれることがある）から commit 提案を
-//! 取り出す部分を切り出してユニットテスト対象にする。単一オブジェクトで返ってきた
-//! 場合も配列へ正規化する。
+//! `claude --output-format json` が返す envelope から commit 提案を取り出す
+//! 部分を切り出してユニットテスト対象にする。
 
 use serde::{Deserialize, Serialize};
 
@@ -13,35 +12,42 @@ pub struct Commit {
     pub files: Vec<String>,
 }
 
-/// markdown コードフェンス行（```... で始まる行）を除去する。
-pub fn strip_fences(s: &str) -> String {
-    s.lines()
-        .filter(|line| !line.trim_start().starts_with("```"))
-        .collect::<Vec<_>>()
-        .join("\n")
+/// `--output-format json` の結果 envelope。gcm が参照するフィールドだけ拾う。
+#[derive(Deserialize)]
+struct Envelope {
+    is_error: bool,
+    #[serde(default)]
+    errors: Vec<String>,
+    #[serde(default)]
+    structured_output: Option<StructuredOutput>,
 }
 
-/// claude の生出力から commit 提案の配列を取り出す。
+/// スキーマで強制した構造化出力。
+#[derive(Deserialize)]
+struct StructuredOutput {
+    commits: Vec<Commit>,
+}
+
+/// claude の envelope から commit 提案の配列を取り出す。
 ///
-/// 単一オブジェクトは配列に正規化する。オブジェクト/配列以外、または
-/// `message` / `files` を持たない要素は失敗。
+/// `is_error` が立っていれば `errors` を連結して失敗を返す。成功時は
+/// `structured_output.commits` を返す（欠けていれば失敗）。
 pub fn parse_proposals(raw: &str) -> Result<Vec<Commit>, String> {
-    let cleaned = strip_fences(raw);
-    let trimmed = cleaned.trim();
-    if trimmed.is_empty() {
-        return Err("empty output".to_string());
+    let envelope: Envelope =
+        serde_json::from_str(raw.trim()).map_err(|e| format!("invalid JSON: {e}"))?;
+
+    if envelope.is_error {
+        return Err(if envelope.errors.is_empty() {
+            "claude reported an error".to_string()
+        } else {
+            envelope.errors.join("; ")
+        });
     }
 
-    let value: serde_json::Value =
-        serde_json::from_str(trimmed).map_err(|e| format!("invalid JSON: {e}"))?;
-
-    let array = match value {
-        serde_json::Value::Object(_) => serde_json::Value::Array(vec![value]),
-        serde_json::Value::Array(_) => value,
-        _ => return Err("expected a JSON object or array".to_string()),
-    };
-
-    serde_json::from_value(array).map_err(|e| format!("invalid commit shape: {e}"))
+    envelope
+        .structured_output
+        .map(|output| output.commits)
+        .ok_or_else(|| "missing structured_output".to_string())
 }
 
 #[cfg(test)]
@@ -49,8 +55,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parses_fenced_array() {
-        let raw = "```json\n[{\"message\": \"feat: x\", \"files\": [\"a\"]}]\n```";
+    fn parses_success_envelope() {
+        let raw = r#"{"type":"result","is_error":false,"structured_output":{"commits":[{"message":"feat: x","files":["a"]}]}}"#;
         let got = parse_proposals(raw).unwrap();
         assert_eq!(
             got,
@@ -62,39 +68,37 @@ mod tests {
     }
 
     #[test]
-    fn normalizes_lone_object_to_array() {
-        let raw = "{\"message\": \"fix: y\", \"files\": [\"b\", \"c\"]}";
+    fn parses_multiple_commits() {
+        let raw = r#"{"is_error":false,"structured_output":{"commits":[{"message":"feat: a","files":["a"]},{"message":"fix: b","files":["b","c"]}]}}"#;
         let got = parse_proposals(raw).unwrap();
-        assert_eq!(got.len(), 1);
-        assert_eq!(got[0].files, vec!["b".to_string(), "c".to_string()]);
+        assert_eq!(got.len(), 2);
+        assert_eq!(got[1].files, vec!["b".to_string(), "c".to_string()]);
     }
 
     #[test]
-    fn parses_fenced_lone_object() {
-        let raw = "```\n{\"message\": \"chore: z\", \"files\": [\"d\"]}\n```";
-        assert_eq!(parse_proposals(raw).unwrap().len(), 1);
+    fn error_envelope_returns_error_message() {
+        let raw = r#"{"is_error":true,"errors":["Reached maximum budget ($0.0001)"]}"#;
+        let err = parse_proposals(raw).unwrap_err();
+        assert!(err.contains("budget"));
     }
 
     #[test]
-    fn rejects_non_object_or_array() {
-        assert!(parse_proposals("\"just a string\"").is_err());
-        assert!(parse_proposals("42").is_err());
+    fn missing_structured_output_is_error() {
+        assert!(parse_proposals(r#"{"is_error":false}"#).is_err());
+    }
+
+    #[test]
+    fn malformed_structured_output_is_error() {
+        assert!(parse_proposals(r#"{"is_error":false,"structured_output":42}"#).is_err());
+    }
+
+    #[test]
+    fn invalid_json_is_error() {
+        assert!(parse_proposals("not json at all").is_err());
     }
 
     #[test]
     fn rejects_empty() {
         assert!(parse_proposals("").is_err());
-        assert!(parse_proposals("```json\n```").is_err());
-    }
-
-    #[test]
-    fn rejects_missing_fields() {
-        assert!(parse_proposals("[{\"message\": \"feat: x\"}]").is_err());
-    }
-
-    #[test]
-    fn strip_fences_removes_fence_lines_only() {
-        assert_eq!(strip_fences("```json\nkeep\n```"), "keep");
-        assert_eq!(strip_fences("a\nb"), "a\nb");
     }
 }
