@@ -6,8 +6,6 @@
 #   statusline-command.py          → ~/.claude/statusline-command.py
 # statusline-command.py は python3 経由で起動するため executable は付けない。
 #
-# settings/・fish/・fish-functions/ は別ユニットで、このツリー配置には含まれない。
-#
 # 依存の結線: settings/settings.json は statusLine に `python3 ~/.claude/statusline-command.py`
 # を指す。そのスクリプト実体をこの単位が配置することで、両単位が揃って初めて statusLine が成立する。
 

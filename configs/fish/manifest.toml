@@ -9,7 +9,7 @@
 # いずれも fish が autoload/source するだけで実行されないため executable は付けない。
 #
 # conf.d・functions は複数ツールが断片を持ち寄る合流点でもある（例: eza の 40-eza.fish。conf.d は
-# 番号帯が重ならない限り併存可）。他ツールに帰属するファイルも並ぶが、このツリー配置には含まれない。
+# 番号帯が重ならない限り併存可）。
 
 [[steps]]
 input = "."
