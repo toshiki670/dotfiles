@@ -1,23 +1,15 @@
 # fish 本体（config.fish・conf.d・functions・themes）を ~/.config/fish へ copy する。
-# 決定経緯: Issue #530・#558
 #
-# output=~/.config/fish のディレクトリ単位ツリー配置。配下は相対構造を保って再帰配置される:
+# output=~/.config/fish のディレクトリ単位ツリー配置:
 #   config.fish                   → ~/.config/fish/config.fish
 #   conf.d/*.fish, README.md      → ~/.config/fish/conf.d/*
 #   functions/_fzf_file.fish      → ~/.config/fish/functions/_fzf_file.fish
 #   functions/_fzf_history.fish   → ~/.config/fish/functions/_fzf_history.fish
 #   themes/OneHalfLight-Ayu.theme → ~/.config/fish/themes/OneHalfLight-Ayu.theme
-# いずれも 0644（fish が autoload/source するだけで実行ビット不要）。
+# いずれも fish が autoload/source するだけで実行されないため executable は付けない。
 #
-# functions/ の `_fzf_gh` / `_fzf_ghq_cd` / `_fzf_worktree_remove` / `__fzf_picker_preview` /
-# `__fzf_ghq_readme_preview` / `cdabbr` は fzf-picker、`gh-clone` は gh-clone、`ps-grep` は
-# ps-grep 自身へ帰属するため、それぞれ独立したツールディレクトリ（configs/fzf-picker,
-# configs/gh-clone, configs/ps-grep）が持つ。ここには含めない（Issue #567）。
-# conf.d は複数ツールが断片を持ち寄る合流点でもあり
-# （eza の 40-eza.fish 等、番号帯が重ならない限り併存可）、claude（08-claude.fish）・workers
-# （60-daily-check.fish・70-git-background-fetch.fish）・starship（95-starship-prompt.fish）は
-# 各ツール側の manifest（configs/claude/fish, configs/workers, configs/starship/fish）が持つ
-# ためここには含めない。
+# conf.d・functions は複数ツールが断片を持ち寄る合流点でもある（例: eza の 40-eza.fish。conf.d は
+# 番号帯が重ならない限り併存可）。
 
 [[steps]]
 input = "."

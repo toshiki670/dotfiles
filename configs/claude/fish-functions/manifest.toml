@@ -1,0 +1,9 @@
+# Claude Code の呼び出し時専用 fish 関数（claude-teams）を fish の functions 合流点へ copy する。
+#
+# 配置先は fish の functions（conf.d・completions と同様、複数ツールが持ち寄る合流点）。
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.config/fish/functions"
