@@ -128,7 +128,7 @@ fn commits_single_proposal_with_real_git_repo() {
         .env("PATH", path_with(&fx.stub_path()))
         .env(
             "CLAUDE_JSON",
-            "[{\"message\":\"feat: add alpha\",\"files\":[\"a.txt\"]}]",
+            r#"{"type":"result","is_error":false,"structured_output":{"commits":[{"message":"feat: add alpha","files":["a.txt"]}]}}"#,
         )
         .write_stdin("\n")
         .assert()
@@ -161,7 +161,7 @@ fn commits_multiple_proposals_as_split_commits() {
         .env("PATH", path_with(&fx.stub_path()))
         .env(
             "CLAUDE_JSON",
-            r#"[{"message":"feat: add alpha","files":["a.txt"]},{"message":"fix: add beta","files":["b.txt"]}]"#,
+            r#"{"type":"result","is_error":false,"structured_output":{"commits":[{"message":"feat: add alpha","files":["a.txt"]},{"message":"fix: add beta","files":["b.txt"]}]}}"#,
         )
         .write_stdin("\n")
         .assert()

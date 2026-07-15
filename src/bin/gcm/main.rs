@@ -77,7 +77,7 @@ fn main() -> ExitCode {
 
         let proposal_json = serde_json::to_string(&proposals).unwrap_or_default();
         conversation = format!(
-            "{conversation}\n\nPrevious proposal (JSON): {proposal_json}\nRevision instruction: {instruction}\nRevise accordingly. Output ONLY the JSON array."
+            "{conversation}\n\nPrevious proposal (JSON): {proposal_json}\nRevision instruction: {instruction}\nRevise accordingly."
         );
 
         // 修正はより高品質な sonnet で。
