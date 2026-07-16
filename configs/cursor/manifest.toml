@@ -1,6 +1,5 @@
 # Cursor のルール（rules/git-no-commit-on-main.mdc）を ~/.cursor へ copy する。
 #
-# output=~/.cursor のディレクトリ単位ツリー配置。配下は相対構造を保って再帰配置される:
 #   rules/git-no-commit-on-main.mdc → ~/.cursor/rules/git-no-commit-on-main.mdc
 #
 # claude/rules/git-no-commit-on-main.md と内容が重複しているが、ルール本体の出所の一本化・

@@ -6,7 +6,6 @@
 # 薄い委譲層 ── git config の native [include]（configs/git/manifest.toml 参照）と同じ発想で
 # bash 自身の `source` に合成を委ねる（engine の steps 合成は使わない）。
 #
-# configs/bash/scripts/ はサブ manifest を持つため対象外。
 # ディレクトリ名は lib でなく scripts（`.gitignore` の Python テンプレート由来の非アンカー
 # `lib/` パターンと衝突し、git add で静かに無視されるため）。
 
