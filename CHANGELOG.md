@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.71.3] - 2026-07-16
+### Features
+- 呼び出し時だけ CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS を有効化する claude-teams 関数を追加する ([#647](https://github.com/toshiki670/dotfiles/pull/647)) ([`c6f6d94`](https://github.com/toshiki670/dotfiles/commit/c6f6d94863a9734ad1ebe23404a0390e59a886c8))
+- Design-creed の作業前列挙と prose-tidy の出所先行判定を追加する ([#651](https://github.com/toshiki670/dotfiles/pull/651)) ([`5223e5a`](https://github.com/toshiki670/dotfiles/commit/5223e5ab04a4c9875b2671c2e9aaec90a45b0845))
+### Fixes
+- Claude -p の JSON 出力を --json-schema で強制する ([#645](https://github.com/toshiki670/dotfiles/pull/645)) ([`977b01c`](https://github.com/toshiki670/dotfiles/commit/977b01c2bbe5b29cb61936bd5daaa58669149e36))
+
+
 ## [0.71.2] - 2026-07-14
 ### Features
 - Prose-tidy skill に「置換より削除」の自己点検を追加する ([#640](https://github.com/toshiki670/dotfiles/pull/640)) ([`da1f043`](https://github.com/toshiki670/dotfiles/commit/da1f04375f0cc6671217d639bace6be86187291b))
