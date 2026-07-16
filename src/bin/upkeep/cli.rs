@@ -1,14 +1,14 @@
 //! `upkeep` の CLI 定義とサブコマンドのディスパッチ。
 //!
 //! [`run`] が `main.rs` から呼ばれる入口。各サブコマンドの実体は対応モジュール
-//! （[`super::cleanup`] / [`super::upgrade`]）にある。
+//! （[`super::cleanup`] / [`super::doctor`] / [`super::upgrade`]）にある。
 
 use std::io;
 
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 
-use super::{cleanup, upgrade};
+use super::{cleanup, doctor, upgrade};
 
 #[derive(Parser)]
 #[command(
@@ -36,6 +36,8 @@ enum Commands {
     },
     /// brew / mise / cargo を一括更新する。
     Upgrade,
+    /// brew / mise の健全性を診断する。
+    Doctor,
 }
 
 /// CLI を解析し、サブコマンドへディスパッチする。
@@ -53,6 +55,7 @@ pub fn run() {
     match cli.command {
         Some(Commands::Cleanup { dry_run }) => cleanup::run(dry_run),
         Some(Commands::Upgrade) => upgrade::run(),
+        Some(Commands::Doctor) => doctor::run(),
         None => {
             let _ = Cli::command().print_help();
         }

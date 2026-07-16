@@ -209,7 +209,7 @@ Full descriptions (subcommands, flags) live in each command's own Rustdoc page, 
 | [`clip`](https://toshiki670.github.io/dotfiles/clip/) | Copy a file to the clipboard (macOS) |
 | [`gh-clone`](https://toshiki670.github.io/dotfiles/gh_clone/) | `gh repo clone` + `ghq migrate` |
 | [`fzf-picker`](https://toshiki670.github.io/dotfiles/fzf_picker/) | fzf pickers: `cdabbr` / `fzf-gh` / `fzf-ghq-cd` / `fzf-worktree-remove` |
-| [`upkeep`](https://toshiki670.github.io/dotfiles/upkeep/) | Environment maintenance: `cleanup` / `upgrade` |
+| [`upkeep`](https://toshiki670.github.io/dotfiles/upkeep/) | Environment maintenance: `cleanup` / `upgrade` / `doctor` |
 | [`workers`](https://toshiki670.github.io/dotfiles/workers/) | Background workers: `daily-check` / `git-background-fetch` |
 
 Every command binary supports `--help` / `--version` (per subcommand too), except the env-driven background workers. `gh-clone` and the `fzf-picker` subcommands that must change the parent shell (e.g. `fzf-ghq-cd`) keep a thin Fish shim for that part, with the logic in the Rust binary.

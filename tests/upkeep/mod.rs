@@ -6,6 +6,8 @@
 //!   `cargo` はあるが `cargo-install-update` 不在で Cargo ステップをスキップ
 //! - [`cleanup`]: `--help`/`--version`、確認 `y` で実削除コマンド呼び出し、`--dry-run` で
 //!   各コマンドに dry-run フラグ付与、確認 `n`/EOF で何も実行しない、未知オプションで失敗
+//! - [`doctor`]: `--help`/`--version`、全 PM 存在で順に診断呼び出し、PM 不在でスキップ、
+//!   診断が問題を検出（非ゼロ exit）しても `upkeep doctor` 自体は成功しその出力を表示
 //!
 //! 外部コマンド（brew / mise / cargo / cargo-cache / cargo-install-update）は PATH 先頭に
 //! 置く**純シェルビルトインのスタブ**（[`stub_body`]）で差し替える。PM「不在」は
@@ -15,6 +17,7 @@ use std::fs;
 use std::path::Path;
 
 mod cleanup;
+mod doctor;
 mod upgrade;
 
 /// 実在しない PATH（外部コマンドを「不在」にするため）。

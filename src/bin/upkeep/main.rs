@@ -15,6 +15,7 @@ mod prompt;
 
 mod cleanup;
 mod cli;
+mod doctor;
 mod upgrade;
 
 fn main() {
