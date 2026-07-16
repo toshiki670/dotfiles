@@ -8,7 +8,11 @@
 1. 適用範囲を次の3つから判定する。
    - **全リポジトリ・全環境で有効**（内容そのものが、特定リポジトリ名・特定の個人ツール・特定の他ルールのファイル名などを一切参照しない、汎用的な原則やワークフローであること） → `configs/claude/`（`toshiki670/dotfiles` リポジトリ）配下に追加する。rule は `configs/claude/rules/`、skill は `configs/claude/skills/` など、既存の兄弟ファイルと同じ階層に置く。`dotfiles apply` で `~/.claude/` へデプロイされる。
    - **このパソコンだけで有効**（他のマシンへ持ち込まない） → `~/.claude/rules/` / `~/.claude/skills/` / `~/.claude/settings.json` など、種類に応じて直接書く。
-   - **`toshiki670/dotfiles` リポジトリで作業するときだけ有効**（内容が dotfiles リポジトリ自身の構造・コマンド・別ルールを参照する等、そのリポジトリ固有の知識を前提にする） → そのリポジトリ自身の配下に、種類に応じて置く。rule は `.claude/rules/*.md`（project-scoped rules。`CLAUDE.md` と同様セッション開始時に無条件で自動ロードされ、`~/.claude/rules/` より優先される）、skill は `.claude/skills/*/SKILL.md`。settings は、チームと共有してよい内容なら `.claude/settings.json`（git 管理）、自分だけ・このリポジトリだけに留めたいなら `.claude/settings.local.json`（gitignore 済み・コミットしない）。
+   - **`toshiki670/dotfiles` リポジトリで作業するときだけ有効**（内容が dotfiles リポジトリ自身の構造・コマンド・別ルールを参照する等、そのリポジトリ固有の知識を前提にする） → そのリポジトリ自身の配下に、種類に応じて置く。
+     - rule: `.claude/rules/*.md`（project-scoped rules。`CLAUDE.md` と同様セッション開始時に無条件で自動ロードされ、`~/.claude/rules/` より優先される）
+     - skill: `.claude/skills/*/SKILL.md`
+     - settings（チームと共有してよい内容）: `.claude/settings.json`（git 管理）
+     - settings（自分だけ・このリポジトリだけに留めたい内容）: `.claude/settings.local.json`（gitignore 済み）
 2. **配置を決める前に、書いた内容自体にこの判定を適用する（自己適用チェック）。** 本文を読み返し、特定のリポジトリ名（例: `toshiki670/dotfiles`）や、そのリポジトリ内にしか存在しないパス・ファイル名（他ルールのファイル名等）を具体的に参照していないか確認する。`~/.claude/...` のような、dotfiles を適用したどの環境にも存在する一般的なパスの参照はこれに該当しない。1つでも該当すれば「全リポジトリ・全環境で有効」は失格で、その参照先が要求する分類（多くは「`toshiki670/dotfiles` リポジトリで作業するときだけ有効」）へ回す。この判定自体もこのルールの手順1〜3を適用して決める。
 3. 「全リポジトリ・全環境」を選んだ場合、`configs/claude/` への追加だけでは `~/.claude/` へ反映されない。
    - ブランチは現在の Git 状態とユーザーの依頼に従って決める。既存の作業ブランチに含めるのが適切ならそれに従い、無関係な既存作業を汚すなら `main` から独立した worktree を切る。
