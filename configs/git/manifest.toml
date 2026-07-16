@@ -9,8 +9,8 @@
 # "DOTFILES_GIT_EMAIL/NAME" 注入＋user.tmpl の if 分岐を廃し、宣言的な locals に一本化する。
 # email/name は commit に載る値であり秘匿ではない。
 #
-# hooks（configs/git/hooks）と ignore（configs/git/ignore）はそれぞれ別 manifest を持つ別単位
-# （配置先が ~/.config/git/hooks・~/.config/git/ignore で本単位の ~/.config/git と異なるため）。
+# hooks（configs/git/hooks）と ignore（configs/git/ignore）は配置先が ~/.config/git/hooks・
+# ~/.config/git/ignore で本単位の ~/.config/git と異なるため、別単位として持つ。
 locals = [ "git.email", "git.name" ]
 
 [[steps]]

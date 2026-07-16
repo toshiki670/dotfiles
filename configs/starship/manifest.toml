@@ -3,9 +3,6 @@
 # output=~/.config（ディレクトリ）。配下の starship.toml を相対構造のまま配置し
 # ~/.config/starship.toml に置く。~/.config 配下の他ツール設定には触れない。
 #
-# fish/（fish 起動連携 `starship init fish` を conf.d 合流点へ置く別単位）はサブ manifest を
-# 持つので、このツリー配置からは委譲され除外される（claude の settings/ と同じ関係）。
-#
 # starship.toml 先頭の `$schema` は starship 公式のスキーマ URL を設定。
 # エディタや taplo はこの URL を取得して設定を検証する。
 #

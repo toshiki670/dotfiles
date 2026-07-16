@@ -1,5 +1,4 @@
 # bat の fish 補完を生成・配置する。
-# 親の configs/bat からはこの単位（自前 manifest）は委譲され除外される。
 # when.deps = bat が PATH に無ければ生成をスキップ（ユニット gate）。
 when = { deps = [ "bat" ] }
 
