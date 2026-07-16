@@ -2,7 +2,8 @@
 //!
 //! `dotfiles profile` の設定／表示と、`when = { profile = … }` を持つ架空ユニットが現在の profile
 //! 状態で配置／skip されること（既定 not-private）・冪等性を検証する。実 yt/mise は名指ししない
-//! （架空 fixture `demo` で書く）。
+//! （架空 fixture `demo` で書く）。加えて `doctor` の「現在 profile が宣言値集合に無ければ警告」
+//! （#628）を検証する。
 //!
 //! 注: `assert_cmd` の `.assert()` は非 TTY なので、profile gate を通った locals 宣言付きユニットは
 //! 警告のみで継続する（本ファイルの gate fixture は locals を持たないので注入経路には入らない）。
@@ -137,4 +138,103 @@ fn profile_gate_skips_on_mismatch() {
         !home.path().join(".config/demo/conf").exists(),
         "profile 不一致なのに配置された",
     );
+}
+
+/// profile 未設定では doctor は宣言値集合との突合を行わず沈黙する（受け入れ条件: 未設定は対象外）。
+#[test]
+fn doctor_is_silent_about_profile_when_unset() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    write_gated_unit(work.path(), "when = { profile = \"private\" }\n");
+
+    dotfiles()
+        .arg("doctor")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("profile").not());
+}
+
+/// 現在 profile がどの unit の `when.profile`（unit gate）にも現れなければ doctor が警告する
+/// （typo 検出・情報提供のみで exit success）。
+#[test]
+fn doctor_warns_when_current_profile_matches_no_unit_level_declaration() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    write_gated_unit(work.path(), "when = { profile = \"private\" }\n");
+
+    dotfiles()
+        .args(["profile", "privat"]) // typo: "private" の 1 文字欠け。
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    dotfiles()
+        .arg("doctor")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains(
+            "profile `privat` を参照する when.profile がありません",
+        ));
+}
+
+/// unit gate（トップレベル `when.profile`）で宣言されていれば警告しない。
+#[test]
+fn doctor_reports_when_profile_declared_at_unit_level() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    write_gated_unit(work.path(), "when = { profile = \"private\" }\n");
+
+    dotfiles()
+        .args(["profile", "private"])
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    dotfiles()
+        .arg("doctor")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "profile `private` を参照する when.profile があります",
+        ));
+}
+
+/// unit gate は持たず、パイプラインの output step だけが `when.profile` を宣言していても、
+/// その step 由来の値は宣言値集合として拾われる（unit レベルしか見ない実装への回帰を防ぐ）。
+#[test]
+fn doctor_is_silent_when_profile_declared_only_at_step_level() {
+    let work = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+
+    let unit = work.path().join("configs/demo");
+    fs::create_dir_all(&unit).unwrap();
+    fs::write(
+        unit.join("manifest.toml"),
+        "[[steps]]\ninput = \"conf\"\n\
+         [[steps]]\noutput = \"~/.config/demo\"\nwhen = { profile = \"work\" }\n",
+    )
+    .unwrap();
+    fs::write(unit.join("conf"), "x\n").unwrap();
+
+    dotfiles()
+        .args(["profile", "work"])
+        .env("HOME", home.path())
+        .assert()
+        .success();
+
+    dotfiles()
+        .arg("doctor")
+        .current_dir(work.path())
+        .env("HOME", home.path())
+        .assert()
+        .success()
+        .stderr(
+            predicate::str::contains("profile `work` を参照する when.profile がありません").not(),
+        );
 }

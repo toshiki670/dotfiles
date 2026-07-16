@@ -1,20 +1,22 @@
-//! `dotfiles doctor`: 全ユニットの `locals` 宣言・ユニット間の配置先衝突・不要になった配置を診断する。
+//! `dotfiles doctor`: 全ユニットの `locals` 宣言・ユニット間の配置先衝突・現在 profile の宣言状況・
+//! 不要になった配置を診断する。
 //!
 //! 全単位の `manifest.toml`（[`crate::discover`]）から `locals` を集め、ストア
 //! （[`crate::locals::store`]）に値が無い名前を報告する。加えて [`crate::placements::expected`] が
 //! 導出する期待配置集合から、複数ユニットが同一パスへ output を宣言している箇所（#593）を報告する。
-//! さらに [`crate::prune::stale`] が示す「前回 apply 時点は期待されていたが今回はもう期待されない」
-//! 配置（#521）も報告する ― 実削除はしない（`dotfiles apply --force` の役目）。いずれもツール別
-//! ロジックは持たず、宣言と現状の突合だけを見る（診断の拡張は #576）。問題があっても
+//! 現在の profile 状態が、全 unit の `when.profile` 宣言値集合に現れているかも突合する（#628・
+//! typo 検出）。さらに [`crate::prune::stale`] が示す「前回 apply 時点は期待されていたが今回はもう
+//! 期待されない」配置（#521）も報告する ― 実削除はしない（`dotfiles apply --force` の役目）。
+//! いずれもツール別ロジックは持たず、宣言と現状の突合だけを見る（診断の拡張は #576）。問題があっても
 //! **ブロックしない**（exit 0・情報提供）。
 
 use crate::apply::gate;
 use crate::discover::{self, MANIFEST};
 use crate::locals::store::Store;
-use crate::manifest::{Manifest, OutputSource, Step, Steps};
+use crate::manifest::{Manifest, OutputSource, Step, Steps, When};
 use crate::placements::{self, Placement};
 use crate::prune;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 /// `source` 配下の `locals` 宣言・期待配置集合を突き合わせ、未設定・衝突・不要な配置を stderr へ
@@ -28,6 +30,7 @@ pub fn run(source: &Path, home: &Path) -> Result<(), String> {
     report_placement_conflicts(&expected);
 
     let gate_state = gate::GateState::load(home)?;
+    report_unknown_profile(&units, gate_state.profile())?;
     let current =
         placements::expected_gated(source, home, &|w| gate::when_satisfied(w, &gate_state))?;
     let stale = prune::stale(home, &current);
@@ -84,6 +87,54 @@ fn report_placement_conflicts(expected: &[Placement]) {
     eprintln!("doctor: 配置先の衝突が {} 件あります:", conflicts.len());
     for (path, units) in &conflicts {
         eprintln!("  - {}: {}", path.display(), units.join(", "));
+    }
+}
+
+/// 現在の profile 状態が、全 unit の `when.profile` 宣言値集合に現れない場合に警告する（#628）。
+/// 未設定（`current` が None）は正常系（not-private 既定）のため対象外 ― 完全に沈黙する。
+///
+/// 「どの manifest も参照しない profile 値」は正当な使い方でもあり得る（private を避ける目的だけの
+/// 値等）ため、エラーにはせず typo の可能性を知らせる情報提供に留める。
+fn report_unknown_profile(units: &[discover::Unit], current: Option<&str>) -> Result<(), String> {
+    let Some(current) = current else {
+        return Ok(());
+    };
+
+    let mut declared = BTreeSet::new();
+    for unit in units {
+        let manifest = Manifest::load(&unit.dir.join(MANIFEST))?;
+        collect_profiles(&manifest, &mut declared);
+    }
+
+    if declared.contains(current) {
+        println!("doctor: profile `{current}` を参照する when.profile があります");
+        return Ok(());
+    }
+    eprintln!(
+        "doctor: profile `{current}` を参照する when.profile がありません（typo であれば意図した \
+         profile gate 付きの断片が配置されません。意図した値であれば無視してください）"
+    );
+    Ok(())
+}
+
+/// `manifest` のトップレベル `when` と（パイプラインなら）各 step の `when` から `profile` 宣言値を
+/// `into` へ集める。ツリー配置（[`Steps::Tree`]）は step の `when` を持てないためトップレベルのみ。
+fn collect_profiles(manifest: &Manifest, into: &mut BTreeSet<String>) {
+    collect_when_profile(&manifest.when, into);
+    if let Steps::Pipeline { steps, .. } = &manifest.steps {
+        for step in steps {
+            let when = match step {
+                Step::Input(s) => &s.when,
+                Step::Output(s) => &s.when,
+            };
+            collect_when_profile(when, into);
+        }
+    }
+}
+
+fn collect_when_profile(when: &Option<When>, into: &mut BTreeSet<String>) {
+    if let Some(profile) = when.as_ref().and_then(|w| w.profile.as_deref()) {
+        into.insert(profile.to_string());
     }
 }
 

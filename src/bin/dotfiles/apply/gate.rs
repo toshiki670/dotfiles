@@ -40,6 +40,12 @@ impl GateState {
             profile: profile.map(str::to_string),
         }
     }
+
+    /// 現在の profile 状態（未設定は None）。gate 評価を経由せず生の値が要る呼び出し元向け
+    /// （[`crate::doctor`] の宣言値集合との突合）。
+    pub fn profile(&self) -> Option<&str> {
+        self.profile.as_deref()
+    }
 }
 
 /// 現在の OS を manifest の語彙（[`Os`]）で返す。
