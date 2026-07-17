@@ -1,12 +1,17 @@
-# git hooks を配置する（ツリー配置 ＋ 配置後リンク生成 hook）。
+# git hooks を配置する（ツリー配置 ＋ 配置後のリンク生成 output.cmd）。
 #
 # 全 hook 種別は同じ内容（`dispatch`）を起動名で分岐するだけなので、13 個複製 copy せず
-# `dispatch` 1 本だけを copy し、hook 名 13 本は配置後の onchange フックで `dispatch` への
-# symlink として生成する（ghostty の symlink フック, configs/ghostty/manifest.toml と同じ
-# パターン。`ln -sf` は冪等）。
+# `dispatch` 1 本だけを copy し、hook 名 13 本は配置後の output.cmd で `dispatch` への symlink
+# として生成する（ghostty の symlink 生成, configs/ghostty/manifest.toml と同じパターン。
+# `ln -sf` は冪等）。ツリー末尾の output.cmd は配置のたび無条件に走る副作用。
+#
+# when.deps = ["sh"]: この output.cmd は sh で書くので、sh が PATH に無い環境ではユニットごと
+#   skip する（bat / ghostty が自分のバイナリを when.deps で gate するのと同じ ― output.cmd の
+#   実行ファイルが未解決なら apply を止めるより単位ごと見送る）。
 #
 # core.hooksPath はここではなく configs/git/configs/core が ~/.config/git/hooks を指す（移行済み）。
 executable = true
+when       = { deps = [ "sh" ] }
 
 [[steps]]
 input = "."
@@ -14,8 +19,8 @@ input = "."
 [[steps]]
 output = "~/.config/git/hooks"
 
-[[hooks]]
-cmd = [
+[[steps]]
+output.cmd = [
   "sh",
   "-c",
   "cd \"$HOME/.config/git/hooks\" && for h in applypatch-msg commit-msg post-applypatch post-checkout post-commit post-merge post-rewrite pre-applypatch pre-commit pre-merge-commit pre-push pre-rebase prepare-commit-msg; do ln -sf dispatch \"$h\"; done",

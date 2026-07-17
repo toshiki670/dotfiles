@@ -1,43 +1,43 @@
-//! `dotfiles apply` の配置後フック（S5 / #459）の E2E。
+//! `dotfiles apply` のツリー末尾 output.cmd（#659）の E2E。
 //!
-//! 架空のフックコマンド `faketool`（PATH 先頭スタブ）と temp HOME で、エンジンの契約を検証する:
-//! ①onchange skip/run（ソースハッシュ・条件④）②when.os ユニット gate が hooks を覆う（条件③）
-//! ③未インストール（PATH 不在）は中断せず skip ④実行して非ゼロ終了は apply エラー
-//! ⑤空コマンドの load 時拒否 ⑥list の hooks 表示 ⑦区切り付き相対パス hook は manifest dir 基準で
-//! 解決・実行（#498）⑧区切り付き相対 hook のスクリプト不在はエラー（bare 名の skip と区別, #498）。
-//! hooks は onchange 固定（`frequency` は #588 スライス1で削除。生きた外部状態への反映は
-//! `output.cmd` step が担う ― [`crate::steps`] 参照）。
+//! ツリーユニット（`input = "."` ＋ パス output）は、末尾に `output.cmd` step を並べて配置後に
+//! 走らせるコマンドを宣言できる。架空のコマンド `faketool`（PATH 先頭スタブ）と temp HOME で契約を
+//! 検証する:
+//! ①末尾 output.cmd は**配置のたび無条件に実行される**（ソース不変でも毎 apply 走る。onchange の
+//! ような skip は無い）②トップレベル `when`（ユニット gate）が false のユニットは配置ごと skip され、
+//! 末尾 output.cmd も走らない ③未インストール（PATH 不在）のコマンドは apply をエラーで止める
+//! （#659 の意図的な挙動変更 ― 旧 onchange フックの「未インストール→skip」フォールバックは撤去した）
+//! ④実行して非ゼロ終了は apply エラー ⑤空コマンドの load 時拒否 ⑥`list` のツリー output.cmd 表示。
 
 use crate::{dotfiles, foreign_os, write_stub};
 use predicates::prelude::*;
 use std::fs;
 use std::path::Path;
 
-/// `faketool` の PATH スタブを置く（呼ばれるたび `$HOME/hook-ran` へ 1 行追記＝実行回数の観測点）。
+/// `faketool` の PATH スタブを置く（呼ばれるたび `$HOME/cmd-ran` へ 1 行追記＝実行回数の観測点）。
 #[cfg(unix)]
 fn write_faketool(bin: &Path) {
-    write_stub(bin, "faketool", "printf 'x\\n' >> \"$HOME/hook-ran\"\n");
+    write_stub(bin, "faketool", "printf 'x\\n' >> \"$HOME/cmd-ran\"\n");
 }
 
-/// `faketool` フック実行マーカーの行数（＝実行回数）。未作成なら 0。
+/// `faketool` 実行マーカーの行数（＝実行回数）。未作成なら 0。
 fn marker_lines(home: &Path) -> usize {
-    fs::read_to_string(home.join("hook-ran"))
+    fs::read_to_string(home.join("cmd-ran"))
         .map(|s| s.lines().count())
         .unwrap_or(0)
 }
 
-/// `faketool` を 1 つだけ宣言したツリーユニット（output ＋ ソースファイル）を `work` に書き出す。
-/// `source_body` を変えるとユニットのソースハッシュが変わり、onchange が再実行を促す。
+/// 末尾に `output.cmd = ["faketool"]` を持つツリーユニット（output ＋ ソースファイル）を `work` に書く。
 #[cfg(unix)]
-fn write_hook_unit(work: &Path, source_body: &str) {
+fn write_tree_cmd_unit(work: &Path) {
     let unit = work.join("configs/demo");
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "hooks = [{ cmd = [\"faketool\"] }]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n[[steps]]\noutput.cmd = [\"faketool\"]\n",
     )
     .unwrap();
-    fs::write(unit.join("data.txt"), source_body).unwrap();
+    fs::write(unit.join("data.txt"), "v1").unwrap();
 }
 
 /// 共通の apply 実行ヘルパ（HOME と PATH を temp に固定）。
@@ -51,52 +51,40 @@ fn apply(work: &Path, home: &Path, path: &Path) -> assert_cmd::assert::Assert {
         .assert()
 }
 
-/// onchange gate（条件④）: 初回は実行、ソース不変の再 apply は skip、ソース変化で再実行。
-/// `faketool` スタブは呼ばれるたび `$HOME/hook-ran` へ追記するので、行数で実行回数を測る。
+/// ①末尾 output.cmd は配置のたび無条件に実行される。ソース不変で 2 回 apply しても、毎回走るので
+/// マーカーは 2 行になる（onchange のようなソース不変 skip は無い）。
 #[cfg(unix)]
 #[test]
-fn hook_runs_on_first_apply_skips_when_unchanged_reruns_on_change() {
+fn output_cmd_runs_on_every_apply_even_when_source_unchanged() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let bin = tempfile::tempdir().unwrap();
 
     write_faketool(bin.path());
-    write_hook_unit(work.path(), "v1");
+    write_tree_cmd_unit(work.path());
 
-    // 初回 apply: ソース未記録 → フック実行（マーカー 1 行）。
-    apply(work.path(), home.path(), bin.path())
-        .success()
-        .stdout(predicate::str::contains("hook: faketool"))
-        .stdout(predicate::str::contains("ran"));
-    assert_eq!(marker_lines(home.path()), 1, "初回はフックが実行されるべき");
-
-    // 2 回目 apply（ソース不変）: onchange で skip（マーカー 1 行のまま）。
-    apply(work.path(), home.path(), bin.path())
-        .success()
-        .stdout(predicate::str::contains("ソース不変"));
+    // 1 回目 apply: 配置後に output.cmd が走る（マーカー 1 行）。
+    apply(work.path(), home.path(), bin.path()).success();
     assert_eq!(
         marker_lines(home.path()),
         1,
-        "ソース不変ならフックは再実行されないべき",
+        "初回の output.cmd が走っていない"
     );
 
-    // ソース変更 → ソースハッシュが変わり再実行（マーカー 2 行）。
-    write_hook_unit(work.path(), "v2");
-    apply(work.path(), home.path(), bin.path())
-        .success()
-        .stdout(predicate::str::contains("ran"));
+    // 2 回目 apply（ソース不変）: output.cmd は毎 apply 無条件に走るのでマーカー 2 行。
+    apply(work.path(), home.path(), bin.path()).success();
     assert_eq!(
         marker_lines(home.path()),
         2,
-        "ソース変化時のみフックが再実行されるべき",
+        "ツリー末尾の output.cmd はソース不変でも毎 apply 実行されるべき",
     );
 }
 
-/// 条件③: when.os ユニット gate が false のユニットは配置ごと skip され、その hooks も走らない。
+/// ②when.os ユニット gate が false のユニットは配置ごと skip され、末尾 output.cmd も走らない。
 /// `faketool` は PATH にあるが、os 不一致でユニットが skip されるためマーカーは作られない。
 #[cfg(unix)]
 #[test]
-fn os_gate_skips_unit_hooks() {
+fn os_gate_skips_unit_including_trailing_output_cmd() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let bin = tempfile::tempdir().unwrap();
@@ -107,7 +95,7 @@ fn os_gate_skips_unit_hooks() {
     fs::write(
         unit.join("manifest.toml"),
         format!(
-            "when = {{ os = \"{other}\" }}\nhooks = [{{ cmd = [\"faketool\"] }}]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+            "when = {{ os = \"{other}\" }}\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n[[steps]]\noutput.cmd = [\"faketool\"]\n",
             other = foreign_os(),
         ),
     )
@@ -122,44 +110,29 @@ fn os_gate_skips_unit_hooks() {
     assert_eq!(
         marker_lines(home.path()),
         0,
-        "os gate=false のユニットでは hooks も走らないべき",
+        "os gate=false のユニットでは末尾 output.cmd も走らないべき",
     );
 }
 
-/// プログラム未インストール（PATH 不在）は apply を中断せず skip し、ハッシュを保存しない
-/// （`command -v` ガード相当）。後で入れると同じソースでも再実行されることで未保存を示す。
+/// ③未インストール（PATH 不在）のコマンドは apply をエラーで止める。#659 の意図的な挙動変更 ―
+/// 旧 onchange フックは bare 名の未インストールを skip したが、汎用 cmd 実行（`output.cmd`）は
+/// spawn 失敗をそのままハードエラーにする（実体化できないコマンドを黙って見送らない）。
 #[cfg(unix)]
 #[test]
-fn missing_program_skips_without_storing_hash() {
+fn missing_program_fails_apply() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let empty_bin = tempfile::tempdir().unwrap(); // faketool を置かない。
-    let bin = tempfile::tempdir().unwrap(); // faketool を置く。
 
-    write_faketool(bin.path());
-    write_hook_unit(work.path(), "v1");
+    write_tree_cmd_unit(work.path());
 
-    // faketool 不在: 中断せず成功・skip 表示・マーカー無し。
     apply(work.path(), home.path(), empty_bin.path())
-        .success()
-        .stdout(predicate::str::contains("skip"))
-        .stdout(predicate::str::contains("PATH にない"));
-    assert_eq!(
-        marker_lines(home.path()),
-        0,
-        "未インストールなら実行されない"
-    );
-
-    // faketool を入れて再 apply（ソース不変）: ハッシュ未保存なので実行される（マーカー 1 行）。
-    apply(work.path(), home.path(), bin.path()).success();
-    assert_eq!(
-        marker_lines(home.path()),
-        1,
-        "未インストール時にハッシュを保存していないので、導入後は再実行されるべき",
-    );
+        .failure()
+        .stderr(predicate::str::contains("faketool"))
+        .stderr(predicate::str::contains("実行失敗"));
 }
 
-/// 実行して非ゼロ終了したフックは apply をエラーで止める（未インストールの skip とは区別する）。
+/// ④実行して非ゼロ終了した output.cmd は apply をエラーで止める。
 #[cfg(unix)]
 #[test]
 fn nonzero_exit_fails_apply() {
@@ -168,7 +141,7 @@ fn nonzero_exit_fails_apply() {
     let bin = tempfile::tempdir().unwrap();
 
     write_stub(bin.path(), "faketool", "exit 1\n");
-    write_hook_unit(work.path(), "v1");
+    write_tree_cmd_unit(work.path());
 
     apply(work.path(), home.path(), bin.path())
         .failure()
@@ -176,14 +149,10 @@ fn nonzero_exit_fails_apply() {
         .stderr(predicate::str::contains("異常終了"));
 }
 
-/// #498: 区切り付き相対パスの hook（`["./hook.sh"]`）はユニットの `manifest.toml`
-/// ディレクトリ基準で解決・実行される。apply のプロセス CWD は `work` ルート（unit dir ではない）に
-/// 固定するので、もし旧挙動（CWD 継承）なら `work/./hook.sh` は不在で skip されマーカーが残らない。
-/// マーカーが作られ、かつ hook の実行時 CWD がユニットディレクトリであることが manifest dir 基準解決の証拠。
-#[cfg(unix)]
+/// ⑤空のコマンド（argv）を持つ output.cmd は load 時に弾く（apply 失敗）。実体化できない typo を
+/// 黙殺しない（step の cmd 非空検証。hooks 固有ではなく汎用の検証を通る）。
 #[test]
-fn relative_path_hook_resolves_against_manifest_dir() {
-    use std::os::unix::fs::PermissionsExt;
+fn empty_output_cmd_fails_at_load() {
     let work = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
 
@@ -191,75 +160,7 @@ fn relative_path_hook_resolves_against_manifest_dir() {
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "hooks = [{ cmd = [\"./hook.sh\"] }]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
-    )
-    .unwrap();
-    fs::write(unit.join("data.txt"), "v1").unwrap();
-    // hook 自身の実行時 CWD を $HOME/hook-cwd に書き出す（解決基準と runtime CWD の観測点）。
-    let script = unit.join("hook.sh");
-    fs::write(&script, "#!/bin/sh\npwd -P > \"$HOME/hook-cwd\"\n").unwrap();
-    fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
-
-    // apply のプロセス CWD = work ルート（≠ unit dir）。
-    dotfiles()
-        .arg("apply")
-        .current_dir(work.path())
-        .env("HOME", home.path())
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("hook: ./hook.sh"))
-        .stdout(predicate::str::contains("ran"));
-
-    // マーカーがある＝相対 hook が解決・実行された。記録された実行時 CWD は manifest ディレクトリ。
-    // tempdir は /var → /private/var の symlink 差があるので canonicalize して比較する。
-    let cwd = fs::read_to_string(home.path().join("hook-cwd"))
-        .expect("相対 hook が実行されマーカーを残すべき（CWD 継承なら不在で skip される）");
-    assert_eq!(
-        fs::canonicalize(cwd.trim()).unwrap(),
-        fs::canonicalize(&unit).unwrap(),
-        "相対 hook の実行時 CWD は manifest ディレクトリであるべき",
-    );
-}
-
-/// #498: 区切り付き相対パスの hook が指すスクリプトが不在（typo / コミット漏れ）の場合は、
-/// bare 名の「未インストール → skip」とは区別し、エラーで apply を止める（実体化できないものを黙殺しない）。
-#[cfg(unix)]
-#[test]
-fn missing_relative_path_hook_fails_apply() {
-    let work = tempfile::tempdir().unwrap();
-    let home = tempfile::tempdir().unwrap();
-
-    let unit = work.path().join("configs/demo");
-    fs::create_dir_all(&unit).unwrap();
-    fs::write(
-        unit.join("manifest.toml"),
-        "hooks = [{ cmd = [\"./missing.sh\"] }]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
-    )
-    .unwrap();
-    fs::write(unit.join("data.txt"), "v1").unwrap();
-    // ./missing.sh は意図的に置かない（同梱物の不在）。
-
-    dotfiles()
-        .arg("apply")
-        .current_dir(work.path())
-        .env("HOME", home.path())
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains("見つかりません"))
-        .stderr(predicate::str::contains("./missing.sh"));
-}
-
-/// 空のコマンド（argv）を持つ hook は load 時に弾く（apply 失敗）。実体化できない typo を黙殺しない。
-#[test]
-fn empty_hook_command_fails_at_load() {
-    let work = tempfile::tempdir().unwrap();
-    let home = tempfile::tempdir().unwrap();
-
-    let unit = work.path().join("configs/demo");
-    fs::create_dir_all(&unit).unwrap();
-    fs::write(
-        unit.join("manifest.toml"),
-        "hooks = [{ cmd = [] }]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n[[steps]]\noutput.cmd = []\n",
     )
     .unwrap();
     fs::write(unit.join("f.txt"), "x\n").unwrap();
@@ -270,20 +171,20 @@ fn empty_hook_command_fails_at_load() {
         .env("HOME", home.path())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("hooks"))
+        .stderr(predicate::str::contains("output.cmd"))
         .stderr(predicate::str::contains("非空"));
 }
 
-/// `dotfiles list` が hooks 属性（件数）を表示する。
+/// ⑥`dotfiles list` がツリー末尾 output.cmd を steps サマリ（`tree, output.cmd=N`）で表示する。
 #[test]
-fn list_shows_hooks_attr() {
+fn list_shows_tree_output_cmd_attr() {
     let work = tempfile::tempdir().unwrap();
 
     let unit = work.path().join("configs/demo");
     fs::create_dir_all(&unit).unwrap();
     fs::write(
         unit.join("manifest.toml"),
-        "hooks = [{ cmd = [\"faketool\"] }]\n[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n",
+        "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/.config/demo\"\n[[steps]]\noutput.cmd = [\"faketool\"]\n",
     )
     .unwrap();
 
@@ -292,5 +193,5 @@ fn list_shows_hooks_attr() {
         .current_dir(work.path())
         .assert()
         .success()
-        .stdout(predicate::str::contains("hooks=1"));
+        .stdout(predicate::str::contains("tree, output.cmd=1"));
 }

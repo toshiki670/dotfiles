@@ -44,7 +44,8 @@ pub fn run(source: &Path, origin: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// 1 単位の属性ラベル: steps サマリ ＋ private / executable ＋ when.deps / when.os / when.profile ＋ hooks。
+/// 1 単位の属性ラベル: steps サマリ ＋ private / executable ＋ when.deps / when.os / when.profile。
+/// ツリー末尾の output.cmd は steps サマリ（`tree, output.cmd=N`・[`Manifest::summary`]）が担う。
 fn attrs(manifest: &Manifest) -> String {
     let mut parts = vec![manifest.summary()];
     if manifest.private {
@@ -63,10 +64,6 @@ fn attrs(manifest: &Manifest) -> String {
         if let Some(profile) = &when.profile {
             parts.push(format!("when.profile={profile}"));
         }
-    }
-    if !manifest.hooks.is_empty() {
-        // フックはコマンド（argv）なので、一覧では件数だけ示す（詳細は manifest を見る）。
-        parts.push(format!("hooks={}", manifest.hooks.len()));
     }
     parts.join(", ")
 }

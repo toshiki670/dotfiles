@@ -12,9 +12,11 @@
 //! エンジンの契約を満たす実体である」結線（load＋ルート配置＋list）だけを見る。
 //!
 //! 前提: dep gate を空 PATH で外せるのは configs の dep が全て bare 名だから（`/` 区切りの絶対/相対
-//! dep は PATH 非探索なので外れない）。実 apply のため un-gate な単位の onchange
-//! hooks も走り得るが、現状そのような単位は無く、bare hook は未インストール→skip で安全。前提が崩れる
-//! 単位が入ったら、ここではなく当該 manifest 側か別テストで扱う。
+//! dep は PATH 非探索なので外れない）。コマンドを実行する単位（ツリー末尾の output.cmd）は全て
+//! `when.deps` で gate されている（bat=bat / ghostty=ghostty / git/hooks=sh）ので、空 PATH では
+//! ユニットごと skip され、未解決コマンドで apply が止まることはない（output.cmd は spawn 失敗を
+//! ハードエラーにするため、gate が無いと空 PATH で apply が落ちる）。前提が崩れる単位が入ったら、
+//! ここではなく当該 manifest 側か別テストで扱う。
 
 use crate::dotfiles;
 use std::fs;

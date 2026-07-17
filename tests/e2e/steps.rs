@@ -558,8 +558,8 @@ fn list_shows_steps_summary_format_and_os_attrs() {
 /// `input.cmd`（外部コマンド実行。標準出力を土台にする）、2 つ目の input は dotfiles 管理サブセット
 /// （`managed.plist`）、output は `output.cmd`（合成済みの内容を標準入力へ渡し、生きたドメインへ反映する）
 /// （`configs/stats` の `defaults export`/`defaults import` と同型。#531/#560）。output.cmd は
-/// 毎 apply 無条件に実行される（hooks を介さない）。`when` は `deps` のみで `os` は付けない（実
-/// configs の stats 自体は darwin 限定だが、エンジンの契約は OS 非依存に保つ）。
+/// 毎 apply 無条件に実行される。`when` は `deps` のみで `os` は付けない（実 configs の stats 自体は
+/// darwin 限定だが、エンジンの契約は OS 非依存に保つ）。
 fn write_output_cmd_unit(work: &Path) {
     let unit = work.join("configs/demo");
     fs::create_dir_all(&unit).unwrap();
@@ -632,8 +632,8 @@ fn import_count(home: &Path) -> usize {
 /// 検証すること: ① 土台（`prefctl export` の標準出力）の非管理キーが内容に保持される、
 /// ② dotfiles 管理サブセットの所有キーが土台を上書きする（宣言順・後勝ち）、③ output.cmd が
 /// 合成済みの内容をそのまま標準入力へ渡す（反映が composed content に結線されている）、④ **ソース
-/// （`managed.plist`）不変のまま 2 回目 apply しても output.cmd は毎回実行される**（hooks を介さない
-/// cmd output の契約 ― onchange gate を通らず常に実行される）。
+/// （`managed.plist`）不変のまま 2 回目 apply しても output.cmd は毎回実行される**（output.cmd は
+/// 毎 apply 無条件に走る冪等契約）。
 #[cfg(unix)]
 #[test]
 fn apply_output_cmd_reflects_composed_content_every_apply() {
@@ -683,8 +683,8 @@ fn apply_output_cmd_reflects_composed_content_every_apply() {
     );
     assert_eq!(import_count(home.path()), 1, "初回は反映されるべき");
 
-    // ソース（managed.plist）不変のまま 2 回目 apply。output.cmd は hooks を介さず毎 apply
-    // 無条件に実行されるため、onchange のような skip は起きない（#560 の回帰防止）。
+    // ソース（managed.plist）不変のまま 2 回目 apply。output.cmd は毎 apply 無条件に実行される
+    // ため、ソース不変でも skip は起きない（#560 の回帰防止）。
     apply().success();
     assert_eq!(
         import_count(home.path()),

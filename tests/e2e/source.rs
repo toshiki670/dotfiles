@@ -7,7 +7,8 @@
 //!   （hermetic な架空 fixture `foo`）。
 //! - **`--source` 明示**: 検出に掛からない CWD でも、指定したソースが最優先で使われる（fixture `bar`）。
 //! - **埋め込みフォールバック**: 作業ツリーが無ければバイナリ埋め込みの出荷 configs で apply が
-//!   完結する（clone 無しの自己完結。実 configs 層なので空 PATH で dep gate / bare hook を無効化）。
+//!   完結する（clone 無しの自己完結。実 configs 層なので空 PATH で dep gate を外し、cmd 実行単位を
+//!   ユニットごと skip させる）。
 
 use crate::dotfiles;
 use predicates::prelude::*;
@@ -84,8 +85,8 @@ fn explicit_source_takes_precedence() {
 /// 埋め込みフォールバック: 作業ツリーが無ければ出荷 configs（埋め込み）で apply が完結する。
 ///
 /// 隔離 CWD（configs 祖先なし）＋空 PATH で実行する。空 PATH は実 configs 層の決まり事
-/// （[`crate::real_configs`] と同じ）で、dep gate を決定的に外し bare hook を未インストール
-/// （skip）にして apply を決定的にする。
+/// （[`crate::real_configs`] と同じ）で、dep gate を決定的に外し、cmd 実行単位（`when.deps` 付き）を
+/// ユニットごと skip させて apply を決定的にする。
 #[test]
 fn falls_back_to_embedded_without_working_tree() {
     let cwd = tempfile::tempdir().unwrap(); // configs を持たない隔離 CWD（祖先にも configs 無し）。

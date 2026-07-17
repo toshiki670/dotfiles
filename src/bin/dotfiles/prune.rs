@@ -53,8 +53,9 @@ fn to_relative(home: &Path, path: &Path) -> PathBuf {
     path.strip_prefix(home).unwrap_or(path).to_path_buf()
 }
 
-/// snapshot を読む。無い・壊れていれば空（[`crate::hooks::onchange::State`] と同じ安全側フォール
-/// バック）。行ごとに 1 相対パス。空行・前後空白は無視する。絶対パス・`..` を含む行は
+/// snapshot を読む。無い・壊れていれば空扱いにする（安全側フォールバック ― 期待配置集合は次回 apply が
+/// 宣言から再導出するので、破損 snapshot で apply 全体を止めない）。行ごとに 1 相対パス。空行・
+/// 前後空白は無視する。絶対パス・`..` を含む行は
 /// [`is_safe_relative`] が弾く（本来 [`to_relative`] が書いた行しか無いはずだが、snapshot が
 /// 壊れる／改ざんされた場合に home の外を指す行を通すと [`stale`] 経由で home 外のファイルを
 /// 退避しかねないため、読み込み時点で一行ずつ検証する）。

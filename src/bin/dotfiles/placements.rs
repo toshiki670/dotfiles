@@ -79,7 +79,7 @@ fn collect(
         }
         let name = unit.rel.to_string_lossy().into_owned();
         match &manifest.steps {
-            Steps::Tree { output } => {
+            Steps::Tree { output, .. } => {
                 push_tree_placements(&unit.dir, &name, output, home, &mut placements)?;
             }
             Steps::Pipeline { steps, .. } => {

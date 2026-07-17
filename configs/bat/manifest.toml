@@ -3,12 +3,13 @@
 # サブディレクトリ themes/ も相対構造を保って再帰配置される（ディレクトリ単位 copy）。
 #
 # when.deps（トップレベル when ＝ ユニットスコープ gate）: bat が PATH に無い環境では
-# ユニットごと skip（配置も hooks も走らない）。bat が無ければ設定もテーマキャッシュ（bat/delta が
-# 使う ayu-dark）も無意味なので、まるごと gate する。
+# ユニットごと skip（配置も末尾の output.cmd も走らない）。bat が無ければ設定もテーマキャッシュ
+# （bat/delta が使う ayu-dark）も無意味なので、まるごと gate する。
 #
-# hooks: 配置後にソース（このユニットの中身）が前回適用時から変われば `bat cache --build` を
-# 実行し、カスタムテーマ ayu-dark を bat/delta に登録し直す（onchange）。フックは
-# 「実行するコマンド（argv）」をデータとして宣言する（binary はツール名を持たず実行するだけ）。
+# 末尾の output.cmd: 配置後に `bat cache --build` を実行し、カスタムテーマ ayu-dark を bat/delta へ
+# 登録し直す。ツリー末尾の output.cmd は配置のたび無条件に走る副作用で、コマンドが冪等であることを
+# 契約とする（`bat cache --build` は再実行しても同じ結果）。実行するコマンド（argv）をデータとして
+# 宣言する（binary はツール名を持たず実行するだけ）。
 when = { deps = [ "bat" ] }
 
 [[steps]]
@@ -17,5 +18,5 @@ input = "."
 [[steps]]
 output = "~/.config/bat"
 
-[[hooks]]
-cmd = [ "bat", "cache", "--build" ]
+[[steps]]
+output.cmd = [ "bat", "cache", "--build" ]

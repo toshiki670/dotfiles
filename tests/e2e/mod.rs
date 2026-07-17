@@ -31,7 +31,8 @@
 //! - [`placements`]: 期待配置集合・ユニット間 output 衝突検出（#593）— ツリー共有ディレクトリの
 //!   非衝突・同一パス衝突・gate 評価前の宣言ベース検出を検証（契約）
 //! - [`profile`]: マシンクラス状態 gate（#467）— profile set/show・`when.profile` の配置/skip・冪等（契約）
-//! - [`hooks`]: onchange フック（S5/#459）— 架空コマンドでエンジンの汎用実行を検証（契約）
+//! - [`hooks`]: ツリー末尾の output.cmd（#659）— 架空コマンドで「配置後に毎 apply 無条件で走る
+//!   副作用」の契約（毎 apply 実行・ユニット gate 被覆・未インストールはエラー）を検証（契約）
 //! - [`color`]: `color sample`（S6/#460）— ANSI 確認表の見出し・エスケープシーケンス（契約）
 //! - [`source`]: ソース二段構え（S8/#462）— 作業ツリー検出 / 埋め込み / `--source` の解決切替（契約＋実 configs）
 //! - [`real_configs`]: 出荷 configs の妥当性（実 configs 層）— 全ユニット走査で load/apply/list
