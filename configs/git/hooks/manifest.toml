@@ -2,8 +2,7 @@
 #
 # 全 hook 種別は同じ内容（`dispatch`）を起動名で分岐するだけなので、13 個複製 copy せず
 # `dispatch` 1 本だけを copy し、hook 名 13 本は配置後の output.cmd で `dispatch` への symlink
-# として生成する（ghostty の symlink 生成, configs/ghostty/manifest.toml と同じパターン。
-# `ln -sf` は冪等）。ツリー末尾の output.cmd は配置のたび無条件に走る副作用。
+# として生成する（`ln -sf` は既存リンクを置き換えるので毎 apply 実行しても安全）。
 #
 # when.deps = ["sh"]: この output.cmd は sh で書くので、sh が PATH に無い環境ではユニットごと
 #   skip する（bat / ghostty が自分のバイナリを when.deps で gate するのと同じ ― output.cmd の

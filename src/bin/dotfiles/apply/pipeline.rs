@@ -2,8 +2,7 @@
 //!
 //! `manifest.toml` の `[[steps]]` を解釈した [`crate::manifest::Steps`] を実行する。ツリー配置
 //! （[`Steps::Tree`]）は畳み込みを経ず単位ディレクトリを output へ再帰配置し（[`crate::apply::copy`]）、
-//! 宣言されていれば末尾の output.cmd を配置後に無条件で実行する（ツリーは内容を持たないため標準入力は
-//! 空）。パイプライン（[`Steps::Pipeline`]）は step 列を上から評価する:
+//! 宣言されていれば末尾の output.cmd を配置後に実行する。パイプライン（[`Steps::Pipeline`]）は step 列を上から評価する:
 //! 各 step は `when`（step スコープ gate）で採否を決め、採用された input は内容へ中身を畳み、
 //! output は内容を宛先へ書く。
 //!
@@ -50,8 +49,7 @@ pub fn run(
         Steps::Tree { output, post } => {
             let dst = output.resolve(home);
             copy::place(unit_dir, &dst, manifest, locals)?;
-            // 配置後に末尾の output.cmd を宣言順で実行する。ツリーは内容概念を持たない（input step が
-            // 中身を供給しない）ため標準入力は空バイト列で渡す。毎 apply 無条件・冪等契約。
+            // ツリーは内容概念を持たない（input step が中身を供給しない）ため標準入力は空バイト列で渡す。
             for c in post {
                 cmd::run_piped(&c.cmd, &[])?;
             }

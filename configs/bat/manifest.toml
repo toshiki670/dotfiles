@@ -7,9 +7,7 @@
 # （bat/delta が使う ayu-dark）も無意味なので、まるごと gate する。
 #
 # 末尾の output.cmd: 配置後に `bat cache --build` を実行し、カスタムテーマ ayu-dark を bat/delta へ
-# 登録し直す。ツリー末尾の output.cmd は配置のたび無条件に走る副作用で、コマンドが冪等であることを
-# 契約とする（`bat cache --build` は再実行しても同じ結果）。実行するコマンド（argv）をデータとして
-# 宣言する（binary はツール名を持たず実行するだけ）。
+# 登録し直す。
 when = { deps = [ "bat" ] }
 
 [[steps]]

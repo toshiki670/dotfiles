@@ -9,9 +9,8 @@
 #     この manifest（when.os ＋下記コマンド）が持ち、binary は関知しない。
 #
 # 末尾の output.cmd: 配置後、~/Library/Application Support/com.mitchellh.ghostty/config →
-#   ~/.config/ghostty/config の symlink を張る。ツリー末尾の output.cmd は配置のたび無条件に走る
-#   副作用で、冪等であることを契約とする（`ln -sf` は既存リンク/ファイルを置き換える。以前の
-#   `rm -f`＋`ln -sf` を 1 コマンドに畳んだ）。実行するコマンド（argv）をデータとして宣言する。
+#   ~/.config/ghostty/config の symlink を張る（`ln -sf` は既存リンク/ファイルを置き換えるので
+#   毎 apply 実行しても安全）。
 #
 # 注: テーマ（config 内の theme 行）の light/dark 切替は color スライスの担当。`theme` 属性は
 #   そのスライスで付与する。
