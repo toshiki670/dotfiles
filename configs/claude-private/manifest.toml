@@ -4,8 +4,7 @@
 # （`~/.claude/` を直接編集したくなる瞬間）はどのリポジトリで作業していても起こりうる。configs/claude/
 # の無条件ユニットに混ぜるとどのマシンにも配布されてしまうため、`dotfiles profile private` で
 # opt-in した個人の開発機だけへ絞る独立ユニットに分ける（configs/yt/manifest.toml と同じ要領。
-# output は configs/claude/ と共有する ── configs/claude/ 側の when にすると、そのユニットの
-# 全ファイルが道連れでゲートされてしまうため）。
+# output は configs/claude/ と共有する。この独立ユニットが必要な理由自体は本文の手順2に譲る）。
 
 when = { profile = "private" }
 
