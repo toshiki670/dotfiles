@@ -1,0 +1,16 @@
+# claude-config-scope-routing.md（軸1: 全リポジトリ、軸2: dotfiles 開発機だけ）を配置する。
+#
+# 内容は toshiki670/dotfiles リポジトリ自身の構造・コマンドを名指しするが、実際に必要になる場面
+# （`~/.claude/` を直接編集したくなる瞬間）はどのリポジトリで作業していても起こりうる。configs/claude/
+# の無条件ユニットに混ぜるとどのマシンにも配布されてしまうため、`dotfiles profile private` で
+# opt-in した個人の開発機だけへ絞る独立ユニットに分ける（configs/yt/manifest.toml と同じ要領。
+# output は configs/claude/ と共有する ── configs/claude/ 側の when にすると、そのユニットの
+# 全ファイルが道連れでゲートされてしまうため）。
+
+when = { profile = "private" }
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.claude"
