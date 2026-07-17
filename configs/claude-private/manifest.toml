@@ -1,0 +1,13 @@
+# Claude Code 設定の配置判定 skill（claude-config-scope-routing）を ~/.claude へ配置する。
+#
+# 内容は toshiki670/dotfiles 自身の構造を名指しするが、必要になる場面（~/.claude/ を直接
+# 編集したくなる瞬間）はどのリポジトリで作業していても起こる。全リポジトリ向けだが
+# 全マシン向けではないため、無条件配布の configs/claude/ から分ける。
+
+when = { profile = "private" }
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/.claude"
