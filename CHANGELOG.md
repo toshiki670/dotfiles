@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.71.4] - 2026-07-17
+### Features
+- 現在の profile が全 manifest の when.profile に現れない場合に警告する ([#653](https://github.com/toshiki670/dotfiles/pull/653)) ([`65bdd4b`](https://github.com/toshiki670/dotfiles/commit/65bdd4b3b0953fe5077e21a746d0f7145e45e784))
+- Add upkeep doctor for brew/mise diagnostics ([#655](https://github.com/toshiki670/dotfiles/pull/655)) ([`3bd0c0c`](https://github.com/toshiki670/dotfiles/commit/3bd0c0c755e2f32c8715caa0ad268997f18f6db0))
+- 変更が必要だと結論づけたら検証可能な行動を伴わせるruleを追加する ([#656](https://github.com/toshiki670/dotfiles/pull/656)) ([`82f946c`](https://github.com/toshiki670/dotfiles/commit/82f946c8f132bb17e939fa9e4f33a3fab83bf894))
+### Refactor
+- 他 manifest.toml に残る dotfiles バイナリ仕様の重複を削る ([#654](https://github.com/toshiki670/dotfiles/pull/654)) ([`0663fff`](https://github.com/toshiki670/dotfiles/commit/0663fff414cc75012ccacd2cbf735d56f4e2e2f1))
+
+
 ## [0.71.3] - 2026-07-16
 ### Features
 - 呼び出し時だけ CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS を有効化する claude-teams 関数を追加する ([#647](https://github.com/toshiki670/dotfiles/pull/647)) ([`c6f6d94`](https://github.com/toshiki670/dotfiles/commit/c6f6d94863a9734ad1ebe23404a0390e59a886c8))
