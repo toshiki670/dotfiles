@@ -1,29 +1,15 @@
-# ghostty の設定（config）を ~/.config/ghostty へ配置し、macOS 参照先への symlink を張る。
+# ghostty の設定（config）を ~/.config/ghostty へ配置する。
 #
-# when = { deps = ["ghostty"], os = "darwin" }: トップレベル when はユニットスコープ gate。
-#   when.deps = ["ghostty"]: ghostty CLI は GUI アプリの app バンドル内
-#     （/Applications/Ghostty.app/Contents/MacOS/ghostty）にあり、これが PATH 解決される。
-#   when.os = "darwin": symlink 生成は macOS 専用なので darwin gate する。darwin 以外では配置も
-#     末尾の output.cmd も skip される（ユニット gate がツリー全体を覆う）。macOS 専用である知識は
-#     この manifest（when.os ＋下記コマンド）が持ち、binary は関知しない。
-#
-# 末尾の output.cmd: 配置後、~/Library/Application Support/com.mitchellh.ghostty/config →
-#   ~/.config/ghostty/config の symlink を張る（`ln -sf` は既存リンク/ファイルを置き換えるので
-#   毎 apply 実行しても安全）。
+# when.deps（トップレベル when ＝ ユニットスコープ gate）: ghostty CLI は GUI アプリの app バンドル内
+#   （/Applications/Ghostty.app/Contents/MacOS/ghostty）にあり、これが PATH 解決される。ghostty が
+#   PATH に無い環境ではユニットごと skip する。
 #
 # 注: テーマ（config 内の theme 行）の light/dark 切替は color スライスの担当。`theme` 属性は
 #   そのスライスで付与する。
-when = { deps = [ "ghostty" ], os = "darwin" }
+when = { deps = [ "ghostty" ] }
 
 [[steps]]
 input = "."
 
 [[steps]]
 output = "~/.config/ghostty"
-
-[[steps]]
-output.cmd = [
-  "sh",
-  "-c",
-  "mkdir -p \"$HOME/Library/Application Support/com.mitchellh.ghostty\" && ln -sf \"$HOME/.config/ghostty/config\" \"$HOME/Library/Application Support/com.mitchellh.ghostty/config\"",
-]
