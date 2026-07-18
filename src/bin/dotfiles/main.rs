@@ -14,7 +14,7 @@
 //! 以下の doc は、ここで定義する用語を前提に書く。
 //!
 //! - **設定単位（ユニット）**: `manifest.toml` を持つ `configs/` 配下のディレクトリ。
-//!   配置宣言とソースをひとまとめにした、走査・gate・フックの単位。
+//!   配置宣言とソースをひとまとめにした、走査・gate・配置の単位。
 //! - **内容（Content）**: 1 ユニットが `[[steps]]` を上から評価しながら組み立てる中身。空から
 //!   始まり、`input` step で中身を畳み、`output` step で書き出される。
 //! - **step**: `input`（読む）か `output`（書く）の択一。どちらも「パス」か
@@ -33,16 +33,14 @@
 //! - **profile**: user が一度選んでおくマシンクラス状態（例 `private`）。`when.profile` が読む。
 //! - **locals（named value）**: マシンローカル値。manifest が名前を宣言し、apply が配置時に
 //!   ストアの値を `@@name@@` placeholder へ注入する。
-//! - **hooks**: ユニット配置後に実行するコマンド列（onchange＝ソース変化時のみ実行）。生きた
-//!   外部状態への反映は hooks でなく `output.cmd` step が担う（毎 apply・冪等が契約）。
 //!
 //! # apply の流れ
 //!
 //! ソースを二段構えで解決し（作業ツリー検出 → バイナリ埋め込み・[`source`]）、ユニットを
-//! 走査（[`discover`]）→ ユニット gate を評価（[`apply::gate`]）→ `[[steps]]` を実行して
-//! 内容を組み立て配置（[`apply::pipeline`]、cmd 実行は [`apply::cmd`]）→ locals を解決・注入
-//! （[`locals`]）→ 配置後フックを実行（[`hooks`]）、を全ユニットについて繰り返した後、今回の
-//! 期待配置集合を [`prune`] の snapshot へ記録する（`--force` のときだけ不要な配置を退避する）。
+//! 走査（[`discover`]）→ ユニット gate を評価（[`apply::gate`]）→ locals を解決・注入
+//! （[`locals`]）→ `[[steps]]` を実行して内容を組み立て配置（[`apply::pipeline`]、cmd 実行は
+//! [`apply::cmd`]）、を全ユニットについて繰り返した後、今回の期待配置集合を [`prune`] の
+//! snapshot へ記録する（`--force` のときだけ不要な配置を退避する）。
 
 // `deny(broken_intra_doc_links)`: doc コメントのリンク切れを CI の `cargo doc -p dotfiles` で
 // 検出するガード。`allow(private_intra_doc_links)`: 既定では公開アイテムの doc から非公開
@@ -65,9 +63,6 @@ mod apply;
 
 // named value。子モジュール（store / resolve / inject / prompt）は locals.rs が束ねる。
 mod locals;
-
-// 配置後フック。子モジュール（exec / onchange）は hooks.rs が束ねる。
-mod hooks;
 
 // 不要になった配置の追跡・退避（#521）。apply が union、doctor が報告、apply --force が実削除。
 mod prune;

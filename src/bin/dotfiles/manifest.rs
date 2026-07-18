@@ -17,9 +17,7 @@
 //! user が選んでおく状態（[`crate::state`]）を読む状態 gate で、`theme`（color スライスまで
 //! 未配線）と同族。
 //!
-//! `locals` はマシンローカル値（named value）の宣言。`hooks` は配置後フック（onchange 固定）の宣言で、
-//! 各エントリが実行する `cmd`（argv）を持ち、非空であることを load 時に検証する（実行は
-//! [`crate::hooks`] の汎用エンジン。ツール固有ロジックは binary でなく manifest が持つ）。
+//! `locals` はマシンローカル値（named value）の宣言。
 
 use serde::Deserialize;
 use std::path::{Component, Path, PathBuf};
@@ -33,7 +31,7 @@ use strum::{Display, EnumIter};
 #[derive(Debug)]
 pub struct Manifest {
     /// ユニット全体 gate。トップレベルに書いた `when` はユニットスコープで、
-    /// 満たさなければユニット全体を skip する（配置も `hooks` も触らない ＝ all-or-nothing）。
+    /// 満たさなければユニット全体を skip する（配置を一切行わない ＝ all-or-nothing）。
     /// `when.deps`（配列・AND）が PATH に揃い、`when.os`（スカラ）が現在 OS と一致し、
     /// `when.profile`（スカラ・状態）が現在の profile 状態と一致した時だけ真。省略時は常時採用。
     /// 同じ語彙を各 step の `when` がその step スコープで再利用する。
@@ -49,26 +47,24 @@ pub struct Manifest {
     pub private: bool,
     /// 実行ビットを付与（0644→0755 / 0600→0700）。省略時 false。パス output を持つユニットのみ。
     pub executable: bool,
-    /// 配置後フック（onchange 固定）。このユニットの配置後に**宣言順**で実行するエントリの配列
-    /// （例 `[[hooks]]` ＋ `cmd = ["bat", "cache", "--build"]`）。各エントリは実行する [`Hook::cmd`]
-    /// （argv）を持つ。ツール固有ロジックは binary に持たず、実行するコマンドをデータとして宣言する
-    /// → 新ツールのフック追加に binary 変更は不要・configs と疎結合。各 `cmd` が非空であることを
-    /// load 時に検証する。実行は [`crate::hooks`]。トップレベル `when`（ユニット gate）が false の
-    /// ユニットは配置ごと skip されるため hooks も走らない（＝ `when.os` でフックを分岐できる）。
-    pub hooks: Vec<Hook>,
 }
 
 /// 配置の形。`[[steps]]` の列は load 時にどちらかへ解釈される。ツリー配置とバイト内容パイプライン
 /// は持てる語彙が違い、混在もできないため、別 variant で表現する。
 #[derive(Debug)]
 pub enum Steps {
-    /// ツリー配置（`input = "."` ＋ パス output の 2 step）: 単位ディレクトリを丸ごと、相対構造を
-    /// 保って配置する（[`crate::apply::copy`]）。step 列は持たない ― バイト内容の合成語彙
-    /// （merge / format）はツリーに意味を持たず、step の `when` は unit gate と冗長、`optional` の
-    /// 対象になる不在（repo 追跡の単位ディレクトリは常に在る）も無いため、いずれも load 時に弾かれる。
+    /// ツリー配置（`input = "."` ＋ パス output ＋ 任意の末尾 output.cmd）: 単位ディレクトリを丸ごと、
+    /// 相対構造を保って配置し（[`crate::apply::copy`]）、宣言されていれば配置後に `post` の各コマンドを
+    /// 無条件で実行する。バイト内容の合成語彙（merge / format）はツリーに意味を持たず、step の `when` は
+    /// unit gate と冗長、`optional` の対象になる不在（repo 追跡の単位ディレクトリは常に在る）も無いため、
+    /// input / パス output・末尾 output.cmd のどれに付けても load 時に弾かれる。
     Tree {
         /// 配置先ディレクトリ（検証済みの `~` 起点パス）。
         output: HomePath,
+        /// 配置後に**宣言順**で実行する output.cmd（argv）。ツリーは内容を持たないため標準入力は空。
+        /// 毎 apply 無条件に走る副作用で、コマンドが冪等であることを契約とする（bat cache 再構築・
+        /// symlink 生成など）。ユニット gate が false なら配置ごと skip されこれも走らない。
+        post: Vec<CmdSource>,
     },
     /// バイト内容パイプライン: 内容を空から始め、宣言順に input（読む）→ output（書く）を畳む
     /// （[`crate::apply::pipeline`]）。input 1 つ以上・output 1 つ以上。
@@ -276,7 +272,7 @@ enum StepSource {
 }
 
 /// cmd 内容源（`{ cmd = [...] }`）。`deny_unknown_fields` で `cmd` 以外のキーを弾く。
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct CmdSource {
     /// 実行する argv。先頭が実行ファイル名、以降が引数。
@@ -310,15 +306,6 @@ pub enum Merge {
     Deep,
     /// テキスト連結（境目に改行 1 つ）。
     Append,
-}
-
-/// 1 つの配置後フック（onchange 固定）。ユニット配置後に実行する `cmd`（argv）。
-/// `deny_unknown_fields` でキーの typo を load 時に弾く。
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Hook {
-    /// 実行するコマンド（argv）。先頭が実行ファイル名、以降が引数。非空を load 時に検証する。
-    pub cmd: Vec<String>,
 }
 
 /// `when.os` が受理する OS。表示名と TOML トークンを揃える規則は [`Format`] と同じ。
@@ -379,7 +366,7 @@ impl Manifest {
     /// パス output を持たない（cmd output だけの）ユニットは `(cmd)` を返す。
     pub fn display_dst(&self) -> String {
         match &self.steps {
-            Steps::Tree { output } => output.to_string(),
+            Steps::Tree { output, .. } => output.to_string(),
             Steps::Pipeline { steps, .. } => steps
                 .iter()
                 .find_map(|step| match step {
@@ -393,11 +380,19 @@ impl Manifest {
         }
     }
 
-    /// apply のラベルと `list` の属性が共有する steps サマリ。ツリーは `tree`、それ以外は
-    /// `steps=Nin/Mout`（＋ `format` ＋ cmd output があれば `output=cmd`）。
+    /// apply のラベルと `list` の属性が共有する steps サマリ。ツリーは `tree`（末尾 output.cmd が
+    /// あれば `tree, output.cmd=N`）、それ以外は `steps=Nin/Mout`（＋ `format` ＋ cmd output があれば
+    /// `output=cmd`）。
     pub fn summary(&self) -> String {
-        let Steps::Pipeline { format, steps } = &self.steps else {
-            return "tree".to_string();
+        let (format, steps) = match &self.steps {
+            Steps::Tree { post, .. } => {
+                return if post.is_empty() {
+                    "tree".to_string()
+                } else {
+                    format!("tree, output.cmd={}", post.len())
+                };
+            }
+            Steps::Pipeline { format, steps } => (format, steps),
         };
         let n_in = steps.iter().filter(|s| matches!(s, Step::Input(_))).count();
         let n_out = steps
@@ -470,8 +465,6 @@ struct RawManifest {
     private: bool,
     #[serde(default)]
     executable: bool,
-    #[serde(default)]
-    hooks: Vec<Hook>,
 }
 
 /// `[[steps]]` の生スキーマ。`input` / `output` の択一は TOML では表現できない（どちらも任意キー）
@@ -591,7 +584,7 @@ impl RawManifest {
     /// - **各 step は input / output のちょうど 1 つ**（[`RawStep::into_sided`]）。
     /// - **steps は input を 1 つ以上・output を 1 つ以上**持つ（空パイプラインは無意味）。
     /// - **パス表記**（#579）: output は `~` 起点のみ。input は単位相対 or `~` 起点。`$`・絶対は不可。
-    /// - **`hooks` の各 `cmd` は非空**。
+    /// - **各 step の `cmd`（input.cmd / output.cmd）は非空**。
     /// - **`when` は実効キーを 1 つ以上**（unit・各 step とも。空 when の silent no-op を弾く）。
     /// - **`private` / `executable` はパス output を持つユニットのみ**（cmd output だけのユニットには
     ///   書き込み先ファイルが無い）。
@@ -623,7 +616,7 @@ impl RawManifest {
             .collect::<Result<_, _>>()?;
 
         // 各 step の cmd（input.cmd / output.cmd）は非空。空 argv は cmd::run/run_piped の cmd[0]
-        // インデックスで panic するため、load 時に弾く（hooks の非空検証と同じ「静かに無視しない」方針）。
+        // インデックスで panic するため、load 時に弾く（実体化できない typo を静かに無視しない方針）。
         for (i, step) in parsed.iter().enumerate() {
             let (label, empty) = match &step.side {
                 ParsedSide::Input(InputSource::Cmd(c)) => ("input", c.cmd.is_empty()),
@@ -635,11 +628,6 @@ impl RawManifest {
                     "steps[{i}].{label}.cmd は非空のコマンド（argv）である必要があります"
                 ));
             }
-        }
-
-        // hooks の cmd は非空。
-        if self.hooks.iter().any(|h| h.cmd.is_empty()) {
-            return Err("hooks の各要素は非空のコマンド（cmd）である必要があります".to_string());
         }
 
         // when は実効キー必須（unit・各 step）。
@@ -686,18 +674,18 @@ impl RawManifest {
             steps,
             private: self.private,
             executable: self.executable,
-            hooks: self.hooks,
         })
     }
 }
 
-/// ツリー（`input = "."` を含む steps）の形を検証し、[`Steps::Tree`] へ解釈する
-/// （merge / format / step の `when` / `optional` を禁止する理由は [`Steps::Tree`] の doc）。
+/// ツリー（`input = "."` を含む steps）の形を検証し、[`Steps::Tree`] へ解釈する。先頭はツリー input、
+/// 2 番目はパス output、3 番目以降（0 個以上）は配置後に走らせる output.cmd。merge / format /
+/// step の `when` / `optional` を禁止する理由は [`Steps::Tree`] の doc。
 fn tree_steps(format: Option<Format>, steps: &[ParsedStep]) -> Result<Steps, String> {
-    if steps.len() != 2 {
+    if steps.len() < 2 {
         return Err(format!(
-            "ツリー input（input = \".\"）を持つユニットは steps がちょうど 2 つ（input = \".\" と \
-             output）である必要があります（現在 {} 個）",
+            "ツリー input（input = \".\"）を持つユニットは steps を 2 つ以上（input = \".\" と \
+             output、任意で末尾に output.cmd）持つ必要があります（現在 {} 個）",
             steps.len()
         ));
     }
@@ -731,8 +719,28 @@ fn tree_steps(format: Option<Format>, steps: &[ParsedStep]) -> Result<Steps, Str
                 .to_string(),
         );
     }
+    // steps[2..] は配置後に無条件で走る output.cmd だけを持てる（input・パス output は不可、
+    // when / merge / optional も不可 ― 分岐はユニット全体の when gate を使う）。
+    let mut post = Vec::new();
+    for (i, step) in steps.iter().enumerate().skip(2) {
+        let ParsedSide::Output(OutputSource::Cmd(c)) = &step.side else {
+            return Err(format!(
+                "steps[{i}]: ツリーの 3 つ目以降の step は output.cmd である必要があります（input・\
+                 パス output は不可 ― ツリーは 1 つの output パスへ配置し、以降は配置後に走らせる \
+                 output.cmd だけを持てる）"
+            ));
+        };
+        if step.when.is_some() || step.merge.is_some() || step.optional {
+            return Err(format!(
+                "steps[{i}]: ツリー末尾の output.cmd には when / merge / optional を指定できません \
+                 （配置のたび無条件に走る副作用。分岐はユニット全体の when gate を使ってください）"
+            ));
+        }
+        post.push(c.clone());
+    }
     Ok(Steps::Tree {
         output: output.clone(),
+        post,
     })
 }
 
@@ -987,9 +995,11 @@ mod tests {
 
     #[test]
     fn accepts_minimal_tree() {
-        // ツリーは step 列を持たない専用の形（output だけ）へ解釈される。
+        // ツリーは専用の形（output ＋ 末尾 output.cmd）へ解釈される。末尾 output.cmd 無しなら post は空。
         let m = parse(TREE).unwrap();
-        assert!(matches!(&m.steps, Steps::Tree { output } if output.to_string() == "~/x"));
+        assert!(
+            matches!(&m.steps, Steps::Tree { output, post } if output.to_string() == "~/x" && post.is_empty())
+        );
     }
 
     #[test]
@@ -1325,14 +1335,60 @@ mod tests {
     // ── tree special case ──
 
     #[test]
-    fn rejects_tree_with_extra_step() {
+    fn accepts_tree_with_trailing_output_cmd() {
+        // ツリーは output の後に output.cmd を末尾に並べられる（配置後に無条件で走る副作用）。
+        let m = parse(
+            "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n\
+             [[steps]]\noutput.cmd = [\"bat\", \"cache\", \"--build\"]\n\
+             [[steps]]\noutput.cmd = [\"sh\", \"-c\", \"true\"]\n",
+        )
+        .unwrap();
+        let Steps::Tree { post, .. } = &m.steps else {
+            panic!("ツリーを期待したがツリーでない");
+        };
+        assert_eq!(post.len(), 2);
+        assert_eq!(post[0].cmd, ["bat", "cache", "--build"]);
+        assert_eq!(post[1].cmd, ["sh", "-c", "true"]);
+        assert_eq!(m.summary(), "tree, output.cmd=2");
+    }
+
+    #[test]
+    fn rejects_tree_with_extra_input_step() {
+        // ツリーの 2 番目が output でない（余分な input）は弾く（末尾 output.cmd は output だけ）。
         let err = parse(
             "[[steps]]\ninput = \".\"\n[[steps]]\ninput = \"a\"\n[[steps]]\noutput = \"~/x\"\n",
         )
         .unwrap_err();
         assert!(
-            err.contains("ちょうど 2 つ"),
-            "3 step のツリーが弾かれていない: {err}"
+            err.contains("output である必要があります"),
+            "余分な input を持つツリーが弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_tree_trailing_non_cmd_step() {
+        // 末尾がパス output（cmd でない）は弾く（3 つ目以降は output.cmd のみ）。
+        let err = parse(
+            "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n[[steps]]\noutput = \"~/y\"\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("output.cmd である必要があります"),
+            "末尾のパス output が弾かれていない: {err}"
+        );
+    }
+
+    #[test]
+    fn rejects_tree_trailing_output_cmd_with_when() {
+        // 末尾 output.cmd に per-step の when は書けない（分岐はユニット gate）。
+        let err = parse(
+            "[[steps]]\ninput = \".\"\n[[steps]]\noutput = \"~/x\"\n\
+             [[steps]]\noutput.cmd = [\"bat\"]\nwhen = { deps = [\"bat\"] }\n",
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("when / merge / optional"),
+            "末尾 output.cmd の when が弾かれていない: {err}"
         );
     }
 
@@ -1445,23 +1501,6 @@ mod tests {
         );
     }
 
-    // ── hooks ──
-
-    #[test]
-    fn accepts_command_hook() {
-        let m = parse(&format!("hooks = [{{ cmd = [\"cmd\", \"sub\"] }}]\n{TREE}")).unwrap();
-        assert_eq!(m.hooks[0].cmd, ["cmd", "sub"]);
-    }
-
-    #[test]
-    fn rejects_empty_hook() {
-        let err = parse(&format!("hooks = [{{ cmd = [] }}]\n{TREE}")).unwrap_err();
-        assert!(
-            err.contains("hooks") && err.contains("非空"),
-            "空コマンドが弾かれていない: {err}"
-        );
-    }
-
     // ── when effective key ──
 
     #[test]
@@ -1510,6 +1549,8 @@ mod tests {
     #[test]
     fn rejects_legacy_vocabulary() {
         // 旧スキーマの語彙は全て未知フィールドとして parse 時に弾かれる（後方互換なし）。
+        // `hooks`（onchange フックの語彙・#659 で撤去）も未知フィールドとして弾かれる ― 配置後の
+        // コマンドはツリー末尾の output.cmd で宣言する。
         for legacy in [
             "dst = \"~/x\"\n",
             "kind = \"generate\"\n",
@@ -1518,6 +1559,7 @@ mod tests {
             "cmd = [\"x\"]\n",
             "sensitive = [\"a\"]\n",
             "[[overlay]]\nsrc = \"a\"\n",
+            "hooks = [{ cmd = [\"bat\"] }]\n",
         ] {
             let src = format!("{legacy}{TREE}");
             assert!(
@@ -1525,11 +1567,5 @@ mod tests {
                 "旧語彙が弾かれていない: {legacy}"
             );
         }
-        // hooks[].frequency も Hook の deny_unknown_fields で弾く。
-        assert!(
-            format!("{TREE}[[hooks]]\ncmd = [\"x\"]\nfrequency = \"always\"\n")
-                .parse::<Manifest>()
-                .is_err()
-        );
     }
 }

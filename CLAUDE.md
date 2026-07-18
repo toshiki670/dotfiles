@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## リポジトリ構造
 
-`dotfiles` CLI で管理。`configs/` がソースで `dotfiles apply` でホームディレクトリへデプロイされる（各ツールの `configs/<tool>/manifest.toml` が配置方式・配置先を宣言）。配置後の onchange hooks も manifest に宣言（bat cache 再構築・ghostty symlink 等）。バイナリの導入は apply の外で `cargo install --git`（＋ `upkeep upgrade`）が担う。
+`dotfiles` CLI で管理。`configs/` がソースで `dotfiles apply` でホームディレクトリへデプロイされる（各ツールの `configs/<tool>/manifest.toml` が配置方式・配置先を宣言）。配置後に走らせるコマンドは同じ manifest の末尾 `output.cmd` step で宣言（毎 apply 無条件・冪等契約。bat cache 再構築・ghostty symlink 等）。バイナリの導入は apply の外で `cargo install --git`（＋ `upkeep upgrade`）が担う。
 
 CLI コマンドはリポジトリルートの **Cargo workspace**。配布物は root package `dotfiles` 1 つに統合される。この package に `[lib]` は無く、`dotfiles`（本体）・`clip` / `gcm` / `gh-clone` / `git-upstream` / `fzf-picker` / `upkeep` / `workers` の8 bin だけで構成される。いずれも `src/bin/<name>/main.rs` を起点に自分専用のモジュールツリー（本体なら `apply.rs` `manifest.rs` 等、他は `cli.rs` や各サブコマンドの module）を持つ独立した bin で、bin 間で共有する lib は無い（rustdoc の crate root がシムだけの重複ページで埋まらないようにするため）。fzf-picker / upkeep / workers は複数コマンドを1 bin へサブコマンド化したもの。version は単一・SoT はタグ `v{version}`。root package は一度の `cargo install --git <repo>` で `~/.cargo/bin` へ配布する。開発・保守ツールは `tools/` 配下で非配布・版なし: lint/format オーケストレータ `dotfiles-lint`（`mise run lint` / `check` → `cargo run -p dotfiles-lint`、mise 供給の shfmt / shellcheck / taplo / stylua / rumdl / ruff を呼ぶ）、Neovim プラグイン同期 `v-sync`（`mise run v-sync`）。リリースは release-plz（単一版の git タグ + GitHub Release、crates.io へは publish しない）。
 

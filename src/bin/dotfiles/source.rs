@@ -8,7 +8,7 @@
 //!   コンパイル時に `configs/` をバイナリへ焼き込み（[`mod@include_dir`]）、解決時に temp dir へ展開する。
 //!
 //! 配置エンジン（[`crate::discover`] / [`crate::apply::copy`] / [`crate::apply::pipeline`] /
-//! [`crate::apply::cmd`] / [`crate::hooks`]）は全て実 path で `std::fs` を読む。埋め込みを temp dir へ
+//! [`crate::apply::cmd`]）は全て実 path で `std::fs` を読む。埋め込みを temp dir へ
 //! 実体化して**実 path**を渡すことで、エンジンは「ソースが埋め込みか実 FS か」を知らずに済む。
 
 use crate::discover;

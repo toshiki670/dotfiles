@@ -4,12 +4,10 @@
 //! ①**トップレベル `when`（ユニット gate）を最初に評価し false なら短絡**（[`crate::apply::gate`]、
 //! 配置を一切触らず skip）。生き残った単位は `[[steps]]` パイプライン（[`crate::apply::pipeline`]）で
 //! 実行する ― 内容を空から始め、宣言順に input（読む）→ output（書く）を畳む。ツリー input
-//! （`input = "."`）は [`crate::apply::copy`] で単位ディレクトリを再帰配置し、バイト内容の合成は
-//! [`crate::apply::fold`]、cmd 実行は [`crate::apply::cmd`] が担う。配置の直前に `locals`
-//! （named value）を解決し（[`crate::locals::resolve`]）、配置ファイルの `@@name@@` を注入する。
-//! 配置成功後に `hooks`（onchange フック）を、ユニットのソースハッシュが前回適用時から変わっていれば
-//! 実行する（[`crate::hooks`]）。ユニット gate が false のときは配置前に短絡 return するため、その
-//! hooks も走らない（＝ `when.os` でフックを分岐できる）。
+//! （`input = "."`）は [`crate::apply::copy`] で単位ディレクトリを再帰配置し（宣言されていれば末尾の
+//! output.cmd を配置後に実行）、バイト内容の合成は [`crate::apply::fold`]、cmd 実行は
+//! [`crate::apply::cmd`] が担う。配置の直前に `locals`（named value）を解決し
+//! （[`crate::locals::resolve`]）、配置ファイルの `@@name@@` を注入する。
 //! 本モジュールはオーケストレーションと、各配置経路が共有する小道具（パーミッション適用・冪等書き込み）
 //! を持つ。
 //!
@@ -30,8 +28,6 @@ pub(crate) mod gate;
 pub(crate) mod pipeline;
 
 use crate::discover::{self, MANIFEST, Unit};
-use crate::hooks;
-use crate::hooks::onchange::State as HookState;
 use crate::locals::store::Store;
 use crate::locals::{prompt, resolve};
 use crate::manifest::Manifest;
@@ -41,9 +37,8 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 /// `source`（= `configs/`）配下を走査し、各 manifest の配置を実行する。
-/// `home` は `~` 展開先。`locals` の取得・注入に使う named value ストアと、`hooks` の onchange
-/// 状態（[`HookState`]）は開始時に1回ロードし、各単位で逐次更新する。`force` は #521 の実削除
-/// opt-in（`dotfiles apply --force`）。
+/// `home` は `~` 展開先。`locals` の取得・注入に使う named value ストアは開始時に 1 回ロードし、
+/// 各単位で逐次更新する。`force` は #521 の実削除 opt-in（`dotfiles apply --force`）。
 pub fn run(source: &Path, home: &Path, force: bool) -> Result<(), String> {
     let units = discover::collect(source)?;
     if units.is_empty() {
@@ -55,11 +50,10 @@ pub fn run(source: &Path, home: &Path, force: bool) -> Result<(), String> {
     }
 
     let mut store = Store::load(home)?;
-    let mut hook_state = HookState::load(home);
     // 状態駆動 gate（profile）の現在状態は開始時に 1 回だけ解決し、全ユニット・全 step で共有する。
     let gate_state = gate::GateState::load(home)?;
     for unit in &units {
-        apply_unit(unit, home, &mut store, &mut hook_state, &gate_state)?;
+        apply_unit(unit, home, &mut store, &gate_state)?;
     }
 
     // 今回の期待配置集合（gate 評価後）を snapshot へ記録する。既定は union（縮めない・裏方の記録で
@@ -80,19 +74,17 @@ pub fn run(source: &Path, home: &Path, force: bool) -> Result<(), String> {
     Ok(())
 }
 
-/// 1 単位を評価順に従って配置し、結果を 1 行で表示する。配置成功後、ユニットが宣言した
-/// `hooks` を onchange gate を通して実行する。
+/// 1 単位を評価順に従って配置し、結果を 1 行で表示する。
 fn apply_unit(
     unit: &Unit,
     home: &Path,
     store: &mut Store,
-    hook_state: &mut HookState,
     gate_state: &gate::GateState,
 ) -> Result<(), String> {
     let manifest = Manifest::load(&unit.dir.join(MANIFEST))?;
     let name = unit.rel.to_string_lossy();
 
-    // ①トップレベル when（ユニット gate）を最初に評価し、満たさなければユニット全体を skip（配置も hooks も触らない）。
+    // ①トップレベル when（ユニット gate）を最初に評価し、満たさなければユニット全体を skip（配置を一切行わない）。
     if let Some(reason) = gate::unit_skip_reason(&manifest, gate_state) {
         println!("apply: {name} → skip ({reason})");
         return Ok(());
@@ -117,9 +109,6 @@ fn apply_unit(
         manifest.display_dst(),
         manifest.summary()
     );
-
-    // 配置後（after フェーズ）に onchange フックを走らせる。ソースが前回適用時と同じなら skip。
-    hooks::run_unit_hooks(&unit.dir, &name, &manifest.hooks, hook_state)?;
     Ok(())
 }
 

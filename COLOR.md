@@ -24,7 +24,7 @@
 ### カスタムテーマ（標準に無いもの）
 
 - `configs/bat/themes/ayu-dark.tmTheme` — **Ayu** の bat/delta 用テーマ。delta(dark) と bat(dark) が**共有**する。`dempfi/ayu` 公式配色から生成。
-- `configs/bat/manifest.toml` の hooks — 上記テーマが変わると `bat cache --build` を自動実行（`dotfiles apply` 時）。これが無いと delta/bat が `ayu-dark` を解決できない。
+- `configs/bat/manifest.toml` の末尾 `output.cmd` — `dotfiles apply` のたびに `bat cache --build` を実行し、ayu-dark を bat/delta のキャッシュへ登録する。これが無いと delta/bat が `ayu-dark` を解決できない。
 
 ## 追従の仕組み（要点）
 
@@ -56,12 +56,12 @@ light / dark を別のテーマセットに変える手順。**上から順に**
 > **標準に無いテーマ**（今回の Ayu のような）を使う場合:
 >
 > 1. `<テーマ>.tmTheme` を `configs/bat/themes/` に置く（`.sublime-color-scheme` は bat が読めないことがあるので `.tmTheme` 推奨）。
-> 2. `bat cache --build` を実行（`dotfiles apply` 経由なら hook が自動実行）。テーマ名は**ファイル名**（拡張子なし）になる。
+> 2. `bat cache --build` を実行（`dotfiles apply` 経由なら末尾 `output.cmd` が毎回実行する）。テーマ名は**ファイル名**（拡張子なし）になる。
 > 3. delta / bat はこの名前を `syntax-theme` / `--theme-dark` で参照できる。delta と bat はこのテーマ名前空間を共有する。
 
 ## 適用と確認
 
-- 適用: `dotfiles apply`（bat テーマを変えた場合は hook が `bat cache --build` を実行）。
+- 適用: `dotfiles apply`（末尾 `output.cmd` が毎回 `bat cache --build` を実行する）。
 - 確認:
   - bat: `bat <ファイル>`（`--theme=auto` なので即時反映）
   - delta: **新しい fish** で `git diff` / `git show`

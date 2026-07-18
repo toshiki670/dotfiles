@@ -1,8 +1,8 @@
 //! step 列の実行器: 内容（Content）を空から始め、宣言順に input（読む）→ output（書く）を畳む。
 //!
 //! `manifest.toml` の `[[steps]]` を解釈した [`crate::manifest::Steps`] を実行する。ツリー配置
-//! （[`Steps::Tree`]）は step 列を持たないため、畳み込みを経ず単位ディレクトリを output へ再帰配置
-//! する（[`crate::apply::copy`]）。パイプライン（[`Steps::Pipeline`]）は step 列を上から評価する:
+//! （[`Steps::Tree`]）は畳み込みを経ず単位ディレクトリを output へ再帰配置し（[`crate::apply::copy`]）、
+//! 宣言されていれば末尾の output.cmd を配置後に実行する。パイプライン（[`Steps::Pipeline`]）は step 列を上から評価する:
 //! 各 step は `when`（step スコープ gate）で採否を決め、採用された input は内容へ中身を畳み、
 //! output は内容を宛先へ書く。
 //!
@@ -46,9 +46,14 @@ pub fn run(
     gate_state: &GateState,
 ) -> Result<(), String> {
     let (format, steps) = match &manifest.steps {
-        Steps::Tree { output } => {
+        Steps::Tree { output, post } => {
             let dst = output.resolve(home);
-            return copy::place(unit_dir, &dst, manifest, locals);
+            copy::place(unit_dir, &dst, manifest, locals)?;
+            // ツリーは内容概念を持たない（input step が中身を供給しない）ため標準入力は空バイト列で渡す。
+            for c in post {
+                cmd::run_piped(&c.cmd, &[])?;
+            }
+            return Ok(());
         }
         Steps::Pipeline { format, steps } => (*format, steps),
     };
