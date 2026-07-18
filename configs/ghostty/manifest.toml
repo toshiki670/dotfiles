@@ -1,9 +1,8 @@
 # ghostty の設定（config）を ~/.config/ghostty へ配置し、macOS 参照先への symlink を張る。
 #
 # when = { deps = ["ghostty"], os = "darwin" }: トップレベル when はユニットスコープ gate。
-#   when.deps = ["ghostty"]: ghostty が PATH に無い環境ではユニットごと skip（配置も symlink も走ら
-#     ない）。ghostty が無ければ config 配置も macOS 参照先への symlink も無意味なので gate する。
-#     （ghostty CLI は /Applications/Ghostty.app/Contents/MacOS/ghostty で PATH 解決される。）
+#   when.deps = ["ghostty"]: ghostty CLI は GUI アプリの app バンドル内
+#     （/Applications/Ghostty.app/Contents/MacOS/ghostty）にあり、これが PATH 解決される。
 #   when.os = "darwin": symlink 生成は macOS 専用なので darwin gate する。darwin 以外では配置も
 #     末尾の output.cmd も skip される（ユニット gate がツリー全体を覆う）。macOS 専用である知識は
 #     この manifest（when.os ＋下記コマンド）が持ち、binary は関知しない。
