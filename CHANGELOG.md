@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.71.5] - 2026-07-19
+### Features
+- Claude Code設定の追加先を2軸で判定するskillを追加する ([#657](https://github.com/toshiki670/dotfiles/pull/657)) ([`db7ab0d`](https://github.com/toshiki670/dotfiles/commit/db7ab0ddb79ada3d000b2cf598d549243d58885a))
+- Dotfiles local list で設定済み named value を一覧する ([#664](https://github.com/toshiki670/dotfiles/pull/664)) ([`6b7e725`](https://github.com/toshiki670/dotfiles/commit/6b7e725a806f9ddd9b5b9636ae11a45d2a19c07b))
+### Fixes
+- Application Support への symlink 生成を削除する ([#663](https://github.com/toshiki670/dotfiles/pull/663)) ([`3c327da`](https://github.com/toshiki670/dotfiles/commit/3c327daebd54c9749774989d1446626a6f4cd110))
+### Refactor
+- Hooks[] onchange 機構を廃し output.cmd へ畳む ([#660](https://github.com/toshiki670/dotfiles/pull/660)) ([`9d0bb45`](https://github.com/toshiki670/dotfiles/commit/9d0bb45196e42f2f005c5c00331801d8a0095718))
+
+
 ## [0.71.4] - 2026-07-17
 ### Features
 - 現在の profile が全 manifest の when.profile に現れない場合に警告する ([#653](https://github.com/toshiki670/dotfiles/pull/653)) ([`65bdd4b`](https://github.com/toshiki670/dotfiles/commit/65bdd4b3b0953fe5077e21a746d0f7145e45e784))
