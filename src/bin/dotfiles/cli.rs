@@ -48,7 +48,7 @@ enum Commands {
     },
     /// 配置の一覧（各ユニットの配置先と方式）を表示する。
     List,
-    /// マシン固有の値（git の email 等）をストアへ保存する。
+    /// マシン固有の値（git の email 等）をストアへ保存・一覧する。
     Local {
         #[command(subcommand)]
         action: LocalAction,
@@ -78,11 +78,13 @@ enum ColorAction {
     Sample,
 }
 
-/// `local` のサブコマンド。将来 `get` / `list` / `unset` を足す余地を見越し `local <action>` 形を保つ。
+/// `local` のサブコマンド。将来 `get` / `unset` を足す余地を見越し `local <action>` 形を保つ。
 #[derive(Subcommand)]
 enum LocalAction {
     /// 名前→値をストア（`~/.config/dotfiles/local.toml`）へ設定する。
     Set { name: String, value: String },
+    /// ストアに設定済みの名前→値を一覧する。
+    List,
 }
 
 /// `dotfiles` の入口。引数を解釈し、サブコマンドへディスパッチする。
@@ -99,9 +101,7 @@ pub fn run() {
     let result = match cli.command {
         Some(Commands::Apply { force }) => run_apply(source, force),
         Some(Commands::List) => run_list(source),
-        Some(Commands::Local {
-            action: LocalAction::Set { name, value },
-        }) => run_local_set(&name, &value),
+        Some(Commands::Local { action }) => run_local(action),
         Some(Commands::Profile { name }) => run_profile(name.as_deref()),
         Some(Commands::Color {
             action: ColorAction::Sample,
@@ -137,10 +137,14 @@ fn run_list(source: Option<&Path>) -> Result<(), String> {
     list::run(resolved.root(), &resolved.origin().to_string())
 }
 
-/// `dotfiles local set <name> <value>`：named value をストアへ保存する。
-fn run_local_set(name: &str, value: &str) -> Result<(), String> {
+/// `dotfiles local <action>`：named value をストアへ保存（`set`）、または一覧（`list`）する。
+fn run_local(action: LocalAction) -> Result<(), String> {
     let home = home_dir()?;
-    local::set(Path::new(&home), name, value)
+    let home = Path::new(&home);
+    match action {
+        LocalAction::Set { name, value } => local::set(home, &name, &value),
+        LocalAction::List => local::list(home),
+    }
 }
 
 /// `dotfiles profile [<name>]`：`<name>` 指定で profile 状態を設定、省略で現在値を表示する。

@@ -43,6 +43,11 @@ impl Store {
         self.values.insert(name.to_string(), value.to_string());
     }
 
+    /// 全エントリを名前の昇順で返す。
+    pub fn entries(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.values.iter().map(|(k, v)| (k.as_str(), v.as_str()))
+    }
+
     /// ストアを **原子的に** 0600 で書き出す（親ディレクトリを作成）。同一ディレクトリへ
     /// 一時ファイルを 0600 で作成し、fsync してから rename で置き換える。rename は既存の
     /// `local.toml`（live ファイル）を切り詰めないため、書き込み途中のクラッシュ/kill でも
