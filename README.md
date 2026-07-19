@@ -119,9 +119,10 @@ Some configs need a value that differs per machine (e.g. git email/name). Store 
 
 ```bash
 dotfiles local set <name> <value>
+dotfiles local list
 ```
 
-Values are kept in `~/.config/dotfiles/local.toml` and injected during `apply`. Run `dotfiles doctor` to see which declared names are still unset.
+Values are kept in `~/.config/dotfiles/local.toml` and injected during `apply`. `list` shows what is currently stored; `dotfiles doctor` shows which declared names are still unset.
 
 ## Machine profile
 

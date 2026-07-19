@@ -1,7 +1,8 @@
 //! マシンローカル値（named value）機構の E2E（S4 / #458）。
 //!
 //! `dotfiles local set` でストアへ設定 →`apply` で `@@name@@` 注入、未設定時の非 TTY 警告と
-//! placeholder 残し、`doctor` の未設定警告を架空 fixture（`demo` 単位）で検証する。
+//! placeholder 残し、`local list` の一覧、`doctor` の未設定警告を架空 fixture（`demo` 単位）で
+//! 検証する。
 //!
 //! 注: `assert_cmd` の `.assert()` は `Command::output()` 経由で子の stdin を継承しない（= 非 TTY）。
 //! よって apply は常に非対話経路（警告のみ）を通り、テストがプロンプトでハングしない。
@@ -98,6 +99,54 @@ fn local_set_writes_owner_only_store() {
         fs::read_to_string(&store).unwrap().contains("val"),
         "ストアに値が保存されていない",
     );
+}
+
+/// `local list` が設定済みの名前→値を名前順で出すことを検証。
+#[test]
+fn local_list_shows_stored_values_in_name_order() {
+    let home = tempfile::tempdir().unwrap();
+
+    for (name, value) in [("git.name", "Toshiki"), ("git.email", "me@example.com")] {
+        dotfiles()
+            .args(["local", "set", name, value])
+            .env("HOME", home.path())
+            .assert()
+            .success();
+    }
+
+    let stdout = dotfiles()
+        .args(["local", "list"])
+        .env("HOME", home.path())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let stdout = String::from_utf8(stdout).unwrap();
+
+    let email = stdout.find("git.email").expect("git.email が出ていない");
+    let name = stdout.find("git.name").expect("git.name が出ていない");
+    assert!(
+        email < name,
+        "名前順（git.email → git.name）で出ていない:\n{stdout}"
+    );
+    assert!(
+        stdout.contains("me@example.com") && stdout.contains("Toshiki"),
+        "値が出ていない:\n{stdout}",
+    );
+}
+
+/// ストアが空（ファイル未作成）なら `list` / `doctor` と同じ作法で「対象なし」を出して成功する。
+#[test]
+fn local_list_reports_empty_store() {
+    let home = tempfile::tempdir().unwrap();
+
+    dotfiles()
+        .args(["local", "list"])
+        .env("HOME", home.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("対象なし"));
 }
 
 /// `doctor` が未設定 locals を警告し、`local set` 後は「設定済み」になることを検証。
