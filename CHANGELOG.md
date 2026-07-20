@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.71.6] - 2026-07-20
+### Features
+- Outdated サブコマンドで更新可能なパッケージを一覧表示する ([#668](https://github.com/toshiki670/dotfiles/pull/668)) ([`f02a728`](https://github.com/toshiki670/dotfiles/commit/f02a728941c90d2d9b19ea0d03cfa685b0f7cd0b))
+- Dependency 更新 PR の Changelog を検討し Issue 化する skill を追加 ([#669](https://github.com/toshiki670/dotfiles/pull/669)) ([`9eb0b39`](https://github.com/toshiki670/dotfiles/commit/9eb0b39f26f0d04d544043d10ea9add672dc6865))
+
+
 ## [0.71.5] - 2026-07-19
 ### Features
 - Claude Code設定の追加先を2軸で判定するskillを追加する ([#657](https://github.com/toshiki670/dotfiles/pull/657)) ([`db7ab0d`](https://github.com/toshiki670/dotfiles/commit/db7ab0ddb79ada3d000b2cf598d549243d58885a))
