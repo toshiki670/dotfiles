@@ -17,8 +17,15 @@ pub enum Explanation {
     Unavailable,
     /// リリースノートは取得できたが claude による要約に失敗した。
     GenerationFailed,
-    /// 要約成功。
-    Summary(String),
+    /// 要約成功。`source_url` は要約元のリリースページ
+    /// （誤りが疑わしいときにユーザーが自分で一次情報を確認できるようにするため）。
+    Summary { text: String, source_url: String },
+}
+
+/// GitHub の1リリース。本文と、そのリリースページの URL を対で持つ。
+struct ReleaseNotes {
+    body: String,
+    url: String,
 }
 
 /// パッケージのリリースノートを解決し、取得できれば claude で要約する。
@@ -29,17 +36,20 @@ pub fn resolve(pkg: &OutdatedPackage) -> Explanation {
         return Explanation::Unavailable;
     }
 
-    let Some(body) = release_notes_for_cargo_package(&pkg.name) else {
+    let Some(release) = release_notes_for_cargo_package(&pkg.name) else {
         return Explanation::Unavailable;
     };
 
-    match super::claude::summarize(&body) {
-        Some(summary) => Explanation::Summary(summary),
+    match super::claude::summarize(&release.body) {
+        Some(text) => Explanation::Summary {
+            text,
+            source_url: release.url,
+        },
         None => Explanation::GenerationFailed,
     }
 }
 
-fn release_notes_for_cargo_package(name: &str) -> Option<String> {
+fn release_notes_for_cargo_package(name: &str) -> Option<ReleaseNotes> {
     let raw = fetch_crate_metadata(name)?;
     let repo_url = extract_repository_url(&raw)?;
     let (owner, repo) = parse_owner_repo(&repo_url)?;
@@ -67,12 +77,12 @@ fn fetch_crate_metadata(name: &str) -> Option<String> {
         .then(|| String::from_utf8_lossy(&output.stdout).into_owned())
 }
 
-/// GitHub の最新リリース（タグ省略）の本文を取得する。
+/// GitHub の最新リリース（タグ省略）の本文と URL を取得する。
 ///
 /// `current`→`latest` 間に複数リリースがあっても集約はしない
 /// （crates.io のバージョン文字列と GitHub タグの命名規則を機械的に突き合わせる処理は
 /// 信頼できないため。直近の変更として最新リリース1件を要約すれば実用上十分）。
-fn fetch_release_body(owner: &str, repo: &str) -> Option<String> {
+fn fetch_release_body(owner: &str, repo: &str) -> Option<ReleaseNotes> {
     let output = Command::new("gh")
         .args([
             "release",
@@ -80,9 +90,7 @@ fn fetch_release_body(owner: &str, repo: &str) -> Option<String> {
             "--repo",
             &format!("{owner}/{repo}"),
             "--json",
-            "body",
-            "--jq",
-            ".body",
+            "body,url",
         ])
         .output()
         .ok()?;
@@ -90,8 +98,24 @@ fn fetch_release_body(owner: &str, repo: &str) -> Option<String> {
     if !output.status.success() {
         return None;
     }
-    let body = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    (!body.is_empty()).then_some(body)
+    parse_release_notes(&String::from_utf8_lossy(&output.stdout))
+}
+
+#[derive(Deserialize)]
+struct GhReleaseView {
+    body: String,
+    url: String,
+}
+
+/// `gh release view --json body,url` の出力から [`ReleaseNotes`] を作る。本文が空なら
+/// 要約する材料が無いので `None` にする。
+fn parse_release_notes(raw: &str) -> Option<ReleaseNotes> {
+    let view: GhReleaseView = serde_json::from_str(raw.trim()).ok()?;
+    let body = view.body.trim().to_string();
+    (!body.is_empty()).then_some(ReleaseNotes {
+        body,
+        url: view.url,
+    })
 }
 
 #[derive(Deserialize)]
@@ -188,5 +212,27 @@ mod tests {
     #[test]
     fn malformed_url_is_none() {
         assert_eq!(parse_owner_repo("https://github.com/owner-only"), None);
+    }
+
+    #[test]
+    fn parses_release_notes() {
+        let raw = r#"{"body":"What's Changed","url":"https://github.com/rustsec/rustsec/releases/tag/v1.0.0"}"#;
+        let got = parse_release_notes(raw).unwrap();
+        assert_eq!(got.body, "What's Changed");
+        assert_eq!(
+            got.url,
+            "https://github.com/rustsec/rustsec/releases/tag/v1.0.0"
+        );
+    }
+
+    #[test]
+    fn empty_body_is_none() {
+        let raw = r#"{"body":"","url":"https://github.com/rustsec/rustsec/releases/tag/v1.0.0"}"#;
+        assert!(parse_release_notes(raw).is_none());
+    }
+
+    #[test]
+    fn invalid_release_json_is_none() {
+        assert!(parse_release_notes("not json").is_none());
     }
 }

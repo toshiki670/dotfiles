@@ -24,7 +24,7 @@ const MISE_JSON: &str = r#"{"jq":{"name":"jq","requested":"1.6","current":"1.6",
 const CARGO_TABLE: &str =
     "Package      Installed  Latest   Needs update\ncargo-audit  v0.17.0    v0.18.0  Yes";
 const CRATES_IO_JSON: &str = r#"{"crate":{"repository":"https://github.com/rustsec/rustsec"}}"#;
-const GH_RELEASE_BODY: &str = "## What's Changed\n\n* Fix bug X";
+const GH_RELEASE_JSON: &str = r#"{"body":"What's Changed\n\n* Fix bug X","url":"https://github.com/rustsec/rustsec/releases/tag/v1.0.0"}"#;
 const CLAUDE_SUMMARY_JSON: &str =
     r#"{"type":"result","is_error":false,"structured_output":{"summary":"新機能Xを追加"}}"#;
 const CLAUDE_ERROR_JSON: &str = r#"{"is_error":true,"errors":["boom"]}"#;
@@ -184,7 +184,7 @@ fn explain_summarizes_cargo_package() {
     let fx = fixture();
     fx.cargo_stub();
     fx.stub_stdout("curl", "CRATES_IO_JSON")
-        .stub_stdout("gh", "GH_RELEASE_BODY")
+        .stub_stdout("gh", "GH_RELEASE_JSON")
         .stub_stdout("claude", "CLAUDE_JSON");
 
     outdated()
@@ -192,11 +192,14 @@ fn explain_summarizes_cargo_package() {
         .env("PATH", &fx.bin)
         .env("CARGO_TABLE", CARGO_TABLE)
         .env("CRATES_IO_JSON", CRATES_IO_JSON)
-        .env("GH_RELEASE_BODY", GH_RELEASE_BODY)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success()
-        .stdout(predicate::str::contains("要約: 新機能Xを追加"));
+        .stdout(predicate::str::contains("要約: 新機能Xを追加"))
+        .stdout(predicate::str::contains(
+            "出典: https://github.com/rustsec/rustsec/releases/tag/v1.0.0",
+        ));
 }
 
 #[test]
@@ -239,7 +242,7 @@ fn explain_shows_generation_failed_when_claude_errors() {
     let fx = fixture();
     fx.cargo_stub();
     fx.stub_stdout("curl", "CRATES_IO_JSON")
-        .stub_stdout("gh", "GH_RELEASE_BODY")
+        .stub_stdout("gh", "GH_RELEASE_JSON")
         .stub_stdout("claude", "CLAUDE_JSON");
 
     outdated()
@@ -247,7 +250,7 @@ fn explain_shows_generation_failed_when_claude_errors() {
         .env("PATH", &fx.bin)
         .env("CARGO_TABLE", CARGO_TABLE)
         .env("CRATES_IO_JSON", CRATES_IO_JSON)
-        .env("GH_RELEASE_BODY", GH_RELEASE_BODY)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
         .env("CLAUDE_JSON", CLAUDE_ERROR_JSON)
         .assert()
         .success()

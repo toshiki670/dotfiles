@@ -15,7 +15,9 @@ pub fn format_package_line(pkg: &OutdatedPackage, explanation: Option<&Explanati
 
     match explanation {
         None => base,
-        Some(Explanation::Summary(text)) => format!("{base}\n    要約: {text}"),
+        Some(Explanation::Summary { text, source_url }) => {
+            format!("{base}\n    要約: {text}\n    出典: {source_url}")
+        }
         Some(Explanation::Unavailable) => format!("{base}\n    変更内容不明"),
         Some(Explanation::GenerationFailed) => format!("{base}\n    要約失敗（claude 生成エラー）"),
     }
@@ -45,8 +47,15 @@ mod tests {
 
     #[test]
     fn with_summary() {
-        let got = format_package_line(&sample(), Some(&Explanation::Summary("新機能追加".into())));
-        assert_eq!(got, "[brew] bat: 0.24.0 -> 0.25.0\n    要約: 新機能追加");
+        let explanation = Explanation::Summary {
+            text: "新機能追加".into(),
+            source_url: "https://github.com/sharkdp/bat/releases/tag/v0.25.0".into(),
+        };
+        let got = format_package_line(&sample(), Some(&explanation));
+        assert_eq!(
+            got,
+            "[brew] bat: 0.24.0 -> 0.25.0\n    要約: 新機能追加\n    出典: https://github.com/sharkdp/bat/releases/tag/v0.25.0"
+        );
     }
 
     #[test]
