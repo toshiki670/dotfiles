@@ -9,8 +9,7 @@ description: "Dependabot 等が作成した依存更新 PR(`label:dependencies s
 
 ## 前提
 
-- Issue #611(`plist` crate 1.10.0 の `plist_dict!` マクロ採用)は、この基準で実際に起票された先行 Issue の具体例で、本文の構成の参考にする。
-- 脆弱性・バグ修正は「PR マージだけで解決するなら Issue 不要」(ユーザー判断)。バージョンアップのみで足りることが多いが、常にそうとは限らないため、追加対応が要るかは都度確認する。
+脆弱性・バグ修正は「PR マージだけで解決するなら Issue 不要」(ユーザー判断)。バージョンアップのみで足りることが多いが、常にそうとは限らないため、追加対応が要るかは都度確認する。
 
 ## 手順
 
@@ -26,8 +25,6 @@ description: "Dependabot 等が作成した依存更新 PR(`label:dependencies s
 7. 承認を得たら `gh issue create --repo toshiki670/dotfiles --label <ラベル> --title ... --body ...` で起票する。ラベルは finding の種類に対応するもの(新機能なら `enhancement`、バグ修正/脆弱性対応なら `bug` 等)を選び、`gh label list --repo toshiki670/dotfiles` で実在を確認してから使う。
 
 ## Issue 本文の構成
-
-Issue #611 の構成に揃える。
 
 - 背景: どの PR・依存・バージョンの Changelog に何が書かれていたか。
 - 対象: このリポジトリのどのコードが対応する(または対応しうる)か。
