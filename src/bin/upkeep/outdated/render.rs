@@ -3,7 +3,7 @@
 use super::explain::Explanation;
 use super::package::OutdatedPackage;
 
-/// `[source] name: current -> latest` の1行。`--explain` 時は解説を2行目に足す。
+/// `[source] name: current -> latest` の1行。`--explain` 時は解説を続く行に足す。
 pub fn format_package_line(pkg: &OutdatedPackage, explanation: Option<&Explanation>) -> String {
     let base = format!(
         "[{}] {}: {} -> {}",

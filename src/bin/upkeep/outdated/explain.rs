@@ -22,7 +22,7 @@ pub enum Explanation {
     Summary { text: String, source_url: String },
 }
 
-/// GitHub の1リリース。本文と、そのリリースページの URL を対で持つ。
+/// GitHub の1リリース（本文とページ URL）。
 struct ReleaseNotes {
     body: String,
     url: String,
@@ -130,8 +130,6 @@ struct CrateInfo {
 }
 
 /// crates.io レスポンスから `repository` を取り出す。
-///
-/// `crate` は Rust の予約語なので `#[serde(rename = "crate")]` でフィールド名をずらす。
 fn extract_repository_url(raw: &str) -> Option<String> {
     serde_json::from_str::<CrateResponse>(raw)
         .ok()?

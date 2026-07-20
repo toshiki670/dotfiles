@@ -1,11 +1,5 @@
 //! `outdated` の E2E（実バイナリ + スタブ PM/外部コマンドで検証）。
 //!
-//! 検証: `--help`/`--version`、PM 個別/複数該当時の一覧表示、該当なしメッセージ、
-//! `cargo` はあるが `cargo-install-update` 不在で cargo ステップをスキップ、
-//! `--explain`（claude 不在で警告フォールバック、cargo 対象の要約成功、brew/mise 対象は
-//! 「変更内容不明」、`gh release view` 失敗時の「変更内容不明」、claude 生成失敗時の
-//! 「要約失敗」）。
-//!
 //! 外部コマンド（brew/mise/cargo/curl/gh/claude）は環境変数の中身をそのまま stdout に
 //! 返すスタブ（[`stdout_stub_body`]）で差し替える。
 

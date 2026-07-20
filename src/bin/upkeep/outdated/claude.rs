@@ -1,8 +1,5 @@
 //! `--explain` 用の `claude -p` 要約呼び出し。
 //!
-//! gcm の `claude.rs`/`proposals.rs` と同じ envelope デコードパターンを使うが、bin 間で
-//! 共有する lib が無い設計のため、この bin 専用に再実装する。
-//!
 //! モデルは `sonnet` 固定にする。`--explain` は opt-in かつ対象は「更新可能な cargo
 //! パッケージ」のみ（呼び出し頻度が低くコスト差は無視できる）である一方、要約はアップ
 //! グレードして安全かを判断する材料になるため、breaking change 等の見落としの実害が
