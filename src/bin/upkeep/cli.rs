@@ -8,7 +8,7 @@ use std::io;
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 
-use super::{cleanup, doctor, upgrade};
+use super::{cleanup, doctor, outdated, upgrade};
 
 #[derive(Parser)]
 #[command(
@@ -38,6 +38,12 @@ enum Commands {
     Upgrade,
     /// brew / mise の健全性を診断する。
     Doctor,
+    /// brew / mise / cargo でアップデート可能なパッケージを一覧表示する。
+    Outdated {
+        /// 取得できたリリースノートを claude -p で日本語要約する（機械的に解決できるのは基本的に cargo バイナリのみ）。
+        #[arg(long)]
+        explain: bool,
+    },
 }
 
 /// CLI を解析し、サブコマンドへディスパッチする。
@@ -56,6 +62,7 @@ pub fn run() {
         Some(Commands::Cleanup { dry_run }) => cleanup::run(dry_run),
         Some(Commands::Upgrade) => upgrade::run(),
         Some(Commands::Doctor) => doctor::run(),
+        Some(Commands::Outdated { explain }) => outdated::run(explain),
         None => {
             let _ = Cli::command().print_help();
         }

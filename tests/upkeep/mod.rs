@@ -18,6 +18,7 @@ use std::path::Path;
 
 mod cleanup;
 mod doctor;
+mod outdated;
 mod upgrade;
 
 /// 実在しない PATH（外部コマンドを「不在」にするため）。
@@ -47,4 +48,14 @@ pub(crate) fn write_stubs(bin: &Path, names: &[&str]) {
     for name in names {
         write_exec(bin, name, &stub_body(name));
     }
+}
+
+/// 呼び出しを記録せず、指定した環境変数の中身をそのまま stdout に出すスタブ本体
+/// （`tests/gcm/mod.rs` の `CLAUDE_STUB` と同じ手法の一般化）。
+///
+/// stdin は読み捨てる: 呼び出し元が `Stdio::piped()` で書き込んで閉じるケース
+/// （claude 要約）でも、`Command::output()` の既定（stdin は null）のケース
+/// （brew/mise/cargo/curl/gh）でも、どちらでも安全にブロックせず終わる。
+pub(crate) fn stdout_stub_body(env_var: &str) -> String {
+    format!("#!/bin/sh\ncat >/dev/null\nprintf '%s\\n' \"${env_var}\"\n")
 }
