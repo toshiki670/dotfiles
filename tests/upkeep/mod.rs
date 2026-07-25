@@ -59,3 +59,16 @@ pub(crate) fn write_stubs(bin: &Path, names: &[&str]) {
 pub(crate) fn stdout_stub_body(env_var: &str) -> String {
     format!("#!/bin/sh\ncat >/dev/null\nprintf '%s\\n' \"${env_var}\"\n")
 }
+
+/// 第1引数（サブコマンド）で分岐して、対応する環境変数の中身を stdout に出すスタブ本体。
+///
+/// `brew outdated` と `brew info`、`mise outdated` と `mise tool` のように、同じコマンドが
+/// 引数違いで複数回呼ばれるものを1つのスタブで賄う。どの分岐にも一致しない呼び出しは
+/// exit 1 にして、テストが意図しない引数で呼んでいることに気づけるようにする。
+pub(crate) fn dispatch_stub_body(cases: &[(&str, &str)]) -> String {
+    let arms: String = cases
+        .iter()
+        .map(|(subcommand, env_var)| format!("  {subcommand}) printf '%s\\n' \"${env_var}\" ;;\n"))
+        .collect();
+    format!("#!/bin/sh\ncat >/dev/null\ncase \"$1\" in\n{arms}  *) exit 1 ;;\nesac\n")
+}

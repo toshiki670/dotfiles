@@ -11,10 +11,14 @@ use predicates::prelude::*;
 use rstest::rstest;
 use tempfile::TempDir;
 
-use crate::{EMPTY_PATH, stdout_stub_body, stub_body, write_exec};
+use crate::{EMPTY_PATH, dispatch_stub_body, stdout_stub_body, stub_body, write_exec};
 
 const BREW_JSON: &str = r#"{"formulae":[{"name":"bat","installed_versions":["0.24.0"],"current_version":"0.25.0","pinned":false,"pinned_version":null}],"casks":[]}"#;
 const MISE_JSON: &str = r#"{"jq":{"name":"jq","requested":"1.6","current":"1.6","bump":"1.8","latest":"1.8.2","source":{"type":"mise.toml","path":"/tmp/mise.toml"}}}"#;
+const BREW_INFO_JSON: &str = r#"{"formulae":[{"homepage":"https://github.com/sharkdp/bat","urls":{"stable":{"url":"https://github.com/sharkdp/bat/archive/refs/tags/v0.26.1.tar.gz"}}}],"casks":[]}"#;
+const BREW_INFO_NON_GITHUB_JSON: &str = r#"{"formulae":[{"homepage":"https://ffmpeg.org/","urls":{"stable":{"url":"https://ffmpeg.org/releases/ffmpeg-8.0.tar.xz"}}}],"casks":[]}"#;
+const MISE_TOOL_AQUA_JSON: &str = r#"{"backend":"aqua:jqlang/jq"}"#;
+const MISE_TOOL_PLUGIN_JSON: &str = r#"{"backend":"asdf:mise-plugins/asdf-jq"}"#;
 const CARGO_TABLE: &str =
     "Package      Installed  Latest   Needs update\ncargo-audit  v0.17.0    v0.18.0  Yes";
 const CRATES_IO_JSON: &str = r#"{"crate":{"repository":"https://github.com/rustsec/rustsec"}}"#;
@@ -46,6 +50,12 @@ impl Fixture {
     /// `name` を、環境変数 `env_var` の中身をそのまま返すスタブとして置く。
     fn stub_stdout(&self, name: &str, env_var: &str) -> &Self {
         write_exec(&self.bin, name, &stdout_stub_body(env_var));
+        self
+    }
+
+    /// `name` を、サブコマンドで返す環境変数を切り替えるスタブとして置く。
+    fn stub_dispatch(&self, name: &str, cases: &[(&str, &str)]) -> &Self {
+        write_exec(&self.bin, name, &dispatch_stub_body(cases));
         self
     }
 
@@ -83,7 +93,7 @@ fn no_updates_available() {
 #[test]
 fn lists_brew_only() {
     let fx = fixture();
-    fx.stub_stdout("brew", "BREW_JSON");
+    fx.stub_dispatch("brew", &[("outdated", "BREW_JSON")]);
 
     outdated()
         .env("PATH", &fx.bin)
@@ -96,7 +106,7 @@ fn lists_brew_only() {
 #[test]
 fn lists_mise_only() {
     let fx = fixture();
-    fx.stub_stdout("mise", "MISE_JSON");
+    fx.stub_dispatch("mise", &[("outdated", "MISE_JSON")]);
 
     outdated()
         .env("PATH", &fx.bin)
@@ -140,8 +150,8 @@ fn skips_cargo_when_install_update_missing() {
 #[test]
 fn lists_all_three_sources() {
     let fx = fixture();
-    fx.stub_stdout("brew", "BREW_JSON")
-        .stub_stdout("mise", "MISE_JSON")
+    fx.stub_dispatch("brew", &[("outdated", "BREW_JSON")])
+        .stub_dispatch("mise", &[("outdated", "MISE_JSON")])
         .cargo_stub();
 
     outdated()
@@ -159,7 +169,7 @@ fn lists_all_three_sources() {
 #[test]
 fn explain_without_claude_warns_and_falls_back() {
     let fx = fixture();
-    fx.stub_stdout("brew", "BREW_JSON");
+    fx.stub_dispatch("brew", &[("outdated", "BREW_JSON")]);
     // claude を置かない。
 
     outdated()
@@ -197,19 +207,116 @@ fn explain_summarizes_cargo_package() {
 }
 
 #[test]
-fn explain_shows_unavailable_for_non_cargo_source() {
+fn explain_summarizes_brew_package() {
     let fx = fixture();
-    fx.stub_stdout("brew", "BREW_JSON")
-        .stub_stdout("claude", "CLAUDE_JSON");
+    fx.stub_dispatch(
+        "brew",
+        &[("outdated", "BREW_JSON"), ("info", "BREW_INFO_JSON")],
+    )
+    .stub_stdout("gh", "GH_RELEASE_JSON")
+    .stub_stdout("claude", "CLAUDE_JSON");
 
     outdated()
         .arg("--explain")
         .env("PATH", &fx.bin)
         .env("BREW_JSON", BREW_JSON)
+        .env("BREW_INFO_JSON", BREW_INFO_JSON)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success()
-        .stdout(predicate::str::contains("変更内容不明"));
+        .stdout(predicate::str::contains("[brew] bat: 0.24.0 -> 0.25.0"))
+        .stdout(predicate::str::contains("要約: 新機能Xを追加"));
+}
+
+#[test]
+fn explain_summarizes_mise_tool_via_backend() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "mise",
+        &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
+    )
+    .stub_stdout("gh", "GH_RELEASE_JSON")
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("MISE_JSON", MISE_JSON)
+        .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("[mise] jq: 1.6 -> 1.8.2"))
+        .stdout(predicate::str::contains("要約: 新機能Xを追加"));
+}
+
+#[test]
+fn explain_shows_homepage_when_upstream_is_not_github() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "brew",
+        &[("outdated", "BREW_JSON"), ("info", "BREW_INFO_JSON")],
+    )
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("BREW_JSON", BREW_JSON)
+        .env("BREW_INFO_JSON", BREW_INFO_NON_GITHUB_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("変更内容不明"))
+        .stdout(predicate::str::contains("参考: https://ffmpeg.org/"));
+}
+
+#[test]
+fn explain_shows_bare_unavailable_when_backend_is_out_of_scope() {
+    let fx = fixture();
+    // asdf backend が名指すのはプラグインであってツール本体ではないので解決しない。
+    fx.stub_dispatch(
+        "mise",
+        &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
+    )
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("MISE_JSON", MISE_JSON)
+        .env("MISE_TOOL_JSON", MISE_TOOL_PLUGIN_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("変更内容不明"))
+        .stdout(predicate::str::contains("参考:").not());
+}
+
+#[test]
+fn explain_shows_repo_page_when_release_is_missing() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "mise",
+        &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
+    )
+    .stub("gh", FAILING_STUB)
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("MISE_JSON", MISE_JSON)
+        .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("変更内容不明"))
+        .stdout(predicate::str::contains(
+            "参考: https://github.com/jqlang/jq",
+        ));
 }
 
 #[test]
