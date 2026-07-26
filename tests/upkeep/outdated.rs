@@ -11,7 +11,10 @@ use predicates::prelude::*;
 use rstest::rstest;
 use tempfile::TempDir;
 
-use crate::{EMPTY_PATH, dispatch_stub_body, stdout_stub_body, stub_body, write_exec};
+use crate::{
+    EMPTY_PATH, dispatch_stub_body, recording_stdout_stub_body, stdout_stub_body, stub_body,
+    write_exec,
+};
 
 const BREW_JSON: &str = r#"{"formulae":[{"name":"bat","installed_versions":["0.24.0"],"current_version":"0.25.0","pinned":false,"pinned_version":null}],"casks":[]}"#;
 const MISE_JSON: &str = r#"{"jq":{"name":"jq","requested":"1.6","current":"1.6","bump":"1.8","latest":"1.8.2","source":{"type":"mise.toml","path":"/tmp/mise.toml"}}}"#;
@@ -23,8 +26,7 @@ const CARGO_TABLE: &str =
     "Package      Installed  Latest   Needs update\ncargo-audit  v0.17.0    v0.18.0  Yes";
 const CRATES_IO_JSON: &str = r#"{"crate":{"repository":"https://github.com/rustsec/rustsec"}}"#;
 const GH_RELEASE_JSON: &str = r#"{"body":"What's Changed\n\n* Fix bug X","url":"https://github.com/rustsec/rustsec/releases/tag/v1.0.0"}"#;
-const CLAUDE_SUMMARY_JSON: &str =
-    r#"{"type":"result","is_error":false,"structured_output":{"summary":"新機能Xを追加"}}"#;
+const CLAUDE_SUMMARY_JSON: &str = r#"{"type":"result","is_error":false,"structured_output":{"release_notes_ja":"新機能Xを追加"}}"#;
 const CLAUDE_ERROR_JSON: &str = r#"{"is_error":true,"errors":["boom"]}"#;
 const FAILING_STUB: &str = "#!/bin/sh\nexit 1\n";
 
@@ -37,19 +39,31 @@ fn outdated() -> Command {
 struct Fixture {
     _root: TempDir,
     bin: PathBuf,
+    log: PathBuf,
 }
 
 fn fixture() -> Fixture {
     let root = TempDir::new().unwrap();
     let bin = root.path().join("bin");
     fs::create_dir_all(&bin).unwrap();
-    Fixture { _root: root, bin }
+    let log = root.path().join("calls.log");
+    Fixture {
+        _root: root,
+        bin,
+        log,
+    }
 }
 
 impl Fixture {
     /// `name` を、環境変数 `env_var` の中身をそのまま返すスタブとして置く。
     fn stub_stdout(&self, name: &str, env_var: &str) -> &Self {
         write_exec(&self.bin, name, &stdout_stub_body(env_var));
+        self
+    }
+
+    /// `name` を、呼び出し引数を `$UPKEEP_LOG` に残す [`Fixture::stub_stdout`] として置く。
+    fn stub_stdout_recording(&self, name: &str, env_var: &str) -> &Self {
+        write_exec(&self.bin, name, &recording_stdout_stub_body(name, env_var));
         self
     }
 
@@ -203,6 +217,80 @@ fn explain_summarizes_cargo_package() {
         .stdout(predicate::str::contains("要約: 新機能Xを追加"))
         .stdout(predicate::str::contains(
             "出典: https://github.com/rustsec/rustsec/releases/tag/v1.0.0",
+        ));
+}
+
+/// 要約の呼び出しは、呼び出し元の設定とツールを持ち込まない形で行う。持ち込むと要約では
+/// なく「要約して回答した」という行為の報告が返るため、この引数自体が修正の本体になる。
+#[test]
+fn explain_isolates_the_claude_invocation() {
+    let fx = fixture();
+    fx.cargo_stub();
+    fx.stub_stdout("curl", "CRATES_IO_JSON")
+        .stub_stdout("gh", "GH_RELEASE_JSON")
+        .stub_stdout_recording("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("UPKEEP_LOG", &fx.log)
+        .env("CARGO_TABLE", CARGO_TABLE)
+        .env("CRATES_IO_JSON", CRATES_IO_JSON)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success();
+
+    let log = fs::read_to_string(&fx.log).unwrap_or_default();
+    for expected in ["--safe-mode", "--tools", "release_notes_ja"] {
+        assert!(log.contains(expected), "missing {expected}:\n{log}");
+    }
+}
+
+/// 解説付きは1件が複数行になるので、パッケージ同士は空行で区切る。
+#[test]
+fn explain_separates_packages_with_a_blank_line() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "brew",
+        &[("outdated", "BREW_JSON"), ("info", "BREW_INFO_JSON")],
+    )
+    .stub_dispatch(
+        "mise",
+        &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
+    )
+    .stub_stdout("gh", "GH_RELEASE_JSON")
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("BREW_JSON", BREW_JSON)
+        .env("BREW_INFO_JSON", BREW_INFO_JSON)
+        .env("MISE_JSON", MISE_JSON)
+        .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\n\n[mise] jq"));
+}
+
+/// 解説なしの一覧は1行ずつなので、空行で間延びさせない。
+#[test]
+fn list_without_explain_has_no_blank_lines_between_packages() {
+    let fx = fixture();
+    fx.stub_dispatch("brew", &[("outdated", "BREW_JSON")])
+        .stub_dispatch("mise", &[("outdated", "MISE_JSON")]);
+
+    outdated()
+        .env("PATH", &fx.bin)
+        .env("BREW_JSON", BREW_JSON)
+        .env("MISE_JSON", MISE_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "[brew] bat: 0.24.0 -> 0.25.0\n[mise] jq: 1.6 -> 1.8.2",
         ));
 }
 

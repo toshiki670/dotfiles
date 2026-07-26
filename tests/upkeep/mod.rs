@@ -60,6 +60,14 @@ pub(crate) fn stdout_stub_body(env_var: &str) -> String {
     format!("#!/bin/sh\ncat >/dev/null\nprintf '%s\\n' \"${env_var}\"\n")
 }
 
+/// [`stdout_stub_body`] に呼び出し引数の記録を足したもの。渡した引数そのものを検証したい
+/// ときだけ使う。
+pub(crate) fn recording_stdout_stub_body(name: &str, env_var: &str) -> String {
+    format!(
+        "#!/bin/sh\ncat >/dev/null\nprintf '{name} %s\\n' \"$*\" >> \"$UPKEEP_LOG\"\nprintf '%s\\n' \"${env_var}\"\n"
+    )
+}
+
 /// 第1引数（サブコマンド）で分岐して、対応する環境変数の中身を stdout に出すスタブ本体。
 ///
 /// `brew outdated` と `brew info`、`mise outdated` と `mise tool` のように、同じコマンドが

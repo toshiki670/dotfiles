@@ -1,9 +1,15 @@
 //! `--explain` 用の `claude -p` 要約呼び出し。
 //!
-//! モデルは `sonnet` 固定にする。`--explain` は opt-in かつ対象は「更新可能な cargo
-//! パッケージ」のみ（呼び出し頻度が低くコスト差は無視できる）である一方、要約はアップ
-//! グレードして安全かを判断する材料になるため、breaking change 等の見落としの実害が
-//! ある。この条件では低コストより要約精度を優先する。
+//! モデルは `sonnet` 固定にする。`--explain` は opt-in かつ対象は更新可能なパッケージ
+//! だけ（呼び出し頻度が低くコスト差は無視できる）である一方、要約はアップグレードして
+//! 安全かを判断する材料になるため、breaking change 等の見落としの実害がある。この条件
+//! では低コストより要約精度を優先する。
+//!
+//! 素朴に呼ぶと、リリースノートの中身ではなく「要約して回答した」という行為の報告が返る
+//! （同一入力の10試行で8件。毎回ではないので1回の実行では判定できない）。出力フィールドを
+//! 成果物で名指しする・`--tools` を空にする・`--safe-mode` で `~/.claude` とプロジェクト
+//! 設定の注入を止める、の3つがそれぞれ単独でほぼ抑えるので重ねてある。3つ目は要約を
+//! 呼び出し元の設定から切り離す意味もあり、入力トークンも半分になる。
 
 use std::io::Write;
 use std::process::{Command, Stdio};
@@ -21,8 +27,7 @@ Even if the text is a single terse line (e.g. one commit-message-like sentence),
 summarize that line as-is; do not refuse or comment on its format.";
 
 /// 構造化出力を強制するスキーマ。
-const OUTPUT_SCHEMA: &str =
-    r#"{"type":"object","properties":{"summary":{"type":"string"}},"required":["summary"]}"#;
+const OUTPUT_SCHEMA: &str = r#"{"type":"object","properties":{"release_notes_ja":{"type":"string"}},"required":["release_notes_ja"]}"#;
 
 /// リリースノート本文を claude -p で日本語要約する。
 ///
@@ -40,6 +45,9 @@ pub fn summarize(release_notes: &str) -> Option<String> {
             OUTPUT_SCHEMA,
             "--output-format",
             "json",
+            "--safe-mode",
+            "--tools",
+            "",
         ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -76,7 +84,7 @@ pub fn summarize(release_notes: &str) -> Option<String> {
     }
 }
 
-/// `--output-format json` の結果 envelope。`summary` フィールドだけ拾う。
+/// `--output-format json` の結果 envelope。要約本文だけ拾う。
 #[derive(Deserialize)]
 struct Envelope {
     is_error: bool,
@@ -88,7 +96,7 @@ struct Envelope {
 
 #[derive(Deserialize)]
 struct StructuredOutput {
-    summary: String,
+    release_notes_ja: String,
 }
 
 /// claude の envelope から要約テキストを取り出す。
@@ -106,7 +114,7 @@ fn parse_summary(raw: &str) -> Result<String, String> {
 
     envelope
         .structured_output
-        .map(|output| output.summary)
+        .map(|output| output.release_notes_ja)
         .ok_or_else(|| "missing structured_output".to_string())
 }
 
@@ -116,7 +124,7 @@ mod tests {
 
     #[test]
     fn parses_success_envelope() {
-        let raw = r#"{"type":"result","is_error":false,"structured_output":{"summary":"新機能Xを追加、バグYを修正"}}"#;
+        let raw = r#"{"type":"result","is_error":false,"structured_output":{"release_notes_ja":"新機能Xを追加、バグYを修正"}}"#;
         assert_eq!(parse_summary(raw).unwrap(), "新機能Xを追加、バグYを修正");
     }
 
