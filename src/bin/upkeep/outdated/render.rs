@@ -41,8 +41,8 @@ pub fn format_package_line(pkg: &OutdatedPackage, explanation: Option<&Explanati
             Some(url) => format!("{base}\n{INDENT}変更内容不明\n{INDENT}参考: {url}"),
             None => format!("{base}\n{INDENT}変更内容不明"),
         },
-        Some(Explanation::GenerationFailed) => {
-            format!("{base}\n{INDENT}要約失敗（claude 生成エラー）")
+        Some(Explanation::GenerationFailed { reason }) => {
+            format!("{base}\n{INDENT}要約失敗: {reason}")
         }
     }
 }
@@ -118,10 +118,13 @@ mod tests {
 
     #[test]
     fn with_generation_failed() {
-        let got = format_package_line(&sample(), Some(&Explanation::GenerationFailed));
+        let explanation = Explanation::GenerationFailed {
+            reason: "claude の出力が空でした".into(),
+        };
+        let got = format_package_line(&sample(), Some(&explanation));
         assert_eq!(
             got,
-            "[brew] bat: 0.24.0 -> 0.25.0\n    要約失敗（claude 生成エラー）"
+            "[brew] bat: 0.24.0 -> 0.25.0\n    要約失敗: claude の出力が空でした"
         );
     }
 }

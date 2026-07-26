@@ -30,6 +30,30 @@ const CLAUDE_SUMMARY_JSON: &str = r#"{"type":"result","is_error":false,"structur
 const CLAUDE_ERROR_JSON: &str = r#"{"is_error":true,"errors":["boom"]}"#;
 const FAILING_STUB: &str = "#!/bin/sh\nexit 1\n";
 
+/// `sleep` を使うスタブ本体を組み立てる。テストの PATH はスタブディレクトリだけに絞って
+/// あるので、スタブ自身が `sleep` を引ける PATH をここで補う。
+fn sleeping_stub_body(body: &str) -> String {
+    format!("#!/bin/sh\nPATH=/usr/bin:/bin\nexport PATH\ncat >/dev/null\n{body}")
+}
+
+/// brew 側（`sharkdp/bat`）のリリース取得だけを遅らせる `gh`。
+fn slow_for_brew_gh_stub() -> String {
+    sleeping_stub_body(concat!(
+        "case \"$*\" in\n  *sharkdp/bat*) sleep 0.5 ;;\nesac\n",
+        "printf '%s\\n' \"$GH_RELEASE_JSON\"\n"
+    ))
+}
+
+/// 呼び出しの開始と終了を `$UPKEEP_LOG` に刻む `gh`。区間が重なるかで並行性を見る。
+fn overlap_probe_gh_stub() -> String {
+    sleeping_stub_body(concat!(
+        "printf 'start\\n' >> \"$UPKEEP_LOG\"\n",
+        "sleep 0.5\n",
+        "printf 'end\\n' >> \"$UPKEEP_LOG\"\n",
+        "printf '%s\\n' \"$GH_RELEASE_JSON\"\n"
+    ))
+}
+
 fn outdated() -> Command {
     let mut cmd = Command::cargo_bin("upkeep").unwrap();
     cmd.arg("outdated");
@@ -443,5 +467,77 @@ fn explain_shows_generation_failed_when_claude_errors() {
         .env("CLAUDE_JSON", CLAUDE_ERROR_JSON)
         .assert()
         .success()
-        .stdout(predicate::str::contains("要約失敗（claude 生成エラー）"));
+        .stdout(predicate::str::contains("要約失敗: boom"));
+}
+
+/// 並行に解決すると完了順はばらつく。表示は検出順（brew → mise）に固定する。
+#[test]
+fn explain_keeps_detection_order_when_resolution_finishes_out_of_order() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "brew",
+        &[("outdated", "BREW_JSON"), ("info", "BREW_INFO_JSON")],
+    )
+    .stub_dispatch(
+        "mise",
+        &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
+    )
+    // 先に検出される brew のリリース取得だけを遅らせ、mise を先に完了させる。
+    .stub("gh", &slow_for_brew_gh_stub())
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    let assert = outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("BREW_JSON", BREW_JSON)
+        .env("BREW_INFO_JSON", BREW_INFO_JSON)
+        .env("MISE_JSON", MISE_JSON)
+        .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8_lossy(&assert.get_output().stdout).into_owned();
+    let brew = stdout.find("[brew] bat").expect("brew line missing");
+    let mise = stdout.find("[mise] jq").expect("mise line missing");
+    assert!(brew < mise, "detection order not preserved:\n{stdout}");
+}
+
+/// パッケージ間に依存は無いので、解決は重ねて走らせる。
+#[test]
+fn explain_resolves_packages_concurrently() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "brew",
+        &[("outdated", "BREW_JSON"), ("info", "BREW_INFO_JSON")],
+    )
+    .stub_dispatch(
+        "mise",
+        &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
+    )
+    .stub("gh", &overlap_probe_gh_stub())
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("UPKEEP_LOG", &fx.log)
+        .env("BREW_JSON", BREW_JSON)
+        .env("BREW_INFO_JSON", BREW_INFO_JSON)
+        .env("MISE_JSON", MISE_JSON)
+        .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success();
+
+    // 直列なら start,end,start,end になる。重なっていれば両方の start が先に並ぶ。
+    let log = fs::read_to_string(&fx.log).unwrap_or_default();
+    let events: Vec<&str> = log.lines().collect();
+    assert_eq!(
+        events,
+        ["start", "start", "end", "end"],
+        "gh calls did not overlap:\n{log}"
+    );
 }
