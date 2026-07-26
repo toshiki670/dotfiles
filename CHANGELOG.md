@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.71.7] - 2026-07-26
+### Features
+- Outdated --explain のリリースノート解決を brew / mise へ広げる ([#673](https://github.com/toshiki670/dotfiles/pull/673)) ([`e9f2a0b`](https://github.com/toshiki670/dotfiles/commit/e9f2a0b60b621ba0dc9975c25f68399d4c4f9aee))
+### Fixes
+- Outdated --explain の要約が行為の報告になるのを直す ([#674](https://github.com/toshiki670/dotfiles/pull/674)) ([`d0534d1`](https://github.com/toshiki670/dotfiles/commit/d0534d118738bf3151b4e1f5a646e07132a3e190))
+### Performance
+- Outdated --explain の解決を並行化する ([#676](https://github.com/toshiki670/dotfiles/pull/676)) ([`afeb0c0`](https://github.com/toshiki670/dotfiles/commit/afeb0c03abdeb8c32a2dfc7c28b3ce3baf3f3e79))
+
+
 ## [0.71.6] - 2026-07-20
 ### Features
 - Outdated サブコマンドで更新可能なパッケージを一覧表示する ([#668](https://github.com/toshiki670/dotfiles/pull/668)) ([`f02a728`](https://github.com/toshiki670/dotfiles/commit/f02a728941c90d2d9b19ea0d03cfa685b0f7cd0b))
