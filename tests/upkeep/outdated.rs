@@ -23,8 +23,7 @@ const CARGO_TABLE: &str =
     "Package      Installed  Latest   Needs update\ncargo-audit  v0.17.0    v0.18.0  Yes";
 const CRATES_IO_JSON: &str = r#"{"crate":{"repository":"https://github.com/rustsec/rustsec"}}"#;
 const GH_RELEASE_JSON: &str = r#"{"body":"What's Changed\n\n* Fix bug X","url":"https://github.com/rustsec/rustsec/releases/tag/v1.0.0"}"#;
-const CLAUDE_SUMMARY_JSON: &str =
-    r#"{"type":"result","is_error":false,"structured_output":{"summary":"新機能Xを追加"}}"#;
+const CLAUDE_SUMMARY_JSON: &str = r#"{"type":"result","is_error":false,"structured_output":{"release_notes_ja":"新機能Xを追加"}}"#;
 const CLAUDE_ERROR_JSON: &str = r#"{"is_error":true,"errors":["boom"]}"#;
 const FAILING_STUB: &str = "#!/bin/sh\nexit 1\n";
 
