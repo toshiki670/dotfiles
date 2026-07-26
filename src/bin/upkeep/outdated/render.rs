@@ -18,7 +18,10 @@ pub fn format_package_line(pkg: &OutdatedPackage, explanation: Option<&Explanati
         Some(Explanation::Summary { text, source_url }) => {
             format!("{base}\n    要約: {text}\n    出典: {source_url}")
         }
-        Some(Explanation::Unavailable) => format!("{base}\n    変更内容不明"),
+        Some(Explanation::Unavailable { reference_url }) => match reference_url {
+            Some(url) => format!("{base}\n    変更内容不明\n    参考: {url}"),
+            None => format!("{base}\n    変更内容不明"),
+        },
         Some(Explanation::GenerationFailed) => format!("{base}\n    要約失敗（claude 生成エラー）"),
     }
 }
@@ -59,8 +62,23 @@ mod tests {
     }
 
     #[test]
-    fn with_unavailable() {
-        let got = format_package_line(&sample(), Some(&Explanation::Unavailable));
+    fn with_unavailable_and_reference() {
+        let explanation = Explanation::Unavailable {
+            reference_url: Some("https://ghostty.org/".into()),
+        };
+        let got = format_package_line(&sample(), Some(&explanation));
+        assert_eq!(
+            got,
+            "[brew] bat: 0.24.0 -> 0.25.0\n    変更内容不明\n    参考: https://ghostty.org/"
+        );
+    }
+
+    #[test]
+    fn with_unavailable_and_no_reference() {
+        let explanation = Explanation::Unavailable {
+            reference_url: None,
+        };
+        let got = format_package_line(&sample(), Some(&explanation));
         assert_eq!(got, "[brew] bat: 0.24.0 -> 0.25.0\n    変更内容不明");
     }
 

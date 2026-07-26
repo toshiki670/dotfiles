@@ -1,10 +1,11 @@
-//! `brew outdated --json=v2` の検出。formulae/casks は同一シェイプなので共通デコードする。
+//! `brew outdated --json=v2` の検出と、`brew info --json=v2` からの上流解決。
 
 use std::process::Command;
 
 use serde::Deserialize;
 
 use super::package::{OutdatedPackage, Source};
+use super::upstream::{Repo, Upstream};
 
 #[derive(Deserialize)]
 struct BrewOutdatedV2 {
@@ -67,9 +68,95 @@ pub fn detect() -> Vec<OutdatedPackage> {
     }
 }
 
+#[derive(Deserialize)]
+struct BrewInfoV2 {
+    #[serde(default)]
+    formulae: Vec<FormulaInfo>,
+    #[serde(default)]
+    casks: Vec<CaskInfo>,
+}
+
+#[derive(Deserialize)]
+struct FormulaInfo {
+    homepage: Option<String>,
+    urls: Option<FormulaUrls>,
+}
+
+#[derive(Deserialize)]
+struct FormulaUrls {
+    stable: Option<FormulaUrl>,
+}
+
+#[derive(Deserialize)]
+struct FormulaUrl {
+    url: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct CaskInfo {
+    homepage: Option<String>,
+    url: Option<String>,
+}
+
+/// `brew info --json=v2` の stdout から上流を組み立てる。
+///
+/// リポジトリは配布物 URL → homepage の順に GitHub を探す。cask の homepage は製品サイト
+/// （`https://codexbar.app/`）でリポジトリを指さないことが多い一方、配布物 URL は
+/// GitHub リリース資産を直に指すため、配布物 URL を先に見る。
+fn parse_info(raw: &str) -> Upstream {
+    let Ok(info) = serde_json::from_str::<BrewInfoV2>(raw) else {
+        return Upstream::default();
+    };
+
+    let (homepage, download_url) = match (
+        info.formulae.into_iter().next(),
+        info.casks.into_iter().next(),
+    ) {
+        (Some(formula), _) => (
+            formula.homepage,
+            formula
+                .urls
+                .and_then(|urls| urls.stable)
+                .and_then(|stable| stable.url),
+        ),
+        (None, Some(cask)) => (cask.homepage, cask.url),
+        (None, None) => return Upstream::default(),
+    };
+
+    Upstream {
+        repo: download_url
+            .as_deref()
+            .and_then(Repo::from_url)
+            .or_else(|| homepage.as_deref().and_then(Repo::from_url)),
+        homepage,
+    }
+}
+
+/// formula/cask のメタデータから上流を引く。
+///
+/// 実行失敗（未知のパッケージ等）は解決なしとして扱う（呼び出し元は要約なしで続行する）。
+pub fn upstream(name: &str) -> Upstream {
+    let output = match Command::new("brew")
+        .args(["info", "--json=v2", name])
+        .output()
+    {
+        Ok(output) if output.status.success() => output,
+        _ => return Upstream::default(),
+    };
+
+    parse_info(&String::from_utf8_lossy(&output.stdout))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn repo(owner: &str, name: &str) -> Option<Repo> {
+        Some(Repo {
+            owner: owner.to_string(),
+            name: name.to_string(),
+        })
+    }
 
     #[test]
     fn parses_formulae_and_casks() {
@@ -119,5 +206,63 @@ mod tests {
     #[test]
     fn invalid_json_is_error() {
         assert!(parse("not json at all").is_err());
+    }
+
+    #[test]
+    fn formula_resolves_repo_from_stable_url() {
+        let raw = r#"{"formulae":[{"homepage":"https://github.com/sharkdp/bat","urls":{"stable":{"url":"https://github.com/sharkdp/bat/archive/refs/tags/v0.26.1.tar.gz"}}}],"casks":[]}"#;
+        let got = parse_info(raw);
+        assert_eq!(got.repo, repo("sharkdp", "bat"));
+        assert_eq!(
+            got.homepage.as_deref(),
+            Some("https://github.com/sharkdp/bat")
+        );
+    }
+
+    #[test]
+    fn cask_resolves_repo_from_download_url_not_product_site() {
+        let raw = r#"{"formulae":[],"casks":[{"homepage":"https://codexbar.app/","url":"https://github.com/steipete/CodexBar/releases/download/v0.45.2/CodexBar-macos-universal-0.45.2.zip"}]}"#;
+        let got = parse_info(raw);
+        assert_eq!(got.repo, repo("steipete", "CodexBar"));
+        assert_eq!(got.homepage.as_deref(), Some("https://codexbar.app/"));
+    }
+
+    #[test]
+    fn falls_back_to_homepage_when_download_url_is_not_github() {
+        let raw = r#"{"formulae":[{"homepage":"https://github.com/owner/repo","urls":{"stable":{"url":"https://mirror.example.com/pkg-1.0.tar.gz"}}}],"casks":[]}"#;
+        assert_eq!(parse_info(raw).repo, repo("owner", "repo"));
+    }
+
+    #[test]
+    fn non_github_upstream_keeps_homepage_without_repo() {
+        let raw = r#"{"formulae":[{"homepage":"https://ffmpeg.org/","urls":{"stable":{"url":"https://ffmpeg.org/releases/ffmpeg-8.0.tar.xz"}}}],"casks":[]}"#;
+        let got = parse_info(raw);
+        assert_eq!(got.repo, None);
+        assert_eq!(got.homepage.as_deref(), Some("https://ffmpeg.org/"));
+    }
+
+    #[test]
+    fn formula_wins_when_a_name_matches_both_kinds() {
+        let raw = r#"{"formulae":[{"homepage":"https://github.com/owner/formula","urls":null}],"casks":[{"homepage":"https://github.com/owner/cask","url":null}]}"#;
+        assert_eq!(parse_info(raw).repo, repo("owner", "formula"));
+    }
+
+    #[test]
+    fn missing_urls_falls_back_to_homepage() {
+        let raw = r#"{"formulae":[{"homepage":"https://github.com/owner/repo"}],"casks":[]}"#;
+        assert_eq!(parse_info(raw).repo, repo("owner", "repo"));
+    }
+
+    #[test]
+    fn empty_info_resolves_nothing() {
+        assert_eq!(
+            parse_info(r#"{"formulae":[],"casks":[]}"#),
+            Upstream::default()
+        );
+    }
+
+    #[test]
+    fn invalid_info_json_resolves_nothing() {
+        assert_eq!(parse_info("not json at all"), Upstream::default());
     }
 }

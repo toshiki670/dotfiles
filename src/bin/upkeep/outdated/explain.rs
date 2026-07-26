@@ -1,20 +1,16 @@
-//! `--explain` のリポジトリ解決とリリースノート要約。
+//! `--explain` の解決フロー: 上流の特定 → リリースノート取得 → 要約。
 //!
-//! 機械的にリポジトリを特定できるのは cargo バイナリ（crates.io の `repository` から
-//! GitHub リポジトリを特定できる）だけ。brew（formula/cask）・mise backend は解決を
-//! 試みず、常に [`Explanation::Unavailable`] を返す（過剰な推測はしない）。
-
-use std::process::Command;
-
-use serde::Deserialize;
+//! 上流の特定はパッケージマネージャ自身のメタデータだけを使う（[`super::brew`] /
+//! [`super::mise`] / [`super::cargo`] の `upstream`）。推測や検索はしない。
 
 use super::package::{OutdatedPackage, Source};
+use super::release;
 
 /// 1 パッケージについて `--explain` を試みた結果。
 pub enum Explanation {
-    /// リリースノート本文を機械的に解決できなかった
-    /// （brew/mise は無条件、cargo でも repository 不明・GitHub 以外・本文取得失敗）。
-    Unavailable,
+    /// リリースノート本文を機械的に解決できなかった。`reference_url` は、それでも
+    /// 利用者が一次情報へ辿れるようメタデータから引けた URL。
+    Unavailable { reference_url: Option<String> },
     /// リリースノートは取得できたが claude による要約に失敗した。
     GenerationFailed,
     /// 要約成功。`source_url` は要約元のリリースページ
@@ -22,215 +18,26 @@ pub enum Explanation {
     Summary { text: String, source_url: String },
 }
 
-/// GitHub の1リリース（本文とページ URL）。
-struct ReleaseNotes {
-    body: String,
-    url: String,
-}
-
 /// パッケージのリリースノートを解決し、取得できれば claude で要約する。
-///
-/// cargo 以外は解決を試みず即 [`Explanation::Unavailable`] を返す。
 pub fn resolve(pkg: &OutdatedPackage) -> Explanation {
-    if pkg.source != Source::Cargo {
-        return Explanation::Unavailable;
-    }
-
-    let Some(release) = release_notes_for_cargo_package(&pkg.name) else {
-        return Explanation::Unavailable;
+    let upstream = match pkg.source {
+        Source::Brew => super::brew::upstream(&pkg.name),
+        Source::Mise => super::mise::upstream(&pkg.name),
+        Source::Cargo => super::cargo::upstream(&pkg.name),
     };
 
-    match super::claude::summarize(&release.body) {
+    let notes = upstream.repo.as_ref().and_then(release::fetch);
+    let Some(notes) = notes else {
+        return Explanation::Unavailable {
+            reference_url: upstream.reference_url(),
+        };
+    };
+
+    match super::claude::summarize(&notes.body) {
         Some(text) => Explanation::Summary {
             text,
-            source_url: release.url,
+            source_url: notes.url,
         },
         None => Explanation::GenerationFailed,
-    }
-}
-
-fn release_notes_for_cargo_package(name: &str) -> Option<ReleaseNotes> {
-    let raw = fetch_crate_metadata(name)?;
-    let repo_url = extract_repository_url(&raw)?;
-    let (owner, repo) = parse_owner_repo(&repo_url)?;
-    fetch_release_body(&owner, &repo)
-}
-
-/// crates.io にパッケージのメタデータを問い合わせる。`User-Agent` が無いと 403 になる。
-fn fetch_crate_metadata(name: &str) -> Option<String> {
-    let output = Command::new("curl")
-        .args([
-            "-sS",
-            "-f",
-            "--max-time",
-            "10",
-            "-H",
-            "User-Agent: dotfiles-upkeep (https://github.com/toshiki670/dotfiles)",
-            &format!("https://crates.io/api/v1/crates/{name}"),
-        ])
-        .output()
-        .ok()?;
-
-    output
-        .status
-        .success()
-        .then(|| String::from_utf8_lossy(&output.stdout).into_owned())
-}
-
-/// GitHub の最新リリース（タグ省略）の本文と URL を取得する。
-///
-/// `current`→`latest` 間に複数リリースがあっても集約はしない
-/// （crates.io のバージョン文字列と GitHub タグの命名規則を機械的に突き合わせる処理は
-/// 信頼できないため。直近の変更として最新リリース1件を要約すれば実用上十分）。
-fn fetch_release_body(owner: &str, repo: &str) -> Option<ReleaseNotes> {
-    let output = Command::new("gh")
-        .args([
-            "release",
-            "view",
-            "--repo",
-            &format!("{owner}/{repo}"),
-            "--json",
-            "body,url",
-        ])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-    parse_release_notes(&String::from_utf8_lossy(&output.stdout))
-}
-
-#[derive(Deserialize)]
-struct GhReleaseView {
-    body: String,
-    url: String,
-}
-
-/// `gh release view --json body,url` の出力から [`ReleaseNotes`] を作る。本文が空なら
-/// 要約する材料が無いので `None` にする。
-fn parse_release_notes(raw: &str) -> Option<ReleaseNotes> {
-    let view: GhReleaseView = serde_json::from_str(raw.trim()).ok()?;
-    let body = view.body.trim().to_string();
-    (!body.is_empty()).then_some(ReleaseNotes {
-        body,
-        url: view.url,
-    })
-}
-
-#[derive(Deserialize)]
-struct CrateResponse {
-    #[serde(rename = "crate")]
-    krate: CrateInfo,
-}
-
-#[derive(Deserialize)]
-struct CrateInfo {
-    repository: Option<String>,
-}
-
-/// crates.io レスポンスから `repository` を取り出す。
-fn extract_repository_url(raw: &str) -> Option<String> {
-    serde_json::from_str::<CrateResponse>(raw)
-        .ok()?
-        .krate
-        .repository
-}
-
-/// `https://github.com/<owner>/<repo>(.git)?(/...)?` から owner/repo を取り出す。
-///
-/// GitHub 以外のホスト（GitLab 等）は `None`（機械的に特定できない扱い）。
-fn parse_owner_repo(url: &str) -> Option<(String, String)> {
-    let rest = url.split("github.com/").nth(1)?;
-    let mut parts = rest.trim_end_matches('/').splitn(3, '/');
-    let owner = parts.next()?.to_string();
-    let repo = parts.next()?.trim_end_matches(".git").to_string();
-    (!owner.is_empty() && !repo.is_empty()).then_some((owner, repo))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn extracts_repository_url() {
-        let raw = r#"{"crate":{"repository":"https://github.com/rustsec/rustsec"}}"#;
-        assert_eq!(
-            extract_repository_url(raw),
-            Some("https://github.com/rustsec/rustsec".to_string())
-        );
-    }
-
-    #[test]
-    fn missing_repository_is_none() {
-        let raw = r#"{"crate":{}}"#;
-        assert_eq!(extract_repository_url(raw), None);
-    }
-
-    #[test]
-    fn null_repository_is_none() {
-        let raw = r#"{"crate":{"repository":null}}"#;
-        assert_eq!(extract_repository_url(raw), None);
-    }
-
-    #[test]
-    fn invalid_json_is_none() {
-        assert_eq!(extract_repository_url("not json"), None);
-    }
-
-    #[test]
-    fn parses_plain_github_url() {
-        assert_eq!(
-            parse_owner_repo("https://github.com/rustsec/rustsec"),
-            Some(("rustsec".to_string(), "rustsec".to_string()))
-        );
-    }
-
-    #[test]
-    fn parses_git_suffixed_url() {
-        assert_eq!(
-            parse_owner_repo("https://github.com/kbknapp/cargo-outdated.git"),
-            Some(("kbknapp".to_string(), "cargo-outdated".to_string()))
-        );
-    }
-
-    #[test]
-    fn parses_monorepo_subpath_url() {
-        assert_eq!(
-            parse_owner_repo("https://github.com/owner/monorepo/tree/main/crates/pkg"),
-            Some(("owner".to_string(), "monorepo".to_string()))
-        );
-    }
-
-    #[test]
-    fn non_github_host_is_none() {
-        assert_eq!(parse_owner_repo("https://gitlab.com/owner/repo"), None);
-    }
-
-    #[test]
-    fn malformed_url_is_none() {
-        assert_eq!(parse_owner_repo("https://github.com/owner-only"), None);
-    }
-
-    #[test]
-    fn parses_release_notes() {
-        let raw = r#"{"body":"What's Changed","url":"https://github.com/rustsec/rustsec/releases/tag/v1.0.0"}"#;
-        let got = parse_release_notes(raw).unwrap();
-        assert_eq!(got.body, "What's Changed");
-        assert_eq!(
-            got.url,
-            "https://github.com/rustsec/rustsec/releases/tag/v1.0.0"
-        );
-    }
-
-    #[test]
-    fn empty_body_is_none() {
-        let raw = r#"{"body":"","url":"https://github.com/rustsec/rustsec/releases/tag/v1.0.0"}"#;
-        assert!(parse_release_notes(raw).is_none());
-    }
-
-    #[test]
-    fn invalid_release_json_is_none() {
-        assert!(parse_release_notes("not json").is_none());
     }
 }

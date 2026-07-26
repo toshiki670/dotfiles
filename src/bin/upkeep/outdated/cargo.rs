@@ -1,4 +1,4 @@
-//! `cargo install-update --list` の検出。
+//! `cargo install-update --list` の検出と、crates.io からの上流解決。
 //!
 //! cargo は JSON 非対応なのでテーブル出力をパースする。ヘッダー行（先頭トークンが
 //! `"Package"`）より前に `Polling registry '...'.......` という進捗行が混ざる。
@@ -6,6 +6,8 @@
 use std::process::Command;
 
 use super::package::{OutdatedPackage, Source};
+use super::registry;
+use super::upstream::{Repo, Upstream};
 
 /// 2 個以上の連続空白で分割する。
 ///
@@ -89,6 +91,16 @@ pub fn detect() -> Vec<OutdatedPackage> {
     };
 
     parse(&String::from_utf8_lossy(&output.stdout))
+}
+
+/// crates.io が名指しする `repository` から上流を引く。
+pub fn upstream(name: &str) -> Upstream {
+    Upstream {
+        repo: registry::crates_io(name)
+            .as_deref()
+            .and_then(Repo::from_url),
+        homepage: None,
+    }
 }
 
 #[cfg(test)]
