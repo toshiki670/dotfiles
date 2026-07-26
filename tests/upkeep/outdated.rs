@@ -247,6 +247,53 @@ fn explain_isolates_the_claude_invocation() {
     }
 }
 
+/// 解説付きは1件が複数行になるので、パッケージ同士は空行で区切る。
+#[test]
+fn explain_separates_packages_with_a_blank_line() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "brew",
+        &[("outdated", "BREW_JSON"), ("info", "BREW_INFO_JSON")],
+    )
+    .stub_dispatch(
+        "mise",
+        &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
+    )
+    .stub_stdout("gh", "GH_RELEASE_JSON")
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("BREW_JSON", BREW_JSON)
+        .env("BREW_INFO_JSON", BREW_INFO_JSON)
+        .env("MISE_JSON", MISE_JSON)
+        .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
+        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\n\n[mise] jq"));
+}
+
+/// 解説なしの一覧は1行ずつなので、空行で間延びさせない。
+#[test]
+fn list_without_explain_has_no_blank_lines_between_packages() {
+    let fx = fixture();
+    fx.stub_dispatch("brew", &[("outdated", "BREW_JSON")])
+        .stub_dispatch("mise", &[("outdated", "MISE_JSON")]);
+
+    outdated()
+        .env("PATH", &fx.bin)
+        .env("BREW_JSON", BREW_JSON)
+        .env("MISE_JSON", MISE_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "[brew] bat: 0.24.0 -> 0.25.0\n[mise] jq: 1.6 -> 1.8.2",
+        ));
+}
+
 #[test]
 fn explain_summarizes_brew_package() {
     let fx = fixture();

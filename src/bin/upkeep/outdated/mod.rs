@@ -44,9 +44,14 @@ pub fn run(explain: bool) {
         eprintln!("⚠️  claude コマンドが見つかりません。要約なしで一覧のみ表示します。");
     }
 
-    for pkg in &packages {
+    for (i, pkg) in packages.iter().enumerate() {
         let explanation = attempt_explain.then(|| explain::resolve(pkg));
-        println!("{}", render::format_package_line(pkg, explanation.as_ref()));
+        let block = render::format_package_line(pkg, explanation.as_ref());
+        // 解説付きは1件が複数行になる。空行を挟まないとどこまでが1パッケージか読めない。
+        if attempt_explain && i > 0 {
+            println!();
+        }
+        println!("{block}");
     }
 
     header("Done");
