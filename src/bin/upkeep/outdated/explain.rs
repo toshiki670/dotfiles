@@ -11,8 +11,8 @@ pub enum Explanation {
     /// リリースノート本文を機械的に解決できなかった。`reference_url` は、それでも
     /// 利用者が一次情報へ辿れるようメタデータから引けた URL。
     Unavailable { reference_url: Option<String> },
-    /// リリースノートは取得できたが claude による要約に失敗した。
-    GenerationFailed,
+    /// リリースノートは取得できたが claude による要約に失敗した。`reason` は失敗の内訳。
+    GenerationFailed { reason: String },
     /// 要約成功。`source_url` は要約元のリリースページ
     /// （誤りが疑わしいときにユーザーが自分で一次情報を確認できるようにするため）。
     Summary { text: String, source_url: String },
@@ -34,10 +34,10 @@ pub fn resolve(pkg: &OutdatedPackage) -> Explanation {
     };
 
     match super::claude::summarize(&notes.body) {
-        Some(text) => Explanation::Summary {
+        Ok(text) => Explanation::Summary {
             text,
             source_url: notes.url,
         },
-        None => Explanation::GenerationFailed,
+        Err(reason) => Explanation::GenerationFailed { reason },
     }
 }

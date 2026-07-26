@@ -31,10 +31,10 @@ const OUTPUT_SCHEMA: &str = r#"{"type":"object","properties":{"release_notes_ja"
 
 /// リリースノート本文を claude -p で日本語要約する。
 ///
-/// `claude` の起動失敗・空出力・パース失敗はすべて警告して `None` を返す
-/// （呼び出し元は要約なしで続行する）。
-pub fn summarize(release_notes: &str) -> Option<String> {
-    let mut child = match Command::new("claude")
+/// 失敗しても標準エラーへは出さない。解決は複数パッケージ分が並行に走るので、ここで出すと
+/// どのパッケージの失敗か分からなくなる（呼び出し元がパッケージ行へ添えて表示する）。
+pub fn summarize(release_notes: &str) -> Result<String, String> {
+    let mut child = Command::new("claude")
         .args([
             "-p",
             "--model",
@@ -53,35 +53,22 @@ pub fn summarize(release_notes: &str) -> Option<String> {
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()
-    {
-        Ok(child) => child,
-        Err(_) => {
-            eprintln!(
-                "⚠️  要約の生成に失敗しました。claude コマンドが利用可能か確認してください。"
-            );
-            return None;
-        }
-    };
+        .map_err(|e| format!("claude を起動できませんでした: {e}"))?;
 
     if let Some(mut stdin) = child.stdin.take() {
         let _ = stdin.write_all(release_notes.as_bytes());
         // stdin はここで drop され閉じる。
     }
 
-    let output = child.wait_with_output().ok()?;
+    let output = child
+        .wait_with_output()
+        .map_err(|e| format!("claude の終了を待てませんでした: {e}"))?;
     let raw = String::from_utf8_lossy(&output.stdout).into_owned();
     if raw.trim().is_empty() {
-        eprintln!("⚠️  要約の生成に失敗しました。claude コマンドが利用可能か確認してください。");
-        return None;
+        return Err("claude の出力が空でした".to_string());
     }
 
-    match parse_summary(&raw) {
-        Ok(summary) => Some(summary),
-        Err(msg) => {
-            eprintln!("⚠️  要約の生成に失敗しました: {msg}");
-            None
-        }
-    }
+    parse_summary(&raw)
 }
 
 /// `--output-format json` の結果 envelope。要約本文だけ拾う。
