@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.71.8] - 2026-07-28
+### Features
+- Memory-tidy に feedback を抽象度で束ねる手順を追加する ([#680](https://github.com/toshiki670/dotfiles/pull/680)) ([`29ead04`](https://github.com/toshiki670/dotfiles/commit/29ead04d46b9872b644bf80a95fd1d58f4fd6097))
+### Fixes
+- Memory-tidy の安全性と索引形式を公式仕様に合わせる ([#682](https://github.com/toshiki670/dotfiles/pull/682)) ([`cb211be`](https://github.com/toshiki670/dotfiles/commit/cb211beeaa17e915615988ada8081ebf0b6ca93f))
+- Memory-tidy の [[link]] チェックがコードスパン内の記法を誤検出するのを直す ([#685](https://github.com/toshiki670/dotfiles/pull/685)) ([`4b9439f`](https://github.com/toshiki670/dotfiles/commit/4b9439faee3b45623c38e7aa756d76df4c56751e))
+
+
 ## [0.71.7] - 2026-07-26
 ### Features
 - Outdated --explain のリリースノート解決を brew / mise へ広げる ([#673](https://github.com/toshiki670/dotfiles/pull/673)) ([`e9f2a0b`](https://github.com/toshiki670/dotfiles/commit/e9f2a0b60b621ba0dc9975c25f68399d4c4f9aee))
