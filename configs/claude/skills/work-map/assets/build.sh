@@ -18,45 +18,45 @@ lib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 out="" content="" title="作業中の理解" graph="" series=""
 
 while [ $# -gt 0 ]; do
-	case "$1" in
-	-o)
-		out="$2"
-		shift 2
-		;;
-	-c)
-		content="$2"
-		shift 2
-		;;
-	-t)
-		title="$2"
-		shift 2
-		;;
-	-g)
-		graph="$2"
-		shift 2
-		;;
-	-s)
-		series="$2"
-		shift 2
-		;;
-	*)
-		echo "不明な引数: $1" >&2
-		exit 2
-		;;
-	esac
+  case "$1" in
+    -o)
+      out="$2"
+      shift 2
+      ;;
+    -c)
+      content="$2"
+      shift 2
+      ;;
+    -t)
+      title="$2"
+      shift 2
+      ;;
+    -g)
+      graph="$2"
+      shift 2
+      ;;
+    -s)
+      series="$2"
+      shift 2
+      ;;
+    *)
+      echo "不明な引数: $1" >&2
+      exit 2
+      ;;
+  esac
 done
 
 [ -n "$out" ] || {
-	echo "-o が必要" >&2
-	exit 2
+  echo "-o が必要" >&2
+  exit 2
 }
 [ -n "$content" ] || {
-	echo "-c が必要" >&2
-	exit 2
+  echo "-c が必要" >&2
+  exit 2
 }
 [ -f "$content" ] || {
-	echo "見つからない: $content" >&2
-	exit 2
+  echo "見つからない: $content" >&2
+  exit 2
 }
 
 tmp="$(mktemp)"
@@ -67,24 +67,24 @@ cat "$content" >>"$tmp"
 
 # dagre は有向グラフを描くときだけ埋める。ライセンス表示は MIT の義務。
 if [ -n "$graph" ]; then
-	{
-		printf '<script>\n'
-		cat "$lib/license-header.js"
-		cat "$lib/dagre.min.js"
-		printf '\n</script>\n<script>\n'
-		cat "$graph"
-		cat "$lib/render-graph.js"
-		printf '</script>\n'
-	} >>"$tmp"
+  {
+    printf '<script>\n'
+    cat "$lib/license-header.js"
+    cat "$lib/dagre.min.js"
+    printf '\n</script>\n<script>\n'
+    cat "$graph"
+    cat "$lib/render-graph.js"
+    printf '</script>\n'
+  } >>"$tmp"
 fi
 
 if [ -n "$series" ]; then
-	{
-		printf '<script>\n'
-		cat "$series"
-		cat "$lib/render-chart.js"
-		printf '</script>\n'
-	} >>"$tmp"
+  {
+    printf '<script>\n'
+    cat "$series"
+    cat "$lib/render-chart.js"
+    printf '</script>\n'
+  } >>"$tmp"
 fi
 
 cat "$lib/tail.html" >>"$tmp"
