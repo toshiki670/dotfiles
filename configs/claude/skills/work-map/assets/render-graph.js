@@ -1,4 +1,4 @@
-// 有向グラフを描く。座標は dagre、意匠はページ側の CSS 変数。
+// 有向グラフを描く。座標は dagre、見た目はページ側の CSS 変数。
 //
 // 呼び出し側が先に GRAPH を定義しておく:
 //   const GRAPH = {
@@ -7,7 +7,7 @@
 //     edges: [[fromId, toId]],
 //   };
 //
-// kind はページの状態語彙に対応する。settled = 確定した前提、'' = 導かれる帰結、open = 未確定。
+// kind はページの状態の区分に対応する。settled = 確定した前提、'' = 導かれる帰結、open = 未確定。
 
 (function () {
   const NW = 178, NH = 42;
