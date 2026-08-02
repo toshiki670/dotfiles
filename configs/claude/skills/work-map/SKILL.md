@@ -53,10 +53,10 @@ description: "/work-map で明示的に起動したときのみ使用する。�
 
 ### 3. ページを組み立てる
 
-`~/.claude/skills/work-map/assets/build.sh` で組み立てる。**ライブラリ本体はこのスクリプトが結合するので、コンテキストを通らない。**
+`assets/build.sh` で組み立てる。**ライブラリ本体はこのスクリプトが結合するので、コンテキストを通らない。** 配置されたファイルに実行ビットは付かないので `bash` 経由で呼ぶ。
 
 ```bash
-~/.claude/skills/work-map/assets/build.sh \
+bash ~/.claude/skills/work-map/assets/build.sh \
   -o ~/Claude/scratch/<題名>.html \
   -c <本文の断片> -t "<タイトル>" [-g <グラフデータ>] [-s <時系列データ>]
 ```
