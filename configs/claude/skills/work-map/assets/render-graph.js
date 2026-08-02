@@ -7,7 +7,7 @@
 //     edges: [[fromId, toId]],
 //   };
 //
-// kind はページの状態の区分に対応する。settled = 確定した前提、'' = 導かれる帰結、open = 未確定。
+// kind はページの状態語彙に対応する。settled = 確定した前提、'' = 導かれる帰結、open = 未確定。
 
 (function () {
   const NW = 178, NH = 42;
