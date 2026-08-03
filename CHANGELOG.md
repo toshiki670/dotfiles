@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.71.9] - 2026-08-03
+### Features
+- Work-map skill を追加する ([#688](https://github.com/toshiki670/dotfiles/pull/688)) ([`549abec`](https://github.com/toshiki670/dotfiles/commit/549abece556a4fdac8efc039af27893a8c60fb37))
+
+
 ## [0.71.8] - 2026-07-28
 ### Features
 - Memory-tidy に feedback を抽象度で束ねる手順を追加する ([#680](https://github.com/toshiki670/dotfiles/pull/680)) ([`29ead04`](https://github.com/toshiki670/dotfiles/commit/29ead04d46b9872b644bf80a95fd1d58f4fd6097))
