@@ -1,0 +1,23 @@
+// mermaid の図を描く。断片は本文側に <pre class="mermaid"> で書く。
+//
+// 色は head.html の :root にある --mm-* を読んで渡す。値の出所はページのトークン1箇所で、
+// 型を増やすときも写像を CSS へ足すだけで済む（--mm-cScale0 のように命名すれば timeline へ届く）。
+
+(function () {
+  const root = document.documentElement;
+  const computed = getComputedStyle(root);
+  const vars = {};
+
+  for (const sheet of document.styleSheets) {
+    for (const rule of sheet.cssRules) {
+      if (!rule.style) continue;
+      for (const prop of rule.style) {
+        if (!prop.startsWith('--mm-')) continue;
+        vars[prop.slice(5)] = computed.getPropertyValue(prop).trim();
+      }
+    }
+  }
+
+  mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: vars });
+  mermaid.run({ querySelector: '.mermaid' });
+})();
