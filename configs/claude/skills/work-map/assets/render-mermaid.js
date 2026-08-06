@@ -19,5 +19,13 @@
   }
 
   mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: vars });
-  mermaid.run({ querySelector: '.mermaid' });
+
+  // mermaid は svg を width="100%" にするので、画面が狭いぶんだけ図が縮んで字が読めなくなる。
+  // 下限を敷いて .scroller のスクロールへ落とす。自然幅より広げはしない（小さい図を引き伸ばさない）。
+  mermaid.run({ querySelector: '.mermaid' }).then(() => {
+    document.querySelectorAll('.mermaid svg').forEach(svg => {
+      const natural = svg.viewBox.baseVal && svg.viewBox.baseVal.width;
+      if (natural) svg.style.minWidth = Math.min(natural, 736) + 'px';
+    });
+  });
 })();

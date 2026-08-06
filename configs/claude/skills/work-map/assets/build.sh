@@ -75,12 +75,16 @@ LOSES = {
     'xychart-beta': '量は -s の自前チャートで描く（xychart は日付軸のラベルが重なる）',
 }
 for block in re.findall(r'<pre class="[^"]*\bmermaid\b[^"]*">(.*?)</pre>', frag, re.S):
-    for line in block.strip().splitlines():
-        head = line.strip().split()[0] if line.strip() else ''
+    # 宣言は行頭に来るとは限らない。frontmatter・init ディレクティブ・コメントを先に落とす
+    block = re.sub(r'^\s*---\s*\n.*?\n\s*---\s*$', '', block.strip(), count=1, flags=re.S | re.M)
+    block = re.sub(r'%%\{.*?\}%%', '', block, flags=re.S)
+    for line in block.splitlines():
+        line = line.strip()
+        if not line or line.startswith('%%'):
+            continue
+        head = line.split()[0]
         if head in LOSES:
             bad.append(f'{head} は使わない — {LOSES[head]}')
-        if head:
-            break
 
 for pat, why in [
     (r'<link\b', '<link>'),
