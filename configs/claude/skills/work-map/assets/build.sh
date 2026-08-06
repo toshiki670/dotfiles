@@ -74,8 +74,15 @@ LOSES = {
     'timeline': '順序は .track で書く（timeline は理由の1文が入らない）',
     'xychart-beta': '量は -s の自前チャートで描く（xychart は日付軸のラベルが重なる）',
 }
-for block in re.findall(r'<pre class="[^"]*\bmermaid\b[^"]*">(.*?)</pre>', frag, re.S):
-    # 宣言は行頭に来るとは限らない。frontmatter・init ディレクティブ・コメントを先に落とす
+# 断片は <pre class="mermaid"> で書く。他のタグに mermaid class を付けると、
+# 下の走査から漏れたまま render-mermaid.js が拾って描いてしまう
+for tag in re.findall(r'<(\w+)[^>]*\bclass="[^"]*\bmermaid\b[^"]*"', frag):
+    if tag != 'pre':
+        bad.append(f'mermaid の断片は <pre class="mermaid"> で書く（<{tag}> になっている）')
+
+for block in re.findall(r'<pre[^>]*\bclass="[^"]*\bmermaid\b[^"]*"[^>]*>(.*?)</pre>', frag, re.S):
+    # frontmatter・init ディレクティブ・コメントを落とすと、宣言はブロックの先頭に来る。
+    # 全行を見ると flowchart のノード id が渡さない型と同名のときに誤って弾く
     block = re.sub(r'^\s*---\s*\n.*?\n\s*---\s*$', '', block.strip(), count=1, flags=re.S | re.M)
     block = re.sub(r'%%\{.*?\}%%', '', block, flags=re.S)
     for line in block.splitlines():
@@ -85,6 +92,7 @@ for block in re.findall(r'<pre class="[^"]*\bmermaid\b[^"]*">(.*?)</pre>', frag,
         head = line.split()[0]
         if head in LOSES:
             bad.append(f'{head} は使わない — {LOSES[head]}')
+        break
 
 for pat, why in [
     (r'<link\b', '<link>'),
@@ -110,7 +118,7 @@ PY
 cat "$content" >>"$tmp"
 
 # mermaid は図を描くときだけ埋める。ライセンス表示は MIT の義務。
-if grep -qE '<pre class="[^"]*\bmermaid\b' "$content"; then
+if grep -qE '<pre[^>]*class="[^"]*\bmermaid\b' "$content"; then
   {
     printf '<script>\n'
     cat "$lib/license-header.js"
@@ -153,8 +161,8 @@ if [ -z "$chrome" ]; then
     fi
   done
 fi
-[ -n "$chrome" ] || {
-  echo "headless Chrome が見つからない。CHROME=<パス> で指す" >&2
+[ -x "$chrome" ] || {
+  echo "headless Chrome が見つからない（CHROME=${CHROME:-未指定}）。CHROME=<パス> で指す" >&2
   exit 1
 }
 

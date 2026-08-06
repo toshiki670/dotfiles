@@ -22,29 +22,39 @@
   });
 
   // (2) ラベルが箱からはみ出していないか。
-  // 比べるのは実際に字が占めた範囲とノードの図形。foreignObject を相手にすると、
-  // 中の要素がその箱ちょうどに広がるので常に一致してしまい、検査が空振りする。
+  // 字を切るのは foreignObject なので、そこへ収まっているかを見る。要素の矩形は当てにならない
+  // — 中の div も span も p も foreignObject にクランプされ、その箱と同じ値を返す。
+  // テキストノードを Range で選べば、実際に字が占めた幅が出る。
   let worst = { px: 0, text: '' };
-  document.querySelectorAll('.mermaid g.node').forEach(g => {
-    const shape = g.querySelector(':scope > rect, :scope > polygon, :scope > path, :scope > circle, :scope > ellipse');
-    if (!shape) return;
-    const box = shape.getBoundingClientRect();
-    if (box.width < 1 || box.height < 1) return;
 
-    const fo = g.querySelector('foreignObject');
-    let ink;
-    if (fo) {
-      const range = document.createRange();
-      range.selectNodeContents(fo.querySelector('div') || fo);
-      ink = range.getBoundingClientRect();
-    } else {
-      const text = g.querySelector('text');
-      if (!text) return;
-      ink = text.getBoundingClientRect();
-    }
+  const inkOf = node => {
+    // 字を持つ最も内側の要素まで降りる
+    let el = node, next;
+    while ((next = [...el.children].find(c => c.textContent.trim() === el.textContent.trim()))) el = next;
+    const texts = [...el.childNodes].filter(n => n.nodeType === Node.TEXT_NODE && n.length);
+    if (!texts.length) return null;
+    const range = document.createRange();
+    range.setStart(texts[0], 0);
+    range.setEnd(texts[texts.length - 1], texts[texts.length - 1].length);
+    return range.getBoundingClientRect();
+  };
 
+  const note = (ink, box, label) => {
+    if (!ink || !box || box.width < 1 || box.height < 1) return;
     const px = Math.max(box.left - ink.left, ink.right - box.right, box.top - ink.top, ink.bottom - box.bottom);
-    if (px > worst.px) worst = { px: Math.round(px * 10) / 10, text: g.textContent.trim() };
+    if (px > worst.px) worst = { px: Math.round(px * 10) / 10, text: label.trim() };
+  };
+
+  document.querySelectorAll('.mermaid foreignObject').forEach(fo => {
+    note(inkOf(fo), fo.getBoundingClientRect(), fo.textContent);
+  });
+
+  // htmlLabels を切った場合は <text> が字そのものなので、ノードの図形と比べる
+  document.querySelectorAll('.mermaid g.node').forEach(g => {
+    if (g.querySelector('foreignObject')) return;
+    const text = g.querySelector('text');
+    const shape = g.querySelector(':scope > rect, :scope > polygon, :scope > path, :scope > circle, :scope > ellipse');
+    if (text && shape) note(text.getBoundingClientRect(), shape.getBoundingClientRect(), g.textContent);
   });
 
   report.labelOverflow = worst.px;
