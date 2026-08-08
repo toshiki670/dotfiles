@@ -73,6 +73,8 @@ set 名に日本語は使えず（Lexical error になる）、ASCII の識別�
 
 陽性対照は、mermaid が測り終えたあとに `letter-spacing` を注入して字だけを広げる形で取る（箱の側を縮める対照では、比較の算術は試せても字の測り方が試せない）。この対照で 34.9 px を検出する。
 
+**ラベルどうしの重なりは別に見る。** はみ出しの検査は `foreignObject` か、図形を持つ `g.node` を比較相手にするので、`<text>` だけで組む型は両方に掛からない。venn がそれで、3集合に長い日本語ラベルを置くと隣の字に乗ったまま素通りしていた。同じ SVG 内の `<text>` を総当たりで見て、矩形が縦横とも 0.5 px を超えて重なったら落とす。誤発火は flowchart / sequence / class / er / gitGraph / pie / architecture-beta で 0 件 — flowchart・class・er はラベルが `foreignObject` に入るので `<text>` を持たず、守備範囲が重ならない。
+
 **`themeVariables` にフォントを渡すとラベルが欠けるという報告は、この構成では再現しなかった。** `--mm-fontFamily` でも `%%{init}%%` でも超過は 0 のままで、`htmlLabels` を切って `<text>` にしても余白は 11 px 残る。mermaid がページの CSS を適用した DOM 上で測るので、箱がテキストに追従するのだと見ている。それでも渡さないのは、日本語は system のフォールバックで足りて渡す利得が無いため。
 
 なお `%%{init}%%` の値に引用符が入っていると、その指定は黙って無視される（`{'fontFamily': 'Hiragino Sans'}` は効き、`{'fontFamily': '"Hiragino Sans", sans-serif'}` は効かない）。フォント指定の再現を試みるときはここで空振りしやすい。

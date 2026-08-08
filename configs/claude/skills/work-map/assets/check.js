@@ -60,13 +60,34 @@
   report.labelOverflow = worst.px;
   if (worst.px > 0.5) report.fail.push(`ラベルが ${worst.px}px はみ出す: 「${worst.text}」`);
 
-  // (3) 外部参照 0 か。実際に取りに行った先を見るので、断片の grep より強い
+  // (3) ラベルどうしが重なっていないか。
+  // 図形を持たず <text> だけで組む型（venn など）は上の2つに掛からない。
+  // 領域が狭いところへ長いラベルを置くと、隣の字の上に乗ったまま素通りする
+  let clash = null;
+  document.querySelectorAll('.mermaid svg').forEach(svg => {
+    const boxes = [...svg.querySelectorAll('text')]
+      .filter(t => t.textContent.trim())
+      .map(t => ({ s: t.textContent.trim(), r: t.getBoundingClientRect() }));
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i].r, b = boxes[j].r;
+        const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (w > 0.5 && h > 0.5 && (!clash || w * h > clash.area)) {
+          clash = { area: w * h, w: Math.round(w), h: Math.round(h), a: boxes[i].s, b: boxes[j].s };
+        }
+      }
+    }
+  });
+  if (clash) report.fail.push(`ラベルが ${clash.w}×${clash.h}px 重なる: 「${clash.a}」と「${clash.b}」`);
+
+  // (4) 外部参照 0 か。実際に取りに行った先を見るので、断片の grep より強い
   const remote = performance.getEntriesByType('resource')
     .map(r => r.name)
     .filter(n => !n.startsWith('file:') && !n.startsWith('data:') && !n.startsWith('blob:'));
   if (remote.length) report.fail.push(`外部へ取りに行った: ${remote.slice(0, 3).join(', ')}`);
 
-  // (4) 文書幅が viewport を超えないか
+  // (5) 文書幅が viewport を超えないか
   report.scrollWidth = document.documentElement.scrollWidth;
   if (report.scrollWidth > window.innerWidth) {
     const culprits = [...document.querySelectorAll('body *')]
