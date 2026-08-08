@@ -57,7 +57,7 @@ description: "/work-map で明示的に起動したときのみ使用する。�
 
 **何がどの分類に属するかは表で書く。** ベン図は「表では分かりにくい」と言われたときだけ、3集合を上限に `venn-beta` で描く。重なりは `union` を書いた組み合わせだけが描かれるので、書き落とすと重ならないように見える。
 
-**領域には短い語か記号だけを置き、中身は `.legend` に出す。** 領域の面積は集合が増えるほど縮み、長いラベルは隣の字に乗る。build はこの重なりで落ちる。
+**領域には記号だけを置き、中身は凡例へ回す。** 領域の面積は集合が増えるほど縮み、長いラベルは隣の字に乗る。build はこの重なりで落ちる。**集合と重なりは別の群にして、それぞれ縦に列挙する。** 記号が列で揃い、どちらの群の記号かを読み手が推測しなくて済む。
 
 ```html
 <div class="figure">
@@ -65,12 +65,22 @@ description: "/work-map で明示的に起動したときのみ使用する。�
 venn-beta
   set A ["A"]
   set B ["B"]
-  union A, B ["◆"]
+  set C ["C"]
+  union A, B ["1"]
+  union A, B, C ["2"]
 </pre></div>
-  <div class="legend">
-    <span>A 障害・不具合の調査</span>
-    <span>B 設計の検討</span>
-    <span>◆ 決定の時系列</span>
+  <div class="legends">
+    <div class="legend stack">
+      <b>集合</b>
+      <span>A 障害・不具合の調査</span>
+      <span>B 設計の検討</span>
+      <span>C 成果物のレビュー</span>
+    </div>
+    <div class="legend stack">
+      <b>重なり</b>
+      <span>1 決定の時系列</span>
+      <span>2 状態表</span>
+    </div>
   </div>
 </div>
 ```
