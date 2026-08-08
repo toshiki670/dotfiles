@@ -93,8 +93,9 @@ venn-beta
 
 | 型 | 日本語 |
 | --- | --- |
-| flowchart / sequence / class / er / gitGraph | そのまま通る |
+| flowchart / sequence / class / er | そのまま通る |
 | `architecture-beta` | ラベルを引用符で囲む（`["通知基盤"]`）。囲まないと Lexer error |
+| `gitGraph` | ブランチ名を引用符で囲む（`branch "開発"`）。`checkout` / `merge` の参照側も同じ。`id:` / `tag:` はそのまま通る |
 | `sankey-beta` | ノード名に日本語が使えない。使うなら ASCII |
 | `venn-beta` | set 名に日本語が使えない。ラベル（`["…"]`）は通る |
 

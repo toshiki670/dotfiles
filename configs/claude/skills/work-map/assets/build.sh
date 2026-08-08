@@ -63,6 +63,7 @@ tmp="$work/page.html"
 # 断片が持ち込む欠陥を先に弾く。ブラウザを起こすより桁で速い。
 python3 - "$content" <<'PY' || exit 1
 import re, sys
+from html.parser import HTMLParser
 
 frag = open(sys.argv[1], encoding='utf-8').read()
 bad = []
@@ -94,14 +95,46 @@ for block in re.findall(r'<pre[^>]*\bclass="[^"]*\bmermaid\b[^"]*"[^>]*>(.*?)</p
             bad.append(f'{head} は使わない — {LOSES[head]}')
         break
 
-for pat, why in [
-    (r'<link\b', '<link>'),
-    (r'@import\b', '@import'),
-    (r'\bsrc="(?!data:)', 'src= の外部参照'),
-    (r'url\((?![\'"]?data:)[\'"]?https?:', 'url() の外部参照'),
-]:
-    if re.search(pat, frag):
-        bad.append(f'外部参照: {why}')
+# 外部参照は markup の構造で見る。文字列で探すと、図のラベルや本文に書いた
+# url(…) や src="…" を、実際に効く属性・CSS と区別できずに弾く
+def css_refs(css):
+    # scheme は CSS でも属性でも大小を区別しない
+    return [f'url({u})' for u in re.findall(r'url\(\s*[\'"]?(https?:[^)\'"\s]*)', css, re.I)]
+
+class Refs(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.found = []
+        self.in_style = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'style':
+            self.in_style += 1
+        if tag == 'link':
+            self.found.append('<link>')
+        for name, value in attrs:
+            if not value:
+                continue
+            if name == 'src' and not value.lower().startswith('data:'):
+                self.found.append(f'src="{value[:60]}"')
+            elif name == 'style':
+                self.found += css_refs(value)
+
+    def handle_endtag(self, tag):
+        if tag == 'style' and self.in_style:
+            self.in_style -= 1
+
+    def handle_data(self, data):
+        if self.in_style:
+            if '@import' in data:
+                self.found.append('@import')
+            self.found += css_refs(data)
+
+
+refs = Refs()
+refs.feed(frag)
+refs.close()
+bad += [f'外部参照: {r}' for r in refs.found]
 
 for b in dict.fromkeys(bad):
     print(f'  {b}', file=sys.stderr)
