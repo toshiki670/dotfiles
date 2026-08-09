@@ -46,6 +46,22 @@
 
     /* 読み物としての行長。図と表はこの制限を受けない */
     --measure: 40rem;
+
+    /* mermaid のテーマ変数へ渡す写像。render-mermaid.js が --mm- を外して渡す。
+       いま書いてあるのは flowchart のぶん。別の型を使うときにその型の変数を足す
+       （timeline なら --mm-cScale0…、xychart なら --mm-xyChart-*）。
+       フォントは渡さない。日本語は system のフォールバックに任せれば足り、
+       渡すと測定幅と実描画幅がずれた事例が報告されている */
+    --mm-background: var(--surface);
+    --mm-primaryColor: var(--sunken);
+    --mm-primaryBorderColor: var(--rule-strong);
+    --mm-primaryTextColor: var(--ink);
+    --mm-lineColor: var(--rule-strong);
+    --mm-textColor: var(--ink-2);
+    --mm-edgeLabelBackground: var(--surface);
+    --mm-clusterBkg: var(--paper);
+    --mm-clusterBorder: var(--rule);
+    --mm-titleColor: var(--ink);
   }
 
   body {
@@ -239,7 +255,7 @@
     max-width: var(--measure);
   }
 
-  /* ---- 依存グラフ ---- */
+  /* ---- 図（mermaid） ---- */
 
   .figure {
     display: flex;
@@ -254,51 +270,31 @@
     max-width: 72rem;
   }
 
-  .scroller svg {
+  /* 描き終わるまで断片の生テキストを見せない。data-processed は mermaid が付ける */
+  .mermaid:not([data-processed]) {
+    visibility: hidden;
+  }
+
+  .mermaid {
+    padding: 0.75rem;
+  }
+
+  .mermaid svg {
     display: block;
-    min-width: 46rem;
-    width: 100%;
     height: auto;
   }
 
-  .node-box {
-    fill: var(--sunken);
-    stroke: var(--rule-strong);
-    stroke-width: 1;
+  /* 状態は mermaid の class 文で意味だけを書き、色はここで与える。
+     mermaid が注入する規則は #mermaid-<id> 付きで特異性が上なので !important が要る */
+  .mermaid g.node.settled > :is(rect, polygon, path, circle, ellipse) {
+    fill: var(--accent-weak) !important;
+    stroke: var(--accent) !important;
   }
 
-  .node-box.settled {
-    fill: var(--accent-weak);
-    stroke: var(--accent);
-  }
-
-  .node-box.open {
-    fill: none;
-    stroke: var(--serious);
-    stroke-dasharray: 5 3;
-  }
-
-  .node-label {
-    font-family: var(--font-body);
-    font-size: 12.5px;
-    fill: var(--ink);
-  }
-
-  .col-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    fill: var(--ink-3);
-  }
-
-  .edge {
-    fill: none;
-    stroke: var(--rule-strong);
-    stroke-width: 1.5;
-  }
-
-  .arrow-head {
-    fill: var(--rule-strong);
+  .mermaid g.node.open > :is(rect, polygon, path, circle, ellipse) {
+    fill: none !important;
+    stroke: var(--serious) !important;
+    stroke-dasharray: 5 3 !important;
   }
 
   .caption {
@@ -321,6 +317,26 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
+  }
+
+  /* 記号だけを図に置いて中身を凡例へ回すとき、群ごとに縦へ列挙する。
+     横に並べておけば記号が列で揃い、狭いときは折り返して縦に積まれる */
+  .legends {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 3.5rem;
+  }
+
+  .legend.stack {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .legend b {
+    font-weight: 400;
+    color: var(--ink-3);
+    letter-spacing: 0.14em;
   }
 
   .swatch {
@@ -609,6 +625,7 @@
   /* ---- チャート ---- */
 
   .chart {
+    overflow-x: auto;
     background: var(--surface);
     border: 1px solid var(--rule);
     max-width: 72rem;
@@ -652,36 +669,6 @@
     font-size: 11px;
     font-weight: 600;
     fill: var(--ink);
-  }
-
-  /* ---- ベン図（表で分かりにくいと言われたときだけ） ---- */
-
-  .set {
-    fill: var(--accent);
-    fill-opacity: 0.1;
-    stroke: var(--accent);
-    stroke-width: 1.2;
-  }
-
-  .set-name {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    fill: var(--accent);
-    font-weight: 600;
-  }
-
-  .region {
-    font-family: var(--font-body);
-    font-size: 12.5px;
-    fill: var(--ink);
-  }
-
-  .region-empty {
-    font-family: var(--font-body);
-    font-size: 11.5px;
-    fill: var(--ink-3);
-    font-style: italic;
   }
 </style>
 </head>

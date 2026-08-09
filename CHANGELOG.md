@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.71.11] - 2026-08-07
+### Features
+- Work-map の図を mermaid へ置き換え、build 時検証を入れる ([#695](https://github.com/toshiki670/dotfiles/pull/695)) ([`22c7ef2`](https://github.com/toshiki670/dotfiles/commit/22c7ef2151eaac692f5d49eccda860f331d49707))
+
+
+## [0.71.10] - 2026-08-05
+### Features
+- Outdated --explain で current→latest 間の全リリースを要約する ([#692](https://github.com/toshiki670/dotfiles/pull/692)) ([`a872d4b`](https://github.com/toshiki670/dotfiles/commit/a872d4b760e8a309b819973507069af4e0994574))
+
+
 ## [0.71.9] - 2026-08-03
 ### Features
 - Work-map skill を追加する ([#688](https://github.com/toshiki670/dotfiles/pull/688)) ([`549abec`](https://github.com/toshiki670/dotfiles/commit/549abece556a4fdac8efc039af27893a8c60fb37))

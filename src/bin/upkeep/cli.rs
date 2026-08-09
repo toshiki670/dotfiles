@@ -40,7 +40,7 @@ enum Commands {
     Doctor,
     /// brew / mise / cargo でアップデート可能なパッケージを一覧表示する。
     Outdated {
-        /// 取得できたリリースノートを claude -p で日本語要約する（機械的に解決できるのは基本的に cargo バイナリのみ）。
+        /// 現在の版から最新版までのリリースノートを claude -p で日本語要約する。
         #[arg(long)]
         explain: bool,
     },

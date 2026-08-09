@@ -1,8 +1,8 @@
 //! `outdated`: brew / mise / cargo でアップデート可能なパッケージを一覧表示する。
 //!
-//! `--explain` は取得できたリリースノートを [`claude::summarize`] で日本語要約する。
-//! 1件の解決の流れは [`explain::resolve`]、複数件の走らせ方は [`ordered::resolve_each`]
-//! を参照。
+//! `--explain` は `current` から `latest` までのリリースノートを [`claude::summarize`] で
+//! 日本語要約する。1件の解決の流れは [`explain::resolve`]、複数件の走らせ方は
+//! [`ordered::resolve_each`] を参照。
 
 mod brew;
 mod cargo;
@@ -14,6 +14,7 @@ mod package;
 mod registry;
 mod release;
 mod render;
+mod tag;
 mod upstream;
 
 use super::banner::header;

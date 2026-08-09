@@ -25,7 +25,33 @@ const MISE_TOOL_PLUGIN_JSON: &str = r#"{"backend":"asdf:mise-plugins/asdf-jq"}"#
 const CARGO_TABLE: &str =
     "Package      Installed  Latest   Needs update\ncargo-audit  v0.17.0    v0.18.0  Yes";
 const CRATES_IO_JSON: &str = r#"{"crate":{"repository":"https://github.com/rustsec/rustsec"}}"#;
-const GH_RELEASE_JSON: &str = r#"{"body":"What's Changed\n\n* Fix bug X","url":"https://github.com/rustsec/rustsec/releases/tag/v1.0.0"}"#;
+/// `gh api repos/rustsec/rustsec/releases`（cargo-audit: v0.17.0 -> v0.18.0）。
+const GH_RELEASES_RUSTSEC: &str = r#"[
+{"tag_name":"v0.18.0","body":"What's Changed\n\n* Fix bug X","html_url":"https://github.com/rustsec/rustsec/releases/tag/v0.18.0","draft":false,"prerelease":false},
+{"tag_name":"v0.17.0","body":"older","html_url":"https://github.com/rustsec/rustsec/releases/tag/v0.17.0","draft":false,"prerelease":false}
+]"#;
+
+/// `gh api repos/sharkdp/bat/releases`（bat: 0.24.0 -> 0.25.0）。
+const GH_RELEASES_BAT: &str = r#"[
+{"tag_name":"v0.25.0","body":"What's Changed\n\n* Fix bug X","html_url":"https://github.com/sharkdp/bat/releases/tag/v0.25.0","draft":false,"prerelease":false},
+{"tag_name":"v0.24.0","body":"older","html_url":"https://github.com/sharkdp/bat/releases/tag/v0.24.0","draft":false,"prerelease":false}
+]"#;
+
+/// `gh api repos/sharkdp/bat/releases` から `current`（0.24.0）が落ちたもの。
+const GH_RELEASES_BAT_WITHOUT_CURRENT: &str = r#"[
+{"tag_name":"v0.25.0","body":"What's Changed","html_url":"https://github.com/sharkdp/bat/releases/tag/v0.25.0","draft":false,"prerelease":false},
+{"tag_name":"v0.23.0","body":"much older","html_url":"https://github.com/sharkdp/bat/releases/tag/v0.23.0","draft":false,"prerelease":false}
+]"#;
+
+/// `gh api repos/jqlang/jq/releases`（jq: 1.6 -> 1.8.2）。タグはパッケージ名接頭辞で、
+/// 範囲に正式リリース3件と prerelease 1件が挟まる。
+const GH_RELEASES_JQ: &str = r#"[
+{"tag_name":"jq-1.8.2","body":"jq 1.8.2 fixes the parser","html_url":"https://github.com/jqlang/jq/releases/tag/jq-1.8.2","draft":false,"prerelease":false},
+{"tag_name":"jq-1.8.2-rc1","body":"release candidate","html_url":"https://github.com/jqlang/jq/releases/tag/jq-1.8.2-rc1","draft":false,"prerelease":true},
+{"tag_name":"jq-1.8.1","body":"jq 1.8.1 adds a builtin","html_url":"https://github.com/jqlang/jq/releases/tag/jq-1.8.1","draft":false,"prerelease":false},
+{"tag_name":"jq-1.7.1","body":"jq 1.7.1 drops an option","html_url":"https://github.com/jqlang/jq/releases/tag/jq-1.7.1","draft":false,"prerelease":false},
+{"tag_name":"jq-1.6","body":"jq 1.6","html_url":"https://github.com/jqlang/jq/releases/tag/jq-1.6","draft":false,"prerelease":false}
+]"#;
 const CLAUDE_SUMMARY_JSON: &str = r#"{"type":"result","is_error":false,"structured_output":{"release_notes_ja":"新機能Xを追加"}}"#;
 const CLAUDE_ERROR_JSON: &str = r#"{"is_error":true,"errors":["boom"]}"#;
 const FAILING_STUB: &str = "#!/bin/sh\nexit 1\n";
@@ -36,21 +62,31 @@ fn sleeping_stub_body(body: &str) -> String {
     format!("#!/bin/sh\nPATH=/usr/bin:/bin\nexport PATH\ncat >/dev/null\n{body}")
 }
 
+/// リポジトリごとに応答を振り分ける `case` 本体。取得を遅らせる等の細工を前に挟むために
+/// スタブ本体とは分けてある。
+const GH_BY_REPO: &str = concat!(
+    "case \"$*\" in\n",
+    "  *sharkdp/bat*) printf '%s\\n' \"$GH_RELEASES_BAT\" ;;\n",
+    "  *) printf '%s\\n' \"$GH_RELEASES_JQ\" ;;\n",
+    "esac\n"
+);
+
+/// リポジトリごとに応答を振り分ける `gh`。
+fn gh_by_repo_stub() -> String {
+    format!("#!/bin/sh\ncat >/dev/null\n{GH_BY_REPO}")
+}
+
 /// brew 側（`sharkdp/bat`）のリリース取得だけを遅らせる `gh`。
 fn slow_for_brew_gh_stub() -> String {
-    sleeping_stub_body(concat!(
-        "case \"$*\" in\n  *sharkdp/bat*) sleep 0.5 ;;\nesac\n",
-        "printf '%s\\n' \"$GH_RELEASE_JSON\"\n"
+    sleeping_stub_body(&format!(
+        "case \"$*\" in\n  *sharkdp/bat*) sleep 0.5 ;;\nesac\n{GH_BY_REPO}"
     ))
 }
 
 /// 呼び出しの開始と終了を `$UPKEEP_LOG` に刻む `gh`。区間が重なるかで並行性を見る。
 fn overlap_probe_gh_stub() -> String {
-    sleeping_stub_body(concat!(
-        "printf 'start\\n' >> \"$UPKEEP_LOG\"\n",
-        "sleep 0.5\n",
-        "printf 'end\\n' >> \"$UPKEEP_LOG\"\n",
-        "printf '%s\\n' \"$GH_RELEASE_JSON\"\n"
+    sleeping_stub_body(&format!(
+        "printf 'start\\n' >> \"$UPKEEP_LOG\"\nsleep 0.5\nprintf 'end\\n' >> \"$UPKEEP_LOG\"\n{GH_BY_REPO}"
     ))
 }
 
@@ -226,7 +262,7 @@ fn explain_summarizes_cargo_package() {
     let fx = fixture();
     fx.cargo_stub();
     fx.stub_stdout("curl", "CRATES_IO_JSON")
-        .stub_stdout("gh", "GH_RELEASE_JSON")
+        .stub_stdout("gh", "GH_RELEASES_JSON")
         .stub_stdout("claude", "CLAUDE_JSON");
 
     outdated()
@@ -234,13 +270,13 @@ fn explain_summarizes_cargo_package() {
         .env("PATH", &fx.bin)
         .env("CARGO_TABLE", CARGO_TABLE)
         .env("CRATES_IO_JSON", CRATES_IO_JSON)
-        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("GH_RELEASES_JSON", GH_RELEASES_RUSTSEC)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success()
         .stdout(predicate::str::contains("要約: 新機能Xを追加"))
         .stdout(predicate::str::contains(
-            "出典: https://github.com/rustsec/rustsec/releases/tag/v1.0.0",
+            "出典 1件: https://github.com/rustsec/rustsec/releases/tag/v0.18.0",
         ));
 }
 
@@ -251,7 +287,7 @@ fn explain_isolates_the_claude_invocation() {
     let fx = fixture();
     fx.cargo_stub();
     fx.stub_stdout("curl", "CRATES_IO_JSON")
-        .stub_stdout("gh", "GH_RELEASE_JSON")
+        .stub_stdout("gh", "GH_RELEASES_JSON")
         .stub_stdout_recording("claude", "CLAUDE_JSON");
 
     outdated()
@@ -260,7 +296,7 @@ fn explain_isolates_the_claude_invocation() {
         .env("UPKEEP_LOG", &fx.log)
         .env("CARGO_TABLE", CARGO_TABLE)
         .env("CRATES_IO_JSON", CRATES_IO_JSON)
-        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("GH_RELEASES_JSON", GH_RELEASES_RUSTSEC)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success();
@@ -283,7 +319,7 @@ fn explain_separates_packages_with_a_blank_line() {
         "mise",
         &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
     )
-    .stub_stdout("gh", "GH_RELEASE_JSON")
+    .stub("gh", &gh_by_repo_stub())
     .stub_stdout("claude", "CLAUDE_JSON");
 
     outdated()
@@ -293,7 +329,8 @@ fn explain_separates_packages_with_a_blank_line() {
         .env("BREW_INFO_JSON", BREW_INFO_JSON)
         .env("MISE_JSON", MISE_JSON)
         .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
-        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("GH_RELEASES_BAT", GH_RELEASES_BAT)
+        .env("GH_RELEASES_JQ", GH_RELEASES_JQ)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success()
@@ -325,7 +362,7 @@ fn explain_summarizes_brew_package() {
         "brew",
         &[("outdated", "BREW_JSON"), ("info", "BREW_INFO_JSON")],
     )
-    .stub_stdout("gh", "GH_RELEASE_JSON")
+    .stub_stdout("gh", "GH_RELEASES_JSON")
     .stub_stdout("claude", "CLAUDE_JSON");
 
     outdated()
@@ -333,7 +370,7 @@ fn explain_summarizes_brew_package() {
         .env("PATH", &fx.bin)
         .env("BREW_JSON", BREW_JSON)
         .env("BREW_INFO_JSON", BREW_INFO_JSON)
-        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("GH_RELEASES_JSON", GH_RELEASES_BAT)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success()
@@ -348,7 +385,7 @@ fn explain_summarizes_mise_tool_via_backend() {
         "mise",
         &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
     )
-    .stub_stdout("gh", "GH_RELEASE_JSON")
+    .stub_stdout("gh", "GH_RELEASES_JSON")
     .stub_stdout("claude", "CLAUDE_JSON");
 
     outdated()
@@ -356,12 +393,77 @@ fn explain_summarizes_mise_tool_via_backend() {
         .env("PATH", &fx.bin)
         .env("MISE_JSON", MISE_JSON)
         .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
-        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("GH_RELEASES_JSON", GH_RELEASES_JQ)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success()
         .stdout(predicate::str::contains("[mise] jq: 1.6 -> 1.8.2"))
         .stdout(predicate::str::contains("要約: 新機能Xを追加"));
+}
+
+/// `current` の次から `latest` までを全部要約に含め、出典としてそれぞれを挙げる。範囲に
+/// 挟まる prerelease は含めない。
+#[test]
+fn explain_covers_every_release_between_current_and_latest() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "mise",
+        &[("outdated", "MISE_JSON"), ("tool", "MISE_TOOL_JSON")],
+    )
+    .stub_stdout("gh", "GH_RELEASES_JSON")
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    let assert = outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("MISE_JSON", MISE_JSON)
+        .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
+        .env("GH_RELEASES_JSON", GH_RELEASES_JQ)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8_lossy(&assert.get_output().stdout).into_owned();
+    // URL は行末で終わるので、`jq-1.8.2` が `jq-1.8.2-rc1` に前方一致するのを改行で切る。
+    for tag in ["jq-1.8.2", "jq-1.8.1", "jq-1.7.1"] {
+        let url = format!("https://github.com/jqlang/jq/releases/tag/{tag}\n");
+        assert!(stdout.contains(&url), "missing source {tag}:\n{stdout}");
+    }
+    assert!(
+        !stdout.contains("tag/jq-1.6\n"),
+        "current itself was summarized:\n{stdout}"
+    );
+    assert!(
+        !stdout.contains("rc1"),
+        "prerelease was summarized:\n{stdout}"
+    );
+    assert!(!stdout.contains('※'), "unexpected range note:\n{stdout}");
+}
+
+/// `current` のタグを引けないときは、最新1件しか見ていないことを明示する（1件だけの
+/// 要約が「1件しか無かった」のか「起点を見失った」のかを読み分けられるように）。
+#[test]
+fn explain_marks_the_range_when_current_tag_is_unknown() {
+    let fx = fixture();
+    fx.stub_dispatch(
+        "brew",
+        &[("outdated", "BREW_JSON"), ("info", "BREW_INFO_JSON")],
+    )
+    .stub_stdout("gh", "GH_RELEASES_JSON")
+    .stub_stdout("claude", "CLAUDE_JSON");
+
+    outdated()
+        .arg("--explain")
+        .env("PATH", &fx.bin)
+        .env("BREW_JSON", BREW_JSON)
+        .env("BREW_INFO_JSON", BREW_INFO_JSON)
+        .env("GH_RELEASES_JSON", GH_RELEASES_BAT_WITHOUT_CURRENT)
+        .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "※ 0.24.0 以降の範囲を特定できず、最新1件のみ要約",
+        ));
 }
 
 #[test]
@@ -455,7 +557,7 @@ fn explain_shows_generation_failed_when_claude_errors() {
     let fx = fixture();
     fx.cargo_stub();
     fx.stub_stdout("curl", "CRATES_IO_JSON")
-        .stub_stdout("gh", "GH_RELEASE_JSON")
+        .stub_stdout("gh", "GH_RELEASES_JSON")
         .stub_stdout("claude", "CLAUDE_JSON");
 
     outdated()
@@ -463,7 +565,7 @@ fn explain_shows_generation_failed_when_claude_errors() {
         .env("PATH", &fx.bin)
         .env("CARGO_TABLE", CARGO_TABLE)
         .env("CRATES_IO_JSON", CRATES_IO_JSON)
-        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("GH_RELEASES_JSON", GH_RELEASES_RUSTSEC)
         .env("CLAUDE_JSON", CLAUDE_ERROR_JSON)
         .assert()
         .success()
@@ -493,7 +595,8 @@ fn explain_keeps_detection_order_when_resolution_finishes_out_of_order() {
         .env("BREW_INFO_JSON", BREW_INFO_JSON)
         .env("MISE_JSON", MISE_JSON)
         .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
-        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("GH_RELEASES_BAT", GH_RELEASES_BAT)
+        .env("GH_RELEASES_JQ", GH_RELEASES_JQ)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success();
@@ -527,7 +630,8 @@ fn explain_resolves_packages_concurrently() {
         .env("BREW_INFO_JSON", BREW_INFO_JSON)
         .env("MISE_JSON", MISE_JSON)
         .env("MISE_TOOL_JSON", MISE_TOOL_AQUA_JSON)
-        .env("GH_RELEASE_JSON", GH_RELEASE_JSON)
+        .env("GH_RELEASES_BAT", GH_RELEASES_BAT)
+        .env("GH_RELEASES_JQ", GH_RELEASES_JQ)
         .env("CLAUDE_JSON", CLAUDE_SUMMARY_JSON)
         .assert()
         .success();
