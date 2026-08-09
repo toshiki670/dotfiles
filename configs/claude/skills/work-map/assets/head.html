@@ -284,17 +284,35 @@
     height: auto;
   }
 
-  /* 状態は mermaid の class 文で意味だけを書き、色はここで与える。
+  /* 状態は mermaid の class 文で意味だけを書き、色はここで与える。囲み（subgraph）も同じ語を取る。
      mermaid が注入する規則は #mermaid-<id> 付きで特異性が上なので !important が要る */
-  .mermaid g.node.settled > :is(rect, polygon, path, circle, ellipse) {
-    fill: var(--accent-weak) !important;
+  .mermaid :is(g.node, g.cluster).settled > :is(rect, polygon, path, circle, ellipse) {
     stroke: var(--accent) !important;
   }
 
-  .mermaid g.node.open > :is(rect, polygon, path, circle, ellipse) {
-    fill: none !important;
+  .mermaid :is(g.node, g.cluster).open > :is(rect, polygon, path, circle, ellipse) {
     stroke: var(--serious) !important;
     stroke-dasharray: 5 3 !important;
+  }
+
+  .mermaid :is(g.node, g.cluster).warn > :is(rect, polygon, path, circle, ellipse) {
+    stroke: var(--warn) !important;
+    stroke-width: 2px !important;
+  }
+
+  /* 塗るのはノードだけ。囲みを塗ると中のノードの塗りと競る */
+  .mermaid g.node.settled > :is(rect, polygon, path, circle, ellipse) {
+    fill: var(--accent-weak) !important;
+  }
+
+  .mermaid g.node:is(.open, .warn) > :is(rect, polygon, path, circle, ellipse) {
+    fill: none !important;
+  }
+
+  /* 出所のリンク。字の色は mermaid が直接当てるので a の色は届かない。下線で示す */
+  .mermaid a .nodeLabel {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
   }
 
   .caption {
@@ -354,6 +372,11 @@
   .swatch.open {
     background: none;
     border: 1px dashed var(--serious);
+  }
+
+  .swatch.warn {
+    background: none;
+    border: 2px solid var(--warn);
   }
 
   /* ---- 経緯 ---- */
