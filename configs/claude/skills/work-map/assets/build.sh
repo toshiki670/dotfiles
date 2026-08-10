@@ -4,11 +4,10 @@
 # ライブラリ本体はこのスクリプトが結合するので、モデルのコンテキストを通らない。
 # 生成物は外部への通信を一切行わない単一ファイルになる。
 #
-#   build.sh -o OUT -c CONTENT [-t TITLE] [-s SERIES_DATA]
+#   build.sh -o OUT -c CONTENT [-t TITLE]
 #
 #     -c CONTENT      <body> の中身（.shell 以下）を書いた断片。
 #                     <pre class="mermaid"> があれば mermaid を同梱する
-#     -s SERIES_DATA  const SERIES = {...} を定義した .js
 #
 # 検査に落ちたら書き出さない。開くまで気づけない欠陥をここで止めるのが目的なので、
 # headless Chrome が無ければ検査を飛ばさずに失敗する。
@@ -16,7 +15,7 @@
 set -euo pipefail
 
 lib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-out="" content="" title="作業中の理解" series=""
+out="" content="" title="作業中の理解"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -30,10 +29,6 @@ while [ $# -gt 0 ]; do
       ;;
     -t)
       title="$2"
-      shift 2
-      ;;
-    -s)
-      series="$2"
       shift 2
       ;;
     *)
@@ -157,15 +152,6 @@ if grep -qE '<pre[^>]*class="[^"]*\bmermaid\b' "$content"; then
     cat "$lib/mermaid.min.js"
     printf '\n</script>\n<script>\n'
     cat "$lib/render-mermaid.js"
-    printf '</script>\n'
-  } >>"$tmp"
-fi
-
-if [ -n "$series" ]; then
-  {
-    printf '<script>\n'
-    cat "$series"
-    cat "$lib/render-chart.js"
     printf '</script>\n'
   } >>"$tmp"
 fi
