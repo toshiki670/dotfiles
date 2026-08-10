@@ -4,11 +4,10 @@
 # ライブラリ本体はこのスクリプトが結合するので、モデルのコンテキストを通らない。
 # 生成物は外部への通信を一切行わない単一ファイルになる。
 #
-#   build.sh -o OUT -c CONTENT [-t TITLE] [-s SERIES_DATA]
+#   build.sh -o OUT -c CONTENT [-t TITLE]
 #
 #     -c CONTENT      <body> の中身（.shell 以下）を書いた断片。
 #                     <pre class="mermaid"> があれば mermaid を同梱する
-#     -s SERIES_DATA  const SERIES = {...} を定義した .js
 #
 # 検査に落ちたら書き出さない。開くまで気づけない欠陥をここで止めるのが目的なので、
 # headless Chrome が無ければ検査を飛ばさずに失敗する。
@@ -16,7 +15,7 @@
 set -euo pipefail
 
 lib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-out="" content="" title="作業中の理解" series=""
+out="" content="" title="作業中の理解"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -30,10 +29,6 @@ while [ $# -gt 0 ]; do
       ;;
     -t)
       title="$2"
-      shift 2
-      ;;
-    -s)
-      series="$2"
       shift 2
       ;;
     *)
@@ -61,20 +56,16 @@ trap 'rm -rf "$work"' EXIT
 tmp="$work/page.html"
 
 # 断片が持ち込む欠陥を先に弾く。ブラウザを起こすより桁で速い。
-python3 - "$content" <<'PY' || exit 1
+python3 - "$content" "$lib/head.html" <<'PY' || exit 1
 import re, sys
 from html.parser import HTMLParser
 
 frag = open(sys.argv[1], encoding='utf-8').read()
 bad = []
 
-# 既存の部品が勝つと実測できた3つの役目。型そのものを禁じるのではなく、
-# その役目に mermaid を使わせない（状態表・.track・自前チャートが載せられるものが載らない）
-LOSES = {
-    'kanban': '個々の状態は状態表＋チップで書く（kanban のカードには「いま何が起きているか」が載らない）',
-    'timeline': '順序は .track で書く（timeline は理由の1文が入らない）',
-    'xychart-beta': '量は -s の自前チャートで描く（xychart は日付軸のラベルが重なる）',
-}
+# 既存の部品が勝つと実測できた役目。型そのものを禁じるのではなく、その役目に mermaid を
+# 使わせない。落ちるものと代わりの部品は SKILL.md の「渡さない型」の表にある
+LOSES = {'kanban', 'timeline'}
 # 断片は <pre class="mermaid"> で書く。他のタグに mermaid class を付けると、
 # 下の走査から漏れたまま render-mermaid.js が拾って描いてしまう
 for tag in re.findall(r'<(\w+)[^>]*\bclass="[^"]*\bmermaid\b[^"]*"', frag):
@@ -92,8 +83,21 @@ for block in re.findall(r'<pre[^>]*\bclass="[^"]*\bmermaid\b[^"]*"[^>]*>(.*?)</p
             continue
         head = line.split()[0]
         if head in LOSES:
-            bad.append(f'{head} は使わない — {LOSES[head]}')
+            bad.append(f'{head} は使わない — SKILL.md「渡さない型」の表にある部品で書く')
         break
+
+# --mm-* は - を入れ子の区切りに使うので、ある名前が別の名前の親を兼ねられてしまう。
+# 兼ねると文字列とオブジェクトが同じ場所を取り合い、宣言順によらず入れ子側が黙って消える
+# （文字列へのプロパティ代入は例外にならない）。線がテーマの既定色に戻るだけで build は通る
+def mm_names(css):
+    return re.findall(r'--mm-([A-Za-z0-9-]+)\s*:', re.sub(r'/\*.*?\*/', '', css, flags=re.S))
+
+
+names = sorted(set(mm_names(frag) + mm_names(open(sys.argv[2], encoding='utf-8').read())))
+for parent in names:
+    for child in names:
+        if child.startswith(parent + '-'):
+            bad.append(f'--mm-{parent} と --mm-{child} は同じ名前を値と入れ子の親に使っている（どちらかを改名する）')
 
 # 外部参照は markup の構造で見る。文字列で探すと、図のラベルや本文に書いた
 # url(…) や src="…" を、実際に効く属性・CSS と区別できずに弾く
@@ -158,15 +162,6 @@ if grep -qE '<pre[^>]*class="[^"]*\bmermaid\b' "$content"; then
     cat "$lib/mermaid.min.js"
     printf '\n</script>\n<script>\n'
     cat "$lib/render-mermaid.js"
-    printf '</script>\n'
-  } >>"$tmp"
-fi
-
-if [ -n "$series" ]; then
-  {
-    printf '<script>\n'
-    cat "$series"
-    cat "$lib/render-chart.js"
     printf '</script>\n'
   } >>"$tmp"
 fi

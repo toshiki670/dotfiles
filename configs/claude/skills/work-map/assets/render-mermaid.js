@@ -1,7 +1,8 @@
 // mermaid の図を描く。断片は本文側に <pre class="mermaid"> で書く。
 //
 // 色は head.html の :root にある --mm-* を読んで渡す。値の出所はページのトークン1箇所で、
-// 型を増やすときも写像を CSS へ足すだけで済む（--mm-cScale0 のように命名すれば timeline へ届く）。
+// 型を増やすときも写像を CSS へ足すだけで済む。残りの - は入れ子に開くので、
+// --mm-pie1 は pie へ、--mm-xyChart-plotColorPalette は xyChart.plotColorPalette へ届く。
 
 (function () {
   const root = document.documentElement;
@@ -13,7 +14,10 @@
       if (!rule.style) continue;
       for (const prop of rule.style) {
         if (!prop.startsWith('--mm-')) continue;
-        vars[prop.slice(5)] = computed.getPropertyValue(prop).trim();
+        const path = prop.slice(5).split('-');
+        let node = vars;
+        while (path.length > 1) node = node[path.shift()] ??= {};
+        node[path[0]] = computed.getPropertyValue(prop).trim();
       }
     }
   }
