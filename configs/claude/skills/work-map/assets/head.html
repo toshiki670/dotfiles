@@ -47,9 +47,10 @@
     /* 読み物としての行長。図と表はこの制限を受けない */
     --measure: 40rem;
 
-    /* mermaid のテーマ変数へ渡す写像。render-mermaid.js が --mm- を外して渡す。
-       いま書いてあるのは flowchart のぶん。別の型を使うときにその型の変数を足す
-       （timeline なら --mm-cScale0…、xychart なら --mm-xyChart-*）。
+    /* mermaid のテーマ変数へ渡す写像。render-mermaid.js が --mm- を外して渡し、
+       残りの - は入れ子に開く（--mm-xyChart-plotColorPalette → xyChart.plotColorPalette）。
+       いま書いてあるのは flowchart と xychart のぶん。別の型を使うときにその型の変数を足す
+       （timeline なら --mm-cScale0…）。
        フォントは渡さない。日本語は system のフォールバックに任せれば足り、
        渡すと測定幅と実描画幅がずれた事例が報告されている */
     --mm-background: var(--surface);
@@ -62,6 +63,7 @@
     --mm-clusterBkg: var(--paper);
     --mm-clusterBorder: var(--rule);
     --mm-titleColor: var(--ink);
+    --mm-xyChart-plotColorPalette: var(--accent);
   }
 
   body {

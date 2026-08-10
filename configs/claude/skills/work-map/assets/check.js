@@ -62,24 +62,73 @@
 
   // (3) ラベルどうしが重なっていないか。
   // 図形を持たず <text> だけで組む型（venn など）は上の2つに掛からない。
-  // 領域が狭いところへ長いラベルを置くと、隣の字の上に乗ったまま素通りする
+  // 領域が狭いところへ長いラベルを置くと、隣の字の上に乗ったまま素通りする。
+  //
+  // 字は回転して置かれることがある（日付軸の labelRotation、縦書きの軸題）。
+  // 軸並行の矩形で測ると、斜めの字は実際より太って見えて隣と重なる。
+  // 四隅を画面座標へ移し、平行四辺形どうしの交わりを面積で見る。
+  const quad = t => {
+    const b = t.getBBox(), m = t.getScreenCTM();
+    const p = [[b.x, b.y], [b.x + b.width, b.y], [b.x + b.width, b.y + b.height], [b.x, b.y + b.height]]
+      .map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]);
+    // 下の切り取りは辺の向きに依存する。回り方を揃えておく
+    const turn = p.reduce((s, [x1, y1], i) => {
+      const [x2, y2] = p[(i + 1) % 4];
+      return s + (x2 - x1) * (y2 + y1);
+    }, 0);
+    return turn > 0 ? p.reverse() : p;
+  };
+
+  const cut = (p1, p2, p3, p4) => {
+    const d = (p1[0] - p2[0]) * (p3[1] - p4[1]) - (p1[1] - p2[1]) * (p3[0] - p4[0]);
+    const u = p1[0] * p2[1] - p1[1] * p2[0], v = p3[0] * p4[1] - p3[1] * p4[0];
+    return [(u * (p3[0] - p4[0]) - (p1[0] - p2[0]) * v) / d, (u * (p3[1] - p4[1]) - (p1[1] - p2[1]) * v) / d];
+  };
+
+  // 一方を他方の4辺で順に切り落とす（Sutherland–Hodgman）。凸どうしなので交わりも凸
+  const overlap = (sub, cl) => {
+    let poly = sub;
+    for (let i = 0; i < 4 && poly.length; i++) {
+      const e0 = cl[i], e1 = cl[(i + 1) % 4];
+      const side = ([x, y]) => (e1[0] - e0[0]) * (y - e0[1]) - (e1[1] - e0[1]) * (x - e0[0]);
+      const input = poly;
+      poly = [];
+      for (let j = 0; j < input.length; j++) {
+        const cur = input[j], prev = input[(j + input.length - 1) % input.length];
+        if (side(cur) >= 0) {
+          if (side(prev) < 0) poly.push(cut(prev, cur, e0, e1));
+          poly.push(cur);
+        } else if (side(prev) >= 0) {
+          poly.push(cut(prev, cur, e0, e1));
+        }
+      }
+    }
+    if (poly.length < 3) return 0;
+    return Math.abs(poly.reduce((s, [x1, y1], i) => {
+      const [x2, y2] = poly[(i + 1) % poly.length];
+      return s + x1 * y2 - x2 * y1;
+    }, 0)) / 2;
+  };
+
   let clash = null;
   document.querySelectorAll('.mermaid svg').forEach(svg => {
     const boxes = [...svg.querySelectorAll('text')]
       .filter(t => t.textContent.trim())
-      .map(t => ({ s: t.textContent.trim(), r: t.getBoundingClientRect() }));
+      .map(t => ({ s: t.textContent.trim(), r: t.getBoundingClientRect(), q: quad(t) }));
     for (let i = 0; i < boxes.length; i++) {
       for (let j = i + 1; j < boxes.length; j++) {
+        // 軸並行の矩形が離れていれば平行四辺形も交わらない。重いほうを先に落とす
         const a = boxes[i].r, b = boxes[j].r;
-        const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-        const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-        if (w > 0.5 && h > 0.5 && (!clash || w * h > clash.area)) {
-          clash = { area: w * h, w: Math.round(w), h: Math.round(h), a: boxes[i].s, b: boxes[j].s };
+        if (Math.min(a.right, b.right) <= Math.max(a.left, b.left)) continue;
+        if (Math.min(a.bottom, b.bottom) <= Math.max(a.top, b.top)) continue;
+        const area = overlap(boxes[i].q, boxes[j].q);
+        if (area > 1 && (!clash || area > clash.area)) {
+          clash = { area: Math.round(area), a: boxes[i].s, b: boxes[j].s };
         }
       }
     }
   });
-  if (clash) report.fail.push(`ラベルが ${clash.w}×${clash.h}px 重なる: 「${clash.a}」と「${clash.b}」`);
+  if (clash) report.fail.push(`ラベルが ${clash.area}px² 重なる: 「${clash.a}」と「${clash.b}」`);
 
   // (4) 外部参照 0 か。実際に取りに行った先を見るので、断片の grep より強い
   const remote = performance.getEntriesByType('resource')

@@ -68,12 +68,11 @@ from html.parser import HTMLParser
 frag = open(sys.argv[1], encoding='utf-8').read()
 bad = []
 
-# 既存の部品が勝つと実測できた3つの役目。型そのものを禁じるのではなく、
-# その役目に mermaid を使わせない（状態表・.track・自前チャートが載せられるものが載らない）
+# 既存の部品が勝つと実測できた2つの役目。型そのものを禁じるのではなく、
+# その役目に mermaid を使わせない（状態表・.track が載せられるものが載らない）
 LOSES = {
     'kanban': '個々の状態は状態表＋チップで書く（kanban のカードには「いま何が起きているか」が載らない）',
     'timeline': '順序は .track で書く（timeline は理由の1文が入らない）',
-    'xychart-beta': '量は -s の自前チャートで描く（xychart は日付軸のラベルが重なる）',
 }
 # 断片は <pre class="mermaid"> で書く。他のタグに mermaid class を付けると、
 # 下の走査から漏れたまま render-mermaid.js が拾って描いてしまう
