@@ -47,9 +47,10 @@
     /* 読み物としての行長。図と表はこの制限を受けない */
     --measure: 40rem;
 
-    /* mermaid のテーマ変数へ渡す写像。render-mermaid.js が --mm- を外して渡す。
-       いま書いてあるのは flowchart のぶん。別の型を使うときにその型の変数を足す
-       （timeline なら --mm-cScale0…、xychart なら --mm-xyChart-*）。
+    /* mermaid のテーマ変数へ渡す写像。render-mermaid.js が --mm- を外して渡し、
+       残りの - は入れ子に開く（--mm-xyChart-plotColorPalette → xyChart.plotColorPalette）。
+       いま書いてあるのは flowchart と xychart のぶん。別の型を使うときにその型の変数を足す
+       （timeline なら --mm-cScale0…）。
        フォントは渡さない。日本語は system のフォールバックに任せれば足り、
        渡すと測定幅と実描画幅がずれた事例が報告されている */
     --mm-background: var(--surface);
@@ -62,6 +63,7 @@
     --mm-clusterBkg: var(--paper);
     --mm-clusterBorder: var(--rule);
     --mm-titleColor: var(--ink);
+    --mm-xyChart-plotColorPalette: var(--accent);
   }
 
   body {
@@ -644,54 +646,6 @@
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
-  }
-  /* ---- チャート ---- */
-
-  .chart {
-    overflow-x: auto;
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    max-width: 72rem;
-  }
-
-  .chart svg {
-    display: block;
-    width: 100%;
-    height: auto;
-    min-width: 40rem;
-  }
-
-  .grid {
-    stroke: var(--rule);
-    stroke-width: 1;
-  }
-
-  .tick {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    fill: var(--ink-3);
-  }
-
-  .area {
-    fill: var(--accent-weak);
-  }
-
-  .line {
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 2;
-    stroke-linejoin: round;
-  }
-
-  .peak {
-    fill: var(--accent);
-  }
-
-  .peak-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    fill: var(--ink);
   }
 </style>
 </head>
