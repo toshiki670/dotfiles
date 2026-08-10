@@ -63,12 +63,9 @@ from html.parser import HTMLParser
 frag = open(sys.argv[1], encoding='utf-8').read()
 bad = []
 
-# 既存の部品が勝つと実測できた2つの役目。型そのものを禁じるのではなく、
-# その役目に mermaid を使わせない（状態表・.track が載せられるものが載らない）
-LOSES = {
-    'kanban': '個々の状態は状態表＋チップで書く（kanban のカードには「いま何が起きているか」が載らない）',
-    'timeline': '順序は .track で書く（timeline は理由の1文が入らない）',
-}
+# 既存の部品が勝つと実測できた役目。型そのものを禁じるのではなく、その役目に mermaid を
+# 使わせない。落ちるものと代わりの部品は SKILL.md の「渡さない型」の表にある
+LOSES = {'kanban', 'timeline'}
 # 断片は <pre class="mermaid"> で書く。他のタグに mermaid class を付けると、
 # 下の走査から漏れたまま render-mermaid.js が拾って描いてしまう
 for tag in re.findall(r'<(\w+)[^>]*\bclass="[^"]*\bmermaid\b[^"]*"', frag):
@@ -86,7 +83,7 @@ for block in re.findall(r'<pre[^>]*\bclass="[^"]*\bmermaid\b[^"]*"[^>]*>(.*?)</p
             continue
         head = line.split()[0]
         if head in LOSES:
-            bad.append(f'{head} は使わない — {LOSES[head]}')
+            bad.append(f'{head} は使わない — SKILL.md「渡さない型」の表にある部品で書く')
         break
 
 # --mm-* は - を入れ子の区切りに使うので、ある名前が別の名前の親を兼ねられてしまう。
