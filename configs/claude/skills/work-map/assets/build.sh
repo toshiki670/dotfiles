@@ -56,7 +56,7 @@ trap 'rm -rf "$work"' EXIT
 tmp="$work/page.html"
 
 # 断片が持ち込む欠陥を先に弾く。ブラウザを起こすより桁で速い。
-python3 - "$content" <<'PY' || exit 1
+python3 - "$content" "$lib/head.html" <<'PY' || exit 1
 import re, sys
 from html.parser import HTMLParser
 
@@ -88,6 +88,19 @@ for block in re.findall(r'<pre[^>]*\bclass="[^"]*\bmermaid\b[^"]*"[^>]*>(.*?)</p
         if head in LOSES:
             bad.append(f'{head} は使わない — {LOSES[head]}')
         break
+
+# --mm-* は - を入れ子の区切りに使うので、ある名前が別の名前の親を兼ねられてしまう。
+# 兼ねると文字列とオブジェクトが同じ場所を取り合い、宣言順によらず入れ子側が黙って消える
+# （文字列へのプロパティ代入は例外にならない）。線がテーマの既定色に戻るだけで build は通る
+def mm_names(css):
+    return re.findall(r'--mm-([A-Za-z0-9-]+)\s*:', re.sub(r'/\*.*?\*/', '', css, flags=re.S))
+
+
+names = sorted(set(mm_names(frag) + mm_names(open(sys.argv[2], encoding='utf-8').read())))
+for parent in names:
+    for child in names:
+        if child.startswith(parent + '-'):
+            bad.append(f'--mm-{parent} と --mm-{child} は同じ名前を値と入れ子の親に使っている（どちらかを改名する）')
 
 # 外部参照は markup の構造で見る。文字列で探すと、図のラベルや本文に書いた
 # url(…) や src="…" を、実際に効く属性・CSS と区別できずに弾く
