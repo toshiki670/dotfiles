@@ -149,5 +149,53 @@
     report.fail.push(`文書幅 ${report.scrollWidth} が viewport ${window.innerWidth} を超える: ${culprits.join(', ') || '不明'}`);
   }
 
+  // (6) 系列が環の色数に収まっているか。
+  // 環の値は head.html の --series-N が持つ。書き方（16進・rgb()・色名）に依らず比べたいので、
+  // 字の色として一度ブラウザに解かせてから突き合わせる
+  const solve = document.createElement('span');
+  document.head.appendChild(solve);
+  const asColor = v => {
+    solve.style.color = '';
+    solve.style.color = v;
+    return getComputedStyle(solve).color;
+  };
+
+  const declared = new Set();
+  for (const sheet of document.styleSheets) {
+    for (const rule of sheet.cssRules) {
+      if (!rule.style) continue;
+      for (const prop of rule.style) {
+        if (/^--series-\d+$/.test(prop)) declared.add(prop);
+      }
+    }
+  }
+  const ring = new Set([...declared]
+    .map(p => asColor(getComputedStyle(document.documentElement).getPropertyValue(p).trim())));
+  report.ring = ring.size;
+
+  const paint = el => {
+    const s = getComputedStyle(el);
+    return s.fill === 'none' ? s.stroke : s.fill;
+  };
+
+  figures.forEach((el, i) => {
+    const svg = el.querySelector('svg');
+    if (!svg) return;
+    // 1系列ぶんの印を1つずつ拾う。棒は1系列が複数の矩形になるので群の先頭だけを見る
+    const colors = [
+      ...[...svg.querySelectorAll('path.pieCircle')].map(paint),
+      ...[...svg.querySelectorAll('g[class*="-plot-"]')].map(g => g.querySelector('path, rect')).filter(Boolean).map(paint),
+      ...[...svg.querySelectorAll('path[class^="radarCurve-"]')].map(paint),
+    ];
+    if (!colors.length) return;
+    const off = colors.filter(c => !ring.has(c));
+    if (off.length) {
+      report.fail.push(`図 ${i + 1}: 環に無い色の系列がある（${off[0]}）。系列は環の ${ring.size} 色まで`);
+    } else if (new Set(colors).size !== colors.length) {
+      report.fail.push(`図 ${i + 1}: 系列 ${colors.length} 個が環の ${ring.size} 色を使い回している`);
+    }
+  });
+  solve.remove();
+
   document.title = 'WMCHECK ' + JSON.stringify(report);
 })();

@@ -33,6 +33,14 @@
     --warn: #8a6714;
     --serious: #a2552a;
 
+    /* 系列色。色の選び方と、3色までである理由は README にある */
+    --series-1: #002a40;
+    --series-2: var(--accent);
+    --series-3: #6aafca;
+    --series-1-ink: var(--surface);
+    --series-2-ink: var(--surface);
+    --series-3-ink: var(--ink);
+
     --font-display: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Songti SC", serif;
     --font-body: "Hiragino Sans", "Yu Gothic", "YuGothic", system-ui, -apple-system, sans-serif;
     --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -49,8 +57,7 @@
 
     /* mermaid のテーマ変数へ渡す写像。render-mermaid.js が --mm- を外して渡し、
        残りの - は入れ子に開く（--mm-xyChart-plotColorPalette → xyChart.plotColorPalette）。
-       いま書いてあるのは flowchart と xychart のぶん。別の型を使うときにその型の変数を足す
-       （pie なら --mm-pie1…）。
+       別の型を使うときにその型の変数を足す。
        フォントは渡さない。日本語は system のフォールバックに任せれば足り、
        渡すと測定幅と実描画幅がずれた事例が報告されている */
     --mm-background: var(--surface);
@@ -63,7 +70,19 @@
     --mm-clusterBkg: var(--paper);
     --mm-clusterBorder: var(--rule);
     --mm-titleColor: var(--ink);
-    --mm-xyChart-plotColorPalette: var(--accent);
+
+    --mm-xyChart-plotColorPalette: var(--series-1), var(--series-2), var(--series-3);
+    --mm-pie1: var(--series-1);
+    --mm-pie2: var(--series-2);
+    --mm-pie3: var(--series-3);
+    --mm-cScale0: var(--series-1);
+    --mm-cScale1: var(--series-2);
+    --mm-cScale2: var(--series-3);
+
+    /* pie は既定で塗りを 0.7 に透かす。見える色が環からずれないよう 1 に戻し、
+       前に出る黒の仕切りを地の色へ寄せる */
+    --mm-pieOpacity: 1;
+    --mm-pieStrokeColor: var(--surface);
   }
 
   body {
@@ -309,6 +328,19 @@
 
   .mermaid g.node:is(.open, .warn) > :is(rect, polygon, path, circle, ellipse) {
     fill: none !important;
+  }
+
+  /* 塗りの上に字が載る型は、扇ごとに字の色を選べない。環の並び順で当てる */
+  .mermaid text.slice:nth-of-type(1) {
+    fill: var(--series-1-ink) !important;
+  }
+
+  .mermaid text.slice:nth-of-type(2) {
+    fill: var(--series-2-ink) !important;
+  }
+
+  .mermaid text.slice:nth-of-type(3) {
+    fill: var(--series-3-ink) !important;
   }
 
   /* 出所のリンク。字の色は mermaid が直接当てるので a の色は届かない。下線で示す */
