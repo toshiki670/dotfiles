@@ -34,7 +34,7 @@
     --serious: #a2552a;
 
     /* 系列色。並び順が意味を持つ — 隣り合う2色が基準を満たすように並べてある。
-       選び方と基準は README にある。各色は塗りの上に載る字の色を連れている */
+       選び方と基準は README にある */
     --series-1: #742543;
     --series-2: #e47752;
     --series-3: #4e4118;
@@ -43,14 +43,6 @@
     --series-6: #57a0b4;
     --series-7: #264464;
     --series-8: #b87edc;
-    --series-1-ink: var(--surface);
-    --series-2-ink: var(--ink);
-    --series-3-ink: var(--surface);
-    --series-4-ink: var(--ink);
-    --series-5-ink: var(--surface);
-    --series-6-ink: var(--ink);
-    --series-7-ink: var(--surface);
-    --series-8-ink: var(--ink);
 
     --font-display: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Songti SC", serif;
     --font-body: "Hiragino Sans", "Yu Gothic", "YuGothic", system-ui, -apple-system, sans-serif;
@@ -350,39 +342,6 @@
 
   .mermaid g.node:is(.open, .warn) > :is(rect, polygon, path, circle, ellipse) {
     fill: none !important;
-  }
-
-  /* 塗りの上に字が載る型は、扇ごとに字の色を選べない。環の並び順で当てる */
-  .mermaid text.slice:nth-of-type(1) {
-    fill: var(--series-1-ink) !important;
-  }
-
-  .mermaid text.slice:nth-of-type(2) {
-    fill: var(--series-2-ink) !important;
-  }
-
-  .mermaid text.slice:nth-of-type(3) {
-    fill: var(--series-3-ink) !important;
-  }
-
-  .mermaid text.slice:nth-of-type(4) {
-    fill: var(--series-4-ink) !important;
-  }
-
-  .mermaid text.slice:nth-of-type(5) {
-    fill: var(--series-5-ink) !important;
-  }
-
-  .mermaid text.slice:nth-of-type(6) {
-    fill: var(--series-6-ink) !important;
-  }
-
-  .mermaid text.slice:nth-of-type(7) {
-    fill: var(--series-7-ink) !important;
-  }
-
-  .mermaid text.slice:nth-of-type(8) {
-    fill: var(--series-8-ink) !important;
   }
 
   /* 出所のリンク。字の色は mermaid が直接当てるので a の色は届かない。下線で示す */

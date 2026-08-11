@@ -272,6 +272,20 @@
       }
     }
   });
+  // (7) 区画の上に載る字が読めるか。
+  // 描く側は字が乗っている塗りから色を選ぶ。円グラフは 1% に満たない区画を描かずに
+  // 色番号だけ進めるので、何番目かで当てると外れる。選び損ねをここで捕まえる
+  document.querySelectorAll('.mermaid svg').forEach(svg => {
+    const slices = svg.querySelectorAll('.pieCircle');
+    svg.querySelectorAll('text.slice').forEach((t, i) => {
+      if (!slices[i]) return;
+      const ra = contrast(rgbOf(getComputedStyle(t).fill), rgbOf(getComputedStyle(slices[i]).fill));
+      if (ra < 4.5) {
+        report.fail.push(`区画の上の「${t.textContent.trim()}」が読めない（${ra.toFixed(2)}:1。4.5:1 が要る）`);
+      }
+    });
+  });
+
   solve.remove();
 
   document.title = 'WMCHECK ' + JSON.stringify(report);
