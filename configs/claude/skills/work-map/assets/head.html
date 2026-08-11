@@ -34,9 +34,9 @@
     --serious: #a2552a;
 
     /* 系列色。色の選び方と、3色までである理由は README にある */
-    --series-1: #002a40;
-    --series-2: var(--accent);
-    --series-3: #6aafca;
+    --series-1: #00186c;
+    --series-2: #036d68;
+    --series-3: #c5a300;
     --series-1-ink: var(--surface);
     --series-2-ink: var(--surface);
     --series-3-ink: var(--ink);
@@ -347,6 +347,20 @@
   .mermaid a .nodeLabel {
     text-decoration: underline;
     text-decoration-thickness: 1px;
+  }
+
+  /* 良い例と悪い例を並べる。言い換えると条件が落ちるものは、並べれば見える。
+     入る幅が無くなったら縦へ折れる */
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: 1.5rem 2rem;
+    align-items: start;
+  }
+
+  /* 並べた列は図の下限幅より狭い。横スクロールでは見比べられないので、列に合わせて縮める */
+  .compare .mermaid svg {
+    min-width: 0 !important;
   }
 
   .caption {
