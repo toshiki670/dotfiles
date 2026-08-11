@@ -33,6 +33,17 @@
     --warn: #8a6714;
     --serious: #a2552a;
 
+    /* 系列色。並び順が意味を持つ — 隣り合う2色が基準を満たすように並べてある。
+       選び方と基準は README にある */
+    --series-1: #742543;
+    --series-2: #e47752;
+    --series-3: #4e4118;
+    --series-4: #61a64c;
+    --series-5: #204942;
+    --series-6: #57a0b4;
+    --series-7: #264464;
+    --series-8: #b87edc;
+
     --font-display: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Songti SC", serif;
     --font-body: "Hiragino Sans", "Yu Gothic", "YuGothic", system-ui, -apple-system, sans-serif;
     --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -49,8 +60,7 @@
 
     /* mermaid のテーマ変数へ渡す写像。render-mermaid.js が --mm- を外して渡し、
        残りの - は入れ子に開く（--mm-xyChart-plotColorPalette → xyChart.plotColorPalette）。
-       いま書いてあるのは flowchart と xychart のぶん。別の型を使うときにその型の変数を足す
-       （pie なら --mm-pie1…）。
+       別の型を使うときにその型の変数を足す。
        フォントは渡さない。日本語は system のフォールバックに任せれば足り、
        渡すと測定幅と実描画幅がずれた事例が報告されている */
     --mm-background: var(--surface);
@@ -63,7 +73,30 @@
     --mm-clusterBkg: var(--paper);
     --mm-clusterBorder: var(--rule);
     --mm-titleColor: var(--ink);
-    --mm-xyChart-plotColorPalette: var(--accent);
+
+    --mm-xyChart-plotColorPalette: var(--series-1), var(--series-2), var(--series-3), var(--series-4), var(--series-5), var(--series-6), var(--series-7), var(--series-8);
+    --mm-pie1: var(--series-1);
+    --mm-pie2: var(--series-2);
+    --mm-pie3: var(--series-3);
+    --mm-pie4: var(--series-4);
+    --mm-pie5: var(--series-5);
+    --mm-pie6: var(--series-6);
+    --mm-pie7: var(--series-7);
+    --mm-pie8: var(--series-8);
+    --mm-cScale0: var(--series-1);
+    --mm-cScale1: var(--series-2);
+    --mm-cScale2: var(--series-3);
+    --mm-cScale3: var(--series-4);
+    --mm-cScale4: var(--series-5);
+    --mm-cScale5: var(--series-6);
+    --mm-cScale6: var(--series-7);
+    --mm-cScale7: var(--series-8);
+
+    /* pie は既定で塗りを 0.7 に透かす。見える色が上の定義からずれないよう 1 に戻し、
+       前に出る黒の仕切りを地の色へ寄せる */
+    --mm-pieOpacity: 1;
+    --mm-pieStrokeColor: var(--surface);
+    --mm-pieOuterStrokeColor: var(--rule-strong);
   }
 
   body {
@@ -315,6 +348,20 @@
   .mermaid a .nodeLabel {
     text-decoration: underline;
     text-decoration-thickness: 1px;
+  }
+
+  /* 良い例と悪い例を並べる。言い換えると条件が落ちるものは、並べれば見える。
+     入る幅が無くなったら縦へ折れる */
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: 1.5rem 2rem;
+    align-items: start;
+  }
+
+  /* 並べた列は図の下限幅より狭い。横スクロールでは見比べられないので、列に合わせて縮める */
+  .compare .mermaid svg {
+    min-width: 0 !important;
   }
 
   .caption {
