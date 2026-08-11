@@ -181,11 +181,12 @@
   figures.forEach((el, i) => {
     const svg = el.querySelector('svg');
     if (!svg) return;
-    // 1系列ぶんの印を1つずつ拾う。棒は1系列が複数の矩形になるので群の先頭だけを見る
+    // 1系列ぶんの印を1つずつ拾う。棒は1系列が複数の矩形になるので群の先頭だけを見る。
+    // 印は要素名で探さない — radar は graticule の書き方で曲線が path と polygon に入れ替わる
     const colors = [
-      ...[...svg.querySelectorAll('path.pieCircle')].map(paint),
+      ...[...svg.querySelectorAll('.pieCircle')].map(paint),
       ...[...svg.querySelectorAll('g[class*="-plot-"]')].map(g => g.querySelector('path, rect')).filter(Boolean).map(paint),
-      ...[...svg.querySelectorAll('path[class^="radarCurve-"]')].map(paint),
+      ...[...svg.querySelectorAll('[class^="radarCurve-"]')].map(paint),
     ];
     if (!colors.length) return;
     const off = colors.filter(c => !ring.has(c));
