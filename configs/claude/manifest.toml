@@ -6,7 +6,7 @@
 #   statusline-command.py          → ~/.claude/statusline-command.py
 # executable はユニット全体に効く（付けると SKILL.md や rules/*.md まで 0755 になる）ため付けない。
 # スクリプトはインタプリタ経由で呼ぶ: statusline-command.py は python3、
-# skills/work-map/assets/build.sh は bash。
+# skills/show-me/assets/build.sh は bash。
 #
 # 依存の結線: settings/settings.json は statusLine に `python3 ~/.claude/statusline-command.py`
 # を指す。そのスクリプト実体をこの単位が配置することで、両単位が揃って初めて statusLine が成立する。
