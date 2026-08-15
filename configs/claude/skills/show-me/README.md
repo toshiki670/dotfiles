@@ -1,4 +1,4 @@
-# work-map — 実装の背景
+# show-me — 実装の背景
 
 手順と規則は [SKILL.md](SKILL.md) にある。ここには実装時の背景を残す。
 
