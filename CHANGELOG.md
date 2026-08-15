@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.71.12] - 2026-08-13
+### Features
+- Work-map のベン図を venn-beta で描けるようにする ([#701](https://github.com/toshiki670/dotfiles/pull/701)) ([`f9d9d5e`](https://github.com/toshiki670/dotfiles/commit/f9d9d5e7c9c48e045cb9832b6732538226f70e17))
+- Work-map に届いているかを見る検査を足す ([#703](https://github.com/toshiki670/dotfiles/pull/703)) ([`eb0c681`](https://github.com/toshiki670/dotfiles/commit/eb0c68152e921f5fe4f0af0a33b4065a7fab69b1))
+- Work-map の状態の語彙を図へ行き渡らせる ([#704](https://github.com/toshiki670/dotfiles/pull/704)) ([`8ff9679`](https://github.com/toshiki670/dotfiles/commit/8ff9679894eef913166d6a784948eb9c64ec152c))
+- Work-map の xychart の塞ぎを外し、使うための決め事を書く ([#709](https://github.com/toshiki670/dotfiles/pull/709)) ([`6e87cc1`](https://github.com/toshiki670/dotfiles/commit/6e87cc1fd804383d83958359cf2b55c788904dd7))
+- Work-map の系列色を隣接の色差で決める ([#715](https://github.com/toshiki670/dotfiles/pull/715)) ([`5c59cc9`](https://github.com/toshiki670/dotfiles/commit/5c59cc9b9f1ff2ce39028cbece8a812b70eeed6c))
+### Fixes
+- Work-map の読み手を特定する手順と知識境界を入れる ([#700](https://github.com/toshiki670/dotfiles/pull/700)) ([`795bb62`](https://github.com/toshiki670/dotfiles/commit/795bb62d5efebd9a954de767d5e28f195c7d2ec3))
+- Work-map の日本語可否表と外部参照の誤爆を直す ([#702](https://github.com/toshiki670/dotfiles/pull/702)) ([`636e090`](https://github.com/toshiki670/dotfiles/commit/636e0903df96ed2e74304465f5d1cb96b489578e))
+- Work-map の塞ぎの記載と理由を1箇所に寄せる ([#713](https://github.com/toshiki670/dotfiles/pull/713)) ([`e9e7824`](https://github.com/toshiki670/dotfiles/commit/e9e7824c0c60d3b69da1419b7806a85c17b74687))
+
+
 ## [0.71.11] - 2026-08-07
 ### Features
 - Work-map の図を mermaid へ置き換え、build 時検証を入れる ([#695](https://github.com/toshiki670/dotfiles/pull/695)) ([`22c7ef2`](https://github.com/toshiki670/dotfiles/commit/22c7ef2151eaac692f5d49eccda860f331d49707))
