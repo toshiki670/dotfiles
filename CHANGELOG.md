@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.71.13] - 2026-08-16
+### Features
+- 負債を監査する debt-audit を置き、設計信条を環境から外す ([#722](https://github.com/toshiki670/dotfiles/pull/722)) ([`13f841a`](https://github.com/toshiki670/dotfiles/commit/13f841a723d894a9595665c9993c495cb5daea81))
+### Fixes
+- 訂正と memory 棚卸しから rule/skill への格上げを外す ([#718](https://github.com/toshiki670/dotfiles/pull/718)) ([`7f245c4`](https://github.com/toshiki670/dotfiles/commit/7f245c483212b4642091eebe23de260f08f92326))
+- Work-map を show-me へ改名する ([#720](https://github.com/toshiki670/dotfiles/pull/720)) ([`75eaa8f`](https://github.com/toshiki670/dotfiles/commit/75eaa8f44b0d634b5aed64daec080899beee83ab))
+
+
 ## [0.71.12] - 2026-08-13
 ### Features
 - Work-map のベン図を venn-beta で描けるようにする ([#701](https://github.com/toshiki670/dotfiles/pull/701)) ([`f9d9d5e`](https://github.com/toshiki670/dotfiles/commit/f9d9d5e7c9c48e045cb9832b6732538226f70e17))
