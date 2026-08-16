@@ -1,6 +1,6 @@
-# Claude Code の静的設定一式（rules / skills / statusline スクリプト）を ~/.claude へ copy する。
+# Claude Code の静的設定一式を ~/.claude へ copy する（input = "." なので配下すべて）。
 #
-# output=~/.claude のディレクトリ単位ツリー配置:
+# output=~/.claude のディレクトリ単位ツリー配置（例）:
 #   rules/*.md                     → ~/.claude/rules/*.md
 #   skills/memory-tidy/SKILL.md    → ~/.claude/skills/memory-tidy/SKILL.md
 #   statusline-command.py          → ~/.claude/statusline-command.py
