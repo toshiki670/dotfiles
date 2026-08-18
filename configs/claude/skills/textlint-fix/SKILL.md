@@ -9,7 +9,7 @@ textlint が指摘した箇所に、ルールの regex を満たすことだけ�
 
 ## 前提
 
-- 対象は人間が読む prose 文書。README・CONTRIBUTING・PR/Issue 本文・レビューコメント・commit message の body 等、prose-tidy と同じ対象範囲。
+- 対象は人間が読む prose 文書。README・CONTRIBUTING・PR/Issue 本文・レビューコメント・commit message の body 等。
 - CLAUDE.md・skill 定義(SKILL.md)・memory ファイル等、Claude Code がモデルとして読む設定文書は対象外。これらには textlint（`preset-ai-writing` を含む全ルール）をそもそも実行しない。「人間読者にとって AI 生成っぽく見えるか」は、モデルが読む設定文書には本質的に当てはまらない判定のため。
 - prose-tidy とは別パス。prose-tidy は密度・媒体適合を判断し、この skill は lint 指摘への対応を担う。どちらかがどちらかを自動的に呼び出すことはなく、必要になったときにそれぞれ個別に起動する。
 
