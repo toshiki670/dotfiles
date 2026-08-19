@@ -17,9 +17,9 @@ description: "読者が実際に必要とする情報密度の観点で text を
 
 ## チェック観点
 
-### 1. given-new contract — 読み手が持っていない語を既知として差し出さない
+### 1. given-new contract — 読み手が持っていない情報を既知として差し出さない
 
-既知(Given)として差し出した語に、読み手の記憶の中でただ1つの先行詞(Antecedent)が対応するか確認する。無ければ読み手は自分で組み立てるしかなく、別の先行詞を掴めばこちらの意図とは違うものを読む([Clark & Haviland 1977](https://web.stanford.edu/~clark/1970s/Clark,%20H.H.%20_%20Haviland,%20S.E.%20_Comprehension%20and%20the%20given-new%20contract_%201977.pdf) の maxim of antecedence)。先行詞は文書内の定義とは限らず、読み手が既に持っている知識でもよい。目安は、ドメイン固有の語彙が定義される前に使われていないか、冒頭・上位セクションから個別セクションへ既知から未知へ積み上がっているか。
+既知(Given)として差し出した情報に、読み手の記憶の中でただ1つの先行詞(Antecedent)が対応するか確認する。無ければ読み手は自分で組み立てるしかなく、別の先行詞を掴めばこちらの意図とは違うものを読む([Clark & Haviland 1977](https://web.stanford.edu/~clark/1970s/Clark,%20H.H.%20_%20Haviland,%20S.E.%20_Comprehension%20and%20the%20given-new%20contract_%201977.pdf) の maxim of antecedence)。先行詞は文書内の記述とは限らず、読み手が既に持っている知識でもよい。目安は、前提となる事実が示される前に前提として扱われていないか、ドメイン固有の語彙が定義される前に使われていないか、冒頭・上位セクションから個別セクションへ既知から未知へ積み上がっているか。
 
 ### 2. curse of knowledge — 書く側の前提を読み手も持っていると思い込まない
 
