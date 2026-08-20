@@ -42,7 +42,7 @@
     return getComputedStyle(probe).color;
   };
 
-  // 地とインクのうち、その塗りとの差が大きいほうを返す
+  // 背景と文字色のうち、その塗りとの差が大きいほうを返す
   const inkOn = fill => {
     const on = lum(fill) + 0.05;
     const gap = c => { const l = lum(c) + 0.05; return l > on ? l / on : on / l; };

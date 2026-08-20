@@ -5,6 +5,10 @@
 // かつ検査自身がレイアウトを動かさない唯一の置き場。
 
 (async () => {
+  // 押すと開く説明は、閉じていると箱を持たない。下の検査がどれも素通りするので、測る前に開く。
+  // 書き出されるのは検査スクリプトを足していないほうなので、生成物は閉じたまま残る
+  document.querySelectorAll('details').forEach(d => { d.open = true; });
+
   const figures = [...document.querySelectorAll('.mermaid')];
 
   // mermaid が描き終わるまで待つ。data-processed は run() が付ける
@@ -152,8 +156,8 @@
   // (6) 隣り合う系列を見分けられるか。
   // 色数では見ない — 何色まで置けるかは、色の差が基準を満たすかで決まる。
   // 明るさの差だけでは色相を見ず、色相の差だけでは色覚によって潰れるので両方を見る。
-  // 印が下地の上に直接置かれる型（線・レーダー）は、下地との差も同じ基準で見る。
-  // 円グラフは区画どうしが接していて境目の線が残るため、下地との差は問われない。
+  // 系列が背景の上に直接置かれる型（線・レーダー）は、背景との差も同じ基準で見る。
+  // 円グラフは区画どうしが接していて境目の線が残るため、背景との差は問われない。
   const DE_MIN = 18.5;
   const RATIO_MIN = 2.13;
 
@@ -226,8 +230,8 @@
   figures.forEach((el, i) => {
     const svg = el.querySelector('svg');
     if (!svg) return;
-    // 1系列ぶんの印を並び順に1つずつ拾う。棒は1系列が複数の矩形になるので群の先頭だけを見る。
-    // 印は要素名で探さない — radar は graticule の書き方で曲線が path と polygon に入れ替わる
+    // 1系列を描いている要素を並び順に1つずつ拾う。棒は1系列が複数の矩形になるので群の先頭だけを見る。
+    // 要素名では探さない — radar は graticule の書き方で曲線が path と polygon に入れ替わる
     const enclosed = [...svg.querySelectorAll('.pieCircle')].map(paint);
     const onGround = [
       ...[...svg.querySelectorAll('g[class*="-plot-"]')].map(g => g.querySelector('path, rect')).filter(Boolean).map(paint),
@@ -258,14 +262,14 @@
     }
 
     if (onGround.length) {
-      // 下地は型で違う。折れ線は自前の下地を敷き、無い型はページの面がそのまま下地になる
+      // 背景は型で違う。折れ線は自前の背景を敷き、無い型はページの面がそのまま背景になる
       const plate = svg.querySelector('rect.background');
       const ground = rgbOf(plate ? getComputedStyle(plate).fill
         : getComputedStyle(document.documentElement).getPropertyValue('--surface').trim());
       for (let j = 0; j < onGround.length; j++) {
         const ra = contrast(onGround[j], ground);
         if (ra < RATIO_MIN) {
-          report.fail.push(`図 ${i + 1}: ${j + 1}番目の系列が下地に埋もれる`
+          report.fail.push(`図 ${i + 1}: ${j + 1}番目の系列が背景に埋もれる`
             + `（明るさの差 ${ra.toFixed(2)} 倍。基準は ${RATIO_MIN} 倍）`);
           break;
         }

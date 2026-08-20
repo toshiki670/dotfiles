@@ -93,7 +93,7 @@
     --mm-cScale7: var(--series-8);
 
     /* pie は既定で塗りを 0.7 に透かす。見える色が上の定義からずれないよう 1 に戻し、
-       前に出る黒の仕切りを地の色へ寄せる */
+       前に出る黒の仕切りを背景の色へ寄せる */
     --mm-pieOpacity: 1;
     --mm-pieStrokeColor: var(--surface);
     --mm-pieOuterStrokeColor: var(--rule-strong);
@@ -108,7 +108,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ---- 骨格: 固定レール + 伸びる本体 ---- */
+  /* ---- 骨格: 固定サイドバー + 伸びる本体 ---- */
 
   .shell {
     display: grid;
@@ -119,7 +119,7 @@
     padding: 3rem 3rem 6rem;
   }
 
-  .rail {
+  .sidebar {
     position: sticky;
     top: 3rem;
     align-self: start;
@@ -142,16 +142,16 @@
     max-width: var(--measure);
   }
 
-  /* ---- レール ---- */
+  /* ---- サイドバー ---- */
 
-  .rail-title {
+  .sidebar-title {
     font-family: var(--font-display);
     font-size: var(--step-1);
     font-weight: 600;
     line-height: 1.5;
   }
 
-  .rail-meta {
+  .sidebar-meta {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
@@ -161,13 +161,13 @@
     color: var(--ink-3);
   }
 
-  .rail nav {
+  .sidebar nav {
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
   }
 
-  .rail nav a {
+  .sidebar nav a {
     color: var(--ink-2);
     text-decoration: none;
     font-size: var(--small);
@@ -177,12 +177,12 @@
     margin-left: -0.7rem;
   }
 
-  .rail nav a:hover {
+  .sidebar nav a:hover {
     color: var(--ink);
     border-left-color: var(--accent);
   }
 
-  .rail-count {
+  .sidebar-count {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -603,6 +603,30 @@
   }
 
 
+  /* ---- 用語 — 押すと開く説明 ---- */
+
+  .terms {
+    display: flex;
+    flex-direction: column;
+  }
+
+  details.term {
+    border-top: 1px solid var(--rule);
+    padding: 0.5rem 0;
+  }
+
+  details.term summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  details.term p {
+    color: var(--ink-2);
+    font-size: var(--small);
+    max-width: var(--measure);
+    padding-top: 0.3rem;
+  }
+
   /* ---- 一般 ---- */
 
   a {
@@ -630,7 +654,7 @@
     max-width: var(--measure);
   }
 
-  /* ---- 画面が狭いとき: レールを畳んで上へ ---- */
+  /* ---- 画面が狭いとき: サイドバーを畳んで上へ ---- */
 
   @media (max-width: 64rem) {
     .shell {
@@ -639,7 +663,7 @@
       padding: 2rem 1.25rem 4rem;
     }
 
-    .rail {
+    .sidebar {
       position: static;
       border-right: none;
       border-bottom: 1px solid var(--rule);
@@ -647,19 +671,19 @@
       padding-bottom: 1.5rem;
     }
 
-    .rail nav {
+    .sidebar nav {
       flex-direction: row;
       flex-wrap: wrap;
       gap: 0 1.25rem;
     }
 
-    .rail nav a {
+    .sidebar nav a {
       border-left: none;
       padding-left: 0;
       margin-left: 0;
     }
 
-    .rail-count {
+    .sidebar-count {
       flex-direction: row;
       gap: 1.5rem;
     }

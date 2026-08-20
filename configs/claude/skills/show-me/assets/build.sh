@@ -195,7 +195,7 @@ fi
 }
 
 # 使い捨てのプロファイルを渡すと Chrome は DOM を吐いたあとも終了しない（初回起動の後始末が残る）。
-# 待つのは印が出るまでにして、出たら止める。
+# 待つのは結果が出るまでにして、出たら止める。
 render() {
   local dom="$work/dom.html"
   : >"$dom"
@@ -204,7 +204,7 @@ render() {
     --user-data-dir="$work/profile" --window-size="$1,900" \
     --virtual-time-budget=20000 --dump-dom "file://$probe" >"$dom" 2>/dev/null &
   local pid=$! i=0
-  # </title> まで出ていれば印は途中で切れていない
+  # </title> まで出ていれば結果は途中で切れていない
   until grep -q 'WMCHECK.*</title>' "$dom" 2>/dev/null; do
     kill -0 "$pid" 2>/dev/null || break
     [ "$i" -lt 600 ] || break
@@ -215,7 +215,7 @@ render() {
   wait "$pid" 2>/dev/null || true
 }
 
-# 広いときと、レールが畳まれる狭いとき。横あふれは狭い側でしか出ない
+# 広いときと、サイドバーが畳まれる狭いとき。横あふれは狭い側でしか出ない
 for w in 1440 480; do
   render "$w"
 
