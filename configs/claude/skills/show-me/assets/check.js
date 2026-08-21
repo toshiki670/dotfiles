@@ -5,8 +5,7 @@
 // かつ検査自身がレイアウトを動かさない唯一の置き場。
 
 (async () => {
-  // 押すと開く説明は、閉じていると箱を持たない。下の検査がどれも素通りするので、測る前に開く。
-  // 書き出されるのは検査スクリプトを足していないほうなので、生成物は閉じたまま残る
+  // 押すと開く説明は、閉じていても中の箱は測れるが、はみ出しが文書幅へ伝わらない。測る前に開く
   document.querySelectorAll('details').forEach(d => { d.open = true; });
 
   const figures = [...document.querySelectorAll('.mermaid')];
