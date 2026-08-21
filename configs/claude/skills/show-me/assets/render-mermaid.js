@@ -1,7 +1,7 @@
 // mermaid の図を描く。断片は本文側に <pre class="mermaid"> で書く。
 //
 // 色は head.html の :root にある --mm-* を読んで渡す。値の出所はページのトークン1箇所で、
-// 型を増やすときも写像を CSS へ足すだけで済む。残りの - は入れ子に開くので、
+// 型を増やすときも `--mm-*` を CSS へ足すだけで済む。残りの - は入れ子に開くので、
 // --mm-pie1 は pie へ、--mm-xyChart-plotColorPalette は xyChart.plotColorPalette へ届く。
 
 (function () {
@@ -42,7 +42,7 @@
     return getComputedStyle(probe).color;
   };
 
-  // 地とインクのうち、その塗りとの差が大きいほうを返す
+  // 背景と文字色のうち、その塗りとの差が大きいほうを返す
   const inkOn = fill => {
     const on = lum(fill) + 0.05;
     const gap = c => { const l = lum(c) + 0.05; return l > on ? l / on : on / l; };
