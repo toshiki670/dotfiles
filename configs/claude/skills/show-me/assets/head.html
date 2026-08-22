@@ -32,6 +32,7 @@
     --good: #3e7a50;
     --warn: #8a6714;
     --serious: #a2552a;
+    --rejected: #7b5a8a;
 
     /* 系列色。並び順が意味を持つ — 隣り合う2色が基準を満たすように並べてある。
        選び方と基準は README にある */
@@ -142,6 +143,32 @@
     max-width: var(--measure);
   }
 
+  /* ---- 状態の語彙 — チップとサイドバーのカウントが同じ記号と色を取る ---- */
+
+  .chip.open,
+  .count-row.open {
+    --state: var(--serious);
+    --mark: "\003F";
+  }
+
+  .chip.settled,
+  .count-row.settled {
+    --state: var(--good);
+    --mark: "\2713";
+  }
+
+  .chip.rejected,
+  .count-row.rejected {
+    --state: var(--rejected);
+    --mark: "\2717";
+  }
+
+  .chip.warn,
+  .count-row.warn {
+    --state: var(--warn);
+    --mark: "\26A0";
+  }
+
   /* ---- サイドバー ---- */
 
   .sidebar-title {
@@ -201,6 +228,7 @@
     font-variant-numeric: tabular-nums;
     font-weight: 400;
     text-align: right;
+    color: var(--state, var(--ink));
   }
 
   .count-row span {
@@ -210,12 +238,11 @@
     color: var(--ink-3);
   }
 
-  .count-row.open b {
-    color: var(--serious);
-  }
-
-  .count-row.warn b {
-    color: var(--warn);
+  /* 未着手は記号を持たない。content が none だと ::before そのものが生まれない */
+  .count-row span::before {
+    content: var(--mark, none);
+    margin-right: 0.35rem;
+    color: var(--state);
   }
 
   /* ---- 見出し ---- */
@@ -571,37 +598,13 @@
     white-space: nowrap;
     padding: 0.15rem 0.5rem;
     border: 1px solid currentColor;
-    color: var(--ink-2);
+    color: var(--state, var(--ink-2));
   }
 
   .chip::before {
+    content: var(--mark, none);
     font-size: 0.85em;
   }
-
-  .chip.settled {
-    color: var(--good);
-  }
-
-  .chip.settled::before {
-    content: "\2713";
-  }
-
-  .chip.open {
-    color: var(--serious);
-  }
-
-  .chip.open::before {
-    content: "\003F";
-  }
-
-  .chip.warn {
-    color: var(--warn);
-  }
-
-  .chip.warn::before {
-    content: "\26A0";
-  }
-
 
   /* ---- 用語 — 押すと開く説明 ---- */
 
