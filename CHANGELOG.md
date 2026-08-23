@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.71.14] - 2026-08-23
+### Features
+- 専門用語を置き換えず押すと開く説明へ回す ([#732](https://github.com/toshiki670/dotfiles/pull/732)) ([`18d2afa`](https://github.com/toshiki670/dotfiles/commit/18d2afa59fa705e64f7c078e7e88066e3ed989dc))
+- Show-me の状態表に書く言葉を5つに決める ([#734](https://github.com/toshiki670/dotfiles/pull/734)) ([`c7d0655`](https://github.com/toshiki670/dotfiles/commit/c7d06550e31cd1b69e62eeb5ecb995ddd49cff2e))
+### Fixes
+- Tidy 3つの重複を外し、残る判定を確立された名前で呼ぶ ([#726](https://github.com/toshiki670/dotfiles/pull/726)) ([`63d85f4`](https://github.com/toshiki670/dotfiles/commit/63d85f40f5783d19360fd0f88bddf1134929fce8))
+- 読み手の前提判定を prose-tidy に集約 ([#729](https://github.com/toshiki670/dotfiles/pull/729)) ([`86f63f2`](https://github.com/toshiki670/dotfiles/commit/86f63f22b6bfaa75ae2822bd5c88eaf8b9cbdef0))
+- Show-me に残った読み手判定の写しを外す ([#731](https://github.com/toshiki670/dotfiles/pull/731)) ([`f82e746`](https://github.com/toshiki670/dotfiles/commit/f82e74687344fe8bea4c47581a7b4accabaf2a4e))
+- Report-facts-only の残存記述を削除する ([#737](https://github.com/toshiki670/dotfiles/pull/737)) ([`a46120c`](https://github.com/toshiki670/dotfiles/commit/a46120c40df45379dc65952636756708a12d7312))
+
+
 ## [0.71.13] - 2026-08-16
 ### Features
 - 負債を監査する debt-audit を置き、設計信条を環境から外す ([#722](https://github.com/toshiki670/dotfiles/pull/722)) ([`13f841a`](https://github.com/toshiki670/dotfiles/commit/13f841a723d894a9595665c9993c495cb5daea81))
