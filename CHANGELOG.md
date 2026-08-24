@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.71.15] - 2026-08-24
+### Features
+- 記録 rule を入れ、memory の feedback を搬出する ([#741](https://github.com/toshiki670/dotfiles/pull/741)) ([`ee18c73`](https://github.com/toshiki670/dotfiles/commit/ee18c7349121ebcb2ba696294d9dd3bf4b69e9ca))
+
+
 ## [0.71.14] - 2026-08-23
 ### Features
 - 専門用語を置き換えず押すと開く説明へ回す ([#732](https://github.com/toshiki670/dotfiles/pull/732)) ([`18d2afa`](https://github.com/toshiki670/dotfiles/commit/18d2afa59fa705e64f7c078e7e88066e3ed989dc))
