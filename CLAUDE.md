@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## リポジトリ構造
 
 `dotfiles` CLI で管理。`configs/` がソースで `dotfiles apply` でホームディレクトリへデプロイされる（各ツールの `configs/<tool>/manifest.toml` が配置方式・配置先を宣言）。配置後に走らせるコマンドは同じ manifest の末尾 `output.cmd` step で宣言（毎 apply 無条件・冪等契約。bat cache 再構築・ghostty symlink 等）。バイナリの導入は apply の外で `cargo install --git`（＋ `upkeep upgrade`）が担う。

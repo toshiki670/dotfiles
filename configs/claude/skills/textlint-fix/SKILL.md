@@ -39,7 +39,7 @@ textlint が指摘した箇所に、ルールの regex を満たすことだけ�
 
 1. 対象ファイル・スコープを決める（曖昧なら聞く）: 1ファイルか、指摘された diff 全体か。依頼されていない範囲へ自発的に広げない。決めたら、前提の除外対象（モデル向け設定文書）に該当するファイルをその時点で外す。
 2. 対象プロジェクトが独自の `.textlintrc.json`（プロジェクト固有のルール上書き）を持つか確認する。無ければ、textlint 自身の config 探索（対象ファイルの祖先ディレクトリを遡る）によりグローバル設定（`~/.textlintrc.json`）がそのまま使われる。プロジェクト固有の lint 実行手段（package.json のスクリプト・CI 定義等）が見つかればそちらを使う。見つからなければ次を実行する:
-   `npx -y -p textlint@15.7.1 -p textlint-rule-preset-ja-technical-writing@12.0.2 -p textlint-rule-preset-ai-writing@1.1.0 textlint --ignore-path /dev/null <対象ファイル>`
+   `npx -y -p textlint -p textlint-rule-preset-ja-technical-writing -p textlint-rule-preset-ai-writing textlint --ignore-path /dev/null <対象ファイル>`
    `--ignore-path /dev/null` は、対象ファイルが ignore 設定で黙って除外され、未検証のまま成功したことにならないようにするため。
 3. 指摘を1件ずつ確認する。チェック観点1〜4に該当するものはその指針に沿って変換し、該当しないものも都度その一文を読んで元の意味・声・含意を保つ最小限の変換を選ぶ。
 4. 修正前後を突き合わせ、意味・声・含意が変わっていないか確認する。

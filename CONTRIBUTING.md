@@ -107,6 +107,19 @@ cargo nextest run --workspace
 
 `mise run lint` で適用される linter / formatter に従う。
 
+## 指示文書の監査
+
+Claude が読む指示文書は、モデル世代が切り替わったときに `/claude-api prompt-audit` を掛け直す。指示はモデルごとの成果物で、ある世代の弱点を補うために書いた行が、次の世代では過剰発火・過剰計画を招く側へ回る。
+
+対象は次の prompt surface。
+
+| 置き場所 | 読まれる範囲 |
+| --- | --- |
+| `configs/claude/skills/*/SKILL.md`、`configs/claude/rules/*.md`、`configs/claude/agents/*.md` | ホームへ展開され、全リポジトリで読まれる |
+| `CLAUDE.md`、`.claude/skills/*/SKILL.md` | このリポジトリで作業するときだけ読まれる |
+
+消した指示は、消しても振る舞いが変わらないことを確かめてから採る。確かめ方は `claude -p --safe-mode --tools ""` に before / after の文面を渡して同じ場面を当てる（`--safe-mode` を外すとプロジェクト文脈が注入され、`--tools` を空にしないとツール実行が混ざる）。
+
 ## ヘルプ・質問
 
 質問や提案がある場合は、GitHub の Issue を作成してください。
