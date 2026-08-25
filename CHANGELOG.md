@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.71.16] - 2026-08-25
+### Fixes
+- Debt-audit が文書の負債に当てられない文言を削る ([#745](https://github.com/toshiki670/dotfiles/pull/745)) ([`ae27207`](https://github.com/toshiki670/dotfiles/commit/ae272079209697f1043dc00900f1d51b770d06c8))
+
+
 ## [0.71.15] - 2026-08-24
 ### Features
 - 記録 rule を入れ、memory の feedback を搬出する ([#741](https://github.com/toshiki670/dotfiles/pull/741)) ([`ee18c73`](https://github.com/toshiki670/dotfiles/commit/ee18c7349121ebcb2ba696294d9dd3bf4b69e9ca))
