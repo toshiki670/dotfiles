@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.71.17] - 2026-08-26
+### Fixes
+- Memory-tidy が監査の最中に対象を書き換え、時間で古びる記述を通すのを直す ([#748](https://github.com/toshiki670/dotfiles/pull/748)) ([`450abe4`](https://github.com/toshiki670/dotfiles/commit/450abe4c14d3835a68b23bf55cdcfa39a4e240b2))
+- 指示文書から古いモデル向けの記述を落とす ([#749](https://github.com/toshiki670/dotfiles/pull/749)) ([`87e6d42`](https://github.com/toshiki670/dotfiles/commit/87e6d4283c49cebf46eea669deb31bee56374bfe))
+
+
 ## [0.71.16] - 2026-08-25
 ### Fixes
 - Debt-audit が文書の負債に当てられない文言を削る ([#745](https://github.com/toshiki670/dotfiles/pull/745)) ([`ae27207`](https://github.com/toshiki670/dotfiles/commit/ae272079209697f1043dc00900f1d51b770d06c8))
