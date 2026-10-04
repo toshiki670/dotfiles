@@ -1,5 +1,5 @@
 [settings]
-install_before = "1d"
+minimum_release_age = "1d"
 
 [tools]
 node   = "latest"
