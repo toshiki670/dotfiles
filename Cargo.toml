@@ -98,7 +98,7 @@ which         = "8"
 # E2E（dev-dependencies）
 assert_cmd = "2.2"
 predicates = "3.1"
-rstest     = "0.26"
+rstest     = "0.27"
 
 # 全 member 共通の lint（各 Cargo.toml の `[lints] workspace = true` で参照）。
 # 初期は最小（CI の `clippy -D warnings` を壊さない範囲）。
