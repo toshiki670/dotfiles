@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.71.18] - 2026-10-20
+### Fixes
+- Install_before を minimum_release_age へ改名する ([#760](https://github.com/toshiki670/dotfiles/pull/760)) ([`0ffc70a`](https://github.com/toshiki670/dotfiles/commit/0ffc70a6c9b0a687842db4c7f492290596f4aa8f))
+
+
 ## [0.71.17] - 2026-08-26
 ### Fixes
 - Memory-tidy が監査の最中に対象を書き換え、時間で古びる記述を通すのを直す ([#748](https://github.com/toshiki670/dotfiles/pull/748)) ([`450abe4`](https://github.com/toshiki670/dotfiles/commit/450abe4c14d3835a68b23bf55cdcfa39a4e240b2))
