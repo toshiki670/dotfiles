@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.71.19] - 2026-11-14
+### Fixes
+- 記録 rule を「直してから、要るときだけ既存を直して残す」形にする ([#766](https://github.com/toshiki670/dotfiles/pull/766)) ([`e67990f`](https://github.com/toshiki670/dotfiles/commit/e67990fa8269c914d0c0c35caf477a684eab71d2))
+
+
 ## [0.71.18] - 2026-11-03
 ### Fixes
 - Install_before を minimum_release_age へ改名する ([#760](https://github.com/toshiki670/dotfiles/pull/760)) ([`0ffc70a`](https://github.com/toshiki670/dotfiles/commit/0ffc70a6c9b0a687842db4c7f492290596f4aa8f))
