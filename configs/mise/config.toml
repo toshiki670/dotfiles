@@ -4,4 +4,3 @@ minimum_release_age = "1d"
 [tools]
 node   = "latest"
 python = "latest"
-rust   = "latest"

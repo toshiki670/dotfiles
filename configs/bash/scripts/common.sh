@@ -7,7 +7,12 @@ eval "$(mise activate bash)"
 # Homebrew PATH configuration (macOS only)
 if [[ "$OSTYPE" == "darwin"* ]] && [[ -d "/opt/homebrew/bin" ]]; then
   export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+  # rustup (cargo / rustc proxies) is keg-only, so it is not linked into /opt/homebrew/bin.
+  [[ -d "/opt/homebrew/opt/rustup/bin" ]] && export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
 fi
+
+# Binaries installed by `cargo install`
+[[ -d "$HOME/.cargo/bin" ]] && export PATH="$HOME/.cargo/bin:$PATH"
 
 # Obsidian (macOS only)
 if [[ "$OSTYPE" == "darwin"* ]] && [[ -d "/Applications/Obsidian.app/Contents/MacOS" ]]; then

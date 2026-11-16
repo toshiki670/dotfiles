@@ -14,7 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup mise (rust + pinned linters)
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup mise (pinned linters)
         uses: jdx/mise-action@v5.2.8
 
       - name: Install fish (not supplied by mise)

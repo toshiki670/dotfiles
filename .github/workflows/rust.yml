@@ -51,8 +51,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Install mise (supplies rust)
-        uses: jdx/mise-action@v5.2.8
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2

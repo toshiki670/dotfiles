@@ -13,7 +13,7 @@ Personal dotfiles for macOS, managed by a self-contained Rust **`dotfiles`** CLI
 These cover the Fish-first workflow and shared tooling (Git, editor, mise, CLI utilities).
 
 ```bash
-brew install git gh fish nvim tree-sitter-cli mise eza bat fd ripgrep starship zoxide fzf git-delta gitleaks
+brew install git gh fish nvim tree-sitter-cli mise rustup eza bat fd ripgrep starship zoxide fzf git-delta gitleaks
 ```
 
 ### Required Homebrew tool descriptions
@@ -24,6 +24,7 @@ brew install git gh fish nvim tree-sitter-cli mise eza bat fd ripgrep starship z
 - `nvim` - Neovim text editor
 - `tree-sitter-cli` - Builds the Tree-sitter parsers that Neovim's nvim-treesitter installs
 - `mise` - Runtime version manager
+- `rustup` - Rust toolchain installer (run `rustup default stable` once; `upkeep upgrade` keeps the toolchain current)
 - `eza` - Modern replacement for ls
 - `bat` - Modern replacement for cat with syntax highlighting
 - `fd` - Fast and user-friendly alternative to find
@@ -72,7 +73,7 @@ Contributors and local development can install straight from a clone instead:
 cargo install --path . dotfiles
 ```
 
-(or `cargo install --git https://github.com/toshiki670/dotfiles dotfiles` without cloning first — the explicit `dotfiles` package name is required because the workspace's `tools/` members also ship bins). The `configs/` tree is embedded in the binary, so either install path is enough on its own (a local clone's working tree is used automatically when present, otherwise the embedded copy is used). The Rust toolchain for `cargo install` is supplied by mise (`mise install`); see [Rust commands](#rust-commands).
+(or `cargo install --git https://github.com/toshiki670/dotfiles dotfiles` without cloning first — the explicit `dotfiles` package name is required because the workspace's `tools/` members also ship bins). The `configs/` tree is embedded in the binary, so either install path is enough on its own (a local clone's working tree is used automatically when present, otherwise the embedded copy is used). The Rust toolchain for `cargo install` comes from Homebrew's `rustup`; see [Rust commands](#rust-commands).
 
 ## 2. Review destinations (optional)
 
@@ -197,7 +198,7 @@ Requires the `trash` CLI (bundled with macOS 15+). Both guards are intentionally
 
 # Rust commands
 
-All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). The recommended install path is Homebrew (see [Installation](#installation)); installing from a clone or via `cargo install --git` needs the package name given explicitly — `cargo install --path . dotfiles` (or `cargo install --git https://github.com/toshiki670/dotfiles dotfiles`) — because the workspace's `tools/` members also have bins, so a bare `cargo install --path .` is ambiguous (`error: multiple packages with binaries found`). The Rust toolchain and the lint tools are supplied by **mise** (`mise.toml`), so a fresh machine bootstraps as: `mise install` (rust) → `cargo install` (commands) → `dotfiles apply` (configs).
+All distributable commands live in the single root `dotfiles` package as multiple bins (a **Cargo workspace** at the repository root, whose only other members are the dev/maintenance tools under `tools/`). The recommended install path is Homebrew (see [Installation](#installation)); installing from a clone or via `cargo install --git` needs the package name given explicitly — `cargo install --path . dotfiles` (or `cargo install --git https://github.com/toshiki670/dotfiles dotfiles`) — because the workspace's `tools/` members also have bins, so a bare `cargo install --path .` is ambiguous (`error: multiple packages with binaries found`). The Rust toolchain comes from Homebrew's **rustup** and the lint tools from **mise** (`mise.toml`), so a fresh machine bootstraps as: `rustup default stable` (rust) → `cargo install` (commands) → `dotfiles apply` (configs). rustup is keg-only, so until `dotfiles apply` puts it on PATH, run it via `$(brew --prefix rustup)/bin`.
 
 Design and internals (manifest schema / apply pipeline / `locals` resolution / `when` gates / …) are not documented here. They live in the **[Rustdoc](https://toshiki670.github.io/dotfiles/)** (the `dotfiles` crate's own module docs), rebuilt on every push to `main`. Treat it as the architecture reference.
 
