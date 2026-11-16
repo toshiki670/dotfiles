@@ -1,8 +1,4 @@
 [tools]
-# クレートのビルド・配布（cargo install）に使う Rust ツールチェーン。
-# fresh machine は mise で rust を取得してから cargo install する。
-rust = "latest"
-
 # workspace のテストランナー（`cargo test` の代替）。再現性のため版をピンする。
 # CI（.github/workflows/rust.yml）はプリビルドバイナリを別経路で取得するため、
 # 更新時はそちらの版も揃えること。

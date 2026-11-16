@@ -1,4 +1,4 @@
-//! `upgrade`: brew / mise / cargo を一括更新する。
+//! `upgrade`: brew / rustup / mise / cargo を一括更新する。
 //!
 //! PATH 上に存在するパッケージマネージャだけを順に更新する。各ステップは失敗しても
 //! 続行する（[`super::command::run`]）。引数は取らないが clap で `--help` /
@@ -12,6 +12,11 @@ pub fn run() {
 
     if command_exists("brew") {
         command::run("Homebrew", "brew", &["upgrade"]);
+    }
+
+    // rustup 本体は brew が上げるが、ツールチェーンは上げないため別に更新する。
+    if command_exists("rustup") {
+        command::run("rustup", "rustup", &["update"]);
     }
 
     if command_exists("mise") {

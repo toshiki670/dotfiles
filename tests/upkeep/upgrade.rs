@@ -1,6 +1,6 @@
 //! `upgrade` の E2E（実バイナリ + スタブ PM で検証）。
 //!
-//! 検証: `--help`/`--version`、全 PM 存在で brew/mise/cargo を順に更新呼び出し、PM 不在
+//! 検証: `--help`/`--version`、全 PM 存在で brew/rustup/mise/cargo を順に更新呼び出し、PM 不在
 //! （空 PATH）で何も呼ばず見出しだけ、`cargo` はあるが `cargo-install-update` 不在で Cargo
 //! ステップをスキップ。
 
@@ -53,7 +53,7 @@ fn meta_flags_succeed(#[case] flag: &str) {
 
 #[test]
 fn upgrades_all_present_managers_in_order() {
-    let fx = fixture(&["brew", "mise", "cargo", "cargo-install-update"]);
+    let fx = fixture(&["brew", "rustup", "mise", "cargo", "cargo-install-update"]);
 
     upgrade()
         .env("PATH", &fx.bin)
@@ -65,6 +65,10 @@ fn upgrades_all_present_managers_in_order() {
 
     let log = log_of(&fx);
     assert!(log.contains("brew upgrade"), "missing brew upgrade:\n{log}");
+    assert!(
+        log.contains("rustup update"),
+        "missing rustup update:\n{log}"
+    );
     assert!(log.contains("mise upgrade"), "missing mise upgrade:\n{log}");
     assert!(log.contains("mise reshim"), "missing mise reshim:\n{log}");
     assert!(

@@ -34,7 +34,7 @@ enum Commands {
         #[arg(short = 'n', long)]
         dry_run: bool,
     },
-    /// brew / mise / cargo を一括更新する。
+    /// brew / rustup / mise / cargo を一括更新する。
     Upgrade,
     /// brew / mise の健全性を診断する。
     Doctor,

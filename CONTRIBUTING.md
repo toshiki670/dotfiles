@@ -6,12 +6,12 @@
 
 ```bash
 # Homebrew経由でインストール
-brew install git gh mise fish
+brew install git gh mise rustup fish
 ```
 
-lint/format ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff）と
-Rust ツールチェーンは、リポジトリの `mise.toml` から `mise install` で供給されます
-（`fish` のみ brew）。
+Rust ツールチェーンは brew の `rustup` から `rustup default stable` で入れます。
+lint/format ツール群（shfmt / shellcheck / taplo / stylua / rumdl / ruff）は、
+リポジトリの `mise.toml` から `mise install` で供給されます（`fish` のみ brew）。
 
 dotfiles の利用に必要なツールは [`README.md`](README.md) を参照してください。
 
