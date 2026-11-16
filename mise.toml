@@ -14,6 +14,11 @@ shfmt      = "3.13.1"
 stylua     = "2.5.2"
 taplo      = "0.10.0"
 
+[env]
+# Homebrew の rustup は keg-only（rust formula と衝突する）で /opt/homebrew/bin へリンクされない。
+# fish / bash 以外のシェル（zsh 等）から mise を通しても cargo を見つけられるよう足す。
+_.path = [ "/opt/homebrew/opt/rustup/bin" ]
+
 [tasks.lint]
 description = "Run linter with auto-fix"
 run         = "cargo run --quiet -p dotfiles-lint -- fix"
