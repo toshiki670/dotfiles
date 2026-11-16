@@ -1,0 +1,14 @@
+# ~/.zprofile を配置する（ツリー配置）。
+#
+# 主シェルは fish だが、ログインシェルは zsh のまま。Claude Code の Bash ツールや
+# Claude アプリのターミナルパネル、zellij のペインなど、fish / bash の設定を通らない
+# zsh にも PATH を揃えるために最小限だけ持つ。
+#
+# .zshenv でなく .zprofile に置くのは、ログインシェルでは .zshenv の後に macOS の
+# /etc/zprofile（path_helper）が PATH を並べ替え、先頭へ足した順序が崩れるため。
+
+[[steps]]
+input = "."
+
+[[steps]]
+output = "~/"
