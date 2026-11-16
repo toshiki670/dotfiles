@@ -13,7 +13,7 @@ Personal dotfiles for macOS, managed by a self-contained Rust **`dotfiles`** CLI
 These cover the Fish-first workflow and shared tooling (Git, editor, mise, CLI utilities).
 
 ```bash
-brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-delta gitleaks
+brew install git gh fish nvim tree-sitter-cli mise eza bat fd ripgrep starship zoxide fzf git-delta gitleaks
 ```
 
 ### Required Homebrew tool descriptions
@@ -22,6 +22,7 @@ brew install git gh fish nvim mise eza bat fd ripgrep starship zoxide fzf git-de
 - `gh` - GitHub CLI (used by shell prompts and aliases)
 - `fish` - Fish shell (**primary shell** for this dotfiles set)
 - `nvim` - Neovim text editor
+- `tree-sitter-cli` - Builds the Tree-sitter parsers that Neovim's nvim-treesitter installs
 - `mise` - Runtime version manager
 - `eza` - Modern replacement for ls
 - `bat` - Modern replacement for cat with syntax highlighting

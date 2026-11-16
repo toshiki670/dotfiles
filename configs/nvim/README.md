@@ -20,6 +20,7 @@
 - **Neovim 0.8+** (0.9以上推奨)
 - **ripgrep** - Telescopeの高速検索
 - **fd** - Telescopeのファイル検索
+- **tree-sitter-cli** - nvim-treesitterのパーサーのビルド
 - **Node.js** - LSPサーバー（ts_ls、yamlls、jsonls、bashlsなど）の実行に必要
 - **Python** - LSPサーバー（pyrightなど）の実行に必要
 
@@ -30,7 +31,7 @@
 **macOS:**
 
 ```bash
-brew install neovim ripgrep fd
+brew install neovim ripgrep fd tree-sitter-cli
 ```
 
 **Arch Linux:**
@@ -118,7 +119,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 | --- | --- | --- |
 | [lazy.nvim](https://github.com/folke/lazy.nvim) | プラグインマネージャー | dein.vim |
 | [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | LSP設定 | LanguageClient-neovim |
-| [mason.nvim](https://github.com/williamboman/mason.nvim) | LSPサーバー管理 | - |
+| [mason.nvim](https://github.com/mason-org/mason.nvim) | LSPサーバー管理 | - |
 | [nvim-cmp](https://github.com/hrsh7th/nvim-cmp) | 補完エンジン | deoplete |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | シンタックス | 従来のsyntax |
 | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | ファジーファインダー | denite.nvim |
@@ -172,7 +173,7 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 | キー | 動作 |
 | --- | --- |
 | `gd` | 定義へジャンプ |
-| `gr` | 参照を表示 |
+| `grr` | 参照を表示 |
 | `gi` | 実装へジャンプ |
 | `K` | ホバー情報 |
 | `<leader>rn` | リネーム |
@@ -199,7 +200,6 @@ brew install lazygit  # Git TUI（Neo-treeから起動可能）
 | `<Esc><Esc>` | 検索ハイライト解除 |
 | `gcc` | 行コメントトグル |
 | `gc` (visual) | 選択範囲コメント |
-| `<Space>ch` | チートシート表示 |
 
 ## LSPサーバー
 

@@ -103,16 +103,15 @@ return {
 				},
 				win = {
 					border = "rounded",
+					height = { min = 4, max = 25 },
 					padding = { 2, 2, 2, 2 },
 					wo = {
 						winblend = 0,
 					},
 				},
 				layout = {
-					height = { min = 4, max = 25 },
 					width = { min = 20, max = 50 },
 					spacing = 3,
-					align = "left",
 				},
 			})
 
@@ -190,64 +189,26 @@ return {
 		end,
 	},
 
-	-- Trouble: Pretty diagnostics, references, telescope results, quickfix and location list
+	-- Trouble: Pretty diagnostics, references, quickfix and location list
 	{
 		"folke/trouble.nvim",
-		cmd = { "TroubleToggle", "Trouble" },
+		cmd = "Trouble",
 		keys = {
-			{ "<leader>xx", "<cmd>TroubleToggle<cr>", desc = "Toggle Trouble" },
-			{ "<leader>xw", "<cmd>TroubleToggle workspace_diagnostics<cr>", desc = "Workspace Diagnostics" },
-			{ "<leader>xd", "<cmd>TroubleToggle document_diagnostics<cr>", desc = "Document Diagnostics" },
-			{ "<leader>xq", "<cmd>TroubleToggle quickfix<cr>", desc = "Quickfix List" },
-			{ "<leader>xl", "<cmd>TroubleToggle loclist<cr>", desc = "Location List" },
-			{ "gR", "<cmd>TroubleToggle lsp_references<cr>", desc = "LSP References" },
+			{ "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
+			{ "<leader>xw", "<cmd>Trouble diagnostics toggle<cr>", desc = "Workspace Diagnostics" },
+			{ "<leader>xd", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", desc = "Document Diagnostics" },
+			{ "<leader>xq", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List" },
+			{ "<leader>xl", "<cmd>Trouble loclist toggle<cr>", desc = "Location List" },
+			{ "gR", "<cmd>Trouble lsp_references toggle<cr>", desc = "LSP References" },
 		},
-		config = function()
-			require("trouble").setup({
-				position = "bottom",
-				height = 10,
-				width = 50,
-				icons = true,
-				mode = "workspace_diagnostics",
-				fold_open = "",
-				fold_closed = "",
-				group = true,
-				padding = true,
-				action_keys = {
-					close = "q",
-					cancel = "<esc>",
-					refresh = "r",
-					jump = { "<cr>", "<tab>" },
-					open_split = { "<c-x>" },
-					open_vsplit = { "<c-v>" },
-					open_tab = { "<c-t>" },
-					jump_close = { "o" },
-					toggle_mode = "m",
-					toggle_preview = "P",
-					hover = "K",
-					preview = "p",
-					close_folds = { "zM", "zm" },
-					open_folds = { "zR", "zr" },
-					toggle_fold = { "zA", "za" },
-					previous = "k",
-					next = "j",
-				},
-				indent_lines = true,
-				auto_open = false,
-				auto_close = false,
-				auto_preview = true,
-				auto_fold = false,
-				auto_jump = { "lsp_definitions" },
-				signs = {
-					error = "",
-					warning = "",
-					hint = "",
-					information = "",
-					other = "﫠",
-				},
-				use_diagnostic_signs = false,
-			})
-		end,
+		opts = {
+			keys = {
+				["<tab>"] = "jump",
+				["<c-x>"] = "jump_split",
+				j = "next",
+				k = "prev",
+			},
+		},
 	},
 
 	-- Vim-matchup: Better % matching
@@ -257,19 +218,6 @@ return {
 		event = { "BufReadPost", "BufNewFile" },
 		config = function()
 			vim.g.matchup_matchparen_offscreen = { method = "popup" }
-		end,
-	},
-
-	-- Vim cheatsheet
-	-- Migrated from original config
-	{
-		"reireias/vim-cheatsheet",
-		cmd = "Cheat",
-		keys = {
-			{ "<Space>ch", "<cmd>Cheat<cr>", desc = "Cheatsheet" },
-		},
-		config = function()
-			vim.g.cheatsheet_cheat_file = vim.fn.expand("~/dotfiles/vim/cheatsheet/common.md")
 		end,
 	},
 

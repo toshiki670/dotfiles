@@ -5,7 +5,7 @@
 vim.api.nvim_create_autocmd("TextYankPost", {
 	group = vim.api.nvim_create_augroup("HighlightYank", { clear = true }),
 	callback = function()
-		vim.highlight.on_yank({ higroup = "IncSearch", timeout = 200 })
+		vim.hl.on_yank({ higroup = "IncSearch", timeout = 200 })
 	end,
 })
 
@@ -14,6 +14,9 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 	group = vim.api.nvim_create_augroup("TrimWhitespace", { clear = true }),
 	pattern = "*",
 	callback = function()
+		if not vim.bo.modifiable then
+			return
+		end
 		local save_cursor = vim.fn.getpos(".")
 		vim.cmd([[%s/\s\+$//e]])
 		vim.fn.setpos(".", save_cursor)
