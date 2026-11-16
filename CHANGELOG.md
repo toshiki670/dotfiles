@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.71.21] - 2026-11-16
+### Fixes
+- Gh の無い環境では release-prepare の起動をユーザーに任せる ([#782](https://github.com/toshiki670/dotfiles/pull/782)) ([`d2624a8`](https://github.com/toshiki670/dotfiles/commit/d2624a87e3000d472834a99bdf1ef913ae92306d))
+- ログインシェルの zsh でも rustup の cargo を PATH に載せる ([#784](https://github.com/toshiki670/dotfiles/pull/784)) ([`0f40ba5`](https://github.com/toshiki670/dotfiles/commit/0f40ba5a8dbcc50d0f16e969792a49ddcfb70e44))
+
+
 ## [0.71.20] - 2026-11-16
 ### Fixes
 - 壊れた設定と非推奨の書き方を現行の仕様へ直す ([#778](https://github.com/toshiki670/dotfiles/pull/778)) ([`054465e`](https://github.com/toshiki670/dotfiles/commit/054465ec1f4121180c784d501e9593e63cb5c44e))
