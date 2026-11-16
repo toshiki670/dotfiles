@@ -5,7 +5,7 @@
 return {
 	-- Mason: LSP server installer
 	{
-		"williamboman/mason.nvim",
+		"mason-org/mason.nvim",
 		cmd = "Mason",
 		keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason" } },
 		build = ":MasonUpdate",
@@ -25,7 +25,7 @@ return {
 
 	-- Mason-lspconfig: Bridge between Mason and lspconfig
 	{
-		"williamboman/mason-lspconfig.nvim",
+		"mason-org/mason-lspconfig.nvim",
 		dependencies = { "mason.nvim" },
 		config = function()
 			-- Build ensure_installed list based on available tools
@@ -47,7 +47,6 @@ return {
 
 			require("mason-lspconfig").setup({
 				ensure_installed = ensure_installed,
-				automatic_installation = true,
 			})
 		end,
 	},
@@ -69,25 +68,25 @@ return {
 					prefix = "●",
 					source = "if_many",
 				},
-				signs = true,
+				signs = {
+					text = {
+						[vim.diagnostic.severity.ERROR] = " ",
+						[vim.diagnostic.severity.WARN] = " ",
+						[vim.diagnostic.severity.HINT] = " ",
+						[vim.diagnostic.severity.INFO] = " ",
+					},
+				},
 				underline = true,
 				update_in_insert = false,
 				severity_sort = true,
 				float = {
 					border = "rounded",
-					source = "always",
+					source = true,
 				},
 			})
 
-			-- Diagnostic signs
-			local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
-			for type, icon in pairs(signs) do
-				local hl = "DiagnosticSign" .. type
-				vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-			end
-
 			-- On attach function (keymaps and settings per buffer)
-			local on_attach = function(client, bufnr)
+			local on_attach = function(_, bufnr)
 				local opts = { noremap = true, silent = true, buffer = bufnr }
 
 				-- Keymaps
@@ -108,35 +107,19 @@ return {
 				vim.keymap.set("n", "<leader>D", vim.lsp.buf.type_definition, opts)
 				vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 				vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
-				-- Use Telescope for references if available
-				vim.keymap.set("n", "gr", function()
+				-- Use Telescope for references (overrides Neovim's default grr)
+				vim.keymap.set("n", "grr", function()
 					require("telescope.builtin").lsp_references()
 				end, opts)
 				vim.keymap.set("n", "<leader>f", function()
 					vim.lsp.buf.format({ async = true })
 				end, opts)
 
-				-- Diagnostic keymaps
-				vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
-				vim.keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
+				-- Diagnostic keymaps ([d / ]d are Neovim defaults)
 				vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, opts)
 				vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, opts)
 
-				-- Highlight symbol under cursor
-				if client.server_capabilities.documentHighlightProvider then
-					vim.api.nvim_create_augroup("lsp_document_highlight", { clear = false })
-					vim.api.nvim_clear_autocmds({ buffer = bufnr, group = "lsp_document_highlight" })
-					vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-						group = "lsp_document_highlight",
-						buffer = bufnr,
-						callback = vim.lsp.buf.document_highlight,
-					})
-					vim.api.nvim_create_autocmd("CursorMoved", {
-						group = "lsp_document_highlight",
-						buffer = bufnr,
-						callback = vim.lsp.buf.clear_references,
-					})
-				end
+				-- Symbol highlighting under the cursor is handled by vim-illuminate
 			end
 
 			-- Common configuration for all servers
@@ -172,7 +155,7 @@ return {
 			-- TypeScript/JavaScript
 			vim.lsp.config("ts_ls", default_config)
 
-			-- Ruby
+			-- Ruby (install manually: gem install solargraph)
 			vim.lsp.config(
 				"solargraph",
 				vim.tbl_extend("force", default_config, {
@@ -190,7 +173,7 @@ return {
 				vim.tbl_extend("force", default_config, {
 					settings = {
 						["rust-analyzer"] = {
-							checkOnSave = {
+							check = {
 								command = "clippy",
 							},
 						},
@@ -230,7 +213,9 @@ return {
 			-- This activates the configs for their respective filetypes
 			vim.lsp.enable("lua_ls")
 			vim.lsp.enable("ts_ls")
-			vim.lsp.enable("solargraph")
+			if vim.fn.executable("solargraph") == 1 then
+				vim.lsp.enable("solargraph")
+			end
 			vim.lsp.enable("rust_analyzer")
 			vim.lsp.enable("pyright")
 
