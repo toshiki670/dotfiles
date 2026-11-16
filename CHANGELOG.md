@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.71.20] - 2026-11-16
+### Fixes
+- 壊れた設定と非推奨の書き方を現行の仕様へ直す ([#778](https://github.com/toshiki670/dotfiles/pull/778)) ([`054465e`](https://github.com/toshiki670/dotfiles/commit/054465ec1f4121180c784d501e9593e63cb5c44e))
+### Refactor
+- Fold_in の merge 側ワイルドカードを無くし全組を明示する ([#770](https://github.com/toshiki670/dotfiles/pull/770)) ([`73b5942`](https://github.com/toshiki670/dotfiles/commit/73b594229f3d4d2c6655efa7a2e62708d9063b53))
+
+
 ## [0.71.19] - 2026-11-14
 ### Fixes
 - 記録 rule を「直してから、要るときだけ既存を直して残す」形にする ([#766](https://github.com/toshiki670/dotfiles/pull/766)) ([`e67990f`](https://github.com/toshiki670/dotfiles/commit/e67990fa8269c914d0c0c35caf477a684eab71d2))
