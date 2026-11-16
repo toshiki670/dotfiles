@@ -12,13 +12,15 @@ disable-model-invocation: true
 
 ## 手順
 
-`gh` が使える環境ならそれを使う。使えない環境（cloud セッション等）では GitHub MCP の `actions_run_trigger` / `actions_list` / `actions_get` / `list_pull_requests` で同じことをする。
+`gh` が使える環境ならそれを使う。使えない環境（cloud セッション等）では、手順 1 だけをユーザーに任せ、手順 2 以降を GitHub MCP の読み取り系ツール（`actions_list` / `actions_get` / `list_pull_requests`）で同じように行う。
 
 1. workflow を起動する。
 
    ```bash
    gh workflow run release-prepare.yml --repo toshiki670/dotfiles --ref main
    ```
+
+   `gh` が無いときは GitHub MCP の `actions_run_trigger` を呼ばない。`403 Resource not accessible by integration` で拒否される（この連携に Actions の write 権限が無いためと見られる。#768）。代わりに <https://github.com/toshiki670/dotfiles/actions/workflows/release-prepare.yml> を案内し、「Run workflow」から `main` で起動してもらう。起動したと言われてから手順 2 へ進む。
 
 2. 起動した run を特定して完了まで待つ。起動直後は一覧に出ないことがあるので、数秒置いてから取得する。
 
