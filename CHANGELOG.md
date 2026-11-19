@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.71.22] - 2026-11-19
+### Features
+- Memory の How to apply に死人テストを当てる ([#786](https://github.com/toshiki670/dotfiles/pull/786)) ([`af130c3`](https://github.com/toshiki670/dotfiles/commit/af130c3719b2830d54d31d3c6fb55873bfa728f7))
+
+
 ## [0.71.21] - 2026-11-16
 ### Fixes
 - Gh の無い環境では release-prepare の起動をユーザーに任せる ([#782](https://github.com/toshiki670/dotfiles/pull/782)) ([`d2624a8`](https://github.com/toshiki670/dotfiles/commit/d2624a87e3000d472834a99bdf1ef913ae92306d))
