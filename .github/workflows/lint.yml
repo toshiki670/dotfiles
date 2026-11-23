@@ -18,7 +18,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Setup mise (pinned linters)
-        uses: jdx/mise-action@v5.2.8
+        uses: jdx/mise-action@v5.2.10
 
       - name: Install fish (not supplied by mise)
         run: |
